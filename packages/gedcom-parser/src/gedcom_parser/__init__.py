@@ -54,6 +54,13 @@ from gedcom_parser.names import (
     detect_patronymic,
     split_compound_surname,
 )
+from gedcom_parser.places import (
+    CoordinateKind,
+    ParsedPlace,
+    PlaceVariant,
+    parse_coordinate,
+    parse_place_levels,
+)
 from gedcom_parser.lexer import iter_lines
 from gedcom_parser.models import EncodingInfo, GedcomLine, GedcomRecord
 from gedcom_parser.parser import (
@@ -69,6 +76,7 @@ __version__ = "0.1.0"
 __all__ = [
     "BrokenRef",
     "Calendar",
+    "CoordinateKind",
     "EncodingInfo",
     "Event",
     "Family",
@@ -91,7 +99,9 @@ __all__ = [
     "NameVariant",
     "Note",
     "ParsedDate",
+    "ParsedPlace",
     "Person",
+    "PlaceVariant",
     "Qualifier",
     "Repository",
     "Source",
@@ -105,9 +115,11 @@ __all__ = [
     "iter_lines",
     "julian_to_gregorian",
     "parse_bytes",
+    "parse_coordinate",
     "parse_document_file",
     "parse_file",
     "parse_gedcom_date",
+    "parse_place_levels",
     "parse_records",
     "parse_text",
     "split_compound_surname",

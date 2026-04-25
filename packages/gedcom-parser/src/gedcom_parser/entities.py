@@ -33,6 +33,7 @@ from gedcom_parser.names import (
     detect_patronymic,
     split_compound_surname,
 )
+from gedcom_parser.places import ParsedPlace
 
 if TYPE_CHECKING:
     from gedcom_parser.models import GedcomRecord
@@ -263,6 +264,13 @@ class Event(BaseModel):
         ),
     )
     place_raw: str | None = None
+    place: ParsedPlace | None = Field(
+        default=None,
+        description=(
+            "Структурированный разбор PLAC: иерархия уровней, координаты, "
+            "FONE/ROMN-варианты. None — PLAC отсутствует."
+        ),
+    )
     type_: str | None = Field(default=None, description="Подтег TYPE.")
     age_raw: str | None = Field(default=None, description="Подтег AGE.")
     notes_xrefs: tuple[str, ...] = ()
@@ -278,11 +286,14 @@ class Event(BaseModel):
         plac_node = record.find("PLAC")
         date_raw = date_node.value if date_node is not None else None
         date_line = date_node.line_no if date_node is not None else None
+        place_raw = plac_node.value if plac_node is not None else None
+        place = ParsedPlace.from_record(plac_node) if plac_node is not None else None
         return cls(
             tag=record.tag,
             date_raw=date_raw,
             date=_try_parse_date(date_raw, date_line),
-            place_raw=plac_node.value if plac_node is not None else None,
+            place_raw=place_raw,
+            place=place,
             type_=record.get_value("TYPE") or None,
             age_raw=record.get_value("AGE") or None,
             notes_xrefs=_xrefs_under(record, "NOTE"),
