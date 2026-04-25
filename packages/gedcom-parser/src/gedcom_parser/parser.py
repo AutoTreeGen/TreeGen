@@ -23,15 +23,14 @@ import warnings
 from collections.abc import Iterable
 from pathlib import Path
 
+from gedcom_parser.document import GedcomDocument
 from gedcom_parser.encoding import decode_gedcom, decode_gedcom_file
 from gedcom_parser.exceptions import GedcomLenientWarning, GedcomParseError
 from gedcom_parser.lexer import iter_lines
 from gedcom_parser.models import EncodingInfo, GedcomLine, GedcomRecord
 
 
-def parse_records(
-    lines: Iterable[GedcomLine], *, lenient: bool = True
-) -> list[GedcomRecord]:
+def parse_records(lines: Iterable[GedcomLine], *, lenient: bool = True) -> list[GedcomRecord]:
     """Свернуть последовательность ``GedcomLine`` в дерево записей.
 
     Args:
@@ -122,9 +121,7 @@ def parse_text(text: str, *, lenient: bool = True) -> list[GedcomRecord]:
     return parse_records(iter_lines(text, lenient=lenient), lenient=lenient)
 
 
-def parse_bytes(
-    raw: bytes, *, lenient: bool = True
-) -> tuple[list[GedcomRecord], EncodingInfo]:
+def parse_bytes(raw: bytes, *, lenient: bool = True) -> tuple[list[GedcomRecord], EncodingInfo]:
     """Распарсить сырые байты GEDCOM с автоопределением кодировки.
 
     Returns:
@@ -150,3 +147,24 @@ def parse_file(
     text, info = decode_gedcom_file(Path(path))
     records = parse_text(text, lenient=lenient)
     return records, info
+
+
+def parse_document_file(path: str | Path, *, lenient: bool = True) -> GedcomDocument:
+    """Прочитать файл и собрать семантический :class:`GedcomDocument`.
+
+    Высокоуровневая обёртка: ``parse_file`` → :meth:`GedcomDocument.from_records`,
+    с пробросом распознанной кодировки в документ.
+
+    ``verify_references()`` НЕ вызывается автоматически — это решает вызывающий
+    код (CLI ``stats``/``validate``, импортёр в БД и т.д.), чтобы парсинг
+    оставался дешёвым.
+
+    Args:
+        path: Путь к ``.ged``-файлу.
+        lenient: См. :func:`parse_text`.
+
+    Returns:
+        Заполненный :class:`GedcomDocument`.
+    """
+    records, info = parse_file(path, lenient=lenient)
+    return GedcomDocument.from_records(records, encoding=info)
