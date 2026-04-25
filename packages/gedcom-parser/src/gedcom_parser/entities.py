@@ -21,9 +21,13 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
+
+from gedcom_parser.dates import ParsedDate, parse_gedcom_date
+from gedcom_parser.exceptions import GedcomDateParseError, GedcomDateWarning
 
 if TYPE_CHECKING:
     from gedcom_parser.models import GedcomRecord
@@ -81,6 +85,27 @@ def _xrefs_under(record: GedcomRecord, tag: str) -> tuple[str, ...]:
         if child.value.startswith("@") and child.value.endswith("@"):
             out.append(_strip_xref(child.value))
     return tuple(out)
+
+
+def _try_parse_date(date_raw: str | None, line_no: int | None) -> ParsedDate | None:
+    """Попытаться разобрать ``date_raw``. На ошибке — warning + ``None``.
+
+    Round-trip без потерь обеспечивается тем, что вызывающий сохраняет
+    ``date_raw`` независимо от исхода парсинга.
+    """
+    if not date_raw:
+        return None
+    try:
+        return parse_gedcom_date(date_raw)
+    except GedcomDateParseError as exc:
+        warnings.warn(
+            f"Failed to parse date {date_raw!r}"
+            + (f" at line {line_no}" if line_no is not None else "")
+            + f": {exc.message}",
+            GedcomDateWarning,
+            stacklevel=3,
+        )
+        return None
 
 
 # -----------------------------------------------------------------------------
@@ -156,6 +181,13 @@ class Event(BaseModel):
 
     tag: str = Field(description="Тег события (BIRT, DEAT, MARR, EVEN, ...).")
     date_raw: str | None = None
+    date: ParsedDate | None = Field(
+        default=None,
+        description=(
+            "Структурированный разбор date_raw (см. gedcom_parser.dates). "
+            "None — даты нет либо строка не разобралась (тогда date_raw сохранён)."
+        ),
+    )
     place_raw: str | None = None
     type_: str | None = Field(default=None, description="Подтег TYPE.")
     age_raw: str | None = Field(default=None, description="Подтег AGE.")
@@ -170,9 +202,12 @@ class Event(BaseModel):
         """Построить ``Event`` из узла события."""
         date_node = record.find("DATE")
         plac_node = record.find("PLAC")
+        date_raw = date_node.value if date_node is not None else None
+        date_line = date_node.line_no if date_node is not None else None
         return cls(
             tag=record.tag,
-            date_raw=date_node.value if date_node is not None else None,
+            date_raw=date_raw,
+            date=_try_parse_date(date_raw, date_line),
             place_raw=plac_node.value if plac_node is not None else None,
             type_=record.get_value("TYPE") or None,
             age_raw=record.get_value("AGE") or None,
@@ -520,6 +555,10 @@ class Header(BaseModel):
     source_name: str | None = Field(default=None, description="SOUR > NAME.")
     submitter_xref: str | None = None
     date_raw: str | None = None
+    date: ParsedDate | None = Field(
+        default=None,
+        description="Структурированный разбор date_raw (HEAD > DATE).",
+    )
     line_no: int | None = None
 
     model_config = _FROZEN
@@ -530,11 +569,15 @@ class Header(BaseModel):
         gedc = record.find("GEDC")
         sour = record.find("SOUR")
         subm = record.find("SUBM")
+        date_node = record.find("DATE")
 
         def _sub_value(parent: GedcomRecord | None, tag: str) -> str | None:
             if parent is None:
                 return None
             return parent.get_value(tag) or None
+
+        date_raw = date_node.value if date_node is not None else None
+        date_line = date_node.line_no if date_node is not None else None
 
         return cls(
             gedcom_version=_sub_value(gedc, "VERS"),
@@ -546,7 +589,8 @@ class Header(BaseModel):
             submitter_xref=(
                 _strip_xref(subm.value) if subm is not None and subm.value.startswith("@") else None
             ),
-            date_raw=record.get_value("DATE") or None,
+            date_raw=date_raw,
+            date=_try_parse_date(date_raw, date_line),
             line_no=record.line_no,
         )
 

@@ -15,6 +15,13 @@
 :class:`Person`, :class:`Family`, :class:`Event`, :class:`Name` и т.д.
 """
 
+from gedcom_parser.dates import (
+    Calendar,
+    ParsedDate,
+    Qualifier,
+    julian_to_gregorian,
+    parse_gedcom_date,
+)
 from gedcom_parser.document import BrokenRef, GedcomDocument
 from gedcom_parser.encoding import decode_gedcom, decode_gedcom_file, detect_encoding
 from gedcom_parser.entities import (
@@ -30,6 +37,8 @@ from gedcom_parser.entities import (
     Submitter,
 )
 from gedcom_parser.exceptions import (
+    GedcomDateParseError,
+    GedcomDateWarning,
     GedcomEncodingError,
     GedcomEncodingWarning,
     GedcomError,
@@ -53,9 +62,12 @@ __version__ = "0.1.0"
 
 __all__ = [
     "BrokenRef",
+    "Calendar",
     "EncodingInfo",
     "Event",
     "Family",
+    "GedcomDateParseError",
+    "GedcomDateWarning",
     "GedcomDocument",
     "GedcomEncodingError",
     "GedcomEncodingWarning",
@@ -71,7 +83,9 @@ __all__ = [
     "MultimediaObject",
     "Name",
     "Note",
+    "ParsedDate",
     "Person",
+    "Qualifier",
     "Repository",
     "Source",
     "Submitter",
@@ -80,9 +94,11 @@ __all__ = [
     "decode_gedcom_file",
     "detect_encoding",
     "iter_lines",
+    "julian_to_gregorian",
     "parse_bytes",
     "parse_document_file",
     "parse_file",
+    "parse_gedcom_date",
     "parse_records",
     "parse_text",
 ]
