@@ -13,11 +13,11 @@
 * Calendar escapes: ``@#DGREGORIAN@``, ``@#DJULIAN@``, ``@#DHEBREW@``,
   ``@#DFRENCH R@``, ``@#DROMAN@``, ``@#DUNKNOWN@``.
 
-В этой итерации полностью поддерживаются Gregorian и Julian (через
-proleptic-конверсию по алгоритму Meeus). Для Hebrew, French Republican,
-Roman, Unknown — компоненты распознаются (qualifier, форма, phrase),
-но ``date_lower``/``date_upper`` оставляются ``None`` — конверсия календарей
-вынесена в отдельный слайс ROADMAP §5.1.5b.
+Поддерживаются: Gregorian, Julian (proleptic, по алгоритму Meeus),
+Hebrew (религиозная нумерация месяцев, гражданский год — через
+``convertdate.hebrew``), French Republican (через
+``convertdate.french_republican``). Roman / Unknown компоненты
+распознаются, но bracketing — ``None`` (нет общепринятой конверсии).
 
 Вход всегда сохраняется в ``ParsedDate.raw`` для round-trip без потерь.
 """
@@ -28,6 +28,8 @@ import re
 from datetime import date
 from typing import Literal
 
+from convertdate import french_republican as _french_republican  # type: ignore[import-untyped]
+from convertdate import hebrew as _hebrew
 from pydantic import BaseModel, ConfigDict, Field
 
 from gedcom_parser.exceptions import GedcomDateParseError
@@ -63,29 +65,45 @@ _GREGORIAN_MONTHS: dict[str, int] = {
     "DEC": 12,
 }
 
-# Hebrew, French Republican, Roman — для распознавания токенов как «месяц»
-# в нон-Gregorian/Julian парсинге будущих слайсов. Сейчас просто чтобы
-# не падать на легитимных датах.
-_HEBREW_MONTHS: frozenset[str] = frozenset(
-    {"TSH", "CSH", "KSL", "TVT", "SHV", "ADR", "ADS", "NSN", "IYR", "SVN", "TMZ", "AAV", "ELL"}
-)
-_FRENCH_MONTHS: frozenset[str] = frozenset(
-    {
-        "VEND",
-        "BRUM",
-        "FRIM",
-        "NIVO",
-        "PLUV",
-        "VENT",
-        "GERM",
-        "FLOR",
-        "PRAI",
-        "MESS",
-        "THER",
-        "FRUC",
-        "COMP",
-    }
-)
+# Hebrew месяцы — GEDCOM 3-буквенные коды → индексы convertdate.hebrew
+# (1=Nisan религиозного порядка). Год в convertdate использует ГРАЖДАНСКОЕ
+# обновление: год X начинается на Tishri 1, X (это месяц 7 в религиозной
+# нумерации). Поэтому все месяцы X — от Tishri (m=7) до Elul (m=6) — все
+# относятся к одному году X. Эта же логика работает для bracketing'а года.
+_HEBREW_MONTH_MAP: dict[str, int] = {
+    "TSH": 7,  # Tishri (начало гражданского года)
+    "CSH": 8,  # Cheshvan / Marcheshvan / Heshvan
+    "KSL": 9,  # Kislev
+    "TVT": 10,  # Tevet / Teveth
+    "SHV": 11,  # Shevat
+    "ADR": 12,  # Adar (или Adar I в високосный год)
+    "ADS": 13,  # Adar Sheni / Adar II / Adar Bet — только в високосный год
+    "NSN": 1,  # Nisan (начало религиозного года)
+    "IYR": 2,  # Iyyar
+    "SVN": 3,  # Sivan
+    "TMZ": 4,  # Tammuz
+    "AAV": 5,  # Av
+    "ELL": 6,  # Elul (конец гражданского года)
+}
+
+# French Republican месяцы — GEDCOM 4-буквенные коды → индексы 1..13.
+# Месяцы 1..12 имеют ровно 30 дней. Месяц 13 (Sansculottides) — 5 дней
+# в обычный год, 6 дней в високосный (см. french_republican.leap()).
+_FRENCH_MONTH_MAP: dict[str, int] = {
+    "VEND": 1,  # Vendémiaire
+    "BRUM": 2,  # Brumaire
+    "FRIM": 3,  # Frimaire
+    "NIVO": 4,  # Nivôse
+    "PLUV": 5,  # Pluviôse
+    "VENT": 6,  # Ventôse
+    "GERM": 7,  # Germinal
+    "FLOR": 8,  # Floréal
+    "PRAI": 9,  # Prairial
+    "MESS": 10,  # Messidor
+    "THER": 11,  # Thermidor
+    "FRUC": 12,  # Fructidor
+    "COMP": 13,  # Sansculottides (jours complémentaires)
+}
 
 
 _CALENDAR_ESCAPE_MAP: dict[str, Calendar] = {
@@ -98,7 +116,11 @@ _CALENDAR_ESCAPE_MAP: dict[str, Calendar] = {
 }
 
 # Календари с поддержкой проекции в proleptic Gregorian для bracketing'а.
-_CALENDARS_WITH_BRACKETING: frozenset[Calendar] = frozenset({"gregorian", "julian"})
+# В этой итерации добавлены Hebrew и French Republican через библиотеку
+# convertdate (ROADMAP §5.1.5b). Roman / Unknown по-прежнему без bracketing'а.
+_CALENDARS_WITH_BRACKETING: frozenset[Calendar] = frozenset(
+    {"gregorian", "julian", "hebrew", "french-r"}
+)
 
 _DAYS_IN_MONTH_NON_LEAP: tuple[int, ...] = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 
@@ -221,6 +243,35 @@ def julian_to_gregorian(year: int, month: int, day: int) -> tuple[int, int, int]
     return _jdn_to_gregorian(jdn)
 
 
+def hebrew_to_gregorian(year: int, month: int, day: int) -> tuple[int, int, int]:
+    """Перевести Hebrew-дату (религиозная нумерация месяцев) в proleptic Gregorian.
+
+    Месяцы — религиозный порядок, как в convertdate: 1=Nisan, 7=Tishri,
+    13=Adar Bet (только в високосный год). Год — гражданская нумерация:
+    год X начинается на Tishri 1 и заканчивается на Elul 29/30. Это значит,
+    что Nisan 5780 (m=1) попадает на весну Greg-2020, а Tishri 5780 (m=7) —
+    на осень Greg-2019. Обе даты внутри Hebrew-года 5780.
+
+    Raises:
+        ValueError: При некорректных компонентах.
+    """
+    return _hebrew.to_gregorian(year, month, day)  # type: ignore[no-any-return]
+
+
+def french_republican_to_gregorian(year: int, month: int, day: int) -> tuple[int, int, int]:
+    """Перевести дату Французского Республиканского календаря в proleptic Gregorian.
+
+    Месяцы 1..12 имеют по 30 дней; месяц 13 (Sansculottides / jours
+    complémentaires) — 5 дней в обычный год, 6 в високосный (см.
+    :func:`convertdate.french_republican.leap`). Год 1 начался 22 сентября
+    1792 г. Календарь использовался до 1805 г.
+
+    Raises:
+        ValueError: При некорректных компонентах.
+    """
+    return _french_republican.to_gregorian(year, month, day)  # type: ignore[no-any-return]
+
+
 def _is_julian_leap(year: int) -> bool:
     """Юлианский год — високосный, если делится на 4 (без правил Gregorian)."""
     return year % 4 == 0
@@ -289,53 +340,89 @@ def _parse_year_token(token: str) -> int:
 
 
 def _parse_month_token(token: str, calendar: Calendar) -> int | None:
-    """Распознать месяц по календарю. Возвращает 1..12/13 или ``None``.
+    """Распознать месяц по календарю. Возвращает индекс месяца или ``None``.
 
-    Возвращает ``None``, если токен не распознан как месяц нужного календаря —
-    это сигнал верхнему парсеру, что тут не ``MONTH YEAR``.
+    Возвращаемые индексы — внутреннее представление каждого календаря:
+
+    * Gregorian / Julian: 1..12 (JAN..DEC).
+    * Hebrew: 1..13 в религиозном порядке (Nisan=1, Tishri=7, Adar Bet=13).
+    * French Republican: 1..13 (Vendémiaire=1, Sansculottides=13).
+
+    Возвращает ``None``, если токен не распознан — это сигнал верхнему
+    парсеру, что строка не соответствует форме ``MONTH YEAR``.
     """
     upper = token.upper()
     if calendar in ("gregorian", "julian"):
         return _GREGORIAN_MONTHS.get(upper)
     if calendar == "hebrew":
-        return 1 if upper in _HEBREW_MONTHS else None
+        return _HEBREW_MONTH_MAP.get(upper)
     if calendar == "french-r":
-        return 1 if upper in _FRENCH_MONTHS else None
+        return _FRENCH_MONTH_MAP.get(upper)
     return None
 
 
 def _safe_date(year: int, month: int, day: int, calendar: Calendar) -> date | None:
-    """Безопасно построить ``datetime.date`` (с конверсией Julian→Gregorian).
+    """Безопасно построить ``datetime.date`` после конверсии в Gregorian.
 
     Возвращает ``None``, если результат не помещается в диапазон
     ``datetime.date`` (1..9999) или компоненты невалидны для календаря.
+    Для Roman / Unknown — всегда ``None`` (нет конверсии).
     """
     try:
         if calendar == "julian":
             gy, gm, gd = julian_to_gregorian(year, month, day)
         elif calendar == "gregorian":
             gy, gm, gd = year, month, day
+        elif calendar == "hebrew":
+            # Adar Bet (m=13) существует только в високосный год; convertdate
+            # сам по себе это не проверяет — рулим явно.
+            if month == 13 and not _hebrew.leap(year):
+                return None
+            gy, gm, gd = hebrew_to_gregorian(year, month, day)
+        elif calendar == "french-r":
+            gy, gm, gd = french_republican_to_gregorian(year, month, day)
         else:
             return None
 
         if gy < 1 or gy > 9999:
             return None
         return date(gy, gm, gd)
+    except (ValueError, OverflowError, KeyError):
+        # KeyError — convertdate иногда поднимает на невалидных компонентах.
+        return None
+
+
+def _day_before(d: date | None) -> date | None:
+    """Вернуть день, предшествующий ``d`` (для bracketing'а до начала след. года)."""
+    if d is None:
+        return None
+    try:
+        return date.fromordinal(d.toordinal() - 1)
     except (ValueError, OverflowError):
         return None
 
 
 def _bracket_year(year: int, calendar: Calendar) -> tuple[date | None, date | None]:
-    """Год → bracketing ``[Jan 1, Dec 31]`` в Gregorian (с учётом Julian)."""
+    """Год → bracketing в Gregorian.
+
+    * Gregorian / Julian: ``[Jan 1, Dec 31]`` соответствующего календаря.
+    * Hebrew: гражданский год — ``[Tishri 1 X, день перед Tishri 1 X+1]``.
+      Это значит, что Hebrew-год X охватывает осень (X-1) → осень X в Greg.
+    * French Republican: ``[Vendémiaire 1 X, день перед Vendémiaire 1 X+1]``.
+    """
     if calendar == "gregorian":
-        lower = _safe_date(year, 1, 1, "gregorian")
-        upper = _safe_date(year, 12, 31, "gregorian")
-    elif calendar == "julian":
-        lower = _safe_date(year, 1, 1, "julian")
-        upper = _safe_date(year, 12, 31, "julian")
-    else:
-        return None, None
-    return lower, upper
+        return _safe_date(year, 1, 1, "gregorian"), _safe_date(year, 12, 31, "gregorian")
+    if calendar == "julian":
+        return _safe_date(year, 1, 1, "julian"), _safe_date(year, 12, 31, "julian")
+    if calendar == "hebrew":
+        lower = _safe_date(year, 7, 1, "hebrew")
+        upper = _day_before(_safe_date(year + 1, 7, 1, "hebrew"))
+        return lower, upper
+    if calendar == "french-r":
+        lower = _safe_date(year, 1, 1, "french-r")
+        upper = _day_before(_safe_date(year + 1, 1, 1, "french-r"))
+        return lower, upper
+    return None, None
 
 
 def _bracket_month(year: int, month: int, calendar: Calendar) -> tuple[date | None, date | None]:
@@ -344,6 +431,21 @@ def _bracket_month(year: int, month: int, calendar: Calendar) -> tuple[date | No
         last_day = _days_in_gregorian_month(year, month)
     elif calendar == "julian":
         last_day = _days_in_julian_month(year, month)
+    elif calendar == "hebrew":
+        try:
+            last_day = _hebrew.month_length(year, month)
+        except (ValueError, KeyError):
+            return None, None
+    elif calendar == "french-r":
+        if 1 <= month <= 12:
+            last_day = 30
+        elif month == 13:
+            try:
+                last_day = 6 if _french_republican.leap(year) else 5
+            except (ValueError, KeyError):
+                return None, None
+        else:
+            return None, None
     else:
         return None, None
     lower = _safe_date(year, month, 1, calendar)

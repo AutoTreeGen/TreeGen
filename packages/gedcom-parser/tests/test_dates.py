@@ -255,29 +255,99 @@ class TestJulianCalendar:
         assert julian_to_gregorian(2000, 1, 1) == (2000, 1, 14)
 
 
-class TestUnsupportedCalendars:
-    """Hebrew, French Republican, Roman, Unknown — без bracketing'а в этом слайсе."""
-
-    def test_hebrew_calendar_no_bracketing(self) -> None:
-        r = parse_gedcom_date("@#DHEBREW@ 1 NSN 5610")
-        assert r.calendar == "hebrew"
-        assert r.date_lower is None
-        assert r.date_upper is None
-
-    def test_hebrew_year_only(self) -> None:
-        r = parse_gedcom_date("@#DHEBREW@ 5610")
-        assert r.calendar == "hebrew"
-        assert r.date_lower is None
-
-    def test_french_calendar(self) -> None:
-        r = parse_gedcom_date("@#DFRENCH R@ 1 VEND 1")
-        assert r.calendar == "french-r"
-        assert r.date_lower is None
+class TestRomanAndUnknownCalendars:
+    """Roman / Unknown — конверсии нет, bracketing всегда None."""
 
     def test_unknown_calendar(self) -> None:
         r = parse_gedcom_date("@#DUNKNOWN@ 1850")
         assert r.calendar == "unknown"
         assert r.date_lower is None
+        assert r.date_upper is None
+
+    def test_roman_calendar(self) -> None:
+        r = parse_gedcom_date("@#DROMAN@ 1850")
+        assert r.calendar == "roman"
+        assert r.date_lower is None
+
+
+class TestHebrewCalendar:
+    """Hebrew (convertdate, религиозная нумерация месяцев, гражданский год)."""
+
+    def test_exact_date_nisan(self) -> None:
+        # 1 Nisan 5780 = 26 March 2020 (через convertdate).
+        r = parse_gedcom_date("@#DHEBREW@ 1 NSN 5780")
+        assert r.calendar == "hebrew"
+        assert r.date_lower == date(2020, 3, 26)
+        assert r.date_upper == date(2020, 3, 26)
+
+    def test_exact_date_tishri_starts_civil_year(self) -> None:
+        # 1 Tishri 5780 = 30 September 2019 (Rosh Hashanah).
+        r = parse_gedcom_date("@#DHEBREW@ 1 TSH 5780")
+        assert r.date_lower == date(2019, 9, 30)
+
+    def test_year_bracketing_civil_span(self) -> None:
+        # Hebrew civil год 5780: Tishri 1 5780 → Elul 29 5780.
+        # = 30 Sep 2019 → 18 Sep 2020.
+        r = parse_gedcom_date("@#DHEBREW@ 5780")
+        assert r.date_lower == date(2019, 9, 30)
+        assert r.date_upper == date(2020, 9, 18)
+
+    def test_month_bracketing(self) -> None:
+        # Tishri 5780 — 30 дней.
+        r = parse_gedcom_date("@#DHEBREW@ TSH 5780")
+        assert r.date_lower == date(2019, 9, 30)
+        # Конец Tishri 5780 — 29 Oct 2019.
+        assert r.date_upper == date(2019, 10, 29)
+
+    def test_adar_bet_in_leap_year(self) -> None:
+        # Hebrew 5779 — високосный, Adar Bet есть. 1 Adar Bet 5779 валидно.
+        r = parse_gedcom_date("@#DHEBREW@ 1 ADS 5779")
+        assert r.date_lower is not None
+        # Без leap year ADS невалидно — bracket вернёт None.
+
+    def test_adar_bet_in_non_leap_year_raises(self) -> None:
+        # Hebrew 5781 — не високосный, Adar Bet (m=13) невалидно.
+        # convertdate сам по себе тут «прокатывает» в Nisan/Adar следующего
+        # года; мы поднимаем ошибку, чтобы каллер увидел проблему.
+        with pytest.raises(GedcomDateParseError, match="Invalid date components"):
+            parse_gedcom_date("@#DHEBREW@ 1 ADS 5781")
+
+
+class TestFrenchRepublicanCalendar:
+    """French Republican (convertdate). Год 1 = 22 Sep 1792."""
+
+    def test_year_1_starts_22_sep_1792(self) -> None:
+        r = parse_gedcom_date("@#DFRENCH R@ 1 VEND 1")
+        assert r.calendar == "french-r"
+        assert r.date_lower == date(1792, 9, 22)
+
+    def test_year_bracketing(self) -> None:
+        r = parse_gedcom_date("@#DFRENCH R@ 1")
+        assert r.date_lower == date(1792, 9, 22)
+        # Год 1 — не високосный, Sansculottides 5 дней.
+        # Кончается 21 Sep 1793 (день перед Vendémiaire 1, 2).
+        assert r.date_upper == date(1793, 9, 21)
+
+    def test_month_bracketing_30_day_month(self) -> None:
+        # Vendémiaire 1 года 1: 22 Sep 1792 → 21 Oct 1792 (30 дней).
+        r = parse_gedcom_date("@#DFRENCH R@ VEND 1")
+        assert r.date_lower == date(1792, 9, 22)
+        assert r.date_upper == date(1792, 10, 21)
+
+    def test_sansculottides_non_leap_5_days(self) -> None:
+        # Год 1 — не високосный, COMP = 5 дней.
+        r = parse_gedcom_date("@#DFRENCH R@ COMP 1")
+        assert r.date_lower is not None
+        assert r.date_upper is not None
+        # 17 Sep 1793 (Sansculottides 1) до 21 Sep 1793 (Sansculottides 5).
+        assert (r.date_upper - r.date_lower).days == 4
+
+    def test_sansculottides_leap_year_6_days(self) -> None:
+        # Год 3 — високосный, COMP = 6 дней.
+        r = parse_gedcom_date("@#DFRENCH R@ COMP 3")
+        assert r.date_lower is not None
+        assert r.date_upper is not None
+        assert (r.date_upper - r.date_lower).days == 5
 
 
 # -----------------------------------------------------------------------------

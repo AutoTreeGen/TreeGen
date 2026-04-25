@@ -15,22 +15,11 @@ authors = [
     { name = "Vladimir", email = "autotreegen@gmail.com" },
 ]
 
-# Корневой проект — meta-package, реальные зависимости в подпакетах.
-dependencies = []
-
-[project.optional-dependencies]
-# Общие dev-инструменты для всего workspace.
-dev = [
-    "pre-commit>=3.8",
-    "ruff>=0.7",
-    "black>=24.10",
-    "mypy>=1.13",
-    "pytest>=8.3",
-    "pytest-asyncio>=0.24",
-    "pytest-cov>=6.0",
-    "pytest-xdist>=3.6",
-    "hypothesis>=6.115",
-    "ipython>=8.29",
+# Корневой проект тянет workspace-пакеты как зависимости, чтобы они оказались
+# в общем .venv и были доступны для скриптов в scripts/, alembic env.py и т.п.
+dependencies = [
+    "shared-models",
+    "gedcom-parser",
 ]
 
 # -----------------------------------------------------------------------------
@@ -42,11 +31,24 @@ dev = [
 # содержат pyproject.toml. По мере появления реальных пакетов — добавляем сюда.
 members = [
     "packages/gedcom-parser",
+    "packages/shared-models",
 ]
+
+# Резолвим workspace-имена из локальных путей, а не из PyPI.
+[tool.uv.sources]
+shared-models = { workspace = true }
+gedcom-parser = { workspace = true }
 
 [tool.uv]
 package = false
-dev-dependencies = [
+
+# -----------------------------------------------------------------------------
+# Dependency groups (PEP 735) — современная замена устаревшего
+# `[tool.uv.dev-dependencies]`. Группа `dev` ставится автоматически при
+# `uv sync` и устанавливается через `uv sync --group dev` явно.
+# -----------------------------------------------------------------------------
+[dependency-groups]
+dev = [
     "pre-commit>=3.8",
     "ruff>=0.7",
     "black>=24.10",
@@ -57,6 +59,11 @@ dev-dependencies = [
     "pytest-xdist>=3.6",
     "hypothesis>=6.115",
     "ipython>=8.29",
+    # Phase 2: миграции и тесты ORM
+    "alembic>=1.14",
+    "asyncpg>=0.30",
+    "psycopg[binary]>=3.2",   # sync-драйвер для alembic offline-режима
+    "testcontainers[postgres]>=4.8",
 ]
 
 # -----------------------------------------------------------------------------
@@ -172,10 +179,15 @@ markers = [
     "slow: tests that are slow (deselect with -m 'not slow')",
     "integration: tests requiring docker-compose services",
     "gedcom_real: tests using real personal GED file (skipped in CI)",
+    "db: tests requiring real Postgres (testcontainers or docker compose)",
+    "bench: performance benchmarks (deselect with -m 'not bench')",
 ]
 filterwarnings = [
     "error",
     "ignore::DeprecationWarning:pkg_resources.*",
+    # convertdate.hebrew внутри to_gregorian() ещё зовёт собственный
+    # deprecated month_days — это шум, не наш баг.
+    "ignore::DeprecationWarning:convertdate.*",
     # Warning'и парсера на грязные реальные GEDCOM-файлы (ANSEL fallback,
     # неявные CONT в lenient-режиме и т.п.) не должны валить тесты —
     # они отражают ожидаемое поведение, а не баги.

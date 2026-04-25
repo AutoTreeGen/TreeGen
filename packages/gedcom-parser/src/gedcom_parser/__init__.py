@@ -19,6 +19,8 @@ from gedcom_parser.dates import (
     Calendar,
     ParsedDate,
     Qualifier,
+    french_republican_to_gregorian,
+    hebrew_to_gregorian,
     julian_to_gregorian,
     parse_gedcom_date,
 )
@@ -113,6 +115,8 @@ __all__ = [
     "decode_gedcom_file",
     "detect_encoding",
     "detect_patronymic",
+    "french_republican_to_gregorian",
+    "hebrew_to_gregorian",
     "is_cyrillic",
     "iter_lines",
     "julian_to_gregorian",
