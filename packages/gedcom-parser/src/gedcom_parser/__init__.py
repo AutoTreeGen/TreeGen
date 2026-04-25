@@ -64,6 +64,7 @@ from gedcom_parser.places import (
     parse_place_levels,
 )
 from gedcom_parser.transliteration import is_cyrillic, transliterate_iso9
+from gedcom_parser.writer import write_records
 from gedcom_parser.lexer import iter_lines
 from gedcom_parser.models import EncodingInfo, GedcomLine, GedcomRecord
 from gedcom_parser.parser import (
@@ -130,4 +131,5 @@ __all__ = [
     "parse_text",
     "split_compound_surname",
     "transliterate_iso9",
+    "write_records",
 ]
