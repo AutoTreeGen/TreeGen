@@ -48,6 +48,12 @@ from gedcom_parser.exceptions import (
     GedcomReferenceWarning,
     GedcomWarning,
 )
+from gedcom_parser.names import (
+    NameVariant,
+    VariantKind,
+    detect_patronymic,
+    split_compound_surname,
+)
 from gedcom_parser.lexer import iter_lines
 from gedcom_parser.models import EncodingInfo, GedcomLine, GedcomRecord
 from gedcom_parser.parser import (
@@ -82,6 +88,7 @@ __all__ = [
     "Header",
     "MultimediaObject",
     "Name",
+    "NameVariant",
     "Note",
     "ParsedDate",
     "Person",
@@ -89,10 +96,12 @@ __all__ = [
     "Repository",
     "Source",
     "Submitter",
+    "VariantKind",
     "__version__",
     "decode_gedcom",
     "decode_gedcom_file",
     "detect_encoding",
+    "detect_patronymic",
     "iter_lines",
     "julian_to_gregorian",
     "parse_bytes",
@@ -101,4 +110,5 @@ __all__ = [
     "parse_gedcom_date",
     "parse_records",
     "parse_text",
+    "split_compound_surname",
 ]

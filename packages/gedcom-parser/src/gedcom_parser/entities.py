@@ -28,6 +28,11 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from gedcom_parser.dates import ParsedDate, parse_gedcom_date
 from gedcom_parser.exceptions import GedcomDateParseError, GedcomDateWarning
+from gedcom_parser.names import (
+    NameVariant,
+    detect_patronymic,
+    split_compound_surname,
+)
 
 if TYPE_CHECKING:
     from gedcom_parser.models import GedcomRecord
@@ -116,23 +121,47 @@ def _try_parse_date(date_raw: str | None, line_no: int | None) -> ParsedDate | N
 class Name(BaseModel):
     """Имя персоны.
 
-    Хранит исходное значение тега ``NAME`` (`value`) и базовое расщепление
-    через ``/Surname/``-нотацию. Подтеги ``GIVN`` / ``SURN`` / ``NPFX`` /
-    ``NSFX`` / ``NICK``, если присутствуют, имеют приоритет над расщеплением
-    из ``value`` — это поведение спецификации GEDCOM 5.5.5 §3.5 и реальных
-    экспортёров.
+    Хранит исходное значение тега ``NAME`` (``value``) и нормализованный
+    разбор. Базовый источник полей — подтеги ``GIVN``/``SURN``/``NPFX``/
+    ``NSFX``/``NICK`` (приоритет — спека GEDCOM 5.5.5 §3.5 и поведение
+    экспортёров). Если их нет — расщепление ``/Surname/``-нотации
+    непосредственно из ``value`` (см. :func:`_split_name_value`).
 
-    Глубокая нормализация (патронимы, девичьи фамилии, иврит/идиш-варианты,
-    транслитерация) — задача подпунктов 6 и 8 ROADMAP §5.1.
+    Поверх этого выполняются нормализации подпункта 6 ROADMAP §5.1:
+
+    * ``patronymic`` — отчество, выделенное эвристикой
+      :func:`gedcom_parser.names.detect_patronymic` из ``given``.
+    * ``surnames`` — составная фамилия, разрезанная по дефису через
+      :func:`gedcom_parser.names.split_compound_surname`. Поле ``surname``
+      сохраняет исходную строку (round-trip).
+    * ``variants`` — кортеж :class:`NameVariant` из подтегов ``FONE`` и
+      ``ROMN``. База для систематической транслитерации (подпункт 8).
     """
 
     value: str = Field(description="Сырое значение тега NAME, как в файле.")
     type_: str | None = Field(default=None, description="Подтег NAME TYPE.")
     given: str | None = None
+    patronymic: str | None = Field(
+        default=None,
+        description=(
+            "Отчество (Восточно-славянская традиция), выделенное эвристикой. None — не обнаружено."
+        ),
+    )
     surname: str | None = None
+    surnames: tuple[str, ...] = Field(
+        default=(),
+        description=(
+            "Составная фамилия, разрезанная по дефису. "
+            "Для одиночной фамилии — кортеж из одного элемента. Пусто, если surname None."
+        ),
+    )
     prefix: str | None = Field(default=None, description="Подтег NPFX.")
     suffix: str | None = Field(default=None, description="Подтег NSFX.")
     nickname: str | None = Field(default=None, description="Подтег NICK.")
+    variants: tuple[NameVariant, ...] = Field(
+        default=(),
+        description="Альтернативы из подтегов FONE / ROMN.",
+    )
     line_no: int | None = None
 
     model_config = _FROZEN
@@ -141,9 +170,12 @@ class Name(BaseModel):
     def from_record(cls, record: GedcomRecord) -> Name:
         """Построить ``Name`` из узла ``NAME``.
 
-        Подтеги ``GIVN``/``SURN``/``NPFX``/``NSFX``/``NICK`` — приоритетные.
-        При их отсутствии для ``given``/``surname``/``suffix`` применяется
-        расщепление ``/Surname/``-нотации в ``value`` (см. :func:`_split_name_value`).
+        Порядок:
+
+        1. Базовый разбор: подтеги имеют приоритет над расщеплением value.
+        2. Эвристика отчества: ``given`` сужается, ``patronymic`` заполняется.
+        3. Разрез составной фамилии: ``surnames`` из ``surname``.
+        4. Сбор FONE/ROMN-вариантов в ``variants``.
         """
         given_from_value, surname_from_value, suffix_from_value = _split_name_value(record.value)
 
@@ -151,16 +183,58 @@ class Name(BaseModel):
         surn_sub = record.get_value("SURN") or None
         nsfx_sub = record.get_value("NSFX") or None
 
+        given = givn_sub if givn_sub is not None else given_from_value
+        surname = surn_sub if surn_sub is not None else surname_from_value
+
+        # Шаг 2: вытащить отчество из given, если есть.
+        given, patronymic = detect_patronymic(given)
+
+        # Шаг 3: разрезать составную фамилию.
+        surnames = split_compound_surname(surname)
+
+        # Шаг 4: FONE / ROMN.
+        variants = _collect_name_variants(record)
+
         return cls(
             value=record.value,
             type_=record.get_value("TYPE") or None,
-            given=givn_sub if givn_sub is not None else given_from_value,
-            surname=surn_sub if surn_sub is not None else surname_from_value,
+            given=given,
+            patronymic=patronymic,
+            surname=surname,
+            surnames=surnames,
             prefix=record.get_value("NPFX") or None,
             suffix=nsfx_sub if nsfx_sub is not None else suffix_from_value,
             nickname=record.get_value("NICK") or None,
+            variants=variants,
             line_no=record.line_no,
         )
+
+
+def _collect_name_variants(record: GedcomRecord) -> tuple[NameVariant, ...]:
+    """Собрать ``FONE``/``ROMN``-подтеги под NAME в кортеж :class:`NameVariant`.
+
+    Подтег ``3 TYPE …`` под FONE/ROMN сохраняется в ``NameVariant.type_``
+    (например, ``"hebrew"``, ``"YIVO"``, ``"polish"``).
+    """
+    out: list[NameVariant] = []
+    for child in record.children:
+        if child.tag == "FONE":
+            out.append(
+                NameVariant(
+                    value=child.value,
+                    kind="phonetic",
+                    type_=child.get_value("TYPE") or None,
+                )
+            )
+        elif child.tag == "ROMN":
+            out.append(
+                NameVariant(
+                    value=child.value,
+                    kind="romanized",
+                    type_=child.get_value("TYPE") or None,
+                )
+            )
+    return tuple(out)
 
 
 # -----------------------------------------------------------------------------
