@@ -1,0 +1,223 @@
+# CLAUDE.md
+
+Инструкции для Claude Code и других AI-ассистентов, работающих с этим репозиторием.
+
+> **Перед началом любой задачи:** прочитай `ROADMAP.md`, относящуюся к фазе секцию,
+> и соответствующий файл в `docs/` (если есть).
+
+---
+
+## 1. О проекте
+
+**AutoTreeGen / SmarTreeDNA** — AI-платформа для научной генеалогии. Объединяет
+GEDCOM-данные, ДНК-результаты и архивные источники в единое evidence-based древо
+с движком гипотез.
+
+Полная дорожная карта: `ROADMAP.md`. Архитектура: `docs/architecture.md`.
+
+---
+
+## 2. Языковые конвенции
+
+| Артефакт | Язык |
+|---|---|
+| Имена идентификаторов (классы, функции, переменные, файлы, БД-таблицы) | **English** |
+| Сообщения об ошибках в коде, логи | **English** |
+| Комментарии, docstrings | **Russian** |
+| Документация (`README`, `docs/`, ADR) | **Russian** |
+| Сообщения коммитов | **English** (Conventional Commits) |
+| Сообщения для конечного пользователя в UI | **i18n** (en + ru минимум) |
+
+**Пример docstring:**
+
+```python
+def parse_gedcom_date(value: str) -> ParsedDate:
+    """Разбирает GEDCOM date phrase в структурированную дату.
+
+    Поддерживает: ABT, BEF, AFT, BET..AND, FROM..TO, юлианский/григорианский
+    календари, иврит-даты. Сохраняет оригинальную строку в `raw` для round-trip.
+
+    Args:
+        value: Строка вида "ABT 1850" или "BET 1840 AND 1845 (Old Style)".
+
+    Returns:
+        ParsedDate с диапазоном и оценкой uncertainty.
+
+    Raises:
+        GedcomDateParseError: If the value cannot be parsed.
+    """
+```
+
+---
+
+## 3. Архитектурные принципы (нерушимые)
+
+1. **Evidence-first.** Каждое утверждение → источник + confidence + provenance.
+   Никаких «голых фактов» без атрибуции.
+2. **Hypothesis-aware.** Гипотезы — first-class entity, не «черновики». Хранятся
+   с rationale и evidence-graph.
+3. **Provenance everywhere.** Поле `provenance` (jsonb) на всех «живых» сущностях.
+   Минимум: `source_files`, `import_job_id`, `manual_edits`.
+4. **Versioning everywhere.** Soft delete (`deleted_at`), audit log, восстановление
+   из снапшотов. Стратегия — см. ADR-0003.
+5. **Privacy by design.** ДНК-данные = special category (GDPR Art. 9). Шифрование
+   at-rest на application-level, явное consent, политика удаления.
+6. **Deterministic > magic.** LLM применяется только там, где он реально полезен
+   (см. Фаза 10). Базовые операции — детерминированные.
+7. **Domain-aware.** Восточная Европа XIX–XX вв., еврейская генеалогия,
+   транслитерация — учитывать с самого начала, не «потом».
+
+---
+
+## 4. Технологический стек
+
+См. `ROADMAP.md` секция 1. Кратко:
+
+- **Backend:** Python 3.12, FastAPI 0.115+, Pydantic v2, SQLAlchemy 2 (async), Alembic.
+- **Frontend:** Next.js 15, React 19, TypeScript (strict), Tailwind 4, shadcn/ui.
+- **БД:** PostgreSQL 16 + pgvector. Локально через `docker compose`.
+- **Очереди:** `arq` на Redis (локально), Cloud Tasks (прод).
+- **Storage:** MinIO (локально), GCS (прод).
+- **LLM:** Anthropic Claude API. **Embeddings:** Voyage AI.
+- **Менеджер пакетов Python:** `uv` (НЕ poetry, НЕ pip напрямую).
+- **Менеджер пакетов JS:** `pnpm` (НЕ npm, НЕ yarn).
+
+---
+
+## 5. Запреты
+
+- ❌ **Прямые коммиты в `main`.** Только через PR + ревью.
+- ❌ **Секреты в коде.** Только через `.env` (в `.gitignore`) или Secret Manager.
+- ❌ **Личный GED-файл (`Ztree.ged`) в коммитах.** Только локальный test fixture.
+- ❌ **DNA-данные в репозитории.** Тестовые DNA — синтетические/обезличенные.
+- ❌ **Breaking changes без ADR.** Любая ломка контракта — через `docs/adr/`.
+- ❌ **Скрейпинг платформ без публичного API** (Ancestry, 23andMe, …).
+  См. `ROADMAP.md` секция 13.
+- ❌ **Автоматический merge персон с близким родством без manual review.**
+
+---
+
+## 6. Стандарты качества
+
+| Метрика | Цель |
+|---|---|
+| Покрытие тестами новой логики | > 80% |
+| Mypy / TypeScript strict | без `any`, без `# type: ignore` без комментария-обоснования |
+| Линтеры | ruff, black, biome — passing |
+| p95 API latency | < 300 мс (для эндпоинтов без LLM) |
+| Размер PR | < 500 строк диффа желательно |
+
+---
+
+## 7. Команды (локально)
+
+```bash
+# Инфраструктура
+docker compose up -d                 # поднять Postgres+Redis+MinIO
+docker compose down                  # остановить
+docker compose down -v               # полный сброс с volumes
+
+# Python (uv workspace)
+uv sync                              # установить все зависимости
+uv run pytest                        # все тесты
+uv run pytest packages/gedcom-parser # тесты конкретного пакета
+uv run ruff check .                  # линт
+uv run ruff format .                 # форматирование
+uv run mypy .                        # типы
+
+# Frontend (pnpm)
+pnpm install                         # установить все зависимости
+pnpm -F web dev                      # dev-сервер Next.js
+pnpm -F web build                    # production-сборка
+pnpm -F web lint                     # biome
+
+# Pre-commit
+uv run pre-commit run --all-files    # прогнать все хуки
+
+# Миграции БД (после Фазы 2)
+uv run alembic revision --autogenerate -m "описание"
+uv run alembic upgrade head
+```
+
+---
+
+## 8. Workflow задачи
+
+1. **Прочитать контекст:** `ROADMAP.md` (секция фазы), `docs/architecture.md`,
+   `docs/data-model.md`, релевантные ADR.
+2. **Создать ветку:** `feat/<short-kebab-name>`, `fix/<…>`, `docs/<…>`.
+3. **Сформулировать план** (5–10 шагов) и согласовать с владельцем
+   до написания кода.
+4. **Реализовать.** Маленькие коммиты с осмысленными сообщениями.
+5. **Тесты.** Покрытие новой логики > 80%. Включая edge cases.
+6. **Самопроверка:**
+   - `uv run pre-commit run --all-files` — passing.
+   - `uv run pytest` — passing.
+   - Ручная проверка ключевых сценариев.
+7. **Если архитектурное решение** — ADR в `docs/adr/`.
+8. **PR** с описанием: что, зачем, как тестировалось, что осталось.
+
+---
+
+## 9. Conventional Commits
+
+Формат: `<type>(<scope>): <subject>`
+
+Типы: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `build`, `ci`.
+
+Примеры:
+
+```
+feat(gedcom-parser): add ANSEL encoding auto-detection
+fix(gedcom-parser): handle missing CONT line in NOTE record
+docs(adr): add ADR-0003 versioning strategy
+test(gedcom-parser): add fixtures for proprietary Ancestry tags
+chore(deps): bump pydantic to 2.10
+```
+
+Breaking changes: `feat!:` или `BREAKING CHANGE:` в теле.
+
+---
+
+## 10. ADR (Architecture Decision Records)
+
+Хранятся в `docs/adr/`. Формат — см. `docs/adr/0000-template.md`.
+
+Каждое решение, влияющее на:
+- структуру данных,
+- межсервисные контракты,
+- выбор технологии,
+- security / privacy политику,
+
+должно быть зафиксировано как ADR.
+
+Список открытых решений — `ROADMAP.md` секция 24.
+
+---
+
+## 11. Работа с GEDCOM
+
+- Канонический формат вход/выход — **GEDCOM 5.5.5** (см. https://gedcom.io).
+- Обратная совместимость с 5.5.1 и проприетарными расширениями (Ancestry, MyHeritage, Geni).
+- Round-trip без потерь: ввод → БД → вывод. Если потери — явный лог.
+- Личный test fixture: `D:\Projects\TreeGen\Ztree.ged` (НЕ коммитить).
+
+См. `docs/gedcom-extensions.md` для проприетарных тегов.
+
+---
+
+## 12. Subagents (`.claude/agents/`)
+
+Специализированные субагенты для разных доменов:
+
+| Агент | Когда использовать |
+|---|---|
+| `gedcom-expert` | Парсер GEDCOM, проприетарные расширения, кодировки |
+| `dna-analyst` | Алгоритмы кластеризации, Shared cM, endogamy |
+| `db-architect` | Миграции, индексы, перформанс запросов |
+| `security-reviewer` | PR с DNA / PII / authn |
+| `code-reviewer` | Общий ревью |
+| `test-writer` | Генерация pytest-фикстур и тестов |
+| `historian` | Нормализация мест, исторические границы |
+
+(Создаются по мере необходимости.)

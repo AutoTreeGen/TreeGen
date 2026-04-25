@@ -1,0 +1,124 @@
+# =============================================================================
+# AutoTreeGen — локальная инфраструктура для разработки
+#
+# Поднимает: PostgreSQL 16 (с pgvector), Redis 7, MinIO (S3-совместимый storage).
+# Запуск: docker compose up -d
+# Сброс:   docker compose down -v
+# =============================================================================
+
+name: autotreegen
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 16 + pgvector
+  # Образ pgvector/pgvector содержит готовое расширение vector.
+  # AlloyDB-совместимая схема (используется в проде на GCP, см. ROADMAP §17).
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: autotreegen-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-autotreegen}
+      POSTGRES_USER: ${POSTGRES_USER:-autotreegen}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-in-local-env}
+      # Локализация для корректной сортировки кириллицы/иврита.
+      LANG: C.UTF-8
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-autotreegen} -d ${POSTGRES_DB:-autotreegen}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=vector
+      - -c
+      - max_connections=200
+      - -c
+      - shared_buffers=256MB
+
+  # ---------------------------------------------------------------------------
+  # Redis 7 — очереди (arq), кэш, pub/sub.
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: autotreegen-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --maxmemory
+      - 512mb
+      - --maxmemory-policy
+      - allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # MinIO — S3-совместимый storage для GEDCOM/DNA/документов.
+  # В проде заменяется на Google Cloud Storage (см. ROADMAP §17).
+  # Web UI: http://localhost:9001 (login: minioadmin / minioadmin).
+  # API:    http://localhost:9000
+  # ---------------------------------------------------------------------------
+  minio:
+    image: minio/minio:latest
+    container_name: autotreegen-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minioadmin}
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web console
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # MinIO bucket bootstrapper — однократно создаёт buckets при первом запуске.
+  # ---------------------------------------------------------------------------
+  minio-init:
+    image: minio/mc:latest
+    container_name: autotreegen-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minioadmin}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 $${S3_ACCESS_KEY} $${S3_SECRET_KEY} &&
+      mc mb --ignore-existing local/gedcom &&
+      mc mb --ignore-existing local/dna &&
+      mc mb --ignore-existing local/documents &&
+      echo 'MinIO buckets ready: gedcom, dna, documents';
+      "
+    restart: "no"
+
+volumes:
+  postgres_data:
+    name: autotreegen_postgres_data
+  redis_data:
+    name: autotreegen_redis_data
+  minio_data:
+    name: autotreegen_minio_data

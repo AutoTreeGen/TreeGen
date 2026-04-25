@@ -1,0 +1,137 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "22"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Python: lint + tests
+  # ---------------------------------------------------------------------------
+  python:
+    name: Python lint & test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: autotreegen
+          POSTGRES_USER: autotreegen
+          POSTGRES_PASSWORD: ci-test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U autotreegen -d autotreegen"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Ruff (lint)
+        run: uv run ruff check .
+
+      - name: Ruff (format check)
+        run: uv run ruff format --check .
+
+      - name: Black (format check)
+        run: uv run black --check .
+
+      - name: Mypy
+        run: uv run mypy .
+        continue-on-error: true   # пока onboarding, потом — снять
+
+      - name: Pytest
+        env:
+          DATABASE_URL: postgresql+asyncpg://autotreegen:ci-test@localhost:5432/autotreegen
+          REDIS_URL: redis://localhost:6379/0
+        run: uv run pytest --cov --cov-report=xml -m "not gedcom_real"
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-python
+          path: coverage.xml
+
+  # ---------------------------------------------------------------------------
+  # Frontend: lint + typecheck + tests
+  # ---------------------------------------------------------------------------
+  frontend:
+    name: Frontend lint & test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        continue-on-error: true   # на ранних фазах apps/web ещё пустой
+
+      - name: Biome (lint + format check)
+        run: pnpm lint
+        continue-on-error: true
+
+      - name: Typecheck
+        run: pnpm typecheck
+        continue-on-error: true
+
+  # ---------------------------------------------------------------------------
+  # Pre-commit (быстрая cross-проверка всех хуков на изменённых файлах)
+  # ---------------------------------------------------------------------------
+  pre-commit:
+    name: pre-commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - uses: pre-commit/[email protected]

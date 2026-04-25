@@ -1,0 +1,6 @@
+# pnpm workspace — объявляет, какие папки являются JS/TS-проектами.
+# https://pnpm.io/pnpm-workspace_yaml
+
+packages:
+  - "apps/*"
+  - "packages-js/*"   # на будущее (если появятся переиспользуемые JS-пакеты)

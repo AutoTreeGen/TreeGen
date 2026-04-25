@@ -1,0 +1,202 @@
+# =============================================================================
+# AutoTreeGen — корневой pyproject.toml.
+# Используется как uv workspace: подпроекты подключаются через [tool.uv.sources].
+# https://docs.astral.sh/uv/concepts/workspaces/
+# =============================================================================
+
+[project]
+name = "autotreegen"
+version = "0.0.1"
+description = "AI-платформа для научной генеалогии (GEDCOM + DNA + архивы)."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+authors = [
+    { name = "Vladimir", email = "autotreegen@gmail.com" },
+]
+
+# Корневой проект — meta-package, реальные зависимости в подпакетах.
+dependencies = []
+
+[project.optional-dependencies]
+# Общие dev-инструменты для всего workspace.
+dev = [
+    "pre-commit>=3.8",
+    "ruff>=0.7",
+    "black>=24.10",
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "pytest-xdist>=3.6",
+    "hypothesis>=6.115",
+    "ipython>=8.29",
+]
+
+# -----------------------------------------------------------------------------
+# uv workspace
+# Подпроекты добавлять в [tool.uv.workspace.members] по мере появления.
+# -----------------------------------------------------------------------------
+[tool.uv.workspace]
+members = [
+    "packages/*",
+    "services/*",
+]
+exclude = [
+    "packages/gedcom-parser/samples",
+]
+
+[tool.uv]
+package = false
+dev-dependencies = [
+    "pre-commit>=3.8",
+    "ruff>=0.7",
+    "black>=24.10",
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "pytest-xdist>=3.6",
+    "hypothesis>=6.115",
+    "ipython>=8.29",
+]
+
+# -----------------------------------------------------------------------------
+# Ruff — линтер + форматтер (заменяет flake8/isort/pyupgrade).
+# -----------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = [
+    ".venv",
+    "build",
+    "dist",
+    "samples/personal",
+]
+
+[tool.ruff.lint]
+# Расширенный набор правил. Точечное отключение — в ignore.
+select = [
+    "E", "W",      # pycodestyle
+    "F",            # pyflakes
+    "I",            # isort
+    "N",            # pep8-naming
+    "UP",           # pyupgrade
+    "B",            # bugbear
+    "A",            # builtins shadowing
+    "C4",           # comprehensions
+    "DTZ",          # datetimez
+    "EM",           # error messages
+    "FA",           # future-annotations
+    "ISC",          # implicit-str-concat
+    "ICN",          # import-conventions
+    "PIE",          # misc
+    "PT",           # pytest-style
+    "RET",          # return
+    "SIM",          # simplify
+    "TID",          # tidy imports
+    "TCH",          # type-checking
+    "ARG",          # unused arguments
+    "PTH",          # use pathlib
+    "ERA",          # eradicate (commented-out code)
+    "PL",           # pylint
+    "RUF",          # ruff-specific
+]
+ignore = [
+    "E501",         # длина строки — контролируется форматтером
+    "PLR0913",      # too many arguments — разрешаем для парсеров
+    "PLR2004",      # magic values — частые в парсерах GEDCOM
+    "ISC001",       # конфликт с форматтером
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "PLR2004", "ARG"]
+"scripts/**" = ["T20"]   # print() в скриптах — ок
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# -----------------------------------------------------------------------------
+# Black — форматтер (используем вместе с ruff format для совместимости).
+# -----------------------------------------------------------------------------
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+extend-exclude = '''
+/(
+    \.venv
+  | build
+  | dist
+  | samples/personal
+)/
+'''
+
+# -----------------------------------------------------------------------------
+# Mypy — типы (strict для нового кода, постепенный onboarding).
+# -----------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+exclude = [
+    "samples/",
+    "build/",
+    "dist/",
+    ".venv/",
+]
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+# -----------------------------------------------------------------------------
+# Pytest
+# -----------------------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["packages", "services"]
+python_files = ["test_*.py", "*_test.py"]
+asyncio_mode = "auto"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+]
+markers = [
+    "slow: tests that are slow (deselect with -m 'not slow')",
+    "integration: tests requiring docker-compose services",
+    "gedcom_real: tests using real personal GED file (skipped in CI)",
+]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning:pkg_resources.*",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["packages", "services"]
+omit = [
+    "*/tests/*",
+    "*/samples/*",
+    "*/__main__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

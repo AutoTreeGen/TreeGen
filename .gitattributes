@@ -1,0 +1,23 @@
+# Нормализация концов строк (особенно важно на Windows + WSL2).
+* text=auto eol=lf
+
+# Бинарники
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.tar binary
+*.woff binary
+*.woff2 binary
+
+# GEDCOM — текст, но потенциально с разными кодировками
+*.ged text working-tree-encoding=UTF-8 eol=lf
+
+# Скрипты Windows — CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
