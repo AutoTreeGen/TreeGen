@@ -84,6 +84,26 @@ def parse_gedcom_date(value: str) -> ParsedDate:
 
 ---
 
+## 4a. Карта репозитория
+
+Точные детали — `docs/architecture.md`. Минимум для ориентирования:
+
+| Путь | Что внутри |
+|---|---|
+| `packages/*` | Переиспользуемые Python-библиотеки (uv workspace member). Текущие: `gedcom-parser`, `dna-analysis`, `entity-resolution`, `inference-engine`, `shared-models`. |
+| `services/*` | FastAPI-сервисы (uv workspace member): `api-gateway`, `parser-service`, `dna-service`, `archive-service`, `inference-service`, `notification-service`. |
+| `apps/web/` | Next.js фронтенд (pnpm workspace member). |
+| `infrastructure/alembic/` | Миграции БД. |
+| `infrastructure/postgres/init/` | Init-скрипты Postgres (монтируются в `docker-entrypoint-initdb.d`). |
+| `infrastructure/terraform/`, `infrastructure/k8s/` | Прод-инфра (GCP). |
+| `docs/` | `architecture.md`, `data-model.md`, `gedcom-extensions.md`, `adr/`. |
+| `scripts/` | Вспомогательные скрипты (CLI, миграционные утилиты). |
+| `Ztree.ged` | Личный GED-файл владельца, используется как fixture для `-m gedcom_real`. **В `.gitignore`.** |
+
+`pnpm-workspace.yaml` объявляет `apps/*` и `packages-js/*` (последний — на будущее, пока не существует).
+
+---
+
 ## 5. Запреты
 
 - ❌ **Прямые коммиты в `main`.** Только через PR + ревью.
@@ -107,6 +127,10 @@ def parse_gedcom_date(value: str) -> ParsedDate:
 | p95 API latency | < 300 мс (для эндпоинтов без LLM) |
 | Размер PR | < 500 строк диффа желательно |
 
+> **Mypy в pre-commit** запускается только на `^(packages|services)/.+\.py$`,
+> исключая `tests/` и `samples/` — strict-онбординг постепенный, новый код
+> в этих путях должен проходить strict сразу.
+
 ---
 
 ## 7. Команды (локально)
@@ -118,18 +142,38 @@ docker compose down                  # остановить
 docker compose down -v               # полный сброс с volumes
 
 # Python (uv workspace)
-uv sync                              # установить все зависимости
-uv run pytest                        # все тесты
-uv run pytest packages/gedcom-parser # тесты конкретного пакета
-uv run ruff check .                  # линт
-uv run ruff format .                 # форматирование
-uv run mypy .                        # типы
+uv sync                                    # установить все зависимости
+uv run pytest                              # все тесты
+uv run pytest -m "not slow and not integration"   # быстрый цикл
+uv run pytest -m gedcom_real               # тесты на личном GED (skipped в CI)
+uv run pytest path/to/test.py::test_name   # один конкретный тест
+uv run --package gedcom-parser pytest      # тесты пакета изнутри workspace
+uv add --package gedcom-parser <dep>       # добавить зависимость в подпакет
+uv run ruff check .                        # линт
+uv run ruff format .                       # форматирование
+uv run mypy .                              # типы
 
-# Frontend (pnpm)
+# Pytest-маркеры (определены в pyproject.toml):
+#   slow         — медленные тесты
+#   integration  — требуют docker-compose сервисов
+#   gedcom_real  — используют реальные GED-файлы (skipped в CI)
+
+# Корпус реальных GED-файлов от разных платформ (Ancestry, MyHeritage, Geni,
+# UTF-16, ANSEL, разные размеры до 150 МБ). Путь конфигурируется через env var:
+#   GEDCOM_TEST_CORPUS=D:/Projects/GED  (default — этот же)
+# Если папки нет — параметризованный smoke автоматически skip-ается.
+GEDCOM_TEST_CORPUS=D:/Projects/GED uv run pytest packages/gedcom-parser -m gedcom_real
+
+# Frontend / monorepo-алиасы из корневого package.json
 pnpm install                         # установить все зависимости
-pnpm -F web dev                      # dev-сервер Next.js
-pnpm -F web build                    # production-сборка
-pnpm -F web lint                     # biome
+pnpm dev                             # = pnpm -F web dev
+pnpm build                           # сборка всех workspaces
+pnpm lint                            # biome check . (весь репо)
+pnpm lint:fix                        # biome check --write .
+pnpm format                          # biome format --write .
+pnpm typecheck                       # tsc -r во всех workspaces
+pnpm test                            # тесты всех workspaces
+pnpm -F web dev                      # точечно: только Next.js
 
 # Pre-commit
 uv run pre-commit run --all-files    # прогнать все хуки
@@ -155,7 +199,9 @@ uv run alembic upgrade head
    - `uv run pytest` — passing.
    - Ручная проверка ключевых сценариев.
 7. **Если архитектурное решение** — ADR в `docs/adr/`.
-8. **PR** с описанием: что, зачем, как тестировалось, что осталось.
+8. **PR** по шаблону `.github/pull_request_template.md` (что, зачем, как тестировалось, что осталось).
+   CI-пайплайны живут в `.github/workflows/` — перед открытием PR убедиться, что
+   они проходят локально (pre-commit + pytest).
 
 ---
 
@@ -200,7 +246,8 @@ Breaking changes: `feat!:` или `BREAKING CHANGE:` в теле.
 - Канонический формат вход/выход — **GEDCOM 5.5.5** (см. https://gedcom.io).
 - Обратная совместимость с 5.5.1 и проприетарными расширениями (Ancestry, MyHeritage, Geni).
 - Round-trip без потерь: ввод → БД → вывод. Если потери — явный лог.
-- Личный test fixture: `D:\Projects\TreeGen\Ztree.ged` (НЕ коммитить).
+- Личный test fixture: `./Ztree.ged` (в корне репо, в `.gitignore`, **не коммитить**).
+  Доступен в тестах с маркером `gedcom_real` (skipped в CI).
 
 См. `docs/gedcom-extensions.md` для проприетарных тегов.
 
@@ -208,7 +255,8 @@ Breaking changes: `feat!:` или `BREAKING CHANGE:` в теле.
 
 ## 12. Subagents (`.claude/agents/`)
 
-Специализированные субагенты для разных доменов:
+Папка `.claude/agents/` создаётся по мере появления специализированных субагентов —
+сейчас её ещё нет. Запланированные роли (создавать по мере необходимости):
 
 | Агент | Когда использовать |
 |---|---|
@@ -219,5 +267,3 @@ Breaking changes: `feat!:` или `BREAKING CHANGE:` в теле.
 | `code-reviewer` | Общий ревью |
 | `test-writer` | Генерация pytest-фикстур и тестов |
 | `historian` | Нормализация мест, исторические границы |
-
-(Создаются по мере необходимости.)
