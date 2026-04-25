@@ -38,12 +38,10 @@ dev = [
 # Подпроекты добавлять в [tool.uv.workspace.members] по мере появления.
 # -----------------------------------------------------------------------------
 [tool.uv.workspace]
+# Перечисляем явно, потому что часть подпапок ещё пустые (.gitkeep) и не
+# содержат pyproject.toml. По мере появления реальных пакетов — добавляем сюда.
 members = [
-    "packages/*",
-    "services/*",
-]
-exclude = [
-    "packages/gedcom-parser/samples",
+    "packages/gedcom-parser",
 ]
 
 [tool.uv]
@@ -178,6 +176,10 @@ markers = [
 filterwarnings = [
     "error",
     "ignore::DeprecationWarning:pkg_resources.*",
+    # Warning'и парсера на грязные реальные GEDCOM-файлы (ANSEL fallback,
+    # неявные CONT в lenient-режиме и т.п.) не должны валить тесты —
+    # они отражают ожидаемое поведение, а не баги.
+    "ignore::gedcom_parser.exceptions.GedcomWarning",
 ]
 
 [tool.coverage.run]

@@ -1,0 +1,9 @@
+0 HEAD
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME John /Smith/
+1 NOTE This is the first physical line of a long note
+2 CONT and this continues on a new line via CONT
+2 CONC and this is appended without a newline via CONC
+2 CONT and another CONT line at the end
+0 TRLR

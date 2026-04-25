@@ -1,0 +1,47 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.5
+2 FORM LINEAGE-LINKED
+3 VERS 5.5.5
+1 CHAR UTF-8
+1 SOUR AUTOTREEGEN
+2 VERS 0.1.0
+2 NAME AutoTreeGen Test Suite
+1 SUBM @U1@
+1 DATE 25 APR 2026
+0 @U1@ SUBM
+1 NAME Test User
+0 @I1@ INDI
+1 NAME John /Smith/
+2 GIVN John
+2 SURN Smith
+1 SEX M
+1 BIRT
+2 DATE 1 JAN 1850
+2 PLAC Slonim, Russian Empire
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Mary /Jones/
+2 GIVN Mary
+2 SURN Jones
+1 SEX F
+1 BIRT
+2 DATE 1850
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Alex /Smith/
+2 GIVN Alex
+2 SURN Smith
+1 SEX M
+1 BIRT
+2 DATE 5 MAR 1875
+2 PLAC Vilna, Russian Empire
+1 FAMC @F1@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+1 MARR
+2 DATE 1872
+2 PLAC Slonim, Russian Empire
+0 TRLR
