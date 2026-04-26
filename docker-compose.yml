@@ -25,7 +25,10 @@ services:
       # Локализация для корректной сортировки кириллицы/иврита.
       LANG: C.UTF-8
     ports:
-      - "5432:5432"
+      # На хосте мапим на 5433 (5432 часто занят нативно установленным Postgres
+      # на dev-машинах разработчика — конфликт ловится через ALTER USER, который
+      # уходит «не туда»). Внутри контейнера Postgres всегда на 5432.
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infrastructure/postgres/init:/docker-entrypoint-initdb.d:ro
