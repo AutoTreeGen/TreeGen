@@ -136,6 +136,17 @@ ignore = [
     # которые не являются закомментированным кодом. Точечный noqa дороже,
     # чем глобальное ignore — мы не пишем dead code в коммитах.
     "ERA001",
+    # ----- TCH001/TCH003 (move imports to TYPE_CHECKING block) -----
+    # Микро-оптимизация: ruff хочет чтобы импорты, используемые только в
+    # type hints, прятались под if TYPE_CHECKING. Но:
+    #   * cli.py с typer использует Path в RUNTIME (typer.Argument проверяет
+    #     existence через Path.exists()). Перемещение под TYPE_CHECKING сломает.
+    #   * conftest и тесты используют Path в RUNTIME для fixtures.
+    #   * Pydantic-модели тоже резолвят аннотации в RUNTIME.
+    # Глобальный ignore чище, чем 13 точечных noqa. Когда команда вырастет —
+    # переоценим (или включим точечно для лёгкого выигрыша по холодному импорту).
+    "TCH001",
+    "TCH003",
 ]
 
 [tool.ruff.lint.per-file-ignores]
