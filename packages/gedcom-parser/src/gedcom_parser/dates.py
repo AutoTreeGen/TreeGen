@@ -898,4 +898,5 @@ __all__ = [
     "ParsedDate",
     "Qualifier",
     "julian_to_gregorian",
-    "parse_gedcom_
+    "parse_gedcom_date",
+]
