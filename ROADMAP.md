@@ -54,7 +54,7 @@
 
 ## 2. Структура монорепозитория
 
-```
+```text
 autotreegen/
 ├── README.md
 ├── ROADMAP.md                          ← этот документ
@@ -172,7 +172,7 @@ autotreegen/
 
 ### 5.3 Промпт для Claude Code (пример)
 
-```
+```text
 Реализуй пакет packages/gedcom-parser. Используй спецификацию GEDCOM 5.5.5
 (https://gedcom.io). Начни с lexer для line-based формата с поддержкой
 CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1251. Все публичные API
@@ -682,7 +682,7 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 
 ## Приложение А — шаблон промпта для Claude Code в начале каждой фазы
 
-```
+```text
 Контекст: я работаю над фазой N проекта AutoTreeGen. См. ROADMAP.md, секцию N.
 Прочитай: CLAUDE.md, docs/data-model.md, docs/architecture.md, ROADMAP.md.
 

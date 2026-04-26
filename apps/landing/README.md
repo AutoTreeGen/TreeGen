@@ -26,7 +26,7 @@ pnpm -F @autotreegen/landing build # static export → apps/landing/out/
 
 ## Project structure
 
-```
+```text
 apps/landing/
 ├── src/
 │   ├── app/
@@ -55,7 +55,7 @@ apps/landing/
 
 The Pages Function lives at the **monorepo root** (Cloudflare convention):
 
-```
+```text
 functions/
 └── api/
     └── waitlist.ts   # POST /api/waitlist → KV + optional Resend notify

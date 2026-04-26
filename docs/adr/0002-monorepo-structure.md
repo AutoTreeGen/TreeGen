@@ -38,7 +38,7 @@
 
 Принят **Вариант A — Monorepo** со следующей структурой:
 
-```
+```text
 autotreegen/
 ├── packages/         # переиспользуемые Python-пакеты (uv workspace)
 ├── services/         # FastAPI-сервисы (uv workspace)
@@ -86,4 +86,4 @@ CI: один GitHub Actions workflow с параллельными jobs (Python 
 
 - `ROADMAP.md` §2 — описание структуры.
 - [uv workspaces](https://docs.astral.sh/uv/concepts/workspaces/)
-- [pnpm workspaces](https://pnpm.io/workspaces)
+- [pnpm workspaces](https://pnpm.io/workspac

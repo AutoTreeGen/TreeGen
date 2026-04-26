@@ -822,7 +822,8 @@ def parse_gedcom_date(value: str) -> ParsedDate:
         )
 
     # Приблизительные: ABT / CAL / EST.
-    for q in ("ABT", "CAL", "EST"):
+    approx_qualifiers: tuple[Literal["ABT", "CAL", "EST"], ...] = ("ABT", "CAL", "EST")
+    for q in approx_qualifiers:
         if body_upper.startswith(f"{q} "):
             rest = body[len(q) + 1 :].strip()
             lower, upper_dt = _parse_single_date(rest, calendar)
@@ -897,5 +898,4 @@ __all__ = [
     "ParsedDate",
     "Qualifier",
     "julian_to_gregorian",
-    "parse_gedcom_date",
-]
+    "parse_gedcom_

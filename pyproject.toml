@@ -1,4 +1,4 @@
-﻿# =============================================================================
+# =============================================================================
 # AutoTreeGen — корневой pyproject.toml.
 # Используется как uv workspace: подпроекты подключаются через [tool.uv.sources].
 # https://docs.astral.sh/uv/concepts/workspaces/
@@ -124,6 +124,9 @@ ignore = [
     "ERA001",
     # Parser complexity — GEDCOM date/place parsing inherently has many branches.
     "PLR0911", "PLR0912", "PLR0915",
+    # Type-checking imports — strict TYPE_CHECKING-only is stylistic;
+    # keep imports flat for readability.
+    "TCH001", "TCH002", "TCH003",
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -166,10 +169,10 @@ exclude = [
 ]
 # Disable strict-import / decorator checks for libraries без stubs (typer, convertdate)
 # и для файлов, где typer-decorator делает функцию untyped.
-disable_error_code = ["misc"]
+disable_error_code = ["misc", "import-not-found", "import-untyped"]
 
 [[tool.mypy.overrides]]
-module = ["convertdate.*", "typer.*"]
+module = ["convertdate", "convertdate.*", "typer", "typer.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

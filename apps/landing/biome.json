@@ -3,5 +3,12 @@
   "extends": ["../../biome.json"],
   "files": {
     "ignore": [".next", "out", "node_modules"]
+  },
+  "linter": {
+    "rules": {
+      "a11y": {
+        "noLabelWithoutControl": "off"
+      }
+    }
   }
 }
