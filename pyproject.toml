@@ -62,8 +62,8 @@ dev = [
     # Phase 2: миграции и тесты ORM
     "alembic>=1.14",
     "asyncpg>=0.30",
-    "psycopg[binary    "python-dotenv>=1.0",     # авто-загрузка .env (Phase 2 alembic)
-]>=3.2",   # sync-драйвер для alembic offline-режима
+    "psycopg[binary]>=3.2",   # sync-драйвер для alembic offline-режима
+    "python-dotenv>=1.0",     # авто-загрузка .env (Phase 2 alembic)
     "testcontainers[postgres]>=4.8",
 ]
 
