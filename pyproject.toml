@@ -198,6 +198,32 @@ disallow_untyped_defs = false
 module = ["typer", "typer.*", "convertdate", "convertdate.*"]
 ignore_missing_imports = true
 
+# SQLAlchemy 2 имеет свои stubs (sqlalchemy[mypy] plugin), но они тяжёлые
+# и periodically lag за версиями; pgvector, asyncpg, alembic — тоже без
+# полных stubs в pre-commit isolated env. Глобально игнорируем missing imports
+# для этих пакетов; реальная проверка типов запросов остаётся за runtime-тестами.
+[[tool.mypy.overrides]]
+module = [
+    "sqlalchemy",
+    "sqlalchemy.*",
+    "asyncpg",
+    "asyncpg.*",
+    "pgvector",
+    "pgvector.*",
+    "alembic",
+    "alembic.*",
+]
+ignore_missing_imports = true
+
+# shared_models наследует от sqlalchemy.AsyncAttrs/DeclarativeBase, которые
+# из-за ignore_missing_imports видны mypy как Any. Strict-mode с
+# disallow_subclassing_any блокирует это. Также SQLAlchemy event decorators
+# (event.listens_for, listen) untyped — глобально разрешаем для shared_models.
+[[tool.mypy.overrides]]
+module = ["shared_models.*"]
+disallow_subclassing_any = false
+disallow_untyped_decorators = false
+
 # CLI пакета gedcom-parser использует typer-pattern с decorated commands;
 # из-за отсутствия typer-stubs decorator считается untyped и mypy падает.
 # Локальное ослабление до тех пор, пока не появятся официальные stubs.
