@@ -86,4 +86,4 @@ CI: один GitHub Actions workflow с параллельными jobs (Python 
 
 - `ROADMAP.md` §2 — описание структуры.
 - [uv workspaces](https://docs.astral.sh/uv/concepts/workspaces/)
-- [pnpm workspaces](https://pnpm.io/workspac
+- [pnpm workspaces](<https://pnpm.io/workspac>
