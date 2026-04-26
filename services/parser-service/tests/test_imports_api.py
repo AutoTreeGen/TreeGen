@@ -5,8 +5,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 pytestmark = [pytest.mark.db, pytest.mark.integration]
@@ -33,7 +31,7 @@ _MINIMAL_GED = b"""\
 
 
 @pytest.mark.asyncio
-async def test_post_import_creates_job_and_persons(app_client) -> None:  # noqa: ANN001
+async def test_post_import_creates_job_and_persons(app_client) -> None:
     """Загрузка минимального .ged → 201 + status=succeeded + 2 persons."""
     files = {"file": ("test.ged", _MINIMAL_GED, "application/octet-stream")}
     response = await app_client.post("/imports", files=files)
@@ -49,7 +47,7 @@ async def test_post_import_creates_job_and_persons(app_client) -> None:  # noqa:
 
 
 @pytest.mark.asyncio
-async def test_post_import_rejects_non_gedcom_file(app_client) -> None:  # noqa: ANN001
+async def test_post_import_rejects_non_gedcom_file(app_client) -> None:
     """Файл с расширением не .ged/.gedcom → 400."""
     files = {"file": ("test.txt", b"not a gedcom", "text/plain")}
     response = await app_client.post("/imports", files=files)
@@ -57,7 +55,7 @@ async def test_post_import_rejects_non_gedcom_file(app_client) -> None:  # noqa:
 
 
 @pytest.mark.asyncio
-async def test_get_import_returns_existing_job(app_client) -> None:  # noqa: ANN001
+async def test_get_import_returns_existing_job(app_client) -> None:
     """Создаём job, потом достаём его по id."""
     files = {"file": ("test.ged", _MINIMAL_GED, "application/octet-stream")}
     created = await app_client.post("/imports", files=files)
@@ -69,7 +67,7 @@ async def test_get_import_returns_existing_job(app_client) -> None:  # noqa: ANN
 
 
 @pytest.mark.asyncio
-async def test_get_import_returns_404_for_unknown_job(app_client) -> None:  # noqa: ANN001
+async def test_get_import_returns_404_for_unknown_job(app_client) -> None:
     """Несуществующий UUID → 404."""
     response = await app_client.get("/imports/00000000-0000-0000-0000-000000000000")
     assert response.status_code == 404

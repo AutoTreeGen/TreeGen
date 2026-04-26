@@ -6,14 +6,12 @@
 
 from __future__ import annotations
 
-import datetime as dt
 import tempfile
 import uuid
 from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
-from shared_models.enums import ImportJobStatus
 from shared_models.orm import ImportJob
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -69,7 +67,7 @@ async def create_import(
             owner_email=settings.owner_email,
             tree_name=Path(file.filename).stem,
         )
-    except Exception as e:  # noqa: BLE001 — конвертим любую ошибку в 500
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Import failed: {e}",

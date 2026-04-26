@@ -58,7 +58,7 @@ class TestDetectPatronymic:
 
     def test_short_word_not_misidentified(self) -> None:
         # "Ович" слишком короткое (стебель < 2 символов), не должно матчить.
-        new_given, patro = detect_patronymic("Ович")
+        _new_given, patro = detect_patronymic("Ович")
         assert patro is None
 
     def test_case_insensitive(self) -> None:

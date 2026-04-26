@@ -141,6 +141,15 @@ ignore = [
 # (см. alembic.ini::file_template) → имена не валидны как Python module names,
 # но alembic их не импортирует обычным образом (exec через context). N999 false positive.
 "infrastructure/alembic/versions/**" = ["N999"]
+# Lazy imports намеренны:
+# - тесты: heavy fixtures (testcontainers, alembic.command) грузим только когда
+#   фикстура реально используется, чтобы collect-only не тянул зависимости;
+# - scripts: те же alembic/CLI-импорты внутри функций для быстрого --help;
+# - import_runner: gedcom-parser и shared_models.types — лениво, чтобы импорт
+#   parser_service.services.* не имел side-effect от тяжёлых модулей.
+"**/tests/**" = ["PLC0415"]
+"**/scripts/**" = ["PLC0415"]
+"**/services/import_runner.py" = ["PLC0415"]
 
 [tool.ruff.format]
 quote-style = "double"

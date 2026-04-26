@@ -17,7 +17,7 @@ from parser_service.database import dispose_engine, init_engine
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     """Инициализировать engine при старте, закрыть при shutdown."""
     settings = get_settings()
     init_engine(settings.database_url)

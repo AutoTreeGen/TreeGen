@@ -58,12 +58,12 @@ def _sha256(path: Path) -> str:
 def _map_sex(value: str | None) -> str:
     """GEDCOM SEX → enum Sex."""
     if value == "M":
-        return Sex.MALE.value
+        return str(Sex.MALE.value)
     if value == "F":
-        return Sex.FEMALE.value
+        return str(Sex.FEMALE.value)
     if value == "X":
-        return Sex.OTHER.value
-    return Sex.UNKNOWN.value
+        return str(Sex.OTHER.value)
+    return str(Sex.UNKNOWN.value)
 
 
 def _chunk(seq: list[dict[str, Any]], size: int) -> list[list[dict[str, Any]]]:
@@ -88,7 +88,7 @@ async def _ensure_owner(session: AsyncSession, email: str) -> User:
     user = User(
         email=email,
         external_auth_id=f"local:{email}",
-        display_name=email.split("@")[0],
+        display_name=email.split("@", maxsplit=1)[0],
         locale="en",
     )
     session.add(user)
@@ -202,7 +202,9 @@ async def run_import(
                         "given_name": name.given,
                         "surname": name.surname,
                         "sort_order": sort_order,
-                        "name_type": NameType.BIRTH.value if sort_order == 0 else NameType.AKA.value,
+                        "name_type": (
+                            NameType.BIRTH.value if sort_order == 0 else NameType.AKA.value
+                        ),
                         "created_at": now,
                         "updated_at": now,
                     }
