@@ -64,6 +64,7 @@ dev = [
     "asyncpg>=0.30",
     "psycopg[binary]>=3.2",   # sync-драйвер для alembic offline-режима
     "testcontainers[postgres]>=4.8",
+    "python-dotenv>=1.0",     # авто-загрузка .env в env.py и скриптах Phase 2
 ]
 
 # -----------------------------------------------------------------------------
@@ -146,6 +147,7 @@ ignore = [
     # Глобальный ignore чище, чем 13 точечных noqa. Когда команда вырастет —
     # переоценим (или включим точечно для лёгкого выигрыша по холодному импорту).
     "TCH001",
+    "TCH002",       # third-party imports — same Pydantic-runtime resolve story
     "TCH003",
 ]
 
