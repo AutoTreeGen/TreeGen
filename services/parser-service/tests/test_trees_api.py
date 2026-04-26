@@ -30,7 +30,7 @@ _MINIMAL_GED = b"""\
 
 
 @pytest.mark.asyncio
-async def test_list_persons_returns_imported(app_client) -> None:  # noqa: ANN001
+async def test_list_persons_returns_imported(app_client) -> None:
     """После импорта: ``GET /trees/{id}/persons`` возвращает 2 персон."""
     files = {"file": ("test.ged", _MINIMAL_GED, "application/octet-stream")}
     created = await app_client.post("/imports", files=files)
@@ -45,7 +45,7 @@ async def test_list_persons_returns_imported(app_client) -> None:  # noqa: ANN00
 
 
 @pytest.mark.asyncio
-async def test_get_person_detail(app_client) -> None:  # noqa: ANN001
+async def test_get_person_detail(app_client) -> None:
     """``GET /persons/{id}`` возвращает имя и хотя бы одно событие BIRT."""
     files = {"file": ("test.ged", _MINIMAL_GED, "application/octet-stream")}
     created = await app_client.post("/imports", files=files)
@@ -64,7 +64,7 @@ async def test_get_person_detail(app_client) -> None:  # noqa: ANN001
 
 
 @pytest.mark.asyncio
-async def test_get_person_returns_404_for_unknown(app_client) -> None:  # noqa: ANN001
+async def test_get_person_returns_404_for_unknown(app_client) -> None:
     """Несуществующий UUID → 404."""
     response = await app_client.get("/persons/00000000-0000-0000-0000-000000000000")
     assert response.status_code == 404

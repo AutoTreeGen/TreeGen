@@ -67,7 +67,6 @@ async def app_client(postgres_dsn: str) -> AsyncIterator:
     os.environ["PARSER_SERVICE_DATABASE_URL"] = postgres_dsn
     # Force re-init lifespan
     from httpx import ASGITransport, AsyncClient
-
     from parser_service.database import dispose_engine, init_engine
     from parser_service.main import app
 
