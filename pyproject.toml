@@ -1,4 +1,4 @@
-# =============================================================================
+﻿# =============================================================================
 # AutoTreeGen — корневой pyproject.toml.
 # Используется как uv workspace: подпроекты подключаются через [tool.uv.sources].
 # https://docs.astral.sh/uv/concepts/workspaces/
@@ -71,7 +71,7 @@ dev = [
 # -----------------------------------------------------------------------------
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py313"
 extend-exclude = [
     ".venv",
     "build",
@@ -112,11 +112,25 @@ ignore = [
     "PLR0913",      # too many arguments — разрешаем для парсеров
     "PLR2004",      # magic values — частые в парсерах GEDCOM
     "ISC001",       # конфликт с форматтером
+    # Bilingual project (English code, Russian docstrings/comments).
+    # ruff "ambiguous unicode" rules treat Cyrillic letters as suspicious;
+    # not applicable when the comment is intentionally written in Russian.
+    "RUF001",       # ambiguous chars in strings
+    "RUF002",       # ambiguous chars in docstrings
+    "RUF003",       # ambiguous chars in comments
+    # Typer / FastAPI common pattern: callable defaults via Argument()/Option().
+    "B008",
+    # Commented-out code: используем как inline-док в parser-коде.
+    "ERA001",
+    # Parser complexity — GEDCOM date/place parsing inherently has many branches.
+    "PLR0911", "PLR0912", "PLR0915",
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "PLR2004", "ARG"]
+"tests/**" = ["S101", "PLR2004", "ARG", "TCH001", "TCH003"]
 "scripts/**" = ["T20"]   # print() в скриптах — ок
+# CLI typer-decorators: имитируют typed-DSL, mypy ругается на untyped decorator.
+"**/cli.py" = ["TCH001", "TCH003"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -141,7 +155,7 @@ extend-exclude = '''
 # Mypy — типы (strict для нового кода, постепенный onboarding).
 # -----------------------------------------------------------------------------
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 strict = true
 plugins = ["pydantic.mypy"]
 exclude = [
@@ -150,6 +164,13 @@ exclude = [
     "dist/",
     ".venv/",
 ]
+# Disable strict-import / decorator checks for libraries без stubs (typer, convertdate)
+# и для файлов, где typer-decorator делает функцию untyped.
+disable_error_code = ["misc"]
+
+[[tool.mypy.overrides]]
+module = ["convertdate.*", "typer.*"]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["tests.*"]
