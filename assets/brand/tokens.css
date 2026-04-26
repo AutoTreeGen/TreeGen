@@ -1,0 +1,112 @@
+/* ─────────────────────────────────────────────────────────────────────
+ * AutoTreeGen Brand Tokens — v1.0
+ *
+ * Источник истины: docs/brand/AutoTreeGen-BrandGuidelines-v1.0.pdf
+ * Машинно-читаемая выжимка: docs/brand/README.md
+ *
+ * Этот файл — Tailwind 4 @theme-блок + чистые CSS-переменные.
+ * Импортируется фронтовыми приложениями (apps/landing, apps/web)
+ * через `@import "../../../assets/brand/tokens.css";` после `@import "tailwindcss";`.
+ *
+ * НЕ редактировать без bump версии в docs/brand/README.md и git-тега brand-vX.Y.
+ * ───────────────────────────────────────────────────────────────────── */
+
+@theme {
+  /* Primary palette */
+  --color-brand-deep-purple: #2c1054; /* фон, медальон */
+  --color-brand-royal-purple: #4b2d8c; /* текст логотипа, заголовки */
+  --color-brand-blue: #2e5da5; /* акцент, конец градиента */
+
+  /* Secondary palette */
+  --color-brand-lilac: #b070c0; /* иконки, теги, акценты */
+  --color-brand-light-lilac: #e8d5f0; /* фоны, плашки, разделители */
+
+  /* Neutrals */
+  --color-brand-ink: #1a1024; /* базовый текст */
+  --color-brand-snow: #ffffff; /* фон, инверсия */
+
+  /* Brand gradient stops (Royal Purple → Brand Blue) — для wordmark/hero */
+  --gradient-brand-stop-from: var(--color-brand-royal-purple);
+  --gradient-brand-stop-to: var(--color-brand-blue);
+
+  /* Typography — brand stack.
+   * `--font-montserrat` опционально предоставляется через next/font/google
+   * (см. layout.tsx). Если переменная не задана — используется строковое
+   * имя "Montserrat" (для случаев, когда шрифт грузится через CSS @import). */
+  --font-brand: var(--font-montserrat, "Montserrat"), "Inter", ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", sans-serif;
+
+  /* Type scale (по гайдлайну p.4) — pt → rem конвертированы при базе 16pt = 1rem */
+  --font-size-brand-display-min: 2rem; /* 32pt */
+  --font-size-brand-display-max: 3rem; /* 48pt */
+  --font-size-brand-h2-min: 0.875rem; /* 14pt */
+  --font-size-brand-h2-max: 1.125rem; /* 18pt */
+  --font-size-brand-h3-min: 0.6875rem; /* 11pt */
+  --font-size-brand-h3-max: 0.8125rem; /* 13pt */
+  --font-size-brand-caption-min: 0.4375rem; /* 7pt — для micro-labels */
+  --font-size-brand-caption-max: 0.5rem; /* 8pt */
+
+  --font-weight-brand-display: 800;
+  --font-weight-brand-h2: 700;
+  --font-weight-brand-h3: 600;
+  --font-weight-brand-body: 400;
+  --font-weight-brand-caption: 700;
+
+  --letter-spacing-brand-display: -0.01em; /* tracking −1% */
+  --letter-spacing-brand-caption: 0.15em; /* tracking +15% */
+
+  --line-height-brand-body: 1.5;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+ * Plain CSS variables (для использования вне Tailwind-контекста)
+ * ───────────────────────────────────────────────────────────────────── */
+:root {
+  --brand-deep-purple: #2c1054;
+  --brand-royal-purple: #4b2d8c;
+  --brand-blue: #2e5da5;
+  --brand-lilac: #b070c0;
+  --brand-light-lilac: #e8d5f0;
+  --brand-ink: #1a1024;
+  --brand-snow: #ffffff;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+ * Tailwind utilities — brand-specific
+ * ───────────────────────────────────────────────────────────────────── */
+
+/* Wordmark gradient: Royal Purple → Brand Blue (по cover PDF) */
+@utility text-brand-wordmark {
+  background: linear-gradient(
+    90deg,
+    var(--color-brand-royal-purple) 0%,
+    var(--color-brand-royal-purple) 60%,
+    var(--color-brand-blue) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  display: inline-block;
+  padding-bottom: 0.08em;
+  line-height: 1.1;
+}
+
+/* Hero/medallion gradient: Deep Purple → Royal Purple → Brand Blue */
+@utility bg-brand-hero {
+  background: linear-gradient(
+    135deg,
+    var(--color-brand-deep-purple) 0%,
+    var(--color-brand-royal-purple) 55%,
+    var(--color-brand-blue) 100%
+  );
+}
+
+/* Caption — UPPERCASE метки ("UPDATED · APRIL 2026"-style) */
+@utility text-brand-caption {
+  font-family: var(--font-brand);
+  font-weight: var(--font-weight-brand-caption);
+  font-size: var(--font-size-brand-caption-max);
+  letter-spacing: var(--letter-spacing-brand-caption);
+  text-transform: uppercase;
+}

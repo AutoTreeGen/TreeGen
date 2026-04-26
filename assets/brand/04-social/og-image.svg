@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="AutoTreeGen — Open Graph preview">
+  <title>AutoTreeGen — From DNA to truth</title>
+  <defs>
+    <radialGradient id="og-bg" cx="30%" cy="20%" r="80%">
+      <stop offset="0%" stop-color="#4B2D8C"/>
+      <stop offset="60%" stop-color="#2C1054"/>
+      <stop offset="100%" stop-color="#150826"/>
+    </radialGradient>
+    <radialGradient id="og-medallion" cx="50%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#4B2D8C"/>
+      <stop offset="65%" stop-color="#2C1054"/>
+      <stop offset="100%" stop-color="#1A0A36"/>
+    </radialGradient>
+    <linearGradient id="og-helix-a" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E8D5F0" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#B070C0" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="og-helix-b" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#2E5DA5" stop-opacity="0.95"/>
+    </linearGradient>
+    <linearGradient id="og-canopy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#E8D5F0" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="og-word" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#E8D5F0"/>
+      <stop offset="55%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#B070C0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#og-bg)"/>
+
+  <g stroke="#B070C0" stroke-opacity="0.08" stroke-width="1">
+    <line x1="0" y1="105" x2="1200" y2="105"/>
+    <line x1="0" y1="525" x2="1200" y2="525"/>
+  </g>
+
+  <g transform="translate(820 95) scale(7.5)">
+    <circle cx="32" cy="32" r="30" fill="url(#og-medallion)"/>
+    <circle cx="32" cy="32" r="29.4" fill="none" stroke="#B070C0" stroke-opacity="0.45" stroke-width="0.6"/>
+    <g stroke="url(#og-canopy)" stroke-linecap="round" fill="none">
+      <path d="M32 30 V14" stroke-width="1.6"/>
+      <path d="M32 16 L26 12 M32 16 L38 12" stroke-width="1.2"/>
+      <path d="M32 19 L24 16.5 M32 19 L40 16.5" stroke-width="1.1"/>
+      <path d="M32 23 L23 22 M32 23 L41 22" stroke-width="1.0"/>
+      <path d="M32 27 L22 27.5 M32 27 L42 27.5" stroke-width="0.9"/>
+      <path d="M26 12 L25 9 M38 12 L39 9" stroke-width="0.9"/>
+      <path d="M24 16.5 L21.5 15 M40 16.5 L42.5 15" stroke-width="0.9"/>
+    </g>
+    <g fill="#FFFFFF">
+      <circle cx="25" cy="9" r="0.9"/><circle cx="39" cy="9" r="0.9"/>
+      <circle cx="32" cy="13.5" r="0.7"/>
+      <circle cx="21.5" cy="15" r="0.7"/><circle cx="42.5" cy="15" r="0.7"/>
+      <circle cx="22" cy="27.5" r="0.6"/><circle cx="42" cy="27.5" r="0.6"/>
+    </g>
+    <g fill="none" stroke-linecap="round">
+      <path d="M32 30 C 28 34 36 38 32 42 C 28 46 36 50 32 52" stroke="url(#og-helix-a)" stroke-width="1.5"/>
+      <path d="M32 30 C 36 34 28 38 32 42 C 36 46 28 50 32 52" stroke="url(#og-helix-b)" stroke-width="1.5"/>
+      <line x1="29.4" y1="34" x2="34.6" y2="34" stroke="#E8D5F0" stroke-opacity="0.8" stroke-width="0.8"/>
+      <line x1="29.4" y1="42" x2="34.6" y2="42" stroke="#E8D5F0" stroke-opacity="0.8" stroke-width="0.8"/>
+      <line x1="29.4" y1="50" x2="34.6" y2="50" stroke="#E8D5F0" stroke-opacity="0.8" stroke-width="0.8"/>
+    </g>
+    <ellipse cx="32" cy="54" rx="6" ry="1.2" fill="#B070C0" fill-opacity="0.4"/>
+  </g>
+
+  <text x="100" y="200" font-family="Montserrat, Inter, sans-serif" font-weight="700" font-size="18" letter-spacing="2.7" fill="#B070C0">SCIENTIFIC GENEALOGY · v1.0</text>
+  <text x="100" y="320" font-family="Montserrat, Inter, sans-serif" font-weight="800" font-size="96" letter-spacing="-1.5" fill="url(#og-word)">AutoTreeGen</text>
+  <text x="100" y="380" font-family="Montserrat, Inter, sans-serif" font-weight="600" font-size="36" fill="#E8D5F0">From DNA to truth.</text>
+  <text x="100" y="425" font-family="Montserrat, Inter, sans-serif" font-weight="600" font-size="36" fill="#E8D5F0" fill-opacity="0.7">Evidence-based family trees,</text>
+  <text x="100" y="465" font-family="Montserrat, Inter, sans-serif" font-weight="600" font-size="36" fill="#E8D5F0" fill-opacity="0.7">powered by AI.</text>
+</svg>
