@@ -303,6 +303,23 @@ def _days_in_gregorian_month(year: int, month: int) -> int:
 _DUAL_YEAR_RE: re.Pattern[str] = re.compile(r"^(\d{1,4})/(\d{1,2})$")
 _PLAIN_YEAR_RE: re.Pattern[str] = re.compile(r"^\d{1,4}$")
 
+# Реальные GEDCOM-файлы (особенно MyHeritage) содержат расширенные формы,
+# не предусмотренные спекой. Мы их распознаём, чтобы не плодить warnings.
+_FUZZY_DECADE_RE: re.Pattern[str] = re.compile(r"^(\d{1,4})(_+)$")
+"""Десятилетие/век с подчёркиваниями: ``198_`` → 1980..1989, ``18__`` → 1800..1899."""
+
+_YEAR_MONTH_DIGITS_RE: re.Pattern[str] = re.compile(r"^(\d{4})(\d{2})$")
+"""Год+месяц слитно: ``202002`` → февраль 2020 (если месяц 1..12)."""
+
+_MONTH_YEAR_SLASH_RE: re.Pattern[str] = re.compile(r"^(\d{1,2})/(\d{4})$")
+"""Месяц/год через слэш: ``10/1941`` → октябрь 1941."""
+
+_YEAR_RANGE_RE: re.Pattern[str] = re.compile(r"^(\d{1,4})\s*[-–—]\s*(\d{1,4})$")
+"""Год-диапазон через дефис/en-dash/em-dash: ``1985-2020``, ``1820 – 1830``."""
+
+_OR_RE: re.Pattern[str] = re.compile(r"^(\S+)\s+or\s+(\S+)$", re.IGNORECASE)
+"""Альтернатива: ``1870 or 1875`` → диапазон BET..AND."""
+
 
 def _parse_year_token(token: str) -> int:
     """Распарсить год из токена.
@@ -461,6 +478,68 @@ def _bracket_exact(
     return d, d
 
 
+def _parse_single_year_token(
+    token: str, calendar: Calendar
+) -> tuple[date | None, date | None] | None:
+    """Распознать одиночный год-токен в любой из расширенных форм.
+
+    Поддерживает (в порядке проверки):
+
+    1. Стандартный год: ``1850``, ``850``, ``1750/51``.
+    2. Фуззи десятилетие/век: ``198_`` → 1980..1989, ``18__`` → 1800..1899.
+    3. Год+месяц слитно: ``202002`` → февраль 2020 (только Gregorian/Julian
+       и при валидном месяце 1..12).
+    4. Месяц/год через слэш: ``10/1941`` → октябрь 1941 (только Gregorian/
+       Julian; не путать с дуальным годом ``1750/51``, у которого второй
+       компонент 1-2 цифры).
+
+    Возвращает bracketing ``(lower, upper)`` или ``None`` если токен ни
+    под одну форму не подошёл. Никогда не raises — это lenient-функция.
+    """
+    # 1. Обычный год (включая дуальный 1750/51).
+    try:
+        year = _parse_year_token(token)
+    except ValueError:
+        pass
+    else:
+        return _bracket_year(year, calendar)
+
+    # 2. Фуззи десятилетие: 198_ → [1980, 1989], 19__ → [1900, 1999].
+    fuzzy = _FUZZY_DECADE_RE.match(token)
+    if fuzzy is not None:
+        prefix = fuzzy.group(1)
+        n_underscores = len(fuzzy.group(2))
+        try:
+            base = int(prefix) * (10**n_underscores)
+        except ValueError:
+            pass
+        else:
+            year_hi = base + (10**n_underscores) - 1
+            lo, _ = _bracket_year(base, calendar)
+            _, hi = _bracket_year(year_hi, calendar)
+            return lo, hi
+
+    # 3. Год+месяц слитно: 202002. Только Greg/Jul — у Hebrew/French месяцы буквенные.
+    if calendar in ("gregorian", "julian"):
+        ym = _YEAR_MONTH_DIGITS_RE.match(token)
+        if ym is not None:
+            year = int(ym.group(1))
+            month = int(ym.group(2))
+            if 1 <= month <= 12:
+                return _bracket_month(year, month, calendar)
+
+    # 4. Месяц/год через слэш: 10/1941.
+    if calendar in ("gregorian", "julian"):
+        my = _MONTH_YEAR_SLASH_RE.match(token)
+        if my is not None:
+            month = int(my.group(1))
+            year = int(my.group(2))
+            if 1 <= month <= 12:
+                return _bracket_month(year, month, calendar)
+
+    return None
+
+
 def _parse_single_date(text: str, calendar: Calendar) -> tuple[date | None, date | None]:
     """Распарсить одну дату внутри уже определённого календаря.
 
@@ -470,6 +549,8 @@ def _parse_single_date(text: str, calendar: Calendar) -> tuple[date | None, date
     * ``MONTH YEAR``            → bracketing ``[1, last day]``
     * ``DAY MONTH YEAR``        → ``[d, d]``
     * любой из выше + ``BC``    → bracketing ``(None, None)``
+    * расширенные год-формы (``198_``, ``202002``, ``10/1941``) — через
+      :func:`_parse_single_year_token`.
 
     Raises:
         GedcomDateParseError: При нераспознаваемых компонентах.
@@ -489,13 +570,13 @@ def _parse_single_date(text: str, calendar: Calendar) -> tuple[date | None, date
             raise GedcomDateParseError(msg)
 
     if len(parts) == 1:
-        try:
-            year = _parse_year_token(parts[0])
-        except ValueError as e:
-            raise GedcomDateParseError(str(e)) from e
+        result = _parse_single_year_token(parts[0], calendar)
+        if result is None:
+            msg = f"Cannot parse year token {parts[0]!r}"
+            raise GedcomDateParseError(msg)
         if is_bc:
             return None, None
-        return _bracket_year(year, calendar)
+        return result
 
     if len(parts) == 2:
         month = _parse_month_token(parts[0], calendar)
@@ -651,6 +732,15 @@ def parse_gedcom_date(value: str) -> ParsedDate:
         msg = f"Date has only calendar escape, no value: {raw!r}"
         raise GedcomDateParseError(msg)
 
+    # Нормализация lenient-вариантов префиксов: 'Bet.', 'BETWEEN' → 'BET'.
+    # Реальные файлы (особенно MyHeritage) часто пишут полное слово или с точкой.
+    if body_upper.startswith("BET. "):
+        body = "BET " + body[5:]
+        body_upper = body.upper()
+    elif body_upper.startswith("BETWEEN "):
+        body = "BET " + body[8:]
+        body_upper = body.upper()
+
     # Period: FROM .. TO ..
     if body_upper.startswith("FROM "):
         rest = body[5:].strip()
@@ -689,6 +779,11 @@ def parse_gedcom_date(value: str) -> ParsedDate:
     if body_upper.startswith("BET "):
         rest = body[4:].strip()
         split_and = _split_keyword(rest, "AND")
+        if split_and is None:
+            # Lenient: 'Bet. 1820-1830' — дашевый разделитель вместо AND.
+            dash = _YEAR_RANGE_RE.match(rest)
+            if dash is not None:
+                split_and = (dash.group(1), dash.group(2))
         if split_and is None:
             msg = f"BET without AND: {raw!r}"
             raise GedcomDateParseError(msg)
@@ -738,6 +833,54 @@ def parse_gedcom_date(value: str) -> ParsedDate:
                 qualifier=q,
                 date_lower=lower,
                 date_upper=upper_dt,
+            )
+
+    # Lenient: '~YYYY' / '~189_' — тильда как маркер приблизительности (~ABT).
+    if body.startswith("~"):
+        rest = body[1:].strip()
+        if rest:
+            try:
+                approx_lo, approx_hi = _parse_single_date(rest, calendar)
+            except GedcomDateParseError:
+                pass
+            else:
+                return ParsedDate(
+                    raw=raw,
+                    calendar=calendar,
+                    qualifier="ABT",
+                    date_lower=approx_lo,
+                    date_upper=approx_hi,
+                )
+
+    # Lenient: 'YYYY-YYYY' / 'YYYY – YYYY' — год-диапазон без BET..AND.
+    yr_range = _YEAR_RANGE_RE.match(body)
+    if yr_range is not None:
+        lo_pair = _parse_single_year_token(yr_range.group(1), calendar)
+        hi_pair = _parse_single_year_token(yr_range.group(2), calendar)
+        if lo_pair is not None and hi_pair is not None:
+            return ParsedDate(
+                raw=raw,
+                calendar=calendar,
+                is_range=True,
+                date_lower=lo_pair[0],
+                date_upper=hi_pair[1],
+            )
+
+    # Lenient: 'X or Y' — альтернатива → BET..AND.
+    or_form = _OR_RE.match(body)
+    if or_form is not None:
+        try:
+            a_lower, _ = _parse_single_date(or_form.group(1).strip(), calendar)
+            _, b_upper = _parse_single_date(or_form.group(2).strip(), calendar)
+        except GedcomDateParseError:
+            pass
+        else:
+            return ParsedDate(
+                raw=raw,
+                calendar=calendar,
+                is_range=True,
+                date_lower=a_lower,
+                date_upper=b_upper,
             )
 
     # Иначе — простая дата.

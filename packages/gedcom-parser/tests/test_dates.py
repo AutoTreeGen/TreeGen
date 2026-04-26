@@ -390,6 +390,173 @@ class TestErrors:
 
 
 # -----------------------------------------------------------------------------
+# Расширенные ("fuzzy") формы дат, не описанные GEDCOM-спекой, но встречающиеся
+# в реальных файлах (MyHeritage, FamilySearch, ручной ввод). Парсер обрабатывает
+# их в lenient-режиме, чтобы corpus-смок-тесты на чужих GED не падали.
+# -----------------------------------------------------------------------------
+
+
+class TestFuzzyDateForms:
+    """Расширенные формы одиночного года-токена через _parse_single_year_token."""
+
+    # ---- Фуззи десятилетие/век: подчёркивания вместо неизвестных цифр ---------
+
+    def test_fuzzy_decade_three_digits_underscore(self) -> None:
+        # "198_" → весь диапазон 1980..1989.
+        r = parse_gedcom_date("198_")
+        assert r.calendar == "gregorian"
+        assert r.qualifier == "none"
+        assert r.is_period is False
+        assert r.is_range is False
+        assert r.date_lower == date(1980, 1, 1)
+        assert r.date_upper == date(1989, 12, 31)
+
+    def test_fuzzy_century_two_digits_underscore(self) -> None:
+        # "18__" → весь XIX век (1800..1899).
+        r = parse_gedcom_date("18__")
+        assert r.date_lower == date(1800, 1, 1)
+        assert r.date_upper == date(1899, 12, 31)
+
+    def test_fuzzy_decade_preserves_raw(self) -> None:
+        # raw сохраняется для round-trip writer'а.
+        r = parse_gedcom_date("197_")
+        assert r.raw == "197_"
+
+    # ---- Год+месяц слитно (MyHeritage exports): YYYYMM -----------------------
+
+    def test_year_month_concatenated_february_leap(self) -> None:
+        # "202002" → февраль 2020 (високосный год → 29 дней).
+        r = parse_gedcom_date("202002")
+        assert r.date_lower == date(2020, 2, 1)
+        assert r.date_upper == date(2020, 2, 29)
+
+    def test_year_month_concatenated_february_non_leap(self) -> None:
+        # "190002" → февраль 1900 (НЕ високосный, %100 без %400 → 28 дней).
+        r = parse_gedcom_date("190002")
+        assert r.date_upper == date(1900, 2, 28)
+
+    def test_year_month_concatenated_july(self) -> None:
+        # "194207" → июль 1942 → 31 день.
+        r = parse_gedcom_date("194207")
+        assert r.date_lower == date(1942, 7, 1)
+        assert r.date_upper == date(1942, 7, 31)
+
+    def test_year_month_concatenated_invalid_month_raises(self) -> None:
+        # "994199" — месяц 99 невалидный, ни одна из веток не подберёт.
+        with pytest.raises(GedcomDateParseError):
+            parse_gedcom_date("994199")
+
+    # ---- Месяц/год через слэш: M/YYYY или MM/YYYY ----------------------------
+
+    def test_month_year_slash_october(self) -> None:
+        # "10/1941" → октябрь 1941.
+        r = parse_gedcom_date("10/1941")
+        assert r.date_lower == date(1941, 10, 1)
+        assert r.date_upper == date(1941, 10, 31)
+
+    def test_month_year_slash_single_digit_month(self) -> None:
+        # "5/1850" → май 1850.
+        r = parse_gedcom_date("5/1850")
+        assert r.date_lower == date(1850, 5, 1)
+        assert r.date_upper == date(1850, 5, 31)
+
+    def test_dual_year_not_misparsed_as_month_slash(self) -> None:
+        # "1750/51" — это GEDCOM dual-year (юлианский/григорианский переход),
+        # _parse_single_year_token должен сначала распознать dual-year и
+        # НЕ скатываться в _MONTH_YEAR_SLASH_RE (где первый токен > 12 = invalid).
+        r = parse_gedcom_date("1750/51")
+        # Главное — что парсинг не упал и год около 1750-1751.
+        assert r.date_lower is not None
+        assert r.date_lower.year in (1750, 1751)
+
+    def test_month_year_slash_invalid_month_raises(self) -> None:
+        # "13/1941" — месяц 13 невалидный, _parse_year_token тоже не справится
+        # (вторая часть из 4 цифр не похожа на dual-year).
+        with pytest.raises(GedcomDateParseError):
+            parse_gedcom_date("13/1941")
+
+
+class TestFuzzyRangeForms:
+    """Расширенные формы диапазонов через _YEAR_RANGE_RE и _OR_RE,
+    обрабатываемые на верхнем уровне ``parse_gedcom_date``."""
+
+    # ---- Год-диапазон через дефис/en-dash/em-dash ----------------------------
+
+    def test_year_range_hyphen(self) -> None:
+        r = parse_gedcom_date("1985-2020")
+        assert r.is_range is True
+        assert r.date_lower == date(1985, 1, 1)
+        assert r.date_upper == date(2020, 12, 31)
+
+    def test_year_range_en_dash(self) -> None:
+        # En-dash U+2013 — типичен для копий из Wikipedia / Word-документов.
+        r = parse_gedcom_date("1820 – 1830")
+        assert r.is_range is True
+        assert r.date_lower == date(1820, 1, 1)
+        assert r.date_upper == date(1830, 12, 31)
+
+    def test_year_range_em_dash(self) -> None:
+        # Em-dash U+2014 — встречается в русскоязычных файлах.
+        r = parse_gedcom_date("1820 — 1830")
+        assert r.is_range is True
+        assert r.date_lower == date(1820, 1, 1)
+        assert r.date_upper == date(1830, 12, 31)
+
+    def test_year_range_no_spaces(self) -> None:
+        # "1820-1830" — без пробелов вокруг дефиса.
+        r = parse_gedcom_date("1820-1830")
+        assert r.is_range is True
+        assert r.date_lower == date(1820, 1, 1)
+        assert r.date_upper == date(1830, 12, 31)
+
+    def test_bet_with_dash_fallback(self) -> None:
+        # "BET 1820-1830" — стандартный BET без AND, lenient fallback на
+        # _YEAR_RANGE_RE внутри BET-ветки.
+        r = parse_gedcom_date("BET 1820-1830")
+        assert r.is_range is True
+        assert r.date_lower == date(1820, 1, 1)
+        assert r.date_upper == date(1830, 12, 31)
+
+    # ---- Альтернатива через "or" --------------------------------------------
+
+    def test_or_alternative_lowercase(self) -> None:
+        r = parse_gedcom_date("1870 or 1875")
+        assert r.is_range is True
+        assert r.date_lower == date(1870, 1, 1)
+        assert r.date_upper == date(1875, 12, 31)
+
+    def test_or_alternative_uppercase(self) -> None:
+        r = parse_gedcom_date("1870 OR 1875")
+        assert r.is_range is True
+        assert r.date_lower == date(1870, 1, 1)
+        assert r.date_upper == date(1875, 12, 31)
+
+    def test_or_alternative_mixed_case(self) -> None:
+        r = parse_gedcom_date("1870 Or 1875")
+        assert r.is_range is True
+        assert r.date_lower == date(1870, 1, 1)
+        assert r.date_upper == date(1875, 12, 31)
+
+
+class TestFuzzyTildeApproximation:
+    """Тильда ``~`` как маркер приблизительности (lenient синоним ABT)."""
+
+    def test_tilde_year_treated_as_abt(self) -> None:
+        # "~1850" должно вести себя как "ABT 1850".
+        r = parse_gedcom_date("~1850")
+        assert r.qualifier == "ABT"
+        assert r.date_lower == date(1850, 1, 1)
+        assert r.date_upper == date(1850, 12, 31)
+
+    def test_tilde_with_fuzzy_decade(self) -> None:
+        # "~189_" — комбинация двух lenient-фич: тильда + fuzzy decade.
+        r = parse_gedcom_date("~189_")
+        assert r.qualifier == "ABT"
+        assert r.date_lower == date(1890, 1, 1)
+        assert r.date_upper == date(1899, 12, 31)
+
+
+# -----------------------------------------------------------------------------
 # Frozen и extra="forbid"
 # -----------------------------------------------------------------------------
 
