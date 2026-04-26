@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from gedcom_parser.encoding import decode_gedcom, detect_encoding
 from gedcom_parser.exceptions import GedcomEncodingError
 

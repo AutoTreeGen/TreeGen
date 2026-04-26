@@ -5,7 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
 from gedcom_parser.exceptions import GedcomParseError
 from gedcom_parser.lexer import iter_lines
 from gedcom_parser.parser import (
@@ -62,12 +61,7 @@ class TestParseRecords:
         assert all_nodes[0] is head
 
     def test_find_all_returns_multiple(self) -> None:
-        text = (
-            "0 @I1@ INDI\n"
-            "1 NAME John /Smith/\n"
-            "1 NAME Jonathan /Smith/\n"
-            "1 SEX M\n"
-        )
+        text = "0 @I1@ INDI\n" "1 NAME John /Smith/\n" "1 NAME Jonathan /Smith/\n" "1 SEX M\n"
         records = parse_text(text)
         names = records[0].find_all("NAME")
         assert len(names) == 2

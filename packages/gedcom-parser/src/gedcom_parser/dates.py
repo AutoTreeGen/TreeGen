@@ -28,7 +28,9 @@ import re
 from datetime import date
 from typing import Literal
 
-from convertdate import french_republican as _french_republican  # type: ignore[import-untyped,import-not-found]
+from convertdate import (
+    french_republican as _french_republican,  # type: ignore[import-untyped,import-not-found]
+)
 from convertdate import hebrew as _hebrew
 from pydantic import BaseModel, ConfigDict, Field
 

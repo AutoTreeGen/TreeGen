@@ -102,4 +102,3 @@ GEDCOM_TEST_CORPUS=/path/to/ged-files uv run pytest packages/gedcom-parser -m ge
 Каждое такое событие сопровождается `GedcomLenientWarning`. В строгом
 режиме (`lenient=False`) обе ситуации — исключения (`GedcomLexerError` /
 `GedcomParseError`).
-

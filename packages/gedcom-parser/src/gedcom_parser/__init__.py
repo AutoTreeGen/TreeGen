@@ -50,11 +50,20 @@ from gedcom_parser.exceptions import (
     GedcomReferenceWarning,
     GedcomWarning,
 )
+from gedcom_parser.lexer import iter_lines
+from gedcom_parser.models import EncodingInfo, GedcomLine, GedcomRecord
 from gedcom_parser.names import (
     NameVariant,
     VariantKind,
     detect_patronymic,
     split_compound_surname,
+)
+from gedcom_parser.parser import (
+    parse_bytes,
+    parse_document_file,
+    parse_file,
+    parse_records,
+    parse_text,
 )
 from gedcom_parser.places import (
     CoordinateKind,
@@ -65,15 +74,6 @@ from gedcom_parser.places import (
 )
 from gedcom_parser.transliteration import is_cyrillic, transliterate_iso9
 from gedcom_parser.writer import write_records
-from gedcom_parser.lexer import iter_lines
-from gedcom_parser.models import EncodingInfo, GedcomLine, GedcomRecord
-from gedcom_parser.parser import (
-    parse_bytes,
-    parse_document_file,
-    parse_file,
-    parse_records,
-    parse_text,
-)
 
 __version__ = "0.1.0"
 

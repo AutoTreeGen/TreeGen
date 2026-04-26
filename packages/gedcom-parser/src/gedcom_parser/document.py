@@ -30,7 +30,7 @@ from gedcom_parser.exceptions import GedcomReferenceWarning
 
 # EncodingInfo используется как тип Pydantic-поля и должен быть доступен в
 # runtime при разрешении model fields — поэтому импорт обычный, не TYPE_CHECKING.
-from gedcom_parser.models import EncodingInfo  # noqa: TC001
+from gedcom_parser.models import EncodingInfo
 
 if TYPE_CHECKING:
     from collections.abc import Container
