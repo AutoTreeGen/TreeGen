@@ -154,6 +154,10 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "PLR2004", "ARG"]
 "scripts/**" = ["T20"]   # print() в скриптах — ок
+# Alembic-генерируемые миграции имеют file_template с датой + дефисом
+# (см. alembic.ini::file_template) → имена не валидны как Python module names,
+# но alembic их не импортирует обычным образом (exec через context). N999 false positive.
+"infrastructure/alembic/versions/**" = ["N999"]
 
 [tool.ruff.format]
 quote-style = "double"
