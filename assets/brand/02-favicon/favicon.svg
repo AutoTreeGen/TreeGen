@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="AutoTreeGen mark">
+  <title>AutoTreeGen</title>
+  <desc>Tree of life with DNA-helix trunk on a deep purple medallion. Brand v1.0.</desc>
+  <defs>
+    <radialGradient id="atg-medallion" cx="50%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#4B2D8C"/>
+      <stop offset="65%" stop-color="#2C1054"/>
+      <stop offset="100%" stop-color="#1A0A36"/>
+    </radialGradient>
+    <linearGradient id="atg-helix-a" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E8D5F0" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#B070C0" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="atg-helix-b" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#2E5DA5" stop-opacity="0.95"/>
+    </linearGradient>
+    <linearGradient id="atg-canopy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#E8D5F0" stop-opacity="0.85"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Medallion -->
+  <circle cx="32" cy="32" r="30" fill="url(#atg-medallion)"/>
+  <circle cx="32" cy="32" r="29.4" fill="none" stroke="#B070C0" stroke-opacity="0.35" stroke-width="0.6"/>
+
+  <!-- Tree canopy: simplified branching -->
+  <g stroke="url(#atg-canopy)" stroke-linecap="round" fill="none">
+    <!-- main vertical -->
+    <path d="M32 30 V14" stroke-width="1.6"/>
+    <!-- upper branches -->
+    <path d="M32 16 L26 12 M32 16 L38 12" stroke-width="1.2"/>
+    <path d="M32 19 L24 16.5 M32 19 L40 16.5" stroke-width="1.1"/>
+    <path d="M32 23 L23 22 M32 23 L41 22" stroke-width="1.0"/>
+    <path d="M32 27 L22 27.5 M32 27 L42 27.5" stroke-width="0.9"/>
+    <!-- twig endings curve up -->
+    <path d="M26 12 L25 9 M38 12 L39 9" stroke-width="0.9"/>
+    <path d="M24 16.5 L21.5 15 M40 16.5 L42.5 15" stroke-width="0.9"/>
+  </g>
+
+  <!-- Sparkle dots (leaves) -->
+  <g fill="#FFFFFF">
+    <circle cx="25" cy="9" r="0.9"/>
+    <circle cx="39" cy="9" r="0.9"/>
+    <circle cx="32" cy="13.5" r="0.7"/>
+    <circle cx="21.5" cy="15" r="0.7"/>
+    <circle cx="42.5" cy="15" r="0.7"/>
+    <circle cx="22" cy="27.5" r="0.6"/>
+    <circle cx="42" cy="27.5" r="0.6"/>
+  </g>
+
+  <!-- DNA-helix trunk (sinusoidal pair from y=30 down to y=52) -->
+  <g fill="none" stroke-linecap="round">
+    <!-- Strand A -->
+    <path d="M32 30 C 28 34, 36 38, 32 42 C 28 46, 36 50, 32 52"
+          stroke="url(#atg-helix-a)" stroke-width="1.5"/>
+    <!-- Strand B -->
+    <path d="M32 30 C 36 34, 28 38, 32 42 C 36 46, 28 50, 32 52"
+          stroke="url(#atg-helix-b)" stroke-width="1.5"/>
+    <!-- Rungs -->
+    <line x1="29.4" y1="34" x2="34.6" y2="34" stroke="#E8D5F0" stroke-opacity="0.8" stroke-width="0.8"/>
+    <line x1="29.4" y1="42" x2="34.6" y2="42" stroke="#E8D5F0" stroke-opacity="0.8" stroke-width="0.8"/>
+    <line x1="29.4" y1="50" x2="34.6" y2="50" stroke="#E8D5F0" stroke-opacity="0.8" stroke-width="0.8"/>
+  </g>
+
+  <!-- Roots glow -->
+  <ellipse cx="32" cy="54" rx="6" ry="1.2" fill="#B070C0" fill-opacity="0.4"/>
+</svg>
