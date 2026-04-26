@@ -34,3 +34,4 @@
 | 0008 | Стратегия мультиязычности и транслитерации | TBD |
 | 0009 | Подход к гипотезам и evidence-graph | TBD |
 | 0010 | Аутентификация (Clerk vs Auth0 vs self-hosted) | TBD |
+| 0011 | [Brand system v1.0](./0011-brand-system-v1.md) | Accepted |
