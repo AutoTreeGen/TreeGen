@@ -62,7 +62,8 @@ dev = [
     # Phase 2: миграции и тесты ORM
     "alembic>=1.14",
     "asyncpg>=0.30",
-    "psycopg[binary]>=3.2",   # sync-драйвер для alembic offline-режима
+    "psycopg[binary    "python-dotenv>=1.0",     # авто-загрузка .env (Phase 2 alembic)
+]>=3.2",   # sync-драйвер для alembic offline-режима
     "testcontainers[postgres]>=4.8",
 ]
 
@@ -178,6 +179,13 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["tests.*"]
 disallow_untyped_defs = false
+
+# CLI пакета gedcom-parser использует typer-pattern с decorated commands;
+# typer без официальных stubs делает decorator "untyped". Локальное ослабление
+# до тех пор, пока не появятся stubs.
+[[tool.mypy.overrides]]
+module = ["gedcom_parser.cli"]
+disallow_untyped_decorators = false
 
 [tool.pydantic-mypy]
 init_forbid_extra = true
