@@ -102,6 +102,10 @@ build/
 !.vscode/extensions.json
 !.vscode/launch.json
 .idea/
+# Visual Studio (.vs/) — scratch-папка с бинарным состоянием IDE: slnx.sqlite,
+# .wsuo, .vsidx-индексы, DocumentLayout.json. Никогда не должна быть в репо
+# (содержит локальные пути и состояние workspace одного разработчика).
+.vs/
 *.swp
 *.swo
 *~
@@ -109,6 +113,11 @@ build/
 Thumbs.db
 desktop.ini
 .cursor/
+
+# ---- MCP / dev-tooling конфиги ----
+# .mcp.json — конфиг локального MCP-сервера (filesystem, shell и т.п.).
+# Привязан к рабочей машине разработчика, не должен утекать в репо.
+.mcp.json
 
 # ---- Docker / dev ----
 .docker/
