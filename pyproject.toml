@@ -135,6 +135,10 @@ ignore = [
 "scripts/**" = ["T20"]   # print() в скриптах — ок
 # CLI typer-decorators: имитируют typed-DSL, mypy ругается на untyped decorator.
 "**/cli.py" = ["TCH001", "TCH003"]
+# Alembic-генерируемые миграции имеют file_template с датой + дефисом
+# (см. alembic.ini::file_template) → имена не валидны как Python module names,
+# но alembic их не импортирует обычным образом (exec через context). N999 false positive.
+"infrastructure/alembic/versions/**" = ["N999"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -206,18 +210,4 @@ module = ["shared_models.*"]
 disallow_subclassing_any = false
 disallow_untyped_decorators = false
 # CLI пакета gedcom-parser использует typer-pattern с decorated commands;
-# typer без официальных stubs делает decorator "untyped". Локальное ослабление
-# до тех пор, пока не появятся stubs.
-[[tool.mypy.overrides]]
-module = ["gedcom_parser.cli"]
-disallow_untyped_decorators = false
-
-[tool.pydantic-mypy]
-init_forbid_extra = true
-init_typed = true
-warn_required_dynamic_aliases = true
-
-# -----------------------------------------------------------------------------
-# Pytest
-# -----------------------------------------------------------------------------
-[tool.pytest.ini_
+# typer без официальных stubs делает decorator
