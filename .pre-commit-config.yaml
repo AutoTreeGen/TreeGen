@@ -6,7 +6,11 @@
 # =============================================================================
 
 default_language_version:
-  python: python3.12
+  # У владельца проекта стоит CPython 3.13 из Microsoft Store; проект объявлен
+  # как requires-python >=3.12, поэтому 3.13 валидна для всех hook-ов. Если CI
+  # окажется на другой минорной версии (например, GitHub Actions с python3.12)
+  # — переопределить явно в .github/workflows/*.yml через `with: python-version`.
+  python: python3.13
 
 default_stages: [pre-commit]
 
