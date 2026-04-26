@@ -222,3 +222,22 @@ disallow_subclassing_any = false
 disallow_untyped_decorators = false
 # CLI пакета gedcom-parser использует typer-pattern с decorated commands;
 # typer без официальных stubs делает decorator
+
+# -----------------------------------------------------------------------------
+# Pytest — корневой конфиг для всего workspace.
+# import-mode=importlib: каждый модуль импортируется по абсолютному пути,
+# без манипуляции sys.path и __init__.py-эвристик rootdir. Это решает
+# ImportPathMismatchError, который возникал когда несколько пакетов имели
+# одноимённый tests/conftest.py (packages/gedcom-parser/tests/conftest.py
+# и services/parser-service/tests/conftest.py оба регистрировались как
+# `tests.conftest` под старым "prepend"-режимом).
+# https://docs.pytest.org/en/stable/explanation/pythonpath.html#import-modes
+# -----------------------------------------------------------------------------
+[tool.pytest.ini_options]
+addopts = "--import-mode=importlib --cov --cov-report=xml --cov-report=term"
+markers = [
+    "slow: медленные тесты",
+    "integration: требуют docker-compose сервисов",
+    "gedcom_real: используют реальные GED-файлы (skipped в CI)",
+    "db: требуют живой БД",
+]
