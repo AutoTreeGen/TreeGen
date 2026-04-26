@@ -9,10 +9,6 @@
       "Write(**/.env)",
       "Write(**/.env.*)"
     ],
-    "allow": [
-      "Read(**/.env.example)",
-      "Edit(**/.env.example)",
-      "Write(**/.env.example)"
-    ]
+    "allow": ["Read(**/.env.example)", "Edit(**/.env.example)", "Write(**/.env.example)"]
   }
 }

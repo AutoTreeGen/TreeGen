@@ -5,10 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-from typer.testing import CliRunner
-
 from gedcom_parser.cli import app
+from typer.testing import CliRunner
 
 runner = CliRunner()
 

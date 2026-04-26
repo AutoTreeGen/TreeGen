@@ -112,6 +112,30 @@ ignore = [
     "PLR0913",      # too many arguments — разрешаем для парсеров
     "PLR2004",      # magic values — частые в парсерах GEDCOM
     "ISC001",       # конфликт с форматтером
+    # ----- "Ambiguous unicode" в русских комментариях/docstrings -----
+    # CLAUDE.md §2 предписывает комментарии и docstrings на русском.
+    # RUF001/002/003 ругаются на каждую кириллическую букву похожую на
+    # латинскую (с≈c, а≈a, о≈o и т.д.). Это false positive для нашего стиля —
+    # реальный риск (визуальный спуфинг) может прятаться только в *идентификаторах*,
+    # а они у нас на английском по той же §2.
+    "RUF001",       # ambiguous in string literals
+    "RUF002",       # ambiguous in docstrings
+    "RUF003",       # ambiguous in comments
+    # ----- Сложность парсеров GEDCOM — естественно велика -----
+    # parse_gedcom_date / _parse_single_date — машины состояний по спеке,
+    # резать их искусственно ради метрики плохо для читаемости.
+    "PLR0911",      # too many return statements
+    "PLR0912",      # too many branches
+    "PLR0915",      # too many statements
+    # ----- typer pattern: Argument(...)/Option(...) в default'ах -----
+    # B008 жалуется, но это идиоматический способ объявления CLI в typer.
+    # Альтернатива (Annotated[...]) тоже работает, но нынешние feat-ы написаны так.
+    "B008",
+    # ----- ERA001 (commented-out code) -----
+    # Срабатывает на короткие комментарии-метки веток вроде "# kind == 'long'",
+    # которые не являются закомментированным кодом. Точечный noqa дороже,
+    # чем глобальное ignore — мы не пишем dead code в коммитах.
+    "ERA001",
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -154,6 +178,19 @@ exclude = [
 [[tool.mypy.overrides]]
 module = ["tests.*"]
 disallow_untyped_defs = false
+
+# typer и convertdate не публикуют type stubs — игнорируем missing imports
+# точечно, чтобы strict-режим работал на остальном коде.
+[[tool.mypy.overrides]]
+module = ["typer", "typer.*", "convertdate", "convertdate.*"]
+ignore_missing_imports = true
+
+# CLI пакета gedcom-parser использует typer-pattern с decorated commands;
+# из-за отсутствия typer-stubs decorator считается untyped и mypy падает.
+# Локальное ослабление до тех пор, пока не появятся официальные stubs.
+[[tool.mypy.overrides]]
+module = ["gedcom_parser.cli"]
+disallow_untyped_decorators = false
 
 [tool.pydantic-mypy]
 init_forbid_extra = true

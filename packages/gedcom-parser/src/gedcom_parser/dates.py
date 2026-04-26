@@ -725,7 +725,10 @@ def parse_gedcom_date(value: str) -> ParsedDate:
         )
 
     # Приблизительные: ABT / CAL / EST.
-    for q in ("ABT", "CAL", "EST"):
+    # Tuple типизирован как tuple[Qualifier, ...], чтобы mypy понимал что `q`
+    # это конкретный Literal, а не str — иначе ParsedDate(qualifier=q) падает.
+    approx_quals: tuple[Qualifier, ...] = ("ABT", "CAL", "EST")
+    for q in approx_quals:
         if body_upper.startswith(f"{q} "):
             rest = body[len(q) + 1 :].strip()
             lower, upper_dt = _parse_single_date(rest, calendar)

@@ -37,11 +37,11 @@ from gedcom_parser.models import GedcomLine
 # Группы: 1=LEVEL, 2=XREF (опционально, с @), 3=TAG, 4=VALUE (опционально).
 _LINE_RE = re.compile(
     r"^"
-    r"(\d+)"                          # LEVEL
+    r"(\d+)"  # LEVEL
     r"[ \t]+"
-    r"(?:(@[^@\s]+@)[ \t]+)?"         # XREF (опционально)
-    r"([A-Za-z_][A-Za-z0-9_]*)"       # TAG
-    r"(?:[ \t](.*))?"                 # VALUE (может содержать пробелы)
+    r"(?:(@[^@\s]+@)[ \t]+)?"  # XREF (опционально)
+    r"([A-Za-z_][A-Za-z0-9_]*)"  # TAG
+    r"(?:[ \t](.*))?"  # VALUE (может содержать пробелы)
     r"$"
 )
 

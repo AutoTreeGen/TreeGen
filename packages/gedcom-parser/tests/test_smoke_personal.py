@@ -15,7 +15,6 @@ from collections import Counter
 from pathlib import Path
 
 import pytest
-
 from gedcom_parser.parser import parse_file
 
 # Маркер для всех тестов в файле.

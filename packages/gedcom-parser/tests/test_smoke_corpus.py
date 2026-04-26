@@ -24,7 +24,6 @@ import os
 from pathlib import Path
 
 import pytest
-
 from gedcom_parser.parser import parse_file
 
 # Все тесты в файле — на реальных данных, в CI пропускаются.
