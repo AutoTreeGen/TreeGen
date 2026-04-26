@@ -38,7 +38,7 @@
 
 Принят **Вариант A — Monorepo** со следующей структурой:
 
-```
+```text
 autotreegen/
 ├── packages/         # переиспользуемые Python-пакеты (uv workspace)
 ├── services/         # FastAPI-сервисы (uv workspace)
@@ -49,6 +49,7 @@ autotreegen/
 ```
 
 Менеджеры пакетов:
+
 - Python: **uv** (workspace через `[tool.uv.workspace]` в корневом `pyproject.toml`).
 - JS/TS: **pnpm** (workspace через `pnpm-workspace.yaml`).
 
@@ -57,16 +58,19 @@ CI: один GitHub Actions workflow с параллельными jobs (Python 
 ## Последствия
 
 **Положительные:**
+
 - Изменение, проходящее через парсер → миграцию → API → UI делается одним PR.
 - Единая dev-среда (`docker compose up` + `uv sync` + `pnpm install`).
 - Лёгкий onboarding (одна точка входа — `README.md`).
 
 **Отрицательные:**
+
 - При росте кодовой базы CI может стать медленным — придётся внедрять
   selective testing (например, через `nx`, `turbo` или собственный таргетинг).
 - Нужна дисциплина: не превращать `packages/shared-models` в свалку.
 
 **Риски:**
+
 - Если позже потребуется полностью отделить какой-то компонент (например,
   `packages/gedcom-parser` как open-source), миграция возможна, но потребует
   чистки git-истории.
@@ -82,4 +86,4 @@ CI: один GitHub Actions workflow с параллельными jobs (Python 
 
 - `ROADMAP.md` §2 — описание структуры.
 - [uv workspaces](https://docs.astral.sh/uv/concepts/workspaces/)
-- [pnpm workspaces](https://pnpm.io/workspaces)
+- [pnpm workspaces](<https://pnpm.io/workspac>

@@ -15,11 +15,39 @@ authors = [
     { name = "Vladimir", email = "autotreegen@gmail.com" },
 ]
 
-# Корневой проект — meta-package, реальные зависимости в подпакетах.
-dependencies = []
+# Корневой проект тянет workspace-пакеты как зависимости, чтобы они оказались
+# в общем .venv и были доступны для скриптов в scripts/, alembic env.py и т.п.
+dependencies = [
+    "shared-models",
+    "gedcom-parser",
+]
 
-[project.optional-dependencies]
-# Общие dev-инструменты для всего workspace.
+# -----------------------------------------------------------------------------
+# uv workspace
+# Подпроекты добавлять в [tool.uv.workspace.members] по мере появления.
+# -----------------------------------------------------------------------------
+[tool.uv.workspace]
+# Перечисляем явно, потому что часть подпапок ещё пустые (.gitkeep) и не
+# содержат pyproject.toml. По мере появления реальных пакетов — добавляем сюда.
+members = [
+    "packages/gedcom-parser",
+    "packages/shared-models",
+]
+
+# Резолвим workspace-имена из локальных путей, а не из PyPI.
+[tool.uv.sources]
+shared-models = { workspace = true }
+gedcom-parser = { workspace = true }
+
+[tool.uv]
+package = false
+
+# -----------------------------------------------------------------------------
+# Dependency groups (PEP 735) — современная замена устаревшего
+# `[tool.uv.dev-dependencies]`. Группа `dev` ставится автоматически при
+# `uv sync` и устанавливается через `uv sync --group dev` явно.
+# -----------------------------------------------------------------------------
+[dependency-groups]
 dev = [
     "pre-commit>=3.8",
     "ruff>=0.7",
@@ -31,34 +59,11 @@ dev = [
     "pytest-xdist>=3.6",
     "hypothesis>=6.115",
     "ipython>=8.29",
-]
-
-# -----------------------------------------------------------------------------
-# uv workspace
-# Подпроекты добавлять в [tool.uv.workspace.members] по мере появления.
-# -----------------------------------------------------------------------------
-[tool.uv.workspace]
-members = [
-    "packages/*",
-    "services/*",
-]
-exclude = [
-    "packages/gedcom-parser/samples",
-]
-
-[tool.uv]
-package = false
-dev-dependencies = [
-    "pre-commit>=3.8",
-    "ruff>=0.7",
-    "black>=24.10",
-    "mypy>=1.13",
-    "pytest>=8.3",
-    "pytest-asyncio>=0.24",
-    "pytest-cov>=6.0",
-    "pytest-xdist>=3.6",
-    "hypothesis>=6.115",
-    "ipython>=8.29",
+    # Phase 2: миграции и тесты ORM
+    "alembic>=1.14",
+    "asyncpg>=0.30",
+    "psycopg[binary]>=3.2",   # sync-драйвер для alembic offline-режима
+    "testcontainers[postgres]>=4.8",
 ]
 
 # -----------------------------------------------------------------------------
@@ -66,7 +71,7 @@ dev-dependencies = [
 # -----------------------------------------------------------------------------
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py313"
 extend-exclude = [
     ".venv",
     "build",
@@ -107,11 +112,28 @@ ignore = [
     "PLR0913",      # too many arguments — разрешаем для парсеров
     "PLR2004",      # magic values — частые в парсерах GEDCOM
     "ISC001",       # конфликт с форматтером
+    # Bilingual project (English code, Russian docstrings/comments).
+    # ruff "ambiguous unicode" rules treat Cyrillic letters as suspicious;
+    # not applicable when the comment is intentionally written in Russian.
+    "RUF001",       # ambiguous chars in strings
+    "RUF002",       # ambiguous chars in docstrings
+    "RUF003",       # ambiguous chars in comments
+    # Typer / FastAPI common pattern: callable defaults via Argument()/Option().
+    "B008",
+    # Commented-out code: используем как inline-док в parser-коде.
+    "ERA001",
+    # Parser complexity — GEDCOM date/place parsing inherently has many branches.
+    "PLR0911", "PLR0912", "PLR0915",
+    # Type-checking imports — strict TYPE_CHECKING-only is stylistic;
+    # keep imports flat for readability.
+    "TCH001", "TCH002", "TCH003",
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "PLR2004", "ARG"]
+"tests/**" = ["S101", "PLR2004", "ARG", "TCH001", "TCH003"]
 "scripts/**" = ["T20"]   # print() в скриптах — ок
+# CLI typer-decorators: имитируют typed-DSL, mypy ругается на untyped decorator.
+"**/cli.py" = ["TCH001", "TCH003"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -136,7 +158,7 @@ extend-exclude = '''
 # Mypy — типы (strict для нового кода, постепенный onboarding).
 # -----------------------------------------------------------------------------
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 strict = true
 plugins = ["pydantic.mypy"]
 exclude = [
@@ -145,6 +167,13 @@ exclude = [
     "dist/",
     ".venv/",
 ]
+# Disable strict-import / decorator checks for libraries без stubs (typer, convertdate)
+# и для файлов, где typer-decorator делает функцию untyped.
+disable_error_code = ["misc", "import-not-found", "import-untyped"]
+
+[[tool.mypy.overrides]]
+module = ["convertdate", "convertdate.*", "typer", "typer.*"]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["tests.*"]
@@ -174,10 +203,19 @@ markers = [
     "slow: tests that are slow (deselect with -m 'not slow')",
     "integration: tests requiring docker-compose services",
     "gedcom_real: tests using real personal GED file (skipped in CI)",
+    "db: tests requiring real Postgres (testcontainers or docker compose)",
+    "bench: performance benchmarks (deselect with -m 'not bench')",
 ]
 filterwarnings = [
     "error",
     "ignore::DeprecationWarning:pkg_resources.*",
+    # convertdate.hebrew внутри to_gregorian() ещё зовёт собственный
+    # deprecated month_days — это шум, не наш баг.
+    "ignore::DeprecationWarning:convertdate.*",
+    # Warning'и парсера на грязные реальные GEDCOM-файлы (ANSEL fallback,
+    # неявные CONT в lenient-режиме и т.п.) не должны валить тесты —
+    # они отражают ожидаемое поведение, а не баги.
+    "ignore::gedcom_parser.exceptions.GedcomWarning",
 ]
 
 [tool.coverage.run]

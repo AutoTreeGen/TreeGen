@@ -1,24 +1,10 @@
-# Samples
+# GEDCOM-сэмплы
 
-Тестовые GEDCOM-файлы для парсера.
+Положите сюда ваш личный `my_tree.ged` для локального тестирования.
 
-## Источники
+**Все файлы `*.ged` и `*.gedcom` в этой папке — в `.gitignore`** и не попадут
+в репозиторий. Это сделано специально, потому что реальные GEDCOM содержат PII
+(personally identifiable information).
 
-- **`personal/Ztree.ged`** — личное дерево владельца проекта (см. `D:\Projects\TreeGen\Ztree.ged`,
-  копируется/симлинкается сюда скриптом `scripts/import_personal_ged.py`). **Не коммитить в публичный репозиторий**
-  (см. `.gitignore`: `samples/personal/`).
-- **`public/`** — обезличенные публичные образцы из разных платформ:
-  - `ancestry/` — экспорты Ancestry
-  - `myheritage/` — экспорты MyHeritage
-  - `geni/` — экспорты Geni
-  - `familysearch/` — экспорты FamilySearch
-  - `gramps/` — экспорты Gramps
-  - `rootsmagic/` — экспорты RootsMagic
-- **`synthetic/`** — синтетические минимальные кейсы для unit-тестов (битые ссылки,
-  иврит-даты, ANSEL-кодировка, проприетарные теги).
-
-## Конвенции
-
-- Имена файлов: `<source>_<feature>_<version>.ged` (например, `ancestry_thrulines_2024.ged`).
-- Каждый файл сопровождается `.md` с описанием особенностей.
-- Размер: < 5 MB для committed файлов; крупные — через Git LFS или внешний storage.
+Для CI и публичных тестов используются минимальные синтетические фикстуры,
+которые лежат в `tests/fixtures/`.

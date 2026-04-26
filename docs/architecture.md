@@ -6,7 +6,7 @@
 
 ## 1. Высокоуровневая схема (Фаза 0)
 
-```
+```text
 ┌──────────────┐
 │  Web (Next)  │
 └──────┬───────┘
@@ -52,7 +52,7 @@
 
 ## 3. Поток данных при импорте GEDCOM
 
-```
+```text
 1. Web → POST /trees/{id}/imports (multipart, файл до 500 MB)
 2. api-gateway сохраняет в S3 (gedcom bucket), enqueue job
 3. parser-service:
