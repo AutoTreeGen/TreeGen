@@ -1,6 +1,47 @@
-"""Общие Pydantic-модели для сервисов AutoTreeGen.
+"""shared-models — общие модели AutoTreeGen.
 
-На данной фазе — пустая заглушка. Будет наполняться в фазе 2 (модель данных).
+Публичный API (минимальный, на старте):
+
+- ``Base``                — DeclarativeBase для всех ORM-моделей.
+- ``orm``                 — модуль с моделями.
+- ``schemas``             — модуль с Pydantic DTO.
+- ``EntityStatus``        — enum статуса доменных записей.
+- ``register_audit_listeners`` — вешает event listeners на сессию.
 """
 
+from __future__ import annotations
+
+from shared_models.audit import is_audit_skipped, register_audit_listeners, set_audit_skip
+from shared_models.base import Base
+from shared_models.enums import (
+    ActorKind,
+    AuditAction,
+    CollaboratorRole,
+    EntityStatus,
+    EventType,
+    NameType,
+    RelationType,
+    Sex,
+    SourceType,
+    TreeVisibility,
+)
+
 __version__ = "0.1.0"
+
+__all__ = [
+    "ActorKind",
+    "AuditAction",
+    "Base",
+    "CollaboratorRole",
+    "EntityStatus",
+    "EventType",
+    "NameType",
+    "RelationType",
+    "Sex",
+    "SourceType",
+    "TreeVisibility",
+    "__version__",
+    "is_audit_skipped",
+    "register_audit_listeners",
+    "set_audit_skip",
+]

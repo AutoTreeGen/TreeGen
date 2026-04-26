@@ -1,18 +1,34 @@
 # =====================================================================
-# shared-models — общие Pydantic-модели для всех сервисов
-# Заглушка на фазе 1, наполняется в фазе 2.
+# shared-models — общие модели данных AutoTreeGen.
+#
+# Один пакет, два слоя (см. ADR-0003 и docs/data-model.md):
+#   - shared_models.orm     — SQLAlchemy 2 async модели (источник правды для БД).
+#   - shared_models.schemas — Pydantic v2 DTO (для API и парсера).
+# Конвертеры orm <-> pydantic — в shared_models.converters.
 # =====================================================================
 
 [project]
 name = "shared-models"
 version = "0.1.0"
-description = "Общие Pydantic-модели для сервисов AutoTreeGen"
+description = "Общие ORM- и Pydantic-модели для сервисов AutoTreeGen"
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "Proprietary" }
 
 dependencies = [
-    "pydantic>=2.10.0",
+    "pydantic[email]>=2.10.0",   # [email] — email-validator для EmailStr в UserBase
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30.0",
+    "pgvector>=0.3.6",        # для будущих embeddings (Phase 10), импортируем тип сразу — миграция добавит позже
+    # UUIDv7 реализован inline в shared_models.types (RFC 9562) — без внешней зависимости.
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "testcontainers[postgres]>=4.8",
+    "psycopg[binary]>=3.2",
 ]
 
 [build-system]

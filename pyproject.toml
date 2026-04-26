@@ -180,6 +180,31 @@ ignore_missing_imports = true
 module = ["tests.*"]
 disallow_untyped_defs = false
 
+# SQLAlchemy 2 имеет свои stubs (sqlalchemy[mypy] plugin), но они тяжёлые
+# и periodically lag за версиями; pgvector, asyncpg, alembic — тоже без
+# полных stubs в pre-commit isolated env. Глобально игнорируем missing imports
+# для этих пакетов; реальная проверка типов запросов остаётся за runtime-тестами.
+[[tool.mypy.overrides]]
+module = [
+    "sqlalchemy",
+    "sqlalchemy.*",
+    "asyncpg",
+    "asyncpg.*",
+    "pgvector",
+    "pgvector.*",
+    "alembic",
+    "alembic.*",
+]
+ignore_missing_imports = true
+
+# shared_models наследует от sqlalchemy.AsyncAttrs/DeclarativeBase, которые
+# из-за ignore_missing_imports видны mypy как Any. Strict-mode с
+# disallow_subclassing_any блокирует это. Также SQLAlchemy event decorators
+# (event.listens_for, listen) untyped — глобально разрешаем для shared_models.
+[[tool.mypy.overrides]]
+module = ["shared_models.*"]
+disallow_subclassing_any = false
+disallow_untyped_decorators = false
 # CLI пакета gedcom-parser использует typer-pattern с decorated commands;
 # typer без официальных stubs делает decorator "untyped". Локальное ослабление
 # до тех пор, пока не появятся stubs.
@@ -195,54 +220,4 @@ warn_required_dynamic_aliases = true
 # -----------------------------------------------------------------------------
 # Pytest
 # -----------------------------------------------------------------------------
-[tool.pytest.ini_options]
-minversion = "8.0"
-testpaths = ["packages", "services"]
-python_files = ["test_*.py", "*_test.py"]
-asyncio_mode = "auto"
-addopts = [
-    "-ra",
-    "--strict-markers",
-    "--strict-config",
-    "--cov-report=term-missing",
-    "--cov-report=xml",
-]
-markers = [
-    "slow: tests that are slow (deselect with -m 'not slow')",
-    "integration: tests requiring docker-compose services",
-    "gedcom_real: tests using real personal GED file (skipped in CI)",
-    "db: tests requiring real Postgres (testcontainers or docker compose)",
-    "bench: performance benchmarks (deselect with -m 'not bench')",
-]
-filterwarnings = [
-    "error",
-    "ignore::DeprecationWarning:pkg_resources.*",
-    # convertdate.hebrew внутри to_gregorian() ещё зовёт собственный
-    # deprecated month_days — это шум, не наш баг.
-    "ignore::DeprecationWarning:convertdate.*",
-    # Warning'и парсера на грязные реальные GEDCOM-файлы (ANSEL fallback,
-    # неявные CONT в lenient-режиме и т.п.) не должны валить тесты —
-    # они отражают ожидаемое поведение, а не баги.
-    "ignore::gedcom_parser.exceptions.GedcomWarning",
-]
-
-[tool.coverage.run]
-branch = true
-source = ["packages", "services"]
-omit = [
-    "*/tests/*",
-    "*/samples/*",
-    "*/__main__.py",
-]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "raise NotImplementedError",
-    "if TYPE_CHECKING:",
-    "if __name__ == .__main__.:",
-]
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[tool.pytest.ini_
