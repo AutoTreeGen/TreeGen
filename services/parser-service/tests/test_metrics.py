@@ -101,19 +101,35 @@ _MINIMAL_GED = b"""\
 
 
 def _counter_value(body: str, metric: str, labels: str) -> float:
-    """Извлечь value Prometheus counter из exposition строки.
+    """Извлечь value Prometheus counter/sample из exposition строки.
 
-    Формат строки: ``<metric>{<labels>} <value>``. Возвращает ``0.0`` если
-    линия не найдена — caller решает, считать это failure или нет (при
-    свежем процессе counter с label'ами появляется только после первого
-    .inc()).
+    Формат строки: ``<metric>{<labels>} <value>``. Prometheus sortирует
+    labels алфавитно в exposition (не insertion-order), поэтому caller
+    может передать labels в любом порядке — мы парсим всю строку метрики
+    и проверяем наличие каждой пары ``key="value"`` независимо.
+
+    Возвращает ``0.0`` если линия не найдена — caller решает, считать
+    это failure или нет (при свежем процессе counter с label'ами
+    появляется только после первого .inc()).
     """
-    pattern = re.compile(
-        rf"^{re.escape(metric)}\{{{re.escape(labels)}\}} (\S+)$",
+    expected = {
+        kv.split("=", 1)[0]: kv.split("=", 1)[1].strip('"')
+        for kv in labels.split(",")
+        if kv.strip()
+    }
+    line_pattern = re.compile(
+        rf"^{re.escape(metric)}\{{(?P<labels>[^}}]*)\}} (?P<value>\S+)$",
         re.MULTILINE,
     )
-    match = pattern.search(body)
-    return float(match.group(1)) if match else 0.0
+    for match in line_pattern.finditer(body):
+        actual_labels = {
+            kv.split("=", 1)[0]: kv.split("=", 1)[1].strip('"')
+            for kv in match.group("labels").split(",")
+            if kv.strip()
+        }
+        if all(actual_labels.get(k) == v for k, v in expected.items()):
+            return float(match.group("value"))
+    return 0.0
 
 
 @pytest.mark.db
