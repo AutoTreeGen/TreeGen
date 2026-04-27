@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from .auth import FamilySearchAuth, Token
+from .auth import AuthorizationRequest, FamilySearchAuth, Token
 from .client import FamilySearchClient
 from .config import FamilySearchConfig
 from .errors import (
@@ -20,6 +20,7 @@ from .models import FsFact, FsGender, FsName, FsPerson, FsRelationship
 
 __all__ = [
     "AuthError",
+    "AuthorizationRequest",
     "ClientError",
     "FamilySearchAuth",
     "FamilySearchClient",
