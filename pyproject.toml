@@ -37,6 +37,7 @@ members = [
     "packages/familysearch-client",
     "packages/inference-engine",
     "services/parser-service",
+    "services/dna-service",
 ]
 
 # Резолвим workspace-имена из локальных путей, а не из PyPI.
@@ -48,6 +49,7 @@ entity-resolution = { workspace = true }
 familysearch-client = { workspace = true }
 inference-engine = { workspace = true }
 parser-service = { workspace = true }
+dna-service = { workspace = true }
 
 [tool.uv]
 package = false
@@ -231,6 +233,13 @@ disallow_subclassing_any = false
 disallow_untyped_decorators = false
 # CLI пакета gedcom-parser использует typer-pattern с decorated commands;
 # typer без официальных stubs делает decorator
+
+# dna-analysis — workspace package, в pre-commit изолированной среде
+# не видим mypy import-resolver'у. disable_error_code должен суппрессить
+# import-not-found, но в strict-mode оно протекает. Явный override.
+[[tool.mypy.overrides]]
+module = ["dna_analysis", "dna_analysis.*"]
+ignore_missing_imports = true
 
 # -----------------------------------------------------------------------------
 # Pytest — корневой конфиг для всего workspace.
