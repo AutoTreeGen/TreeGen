@@ -34,6 +34,11 @@ SERVICE_TABLES = {
     # доказательства, привязаны через FK CASCADE на hypothesis. Тоже
     # service-table — не несут soft-delete (удаление вместе с гипотезой).
     "hypothesis_evidences",
+    # Manual person-merge audit (Phase 4.6 / ADR-0022): лог-trail с
+    # собственной retention-политикой (90-дневное undo-окно + purge).
+    # ``undone_at`` и ``purged_at`` — отдельные indicators событий,
+    # не soft-delete этой строки.
+    "person_merge_logs",
 }
 
 TREE_ENTITY_TABLES = {

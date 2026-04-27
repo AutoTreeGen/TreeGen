@@ -21,6 +21,7 @@ from shared_models.orm.multimedia import EntityMultimedia, MultimediaObject
 from shared_models.orm.name import Name
 from shared_models.orm.note import EntityNote, Note
 from shared_models.orm.person import Person
+from shared_models.orm.person_merge_log import PersonMergeLog
 from shared_models.orm.place import Place, PlaceAlias
 from shared_models.orm.shared_match import SharedMatch
 from shared_models.orm.source import Source
@@ -49,6 +50,7 @@ __all__ = [
     "Name",
     "Note",
     "Person",
+    "PersonMergeLog",
     "Place",
     "PlaceAlias",
     "SharedMatch",
