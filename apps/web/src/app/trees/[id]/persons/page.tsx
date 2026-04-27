@@ -3,24 +3,92 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ApiError, fetchPersons } from "@/lib/api";
+import { ApiError, searchPersons } from "@/lib/api";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 
 const PAGE_SIZE = 50;
+const SEARCH_DEBOUNCE_MS = 300;
+
+/**
+ * Преобразовать строковое поле года в число для API. Пустую/невалидную
+ * строку отдаём undefined — эндпоинт пропускает фильтр.
+ */
+function parseYear(raw: string): number | undefined {
+  if (!raw) return undefined;
+  const n = Number(raw);
+  return Number.isInteger(n) && n >= 1 && n <= 9999 ? n : undefined;
+}
 
 export default function PersonsListPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const searchParams = useSearchParams();
   const treeId = params.id;
+
+  const initialQ = searchParams.get("q") ?? "";
+  const initialMin = searchParams.get("birth_year_min") ?? "";
+  const initialMax = searchParams.get("birth_year_max") ?? "";
   const offset = Number(searchParams.get("offset") ?? "0") || 0;
 
+  // Локальный state, синхронизируемый с URL через debounce: пользователь
+  // печатает → state обновляется мгновенно (controlled input ощущается
+  // живым), запрос летит и URL обновляется через 300 мс.
+  const [q, setQ] = useState(initialQ);
+  const [birthYearMin, setBirthYearMin] = useState(initialMin);
+  const [birthYearMax, setBirthYearMax] = useState(initialMax);
+
+  const debouncedQ = useDebouncedValue(q, SEARCH_DEBOUNCE_MS);
+  const debouncedMin = useDebouncedValue(birthYearMin, SEARCH_DEBOUNCE_MS);
+  const debouncedMax = useDebouncedValue(birthYearMax, SEARCH_DEBOUNCE_MS);
+
+  const minYear = useMemo(() => parseYear(debouncedMin), [debouncedMin]);
+  const maxYear = useMemo(() => parseYear(debouncedMax), [debouncedMax]);
+
+  // Sync URL state when debounced values change. router.replace вместо
+  // push — чтобы back-кнопка не прыгала через каждый keystroke. Page
+  // reset (offset=0) при смене фильтра, иначе страница 5 с 0 результатов.
+  useEffect(() => {
+    if (!treeId) return;
+    const sp = new URLSearchParams();
+    if (debouncedQ) sp.set("q", debouncedQ);
+    if (debouncedMin) sp.set("birth_year_min", debouncedMin);
+    if (debouncedMax) sp.set("birth_year_max", debouncedMax);
+    const filtersChanged =
+      debouncedQ !== (searchParams.get("q") ?? "") ||
+      debouncedMin !== (searchParams.get("birth_year_min") ?? "") ||
+      debouncedMax !== (searchParams.get("birth_year_max") ?? "");
+    if (!filtersChanged && offset > 0) {
+      sp.set("offset", String(offset));
+    }
+    const target = sp.toString();
+    const current = searchParams.toString();
+    if (target !== current) {
+      router.replace(`/trees/${treeId}/persons${target ? `?${target}` : ""}`, { scroll: false });
+    }
+    // searchParams в зависимостях оставим — URL внешне может измениться
+    // (например, back-навигация), и нам надо синхронизироваться.
+  }, [debouncedQ, debouncedMin, debouncedMax, offset, router, searchParams, treeId]);
+
   const query = useQuery({
-    queryKey: ["persons", treeId, { limit: PAGE_SIZE, offset }],
-    queryFn: () => fetchPersons(treeId, PAGE_SIZE, offset),
+    queryKey: [
+      "persons-search",
+      treeId,
+      { q: debouncedQ, birthYearMin: minYear, birthYearMax: maxYear, offset },
+    ],
+    queryFn: () =>
+      searchPersons(treeId, {
+        q: debouncedQ || undefined,
+        birthYearMin: minYear,
+        birthYearMax: maxYear,
+        limit: PAGE_SIZE,
+        offset,
+      }),
     enabled: Boolean(treeId),
   });
 
@@ -29,6 +97,7 @@ export default function PersonsListPage() {
   const lastPageOffset = total > 0 ? Math.floor((total - 1) / PAGE_SIZE) * PAGE_SIZE : 0;
   const canPrev = offset > 0;
   const canNext = total > 0 && offset + PAGE_SIZE < total;
+  const hasFilters = Boolean(debouncedQ || debouncedMin || debouncedMax);
 
   const setOffset = (next: number) => {
     const sp = new URLSearchParams(searchParams.toString());
@@ -41,6 +110,13 @@ export default function PersonsListPage() {
     router.push(`/trees/${treeId}/persons${qs ? `?${qs}` : ""}`);
   };
 
+  const clearFilters = () => {
+    setQ("");
+    setBirthYearMin("");
+    setBirthYearMax("");
+    router.replace(`/trees/${treeId}/persons`, { scroll: false });
+  };
+
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
       <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
@@ -50,8 +126,13 @@ export default function PersonsListPage() {
           <h2 className="mt-2 text-2xl font-semibold tracking-tight">Persons</h2>
           {data ? (
             <p className="mt-1 text-sm text-[color:var(--color-ink-500)]">
-              {total.toLocaleString("en-US")} total · showing {offset + 1}–
-              {Math.min(offset + PAGE_SIZE, total)}
+              {total.toLocaleString("en-US")} {total === 1 ? "match" : "matches"}
+              {total > 0 ? (
+                <>
+                  {" "}
+                  · showing {offset + 1}–{Math.min(offset + PAGE_SIZE, total)}
+                </>
+              ) : null}
             </p>
           ) : null}
         </div>
@@ -64,13 +145,83 @@ export default function PersonsListPage() {
         </Button>
       </header>
 
+      <section
+        aria-label="Search filters"
+        className="mb-6 flex flex-col gap-3 rounded-lg ring-1 ring-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 sm:flex-row sm:items-end"
+      >
+        <div className="flex flex-1 flex-col gap-1.5">
+          <label
+            htmlFor="persons-search-name"
+            className="text-xs uppercase tracking-wide text-[color:var(--color-ink-500)]"
+          >
+            Name
+          </label>
+          <Input
+            id="persons-search-name"
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="e.g. Zhitnitzky"
+          />
+        </div>
+        <div className="flex w-32 flex-col gap-1.5">
+          <label
+            htmlFor="persons-search-min-year"
+            className="text-xs uppercase tracking-wide text-[color:var(--color-ink-500)]"
+          >
+            Born ≥
+          </label>
+          <Input
+            id="persons-search-min-year"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={9999}
+            value={birthYearMin}
+            onChange={(e) => setBirthYearMin(e.target.value)}
+            placeholder="1850"
+          />
+        </div>
+        <div className="flex w-32 flex-col gap-1.5">
+          <label
+            htmlFor="persons-search-max-year"
+            className="text-xs uppercase tracking-wide text-[color:var(--color-ink-500)]"
+          >
+            Born ≤
+          </label>
+          <Input
+            id="persons-search-max-year"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={9999}
+            value={birthYearMax}
+            onChange={(e) => setBirthYearMax(e.target.value)}
+            placeholder="1900"
+          />
+        </div>
+        <Button
+          variant="ghost"
+          size="md"
+          onClick={clearFilters}
+          disabled={!hasFilters}
+          aria-label="Clear all filters"
+        >
+          Clear
+        </Button>
+      </section>
+
       {query.isLoading ? <PersonsListSkeleton /> : null}
 
       {query.isError ? (
         <PersonsListError error={query.error} onRetry={() => query.refetch()} />
       ) : null}
 
-      {data ? (
+      {data && data.items.length === 0 ? (
+        <PersonsEmptyState query={debouncedQ} hasFilters={hasFilters} onClear={clearFilters} />
+      ) : null}
+
+      {data && data.items.length > 0 ? (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {data.items.map((person) => (
             <Card key={person.id} className="relative">
@@ -112,7 +263,7 @@ export default function PersonsListPage() {
         </div>
       ) : null}
 
-      {data ? (
+      {data && data.items.length > 0 ? (
         <nav className="mt-8 flex items-center justify-between gap-3" aria-label="Pagination">
           <Button
             variant="secondary"
@@ -159,6 +310,36 @@ function PersonsListSkeleton() {
   );
 }
 
+function PersonsEmptyState({
+  query,
+  hasFilters,
+  onClear,
+}: {
+  query: string;
+  hasFilters: boolean;
+  onClear: () => void;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          {query ? <>Nothing found for &ldquo;{query}&rdquo;</> : "No persons match these filters"}
+        </CardTitle>
+        <CardDescription>
+          Try a shorter substring, broaden the year range, or clear filters to see everyone.
+        </CardDescription>
+      </CardHeader>
+      {hasFilters ? (
+        <CardContent>
+          <Button variant="primary" size="sm" onClick={onClear}>
+            Clear filters
+          </Button>
+        </CardContent>
+      ) : null}
+    </Card>
+  );
+}
+
 function PersonsListError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
   const message =
     error instanceof ApiError
@@ -168,9 +349,9 @@ function PersonsListError({ error, onRetry }: { error: unknown; onRetry: () => v
         : "Unknown error";
 
   return (
-    <Card>
+    <Card className="border-red-200 ring-red-200">
       <CardHeader>
-        <CardTitle>Couldn&apos;t load persons</CardTitle>
+        <CardTitle>Search failed</CardTitle>
         <CardDescription>{message}</CardDescription>
       </CardHeader>
       <CardContent>

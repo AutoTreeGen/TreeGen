@@ -17,8 +17,9 @@ from shared_models.orm import (
     Name,
     Person,
     Source,
+    Tree,
 )
-from sqlalchemy import func, select
+from sqlalchemy import and_, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -59,6 +60,152 @@ async def list_persons(
     res = await session.execute(
         select(Person)
         .where(Person.tree_id == tree_id, Person.deleted_at.is_(None))
+        .order_by(Person.created_at)
+        .limit(limit)
+        .offset(offset)
+    )
+    persons = res.scalars().all()
+
+    items: list[PersonSummary] = []
+    for p in persons:
+        primary = next(
+            (
+                f"{n.given_name or ''} {n.surname or ''}".strip()
+                for n in sorted(p.names, key=lambda n: n.sort_order)
+                if n.given_name or n.surname
+            ),
+            None,
+        )
+        items.append(
+            PersonSummary(
+                id=p.id,
+                gedcom_xref=p.gedcom_xref,
+                sex=p.sex,
+                confidence_score=p.confidence_score,
+                primary_name=primary,
+            )
+        )
+    return PersonListResponse(
+        tree_id=tree_id,
+        total=int(total or 0),
+        limit=limit,
+        offset=offset,
+        items=items,
+    )
+
+
+@router.get(
+    "/trees/{tree_id}/persons/search",
+    response_model=PersonListResponse,
+    summary="Search persons in a tree by name and birth-year range",
+)
+async def search_persons(
+    tree_id: uuid.UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    q: Annotated[
+        str | None,
+        Query(
+            description=(
+                "Case-insensitive substring search across given_name, surname, "
+                "и их конкатенацию. ILIKE %q%. Пусто/None — не фильтрует. "
+                "Параметр SQL-injection-safe (SQLAlchemy parameterizes)."
+            ),
+            max_length=200,
+        ),
+    ] = None,
+    birth_year_min: Annotated[
+        int | None,
+        Query(
+            ge=1,
+            le=9999,
+            description="Минимум года рождения из BIRT-события (date_start.year ≥ X).",
+        ),
+    ] = None,
+    birth_year_max: Annotated[
+        int | None,
+        Query(
+            ge=1,
+            le=9999,
+            description="Максимум года рождения из BIRT-события (date_start.year ≤ X).",
+        ),
+    ] = None,
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> PersonListResponse:
+    """Search persons by name substring + birth-year range.
+
+    Возвращает тот же ``PersonListResponse`` что и list-эндпоинт.
+    Если все три фильтра пустые — endpoint эквивалентен пагинированному
+    list (полезно как унифицированный entry point из UI с lazy-фильтрами).
+
+    Tree existence: 404 если ``tree_id`` не существует в БД (в отличие
+    от list-эндпоинта, который возвращает пустой результат — search
+    делает явный roundtrip и должен сообщать «такого дерева нет»).
+
+    Birth year — опциональный фильтр через ``EXISTS`` подзапрос на
+    BIRT-событие с ``date_start`` в указанном диапазоне. Персоны без
+    BIRT (или без ``date_start``) исключаются когда хотя бы один из
+    ``birth_year_min`` / ``birth_year_max`` задан.
+    """
+    tree_exists = await session.scalar(
+        select(func.count()).select_from(Tree).where(Tree.id == tree_id)
+    )
+    if not tree_exists:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Tree {tree_id} not found",
+        )
+
+    base_filters = [Person.tree_id == tree_id, Person.deleted_at.is_(None)]
+
+    if q:
+        # Pattern с escape'ом ILIKE-метасимволов: % и _ внутри пользовательского
+        # ввода не должны работать как wildcard'ы, иначе `q='%'` вернёт всё.
+        # Backslash-escape работает в Postgres ILIKE без явного ESCAPE clause.
+        safe = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        pattern = f"%{safe}%"
+        # Подзапрос: персоны, у которых хоть одно имя удовлетворяет ILIKE.
+        # Конкатенация given+surname обрабатывает запросы вида "John Smith".
+        name_match = exists(
+            select(Name.id).where(
+                Name.person_id == Person.id,
+                or_(
+                    Name.given_name.ilike(pattern),
+                    Name.surname.ilike(pattern),
+                    func.concat(
+                        func.coalesce(Name.given_name, ""),
+                        " ",
+                        func.coalesce(Name.surname, ""),
+                    ).ilike(pattern),
+                ),
+            )
+        )
+        base_filters.append(name_match)
+
+    if birth_year_min is not None or birth_year_max is not None:
+        date_filters = [Event.date_start.is_not(None)]
+        if birth_year_min is not None:
+            date_filters.append(func.extract("year", Event.date_start) >= birth_year_min)
+        if birth_year_max is not None:
+            date_filters.append(func.extract("year", Event.date_start) <= birth_year_max)
+        birth_match = exists(
+            select(Event.id)
+            .join(EventParticipant, EventParticipant.event_id == Event.id)
+            .where(
+                EventParticipant.person_id == Person.id,
+                Event.event_type == "BIRT",
+                Event.deleted_at.is_(None),
+                and_(*date_filters),
+            )
+        )
+        base_filters.append(birth_match)
+
+    total = await session.scalar(select(func.count(Person.id)).where(*base_filters))
+
+    res = await session.execute(
+        select(Person)
+        .options(selectinload(Person.names))
+        .where(*base_filters)
         .order_by(Person.created_at)
         .limit(limit)
         .offset(offset)
