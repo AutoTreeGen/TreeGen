@@ -16,7 +16,7 @@ from .errors import (
     RateLimitError,
     ServerError,
 )
-from .models import FsFact, FsGender, FsName, FsPerson, FsRelationship
+from .models import FsFact, FsGender, FsName, FsPedigreeNode, FsPerson, FsRelationship
 
 __all__ = [
     "AuthError",
@@ -29,6 +29,7 @@ __all__ = [
     "FsFact",
     "FsGender",
     "FsName",
+    "FsPedigreeNode",
     "FsPerson",
     "FsRelationship",
     "NotFoundError",
