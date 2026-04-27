@@ -13,6 +13,7 @@ members = [
     "entity-resolution",
     "familysearch-client",
     "gedcom-parser",
+    "inference-engine",
     "parser-service",
     "shared-models",
 ]
@@ -762,6 +763,17 @@ sdist = { url = "https://files.pythonhosted.org/packages/ce/cc/762dfb036166873f0
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5d/13/ad7d7ca3808a898b4612b6fe93cde56b53f3034dcde235acb1f0e1df24c6/idna-3.13-py3-none-any.whl", hash = "sha256:892ea0cde124a99ce773decba204c5552b69c3c67ffd5f232eb7696135bc8bb3", size = 68629, upload-time = "2026-04-22T16:42:40.909Z" },
 ]
+
+[[package]]
+name = "inference-engine"
+version = "0.1.0"
+source = { editable = "packages/inference-engine" }
+dependencies = [
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pydantic", specifier = ">=2.10" }]
 
 [[package]]
 name = "iniconfig"
