@@ -6,14 +6,25 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from shared_models.orm import Event, EventParticipant, Name, Person
+from shared_models.orm import (
+    Citation,
+    EntityMultimedia,
+    Event,
+    EventParticipant,
+    MultimediaObject,
+    Name,
+    Person,
+    Source,
+)
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from parser_service.database import get_session
 from parser_service.schemas import (
+    CitationSummary,
     EventSummary,
+    MultimediaSummary,
     NameSummary,
     PersonDetail,
     PersonListResponse,
@@ -110,7 +121,60 @@ async def get_person(
         .where(EventParticipant.person_id == person_id, Event.deleted_at.is_(None))
         .order_by(Event.date_start.nulls_last())
     )
-    events = [EventSummary.model_validate(e) for e in events_res.scalars().all()]
+    event_orms = events_res.scalars().all()
+    event_ids = [e.id for e in event_orms]
+
+    # Citations для всех event'ов одним запросом — JOIN на sources, чтобы
+    # отдать source_title без второго round-trip фронта.
+    citations_by_event: dict[uuid.UUID, list[CitationSummary]] = {eid: [] for eid in event_ids}
+    if event_ids:
+        cit_res = await session.execute(
+            select(Citation, Source.title)
+            .join(Source, Source.id == Citation.source_id)
+            .where(
+                Citation.entity_type == "event",
+                Citation.entity_id.in_(event_ids),
+                Citation.deleted_at.is_(None),
+            )
+        )
+        for citation, source_title in cit_res.all():
+            citations_by_event[citation.entity_id].append(
+                CitationSummary(
+                    source_id=citation.source_id,
+                    source_title=source_title,
+                    page=citation.page_or_section,
+                    quality=citation.quality,
+                )
+            )
+
+    events: list[EventSummary] = []
+    for e in event_orms:
+        summary = EventSummary.model_validate(e)
+        summary.citations = citations_by_event.get(e.id, [])
+        events.append(summary)
+
+    # Multimedia персоны: JOIN entity_multimedia → multimedia_objects.
+    media_res = await session.execute(
+        select(MultimediaObject)
+        .join(EntityMultimedia, EntityMultimedia.multimedia_id == MultimediaObject.id)
+        .where(
+            EntityMultimedia.entity_type == "person",
+            EntityMultimedia.entity_id == person_id,
+            MultimediaObject.deleted_at.is_(None),
+        )
+    )
+    media_objs = media_res.scalars().all()
+    media: list[MultimediaSummary] = []
+    for obj in media_objs:
+        format_ = obj.object_metadata.get("format") if obj.object_metadata else None
+        media.append(
+            MultimediaSummary(
+                id=obj.id,
+                title=obj.caption,
+                file_path=obj.storage_url,
+                format=format_,
+            )
+        )
 
     return PersonDetail(
         id=person.id,
@@ -121,4 +185,5 @@ async def get_person(
         confidence_score=person.confidence_score,
         names=names,
         events=events,
+        media=media,
     )

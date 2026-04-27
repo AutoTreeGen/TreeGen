@@ -65,6 +65,21 @@ class PlaceSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
+class CitationSummary(BaseModel):
+    """Краткая ссылка на источник для встраивания в EventSummary.
+
+    `source_title` денормализован — берётся из join'а с `sources`,
+    избавляет фронт от второго запроса.
+    """
+
+    source_id: uuid.UUID
+    source_title: str
+    page: str | None = None
+    quality: float | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class EventSummary(BaseModel):
     """Событие персоны в карточке."""
 
@@ -75,8 +90,27 @@ class EventSummary(BaseModel):
     date_end: datetime | None = None
     place_id: uuid.UUID | None = None
     place: PlaceSummary | None = None
+    citations: list[CitationSummary] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class MultimediaSummary(BaseModel):
+    """Краткое представление multimedia-объекта для PersonDetail.media[]."""
+
+    id: uuid.UUID
+    title: str | None = Field(
+        default=None,
+        validation_alias="caption",
+        description="Caption медиа (MultimediaObject.caption).",
+    )
+    file_path: str = Field(
+        validation_alias="storage_url",
+        description="Путь/URL файла (MultimediaObject.storage_url).",
+    )
+    format: str | None = None
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class NameSummary(BaseModel):
@@ -91,7 +125,7 @@ class NameSummary(BaseModel):
 
 
 class PersonDetail(BaseModel):
-    """Детали персоны: персональные поля + связанные имена/события."""
+    """Детали персоны: персональные поля + связанные имена/события + media."""
 
     id: uuid.UUID
     tree_id: uuid.UUID
@@ -101,5 +135,6 @@ class PersonDetail(BaseModel):
     confidence_score: float
     names: list[NameSummary]
     events: list[EventSummary]
+    media: list[MultimediaSummary] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
