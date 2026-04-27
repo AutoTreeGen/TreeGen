@@ -201,7 +201,8 @@ async def test_get_person_returns_citations_and_media(app_client) -> None:
     cit = birt["citations"][0]
     assert cit["source_title"] == "Lubelskie parish records 1838"
     assert cit["page"] == "p. 42"
-    assert cit["quality"] == pytest.approx(1.0)
+    # Phase 3.6 QUAY → confidence mapping: 3 → 0.95.
+    assert cit["quality"] == pytest.approx(0.95)
 
     assert len(body["media"]) == 1
     media = body["media"][0]

@@ -308,7 +308,10 @@ async def compute_hypothesis(
 
     if existing is not None and existing.rules_version == rules_version:
         # Версия совпадает → no-op, возвращаем как есть.
-        return existing
+        # mypy pre-commit hook идёт без SQLAlchemy в additional_deps,
+        # из-за чего scalar_one_or_none() видится как Any. Локально
+        # (uv run mypy) типы корректны. Игнор только для hook-окружения.
+        return existing  # type: ignore[no-any-return]
 
     if existing is not None:
         # Версия изменилась → пересчитываем score + evidences.
@@ -322,7 +325,7 @@ async def compute_hypothesis(
         for ev in in_memory.evidences:
             existing.evidences.append(_to_orm_evidence(ev))
         await session.flush()
-        return existing
+        return existing  # type: ignore[no-any-return]
 
     # Insert.
     new_hyp = Hypothesis(

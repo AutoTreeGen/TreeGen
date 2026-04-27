@@ -255,7 +255,8 @@ async def test_event_has_citation(app_client, postgres_dsn) -> None:
     - ровно 1 citation после импорта (на BIRT-event @I1@);
     - entity_type == "event", source_id ссылается на наш SOUR;
     - page_or_section == "p. 42";
-    - quality нормализован: QUAY 3 → 1.0 (3 / 3).
+    - quay_raw сохранён как 3 (raw GEDCOM значение);
+    - quality (derived confidence) — Phase 3.6 mapping: QUAY 3 → 0.95.
     """
     from shared_models.orm import Citation, Event, Source
     from sqlalchemy import select
@@ -279,8 +280,10 @@ async def test_event_has_citation(app_client, postgres_dsn) -> None:
             cit = citations[0]
             assert cit.entity_type == "event"
             assert cit.page_or_section == "p. 42"
-            # QUAY 3 → 3/3 = 1.0.
-            assert cit.quality == pytest.approx(1.0)
+            # Phase 3.6: raw QUAY сохраняется в quay_raw, derived confidence
+            # — в quality (0→0.1, 1→0.4, 2→0.7, 3→0.95, missing→0.5).
+            assert cit.quay_raw == 3
+            assert cit.quality == pytest.approx(0.95)
 
             birth = (
                 await session.execute(
