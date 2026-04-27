@@ -4,13 +4,17 @@ from __future__ import annotations
 
 import datetime as dt
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import CheckConstraint, Date, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from shared_models.base import Base
 from shared_models.mixins import IdMixin, TimestampMixin, TreeEntityMixins
+
+if TYPE_CHECKING:
+    from shared_models.orm.place import Place
 
 
 class Event(TreeEntityMixins, Base):
@@ -44,6 +48,8 @@ class Event(TreeEntityMixins, Base):
     date_qualifier: Mapped[str | None] = mapped_column(String(16), nullable=True)
     date_calendar: Mapped[str | None] = mapped_column(String(16), nullable=True)
     description: Mapped[str | None] = mapped_column(String, nullable=True)
+
+    place: Mapped[Place | None] = relationship("Place", lazy="raise")
 
 
 class EventParticipant(IdMixin, TimestampMixin, Base):

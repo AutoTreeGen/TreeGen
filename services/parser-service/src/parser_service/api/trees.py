@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from shared_models.orm import Event, EventParticipant, Name, Person
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from parser_service.database import get_session
 from parser_service.schemas import (
@@ -104,6 +105,7 @@ async def get_person(
 
     events_res = await session.execute(
         select(Event)
+        .options(joinedload(Event.place))
         .join(EventParticipant, EventParticipant.event_id == Event.id)
         .where(EventParticipant.person_id == person_id, Event.deleted_at.is_(None))
         .order_by(Event.date_start.nulls_last())
