@@ -19,6 +19,7 @@ dependencies = [
     "shared-models",
     "gedcom-parser",
     "entity-resolution",
+    "inference-engine",
 ]
 
 [project.optional-dependencies]
