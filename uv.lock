@@ -10,6 +10,7 @@ resolution-markers = [
 members = [
     "autotreegen",
     "dna-analysis",
+    "dna-service",
     "entity-resolution",
     "familysearch-client",
     "gedcom-parser",
@@ -494,6 +495,54 @@ requires-dist = [
     { name = "cryptography", specifier = ">=42" },
     { name = "pydantic", specifier = ">=2.10" },
 ]
+
+[[package]]
+name = "dna-service"
+version = "0.1.0"
+source = { editable = "services/dna-service" }
+dependencies = [
+    { name = "anyio" },
+    { name = "asyncpg" },
+    { name = "dna-analysis" },
+    { name = "fastapi" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "python-dotenv" },
+    { name = "python-multipart" },
+    { name = "shared-models" },
+    { name = "sqlalchemy", extra = ["asyncio"] },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "httpx" },
+    { name = "psycopg", extra = ["binary"] },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "testcontainers" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "anyio", specifier = ">=4.0" },
+    { name = "asyncpg", specifier = ">=0.30" },
+    { name = "dna-analysis", editable = "packages/dna-analysis" },
+    { name = "fastapi", specifier = ">=0.115" },
+    { name = "httpx", marker = "extra == 'test'", specifier = ">=0.27" },
+    { name = "psycopg", extras = ["binary"], marker = "extra == 'test'", specifier = ">=3.2" },
+    { name = "pydantic", specifier = ">=2.10" },
+    { name = "pydantic-settings", specifier = ">=2.6" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3" },
+    { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.24" },
+    { name = "python-dotenv", specifier = ">=1.0" },
+    { name = "python-multipart", specifier = ">=0.0.20" },
+    { name = "shared-models", editable = "packages/shared-models" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
+    { name = "testcontainers", extras = ["postgres"], marker = "extra == 'test'", specifier = ">=4.8" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.32" },
+]
+provides-extras = ["test"]
 
 [[package]]
 name = "dnspython"
