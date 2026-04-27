@@ -26,6 +26,10 @@ packages/dna-analysis/test_data/real/
 *.dna.csv
 *.dna.zip
 *_dna_*.csv
+# HapMap genetic map (~50MB, public domain reference data — см. ADR-0014).
+# Скачивается через packages/dna-analysis/scripts/download_genetic_map.py.
+# Test fixture (одна хромосома) живёт в tests/fixtures/genetic_map/ и НЕ под этим правилом.
+packages/dna-analysis/data/genetic_maps/
 
 # ---- Python ----
 __pycache__/

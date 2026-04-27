@@ -8,6 +8,7 @@ HTTP — `services/dna-service/` (Phase 6.1).
 from __future__ import annotations
 
 from dna_analysis.errors import DnaParseError, UnsupportedFormatError
+from dna_analysis.genetic_map import GeneticMap, GeneticMapError
 from dna_analysis.models import (
     Chromosome,
     DnaTest,
@@ -21,6 +22,8 @@ __all__ = [
     "Chromosome",
     "DnaParseError",
     "DnaTest",
+    "GeneticMap",
+    "GeneticMapError",
     "Genotype",
     "Provider",
     "ReferenceBuild",
