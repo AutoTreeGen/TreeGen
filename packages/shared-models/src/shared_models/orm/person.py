@@ -6,7 +6,7 @@ import uuid
 from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, String
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from shared_models.base import Base
@@ -36,6 +36,20 @@ class Person(TreeEntityMixins, Base):
     merged_into_person_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("persons.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    # Daitch-Mokotoff phonetic codes — вычисляются на INSERT в import_runner
+    # из всех Name-записей персоны (BIRTH + AKA), массив уникальных
+    # 6-цифровых bucket'ов. См. Phase 4.4.1 / docs/agent-briefs/phase-4-4-1-phonetic-search.md.
+    # GIN-индексы покрывают operator `&&` (arrays overlap) для быстрого
+    # phonetic-поиска. NULL означает «не вычислялось» (старые ряды до миграции).
+    surname_dm: Mapped[list[str] | None] = mapped_column(
+        ARRAY(String),
+        nullable=True,
+    )
+    given_name_dm: Mapped[list[str] | None] = mapped_column(
+        ARRAY(String),
         nullable=True,
     )
 

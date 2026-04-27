@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError, searchPersons } from "@/lib/api";
@@ -34,6 +35,7 @@ export default function PersonsListPage() {
   const initialQ = searchParams.get("q") ?? "";
   const initialMin = searchParams.get("birth_year_min") ?? "";
   const initialMax = searchParams.get("birth_year_max") ?? "";
+  const initialPhonetic = searchParams.get("phonetic") === "true";
   const offset = Number(searchParams.get("offset") ?? "0") || 0;
 
   // Локальный state, синхронизируемый с URL через debounce: пользователь
@@ -42,6 +44,7 @@ export default function PersonsListPage() {
   const [q, setQ] = useState(initialQ);
   const [birthYearMin, setBirthYearMin] = useState(initialMin);
   const [birthYearMax, setBirthYearMax] = useState(initialMax);
+  const [phonetic, setPhonetic] = useState(initialPhonetic);
 
   const debouncedQ = useDebouncedValue(q, SEARCH_DEBOUNCE_MS);
   const debouncedMin = useDebouncedValue(birthYearMin, SEARCH_DEBOUNCE_MS);
@@ -57,10 +60,12 @@ export default function PersonsListPage() {
     if (!treeId) return;
     const sp = new URLSearchParams();
     if (debouncedQ) sp.set("q", debouncedQ);
+    if (phonetic) sp.set("phonetic", "true");
     if (debouncedMin) sp.set("birth_year_min", debouncedMin);
     if (debouncedMax) sp.set("birth_year_max", debouncedMax);
     const filtersChanged =
       debouncedQ !== (searchParams.get("q") ?? "") ||
+      phonetic !== (searchParams.get("phonetic") === "true") ||
       debouncedMin !== (searchParams.get("birth_year_min") ?? "") ||
       debouncedMax !== (searchParams.get("birth_year_max") ?? "");
     if (!filtersChanged && offset > 0) {
@@ -73,17 +78,18 @@ export default function PersonsListPage() {
     }
     // searchParams в зависимостях оставим — URL внешне может измениться
     // (например, back-навигация), и нам надо синхронизироваться.
-  }, [debouncedQ, debouncedMin, debouncedMax, offset, router, searchParams, treeId]);
+  }, [debouncedQ, phonetic, debouncedMin, debouncedMax, offset, router, searchParams, treeId]);
 
   const query = useQuery({
     queryKey: [
       "persons-search",
       treeId,
-      { q: debouncedQ, birthYearMin: minYear, birthYearMax: maxYear, offset },
+      { q: debouncedQ, phonetic, birthYearMin: minYear, birthYearMax: maxYear, offset },
     ],
     queryFn: () =>
       searchPersons(treeId, {
         q: debouncedQ || undefined,
+        phonetic: phonetic || undefined,
         birthYearMin: minYear,
         birthYearMax: maxYear,
         limit: PAGE_SIZE,
@@ -97,7 +103,7 @@ export default function PersonsListPage() {
   const lastPageOffset = total > 0 ? Math.floor((total - 1) / PAGE_SIZE) * PAGE_SIZE : 0;
   const canPrev = offset > 0;
   const canNext = total > 0 && offset + PAGE_SIZE < total;
-  const hasFilters = Boolean(debouncedQ || debouncedMin || debouncedMax);
+  const hasFilters = Boolean(debouncedQ || debouncedMin || debouncedMax || phonetic);
 
   const setOffset = (next: number) => {
     const sp = new URLSearchParams(searchParams.toString());
@@ -114,6 +120,7 @@ export default function PersonsListPage() {
     setQ("");
     setBirthYearMin("");
     setBirthYearMax("");
+    setPhonetic(false);
     router.replace(`/trees/${treeId}/persons`, { scroll: false });
   };
 
@@ -211,6 +218,26 @@ export default function PersonsListPage() {
         </Button>
       </section>
 
+      {/* Phonetic toggle — отдельной строкой под фильтрами, потому что
+          это behaviour-modifier, а не сам фильтр. Tooltip через native
+          <abbr title> чтобы не тянуть Radix Tooltip ради одного MVP-toggle. */}
+      <div className="-mt-3 mb-6 flex items-center gap-2 text-sm text-[color:var(--color-ink-700)]">
+        <Checkbox
+          id="persons-search-phonetic"
+          checked={phonetic}
+          onChange={(e) => setPhonetic(e.target.checked)}
+        />
+        <label htmlFor="persons-search-phonetic" className="cursor-pointer">
+          Phonetic search{" "}
+          <abbr
+            title="Daitch-Mokotoff: find name variants across spellings — Zhitnitzky finds Жытницкий, Zhytnicki, Schitnitzky, etc. Useful for Jewish / Eastern European genealogy."
+            className="cursor-help text-[color:var(--color-ink-500)] no-underline"
+          >
+            (Daitch-Mokotoff)
+          </abbr>
+        </label>
+      </div>
+
       {query.isLoading ? <PersonsListSkeleton /> : null}
 
       {query.isError ? (
@@ -245,6 +272,11 @@ export default function PersonsListPage() {
                   ]
                     .filter(Boolean)
                     .join(" · ")}
+                  {person.match_type === "phonetic" ? (
+                    <span className="ml-2 text-xs italic text-[color:var(--color-ink-500)]">
+                      via phonetic match
+                    </span>
+                  ) : null}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex items-center justify-between gap-2">

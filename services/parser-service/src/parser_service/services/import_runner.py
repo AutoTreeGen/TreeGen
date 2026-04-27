@@ -52,6 +52,8 @@ from shared_models.types import new_uuid
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from parser_service.services.dm_buckets import merge_dm_buckets
+
 _BATCH_SIZE = 5000
 
 
@@ -264,38 +266,24 @@ async def run_import(
 
     set_audit_skip(session.sync_session, True)
     try:
-        # ---- Persons ----
+        # ---- Persons + Names (DM-buckets вычисляются в одном проходе) ----
+        # Phase 4.4.1: для phonetic-search сохраняем union DM-кодов всех
+        # имён (BIRTH + AKA + …) персоны в `surname_dm` / `given_name_dm`.
+        # Один проход вместо двух — собираем name_rows и DM сразу.
         person_rows: list[dict[str, Any]] = []
+        name_rows: list[dict[str, Any]] = []
         person_id_by_xref: dict[str, Any] = {}
         now = dt.datetime.now(dt.UTC)
         for xref, person in document.persons.items():
             pid = new_uuid()
             person_id_by_xref[xref] = pid
-            person_rows.append(
-                {
-                    "id": pid,
-                    "tree_id": tree.id,
-                    "gedcom_xref": xref,
-                    "sex": _map_sex(person.sex),
-                    "status": EntityStatus.PROBABLE.value,
-                    "confidence_score": 0.5,
-                    "version_id": 1,
-                    "provenance": {"import_job_id": str(job.id)},
-                    "created_at": now,
-                    "updated_at": now,
-                }
-            )
-        await _bulk_insert(session, Person, person_rows)
-
-        # ---- Names ----
-        name_rows: list[dict[str, Any]] = []
-        for xref, person in document.persons.items():
-            person_id = person_id_by_xref[xref]
+            surname_strings: list[str] = []
+            given_strings: list[str] = []
             for sort_order, name in enumerate(person.names):
                 name_rows.append(
                     {
                         "id": new_uuid(),
-                        "person_id": person_id,
+                        "person_id": pid,
                         "given_name": name.given,
                         "surname": name.surname,
                         "sort_order": sort_order,
@@ -306,6 +294,27 @@ async def run_import(
                         "updated_at": now,
                     }
                 )
+                if name.surname:
+                    surname_strings.append(name.surname)
+                if name.given:
+                    given_strings.append(name.given)
+            person_rows.append(
+                {
+                    "id": pid,
+                    "tree_id": tree.id,
+                    "gedcom_xref": xref,
+                    "sex": _map_sex(person.sex),
+                    "status": EntityStatus.PROBABLE.value,
+                    "confidence_score": 0.5,
+                    "version_id": 1,
+                    "provenance": {"import_job_id": str(job.id)},
+                    "surname_dm": merge_dm_buckets(surname_strings) or None,
+                    "given_name_dm": merge_dm_buckets(given_strings) or None,
+                    "created_at": now,
+                    "updated_at": now,
+                }
+            )
+        await _bulk_insert(session, Person, person_rows)
         await _bulk_insert(session, Name, name_rows)
 
         # ---- Families + family_children ----
