@@ -3,7 +3,7 @@
 Phase 7.0 — framework (Hypothesis / Evidence / InferenceRule Protocol /
 registry / composer).
 
-Phase 7.1 добавил конкретные rule'ы:
+Phase 7.1 добавил GEDCOM-rules:
 
 * ``BirthYearMatchRule`` — proximity дат рождения (tiers 0 / ±1–2 / ≥10).
 * ``SurnameMatchRule`` — Daitch-Mokotoff bucket overlap, с опциональной
@@ -13,13 +13,19 @@ Phase 7.1 добавил конкретные rule'ы:
 * ``SexConsistencyRule`` — hard contradiction для same_person при
   несовпадении известных M/F.
 
+Phase 7.3 добавил DNA-rule:
+
+* ``DnaSegmentRelationshipRule`` — pairwise total-cM rule для гипотез
+  ``same_person`` / ``parent_child`` / ``siblings`` с endogamy
+  adjustment по ``EthnicityPopulation``. ADR-0023.
+
 Все rule'ы — pure functions, тестируются синтетически (см. ADR-0016).
-Phase 7.x добавит DNA-segment evidence, parent-age sanity и LLM-rules
-(последние — Phase 10, отдельным package с явным seed).
+LLM-rules — Phase 10, отдельным пакетом с явным seed.
 """
 
 from inference_engine.rules.base import InferenceRule
 from inference_engine.rules.birth_year import BirthYearMatchRule
+from inference_engine.rules.dna import DnaSegmentRelationshipRule
 from inference_engine.rules.place import BirthPlaceMatchRule
 from inference_engine.rules.registry import (
     RuleAlreadyRegisteredError,
@@ -36,6 +42,7 @@ from inference_engine.rules.surname import SurnameMatchRule
 __all__ = [
     "BirthPlaceMatchRule",
     "BirthYearMatchRule",
+    "DnaSegmentRelationshipRule",
     "InferenceRule",
     "RuleAlreadyRegisteredError",
     "RuleNotFoundError",
