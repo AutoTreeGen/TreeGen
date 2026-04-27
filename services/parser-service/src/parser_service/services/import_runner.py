@@ -29,6 +29,7 @@ from shared_models.enums import (
     ImportSourceKind,
     NameType,
     Sex,
+    SourceType,
 )
 from shared_models.orm import (
     AuditLog,
@@ -40,6 +41,7 @@ from shared_models.orm import (
     Name,
     Person,
     Place,
+    Source,
     Tree,
     User,
 )
@@ -351,6 +353,43 @@ async def run_import(
 
         await _bulk_insert(session, Place, place_rows)
 
+        # ---- Sources ----
+        # SOUR-записи документа → bulk insert в `sources`. Поля:
+        #  - title:       обязательно (NOT NULL); если у GEDCOM-источника TITL
+        #                 пуст — фолбэк на xref, чтобы соблюсти constraint.
+        #  - author/publication: TITL.AUTH/PUBL (опционально).
+        #  - source_type: пока всегда OTHER. Классификация (book/metric_record/...) —
+        #                 Phase 3.4 (entity resolution).
+        #  - repository:  free-form name; xref на `repositories` пока не разворачиваем
+        #                 (REPO импортируем в отдельной фазе).
+        # Дедупликация по title — Phase 3.4 (см. ROADMAP).
+        source_rows: list[dict[str, Any]] = []
+        source_id_by_xref: dict[str, Any] = {}
+        for xref, parsed_source in document.sources.items():
+            sid = new_uuid()
+            source_id_by_xref[xref] = sid
+            source_rows.append(
+                {
+                    "id": sid,
+                    "tree_id": tree.id,
+                    "title": parsed_source.title or xref,
+                    "author": parsed_source.author,
+                    "publication": parsed_source.publication,
+                    "source_type": SourceType.OTHER.value,
+                    "repository": None,
+                    "repository_id": None,
+                    "url": None,
+                    "publication_date": None,
+                    "status": EntityStatus.PROBABLE.value,
+                    "confidence_score": 0.5,
+                    "version_id": 1,
+                    "provenance": {"import_job_id": str(job.id), "gedcom_xref": xref},
+                    "created_at": now,
+                    "updated_at": now,
+                }
+            )
+        await _bulk_insert(session, Source, source_rows)
+
         # ---- Events + EventParticipants ----
         # Persona events → один participant с role="principal".
         # FAM events → оба супруга participants (role="husband"/"wife"), если
@@ -457,6 +496,7 @@ async def run_import(
             "families": len(family_rows),
             "family_children": len(fc_rows),
             "places": len(place_rows),
+            "sources": len(source_rows),
             "events": len(event_rows),
             "event_participants": len(participant_rows),
         }

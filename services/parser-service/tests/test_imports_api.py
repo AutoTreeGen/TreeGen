@@ -32,6 +32,9 @@ _MINIMAL_GED = b"""\
 1 MARR
 2 DATE 1875
 2 PLAC Vilna, Russian Empire
+0 @S1@ SOUR
+1 TITL Lubelskie parish records 1838
+1 AUTH Lubelskie Archive
 0 TRLR
 """
 
@@ -53,6 +56,8 @@ async def test_post_import_creates_job_and_persons(app_client) -> None:
     assert body["stats"]["event_participants"] == 3
     # BIRT и MARR ссылаются на разные PLAC → 2 уникальных места.
     assert body["stats"]["places"] == 2
+    # Один SOUR-record в фикстуре.
+    assert body["stats"]["sources"] == 1
     assert body["source_filename"] == "test.ged"
     assert body["tree_id"] is not None
     assert body["id"] is not None
@@ -127,6 +132,42 @@ async def test_import_creates_places_and_links_events(app_client, postgres_dsn) 
             assert birth.place_id is not None
             slonim = next(p for p in places if p.canonical_name.startswith("Slonim"))
             assert birth.place_id == slonim.id
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_import_persists_sources(app_client, postgres_dsn) -> None:
+    """SOUR-записи попадают в `sources` с TITL и AUTH.
+
+    После импорта `_MINIMAL_GED` в дереве должна быть ровно одна запись
+    `sources` с title="Lubelskie parish records 1838" и author="Lubelskie
+    Archive". Тип source_type — фолбэк OTHER (классификация в Phase 3.4).
+    """
+    from shared_models.orm import Source
+    from sqlalchemy import select
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    files = {"file": ("test.ged", _MINIMAL_GED, "application/octet-stream")}
+    created = await app_client.post("/imports", files=files)
+    assert created.status_code == 201, created.text
+    tree_id = created.json()["tree_id"]
+
+    engine = create_async_engine(postgres_dsn, future=True)
+    try:
+        SessionMaker = async_sessionmaker(engine, expire_on_commit=False)  # noqa: N806
+        async with SessionMaker() as session:
+            sources = (
+                (await session.execute(select(Source).where(Source.tree_id == tree_id)))
+                .scalars()
+                .all()
+            )
+            assert len(sources) == 1
+            src = sources[0]
+            assert src.title == "Lubelskie parish records 1838"
+            assert src.author == "Lubelskie Archive"
+            assert src.source_type == "other"
+            assert src.provenance.get("gedcom_xref") == "S1"
     finally:
         await engine.dispose()
 
