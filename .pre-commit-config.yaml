@@ -50,6 +50,7 @@ repos:
       - id: mypy
         additional_dependencies:
           - pydantic>=2.10
+          - sqlalchemy>=2.0
           - types-python-dateutil
         args: [--config-file=pyproject.toml]
         # Постепенный onboarding: пока запускаем только на packages/services с готовыми типами.
