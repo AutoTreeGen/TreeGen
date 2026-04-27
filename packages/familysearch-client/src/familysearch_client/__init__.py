@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from .auth import AuthorizationRequest, FamilySearchAuth, Token
-from .client import FamilySearchClient
+from .client import FamilySearchClient, RetryPolicy
 from .config import FamilySearchConfig
 from .errors import (
     AuthError,
@@ -33,6 +33,7 @@ __all__ = [
     "FsRelationship",
     "NotFoundError",
     "RateLimitError",
+    "RetryPolicy",
     "ServerError",
     "Token",
 ]
