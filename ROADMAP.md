@@ -241,7 +241,7 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 | **3.1** | Импорт `events` + `event_participants` для `INDI`/`FAM` | done (PR-13) |
 | **3.2** | Импорт `places` (без alias-канонизации), multi-principal participants (husband/wife на MARR), `place` в `GET /persons/{id}` | done (PR-19, PR-20, PR-21) |
 | **3.3** | Импорт `sources` + `citations` с PAGE/QUAY, OBJE → `multimedia_objects` + полиморфный `entity_multimedia`; `events[].citations` и `media[]` в `GET /persons/{id}` | done (PR-30, PR-32, PR-33, PR-35) |
-| **3.4** | Идемпотентность импорта по `(tree_id, source_sha256)` + базовый entity-resolution overlap | not started |
+| **3.4** | Entity resolution: `packages/entity-resolution/` (Soundex + Daitch-Mokotoff + Levenshtein + token-set + DM-blocking), `dedup_finder` (READ-ONLY), `GET /trees/{id}/duplicate-suggestions`. См. ADR-0015. Идемпотентность импорта по `(tree_id, source_sha256)` перенесена в Phase 3.5. | done (PR-39, PR-44, PR-48, PR-50) |
 | **3.5** | Background-режим через `arq` + SSE для прогресса | not started |
 
 ### 7.1 Эндпоинты
