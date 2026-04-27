@@ -306,3 +306,25 @@ class NotificationEventType(StrEnum):
     IMPORT_FAILED = "import_failed"
     MERGE_UNDONE = "merge_undone"
     DEDUP_SUGGESTION_NEW = "dedup_suggestion_new"
+
+
+class HypothesisComputeJobStatus(StrEnum):
+    """Статус bulk hypothesis-compute job (Phase 7.5).
+
+    Lifecycle: ``QUEUED`` → ``RUNNING`` → ``SUCCEEDED``/``FAILED``/``CANCELLED``.
+
+    ``QUEUED`` — job создан, ещё не стартовал (sync-mode моментально
+    переходит в ``RUNNING``).
+    ``RUNNING`` — обрабатывает batch'и, прогресс в ``progress.processed``.
+    ``SUCCEEDED`` — все pairs обработаны.
+    ``FAILED`` — exception в одном из batch'ей; ``error`` поле заполнено,
+    предыдущие закоммиченные batch'и остаются.
+    ``CANCELLED`` — user через PATCH /cancel, worker увидел флаг между
+    batch'ами и остановился.
+    """
+
+    QUEUED = "queued"
+    RUNNING = "running"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    CANCELLED = "cancelled"

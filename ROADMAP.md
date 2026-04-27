@@ -264,6 +264,13 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 5. Идемпотентность: загрузка одного и того же GED дважды не дублирует данные (детект по хешу + entity resolution).
 6. WebSocket / SSE для прогресса импорта.
 7. Health checks, structured logging (JSON), Prometheus-метрики.
+   - Phase 9.0 (done 2026-04-27): `prometheus-client` + `GET /metrics` exposition,
+     5 collectors (`treegen_hypothesis_created_total`, `_review_action_total`,
+     `_compute_duration_seconds`, `_import_completed_total`,
+     `_dedup_finder_duration_seconds`) wired в `hypothesis_runner` /
+     `import_runner` / `familysearch_importer` / `dedup_finder` /
+     `api/hypotheses` review. Grafana / Alertmanager / OpenTelemetry tracing —
+     follow-up Phase 9.x.
 
 ---
 

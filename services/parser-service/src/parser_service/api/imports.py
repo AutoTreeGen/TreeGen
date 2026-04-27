@@ -20,6 +20,7 @@ from parser_service.config import Settings, get_settings
 from parser_service.database import get_session
 from parser_service.schemas import ImportJobResponse
 from parser_service.services.import_runner import run_import
+from parser_service.services.metrics import import_completed_total
 
 router = APIRouter()
 
@@ -69,6 +70,8 @@ async def create_import(
             source_filename=file.filename,
         )
     except Exception as e:
+        # Phase 9.0: error-сторона счётчика; success — внутри run_import.
+        import_completed_total.labels(source="gedcom", outcome="error").inc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Import failed: {e}",

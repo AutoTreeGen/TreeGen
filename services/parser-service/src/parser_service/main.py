@@ -18,6 +18,10 @@ from parser_service.api import (
     familysearch,
     hypotheses,
     imports,
+    familysearch,
+    hypotheses,
+    imports,
+    metrics,
     persons,
     sources,
     trees,
@@ -66,6 +70,9 @@ app.include_router(hypotheses.router, tags=["hypotheses"])
 # persons router включается ПОСЛЕ trees (тот владеет `GET /persons/{id}`),
 # но имена путей не пересекаются: тут `/persons/{id}/merge*`.
 app.include_router(persons.router, tags=["persons", "merge"])
+# /metrics — Prometheus exposition (Phase 9.0). Без префикса, чтобы scrape
+# конфиг был стандартным.
+app.include_router(metrics.router, tags=["meta"])
 
 
 @app.get("/healthz", tags=["meta"])

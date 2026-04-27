@@ -57,6 +57,8 @@ from sqlalchemy import and_, delete, insert, or_, select
 
 from parser_service.services.fs_dedup import find_fs_dedup_candidates
 
+from parser_service.services.metrics import import_completed_total
+
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -499,6 +501,8 @@ async def import_fs_pedigree(
         "fs_dedup_attempts_created": fs_dedup_attempts_created,
     }
     await session.flush()
+    # Phase 9.0: success-инкремент; error path — в api/familysearch.py.
+    import_completed_total.labels(source="fs", outcome="success").inc()
     return job
 
 

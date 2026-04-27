@@ -17,6 +17,7 @@ from shared_models.orm.event import Event, EventParticipant
 from shared_models.orm.family import Family, FamilyChild
 from shared_models.orm.fs_dedup_attempt import FsDedupAttempt
 from shared_models.orm.hypothesis import Hypothesis, HypothesisEvidence
+from shared_models.orm.hypothesis_compute_job import HypothesisComputeJob
 from shared_models.orm.import_job import ImportJob
 from shared_models.orm.multimedia import EntityMultimedia, MultimediaObject
 from shared_models.orm.name import Name
@@ -47,6 +48,7 @@ __all__ = [
     "FamilyChild",
     "FsDedupAttempt",
     "Hypothesis",
+    "HypothesisComputeJob",
     "HypothesisEvidence",
     "ImportJob",
     "MultimediaObject",

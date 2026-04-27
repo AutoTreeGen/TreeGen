@@ -48,6 +48,10 @@ SERVICE_TABLES = {
     # ``(rejected_at, merged_at)`` без soft-delete; уникальность
     # активного состояния — partial unique индекс. См. ORM-модуль.
     "fs_dedup_attempts",
+    # Bulk hypothesis-compute jobs (Phase 7.5): служебные job rows
+    # с прогрессом и cancel-флагом. Soft-delete не нужен — старые job'ы
+    # purge'аются retention-политикой (TBD).
+    "hypothesis_compute_jobs",
 }
 
 TREE_ENTITY_TABLES = {
