@@ -176,10 +176,7 @@ async def _ensure_owner(session: AsyncSession, email: str) -> User:
     res = await session.execute(select(User).where(User.email == email))
     user = res.scalar_one_or_none()
     if user is not None:
-        # mypy в pre-commit-hook идёт без SQLAlchemy в additional_deps,
-        # из-за чего scalar_one_or_none() видится как Any. Локально (uv run
-        # mypy) типы видны корректно. Игнор только для hook-окружения.
-        return user  # type: ignore[no-any-return]
+        return user
     user = User(
         email=email,
         external_auth_id=f"local:{email}",
@@ -188,7 +185,7 @@ async def _ensure_owner(session: AsyncSession, email: str) -> User:
     )
     session.add(user)
     await session.flush()
-    return user  # type: ignore[no-any-return]
+    return user
 
 
 async def run_import(
