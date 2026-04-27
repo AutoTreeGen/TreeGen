@@ -18,9 +18,11 @@ Ztree.ged
 *Ztree*.ged
 # Личные/приватные образцы для тестирования
 packages/gedcom-parser/samples/personal/
-# DNA-данные (special category по GDPR)
+# DNA-данные (special category по GDPR — см. ADR-0012)
 **/dna-data/
 **/dna_kits/
+packages/dna-analysis/test_data/real/
+*.dna
 *.dna.csv
 *.dna.zip
 *_dna_*.csv

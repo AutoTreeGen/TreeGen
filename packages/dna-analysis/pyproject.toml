@@ -1,12 +1,20 @@
 [project]
 name = "dna-analysis"
-version = "0.0.1"
-description = "AutoTreeGen DNA analysis — Phase 6 placeholder."
+version = "0.1.0"
+description = "AutoTreeGen DNA analysis — pure-function parsers and algorithms (Phase 6.0)."
 requires-python = ">=3.13"
 readme = "README.md"
 license = { text = "Proprietary" }
 authors = [{ name = "AutoTreeGen" }]
-dependencies = []
+# Ровно две зависимости:
+#  - pydantic: модели DnaTest/Snp/Genotype с валидацией.
+#  - cryptography: helpers для Phase 6.1 (key derivation, AES-GCM).
+# Никаких sqlalchemy / fastapi / httpx — это pure-functions пакет
+# (см. ADR-0012 §«Architectural separation»).
+dependencies = [
+    "pydantic>=2.10",
+    "cryptography>=42",
+]
 
 [build-system]
 requires = ["hatchling>=1.27"]
@@ -16,6 +24,4 @@ build-backend = "hatchling.build"
 packages = ["src/dna_analysis"]
 
 [tool.hatch.metadata]
-# Пакет в workspace, но реального содержимого ещё нет (Phase 6).
-# Когда заполним — поднимем version, опишем dependencies.
 allow-direct-references = true
