@@ -31,16 +31,20 @@ from familysearch_client import (
 
 async def main() -> None:
     config = FamilySearchConfig.sandbox()
+    redirect_uri = "http://localhost:8765/cb"
     auth = FamilySearchAuth(client_id="your-app-key", config=config)
 
-    auth_url, code_verifier = auth.start_flow(redirect_uri="http://localhost:8765/cb")
-    # 1. Открыть auth_url в браузере, авторизоваться, забрать ?code=... из redirect.
-    # 2. Передать сюда полученный code и сохранённый code_verifier.
+    request = auth.start_flow(redirect_uri=redirect_uri)
+    # 1. Открыть request.authorize_url в браузере, юзер логинится.
+    # 2. FamilySearch редиректит на redirect_uri?code=...&state=...
+    # 3. Caller обязан проверить, что state из callback == request.state
+    #    (CSRF protection — пакет это не делает за вас).
+    # 4. Передать code и тот же объект request:
     code = input("paste authorization code: ")
     token = await auth.complete_flow(
         code=code,
-        code_verifier=code_verifier,
-        redirect_uri="http://localhost:8765/cb",
+        request=request,
+        redirect_uri=redirect_uri,
     )
 
     async with FamilySearchClient(access_token=token.access_token, config=config) as fs:
