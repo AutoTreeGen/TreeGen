@@ -238,8 +238,8 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 | Подфаза | Что внутри | Статус |
 |---|---|---|
 | **3-A** | FastAPI-скелет, `POST /imports`, `GET /imports/{id}`, `GET /trees/{id}/persons`, `GET /persons/{id}`, `GET /healthz` | done (PR-3) |
-| **3.1** | Импорт `events` + `event_participants` для `INDI`/`FAM` | in progress (PR-3.1) |
-| **3.2** | Импорт `places` + `place_aliases`, multi-principal participants (husband/wife на MARR) | not started |
+| **3.1** | Импорт `events` + `event_participants` для `INDI`/`FAM` | done (PR-13) |
+| **3.2** | Импорт `places` (без alias-канонизации), multi-principal participants (husband/wife на MARR), `place` в `GET /persons/{id}` | done (PR-19, PR-20, PR-21) |
 | **3.3** | Импорт `sources` + `citations`, OBJE → multimedia | not started |
 | **3.4** | Идемпотентность импорта по `(tree_id, source_sha256)` + базовый entity-resolution overlap | not started |
 | **3.5** | Background-режим через `arq` + SSE для прогресса | not started |
