@@ -235,6 +235,17 @@ disallow_untyped_decorators = false
 # -----------------------------------------------------------------------------
 [tool.pytest.ini_options]
 addopts = "--import-mode=importlib --cov --cov-report=xml --cov-report=term"
+# auto-режим: async-функции теста и фикстуры распознаются без явного
+# @pytest.mark.asyncio. Нужно для shared-models/tests/test_orm_smoke.py
+# (написаны в auto-стиле). Существующие explicit-декораторы в
+# parser-service/tests/* остаются совместимы — auto не запрещает их.
+asyncio_mode = "auto"
+# Session-scoped async fixtures (например shared-models engine_fixture)
+# должны жить в том же event loop, что и тесты, которые их потребляют.
+# Иначе asyncpg-Future, созданный в одном loop'е, попадает в другой и
+# падает с "Future attached to a different loop".
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 markers = [
     "slow: медленные тесты",
     "integration: требуют docker-compose сервисов",

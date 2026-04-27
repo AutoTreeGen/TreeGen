@@ -17,10 +17,7 @@ import warnings
 from pathlib import Path
 from typing import Any
 
-from shared_models import (
-    register_audit_listeners,
-    set_audit_skip,
-)
+from shared_models import set_audit_skip
 from shared_models.enums import (
     ActorKind,
     AuditAction,
@@ -102,6 +99,7 @@ async def run_import(
     *,
     owner_email: str,
     tree_name: str | None = None,
+    source_filename: str | None = None,
 ) -> ImportJob:
     """Распарсить GEDCOM-файл и записать в БД.
 
@@ -110,6 +108,9 @@ async def run_import(
         ged_path: Локальный путь к .ged файлу.
         owner_email: Email user'а-владельца дерева. Создаётся, если нет.
         tree_name: Имя нового дерева. По умолчанию — basename файла.
+        source_filename: Оригинальное имя файла (для upload-сценария, когда
+            ``ged_path`` указывает на временный файл). По умолчанию —
+            ``ged_path.name``.
 
     Returns:
         Созданный ``ImportJob`` со статусом ``succeeded`` и заполненными stats.
@@ -123,32 +124,31 @@ async def run_import(
         msg = f"GEDCOM file not found: {ged_path}"
         raise FileNotFoundError(msg)
 
-    register_audit_listeners(session.sync_session.bind.sync_engine)
-
+    # Audit-listener регистрируется глобально в database.init_engine().
     sha = _sha256(ged_path)
+    display_filename = source_filename or ged_path.name
     owner = await _ensure_owner(session, owner_email)
 
+    # Tree использует TreeOwnedMixins (без StatusMixin) — не передаём status/confidence.
     tree = Tree(
         owner_user_id=owner.id,
         name=tree_name or ged_path.stem,
         visibility="private",
         default_locale="en",
         settings={},
-        provenance={"source_filename": ged_path.name, "source_sha256": sha},
+        provenance={"source_filename": display_filename, "source_sha256": sha},
         version_id=1,
-        status=EntityStatus.CONFIRMED.value,
-        confidence_score=1.0,
     )
     session.add(tree)
     await session.flush()
 
     job = ImportJob(
         tree_id=tree.id,
-        owner_user_id=owner.id,
+        created_by_user_id=owner.id,
         source_kind=ImportSourceKind.GEDCOM.value,
-        source_filename=ged_path.name,
+        source_filename=display_filename,
         source_sha256=sha,
-        status=ImportJobStatus.PROCESSING.value,
+        status=ImportJobStatus.RUNNING.value,
         started_at=dt.datetime.now(dt.UTC),
     )
     session.add(job)
@@ -278,7 +278,7 @@ async def run_import(
             actor_user_id=owner.id,
             actor_kind=ActorKind.IMPORT_JOB.value,
             import_job_id=job.id,
-            reason=f"API import of {ged_path.name}",
+            reason=f"API import of {display_filename}",
             diff={"summary": stats, "source_sha256": sha, "fields": list(stats.keys())},
         )
     )

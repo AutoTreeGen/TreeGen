@@ -37,12 +37,22 @@ def postgres_dsn() -> Iterator[str]:
     except ImportError:
         pytest.skip("testcontainers not installed")
 
+    import os
+
     container = PostgresContainer("pgvector/pgvector:pg16")
     container.start()
+    # Без override DATABASE_URL: env.py подгружает .env (load_dotenv) и
+    # перезаписывает sqlalchemy.url локальным dev-DSN, из-за чего миграции
+    # уезжают не в testcontainer. Перебиваем через ENV — env.py берёт его
+    # как первоисточник.
+    saved_db_url = os.environ.get("DATABASE_URL")
+    saved_alt_db_url = os.environ.get("AUTOTREEGEN_DATABASE_URL")
     try:
         sync_url = container.get_connection_url().replace(
             "postgresql+psycopg2://", "postgresql+psycopg://", 1
         )
+        os.environ["DATABASE_URL"] = sync_url
+        os.environ.pop("AUTOTREEGEN_DATABASE_URL", None)
 
         # Применить миграции через subprocess (alembic API простой и надёжный).
         from alembic import command
@@ -56,6 +66,12 @@ def postgres_dsn() -> Iterator[str]:
         async_url = sync_url.replace("postgresql+psycopg://", "postgresql+asyncpg://", 1)
         yield async_url
     finally:
+        if saved_db_url is None:
+            os.environ.pop("DATABASE_URL", None)
+        else:
+            os.environ["DATABASE_URL"] = saved_db_url
+        if saved_alt_db_url is not None:
+            os.environ["AUTOTREEGEN_DATABASE_URL"] = saved_alt_db_url
         container.stop()
 
 

@@ -10,8 +10,11 @@ from __future__ import annotations
 import asyncio
 import os
 import sys
+import threading
+from collections.abc import Coroutine
 from logging.config import fileConfig
 from pathlib import Path
+from typing import Any
 
 # Windows + Python 3.13: ProactorEventLoop несовместим с asyncpg/psycopg в
 # async-режиме (рвёт SCRAM-auth с ложным InvalidPasswordError). Принудительно
@@ -119,7 +122,39 @@ async def run_migrations_online() -> None:
     await connectable.dispose()
 
 
+def _run_in_isolated_loop(coro: Coroutine[Any, Any, None]) -> None:
+    """Запустить корутину в новом event loop в отдельном потоке.
+
+    Зачем не ``asyncio.run``: alembic env.py может быть вызван из уже работающего
+    event loop'а (например, ``pytest-asyncio``-фикстура зовёт
+    ``alembic.command.upgrade`` синхронно, но сама находится внутри loop'а
+    pytest-asyncio). ``asyncio.run`` в этой ситуации падает с
+    ``RuntimeError: asyncio.run() cannot be called from a running event loop``.
+
+    Запуск в отдельном потоке с новым loop'ом изолирован от внешнего и работает
+    одинаково для обоих сценариев: CLI ``alembic upgrade head`` и тестовой
+    фикстуры. Поток джойнится синхронно — для caller'а это просто блокирующий
+    вызов миграций.
+    """
+    result: list[BaseException] = []
+
+    def _runner() -> None:
+        loop = asyncio.new_event_loop()
+        try:
+            loop.run_until_complete(coro)
+        except BaseException as exc:
+            result.append(exc)
+        finally:
+            loop.close()
+
+    thread = threading.Thread(target=_runner, name="alembic-migrations")
+    thread.start()
+    thread.join()
+    if result:
+        raise result[0]
+
+
 if context.is_offline_mode():
     run_migrations_offline()
 else:
-    asyncio.run(run_migrations_online())
+    _run_in_isolated_loop(run_migrations_online())

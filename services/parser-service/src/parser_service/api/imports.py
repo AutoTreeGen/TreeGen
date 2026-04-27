@@ -66,6 +66,7 @@ async def create_import(
             tmp_path,
             owner_email=settings.owner_email,
             tree_name=Path(file.filename).stem,
+            source_filename=file.filename,
         )
     except Exception as e:
         raise HTTPException(
