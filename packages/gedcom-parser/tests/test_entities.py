@@ -149,6 +149,7 @@ class TestSimpleEntities:
             "0 @S1@ SOUR\n"
             "1 TITL Lithuanian Census 1897\n"
             "1 AUTH Imperial Office\n"
+            "1 ABBR LCens1897\n"
             "1 PUBL 1898\n"
             "1 REPO @R1@\n"
         )
@@ -157,8 +158,44 @@ class TestSimpleEntities:
         assert src.xref_id == "S1"
         assert src.title == "Lithuanian Census 1897"
         assert src.author == "Imperial Office"
+        assert src.abbreviation == "LCens1897"
         assert src.publication == "1898"
         assert src.repository_xref == "R1"
+
+    def test_source_with_author_and_publication(self) -> None:
+        # Минимальный SOUR с только AUTH/PUBL и без TITL/ABBR/REPO.
+        text = "0 @S1@ SOUR\n1 AUTH Lithuanian State Historical Archive\n1 PUBL Vilnius, 1992\n"
+        rec = parse_text(text)[0]
+        src = Source.from_record(rec)
+        assert src.author == "Lithuanian State Historical Archive"
+        assert src.publication == "Vilnius, 1992"
+        assert src.title is None
+        assert src.abbreviation is None
+        assert src.repository_xref is None
+
+    def test_source_with_abbreviation_only(self) -> None:
+        # ABBR без TITL — SOUR может быть индексирован только аббревиатурой
+        # (в практике встречается у Geni / older Family Tree Maker экспортов).
+        text = "0 @S1@ SOUR\n1 ABBR FT-1907\n"
+        rec = parse_text(text)[0]
+        src = Source.from_record(rec)
+        assert src.abbreviation == "FT-1907"
+        assert src.title is None
+
+    def test_source_repository_xref_resolved(self) -> None:
+        # Гарантируем, что REPO @R1@ сохраняется как xref-строка без @.
+        text = "0 @S1@ SOUR\n1 TITL Census\n1 REPO @R-VILN@\n"
+        rec = parse_text(text)[0]
+        src = Source.from_record(rec)
+        assert src.repository_xref == "R-VILN"
+
+    def test_source_repository_inline_value_ignored(self) -> None:
+        # Если REPO задан inline-текстом (без @), мы его не интерпретируем
+        # как xref. (GEDCOM 5.5.5 формально не разрешает, но встречается.)
+        text = "0 @S1@ SOUR\n1 REPO Vilnius Archive\n"
+        rec = parse_text(text)[0]
+        src = Source.from_record(rec)
+        assert src.repository_xref is None
 
     def test_note(self) -> None:
         text = "0 @N1@ NOTE Some scholarly observation\n"

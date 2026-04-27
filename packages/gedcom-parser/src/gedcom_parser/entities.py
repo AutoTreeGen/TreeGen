@@ -668,11 +668,24 @@ class Family(BaseModel):
 
 
 class Source(BaseModel):
-    """Запись ``SOUR`` верхнего уровня — источник."""
+    """Запись ``SOUR`` верхнего уровня — источник.
+
+    Соответствует ``SOURCE_RECORD`` из GEDCOM 5.5.5 §3.5. Подтеги ``TITL``,
+    ``AUTH``, ``PUBL``, ``ABBR``, ``REPO`` и ``TEXT`` экспонируются как
+    отдельные поля; вложенный ``DATA`` (с ``EVEN`` / ``AGNC``) пока не
+    разворачивается — добавим, когда понадобится.
+    """
 
     xref_id: str
     title: str | None = Field(default=None, description="Подтег TITL.")
     author: str | None = Field(default=None, description="Подтег AUTH.")
+    abbreviation: str | None = Field(
+        default=None,
+        description=(
+            "Подтег ABBR — короткое имя источника (используется в каталогах "
+            "и для UI-сокращений). Не путать с TITL."
+        ),
+    )
     publication: str | None = Field(default=None, description="Подтег PUBL.")
     repository_xref: str | None = Field(
         default=None, description="xref репозитория из подтега REPO."
@@ -698,6 +711,7 @@ class Source(BaseModel):
             xref_id=record.xref_id,
             title=record.get_value("TITL") or None,
             author=record.get_value("AUTH") or None,
+            abbreviation=record.get_value("ABBR") or None,
             publication=record.get_value("PUBL") or None,
             repository_xref=repo_xref,
             text=record.get_value("TEXT") or None,
