@@ -58,6 +58,7 @@ from shared_models.orm import (
     Person,
     Place,
     Source,
+    Tree,
 )
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -68,6 +69,7 @@ from parser_service.services.dedup_finder import (
     find_place_duplicates,
     find_source_duplicates,
 )
+from parser_service.services.notifications import notify_hypothesis_pending_review
 
 
 def _engine_version() -> str:
@@ -342,6 +344,21 @@ async def compute_hypothesis(
     new_hyp.evidences = [_to_orm_evidence(ev) for ev in in_memory.evidences]
     session.add(new_hyp)
     await session.flush()
+
+    # Phase 4.9: light notification — оповещаем tree-owner'а о новой
+    # pending-review гипотезе. Fire-and-forget: ошибки/недоступность
+    # notification-service'а логируются, но не блокируют persist.
+    # Уведомления отправляем только на свежий INSERT — re-compute с
+    # новой rules_version — silent (юзер уже видел исходную гипотезу).
+    owner_id = await session.scalar(select(Tree.owner_user_id).where(Tree.id == tree_id))
+    if owner_id is not None:
+        await notify_hypothesis_pending_review(
+            user_id=owner_id,
+            hypothesis_id=new_hyp.id,
+            tree_id=tree_id,
+            composite_score=in_memory.composite_score,
+            hypothesis_type=hypothesis_type.value,
+        )
     return new_hyp
 
 
