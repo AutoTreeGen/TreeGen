@@ -27,6 +27,7 @@ from gedcom_parser.dates import (
 from gedcom_parser.document import BrokenRef, GedcomDocument
 from gedcom_parser.encoding import decode_gedcom, decode_gedcom_file, detect_encoding
 from gedcom_parser.entities import (
+    Citation,
     Event,
     Family,
     Header,
@@ -80,6 +81,7 @@ __version__ = "0.1.0"
 __all__ = [
     "BrokenRef",
     "Calendar",
+    "Citation",
     "CoordinateKind",
     "EncodingInfo",
     "Event",
