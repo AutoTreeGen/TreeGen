@@ -39,6 +39,7 @@ from inference_engine import (
 from inference_engine.rules import (
     BirthPlaceMatchRule,
     BirthYearMatchRule,
+    DnaSegmentRelationshipRule,
     InferenceRule,
     SexConsistencyRule,
     SurnameMatchRule,
@@ -50,6 +51,8 @@ from shared_models.enums import (
     HypothesisType,
 )
 from shared_models.orm import (
+    DnaKit,
+    DnaMatch,
     Event,
     EventParticipant,
     Hypothesis,
@@ -59,7 +62,7 @@ from shared_models.orm import (
     Place,
     Source,
 )
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -84,15 +87,18 @@ def _engine_version() -> str:
 
 
 # ----- Default rule pack для compose_hypothesis -----------------------------
-# Тут — Phase 7.1 rules. Когда appear новые rules (DNA segment, parent-age),
-# добавляем сюда. rules_version хешируется из этого набора, чтобы
-# reproducibility работал.
+# Phase 7.1 rules + Phase 7.3 DNA rule (ADR-0023). DNA-rule silent если
+# `context["dna_evidence"]` отсутствует, поэтому добавление безопасно для
+# гипотез без линкованных DnaKit. rules_version хешируется из rule_id'ов,
+# поэтому появление DNA rule инвалидирует старые hypothesis-rows и
+# триггерит пересчёт при следующем `compute_hypothesis` (см. ADR-0021).
 
 _DEFAULT_RULE_CLASSES = (
     SurnameMatchRule,
     BirthYearMatchRule,
     BirthPlaceMatchRule,
     SexConsistencyRule,
+    DnaSegmentRelationshipRule,
 )
 
 
@@ -278,13 +284,20 @@ async def compute_hypothesis(
     if subject_a is None or subject_b is None:
         return None
 
-    # 3+4. Compose с временной регистрацией дефолтных правил.
+    # 3. DNA-aggregate (Phase 7.3.1, ADR-0023). Грузим только для person-пар:
+    # SOURCE / PLACE гипотезы DNA-evidence не имеют. None → DNA rule silent.
+    dna_evidence: dict[str, Any] | None = None
+    if subject_type is HypothesisSubjectType.PERSON:
+        dna_evidence = await _load_dna_aggregate(session, a_id, b_id)
+
+    # 4. Compose с временной регистрацией дефолтных правил.
     engine_type = _ENGINE_TYPE_FOR_PERSISTENT[hypothesis_type]
     in_memory = _compose_with_default_rules(
         engine_type=engine_type,
         subject_a=subject_a,
         subject_b=subject_b,
         hypothesis_type_value=hypothesis_type.value,
+        dna_evidence=dna_evidence,
     )
 
     rules_version = _compute_rules_version()
@@ -433,20 +446,107 @@ def _compose_with_default_rules(
     subject_a: dict[str, Any],
     subject_b: dict[str, Any],
     hypothesis_type_value: str,
+    dna_evidence: dict[str, Any] | None = None,
 ) -> inference_engine.Hypothesis:
-    """compose_hypothesis() с дефолтным набором rules Phase 7.1.
+    """compose_hypothesis() с дефолтным набором rules.
 
     Передаём ``rules=`` явно (не через registry) чтобы не конфликтовать
     с другими caller'ами, которые могли зарегистрировать свой набор.
+    ``dna_evidence`` (Phase 7.3.1) попадает в context только если есть
+    пара kit↔match — DnaSegmentRelationshipRule сам silent при отсутствии.
     """
     rule_instances: list[InferenceRule] = [cls() for cls in _DEFAULT_RULE_CLASSES]
+    context: dict[str, Any] = {"hypothesis_type": hypothesis_type_value}
+    if dna_evidence is not None:
+        context["dna_evidence"] = dna_evidence
     return compose_hypothesis(
         hypothesis_type=engine_type,
         subject_a=subject_a,
         subject_b=subject_b,
-        context={"hypothesis_type": hypothesis_type_value},
+        context=context,
         rules=rule_instances,
     )
+
+
+async def _load_dna_aggregate(
+    session: AsyncSession,
+    person_a_id: uuid.UUID,
+    person_b_id: uuid.UUID,
+) -> dict[str, Any] | None:
+    """Собрать DNA-aggregate для пары persons (Phase 7.3.1, ADR-0023).
+
+    Ищем DnaMatch в обе стороны: kit-владелец=A → matched_person_id=B,
+    либо kit-владелец=B → matched_person_id=A. Если матчей несколько,
+    берём с максимальным total_cm — это known limitation, full
+    aggregation поедет в Phase 7.4 вместе с DnaSegment table.
+
+    Returns:
+        Dict в формате, ожидаемом DnaSegmentRelationshipRule (см. ADR-0023
+        §«Вариант A»), либо None если матча нет / total_cm нулевой.
+        Caller (compute_hypothesis) при None просто не передаёт ключ
+        ``dna_evidence`` в context — rule остаётся silent.
+    """
+    primary_stmt = (
+        select(
+            DnaMatch.total_cm,
+            DnaMatch.largest_segment_cm,
+            DnaMatch.segment_count,
+            DnaKit.id.label("kit_id"),
+            DnaKit.person_id.label("kit_owner_person_id"),
+            DnaKit.ethnicity_population.label("kit_ethnicity"),
+        )
+        .join(DnaKit, DnaKit.id == DnaMatch.kit_id)
+        .where(
+            DnaMatch.deleted_at.is_(None),
+            DnaKit.deleted_at.is_(None),
+            DnaMatch.total_cm.is_not(None),
+            or_(
+                (DnaKit.person_id == person_a_id) & (DnaMatch.matched_person_id == person_b_id),
+                (DnaKit.person_id == person_b_id) & (DnaMatch.matched_person_id == person_a_id),
+            ),
+        )
+        .order_by(DnaMatch.total_cm.desc())
+        .limit(1)
+    )
+    primary = (await session.execute(primary_stmt)).first()
+    if primary is None:
+        return None
+
+    # Ethnicity второй стороны — если у неё тоже есть kit, иначе "general".
+    other_person_id = person_b_id if primary.kit_owner_person_id == person_a_id else person_a_id
+    other_kit_stmt = (
+        select(DnaKit.id, DnaKit.ethnicity_population)
+        .where(
+            DnaKit.deleted_at.is_(None),
+            DnaKit.person_id == other_person_id,
+        )
+        .limit(1)
+    )
+    other_kit = (await session.execute(other_kit_stmt)).first()
+    other_ethnicity = other_kit.ethnicity_population if other_kit is not None else "general"
+    other_kit_id = str(other_kit.id) if other_kit is not None else None
+
+    ethnicity_a: str
+    ethnicity_b: str
+    kit_a_id: str | None
+    kit_b_id: str | None
+    if primary.kit_owner_person_id == person_a_id:
+        ethnicity_a, ethnicity_b = primary.kit_ethnicity, other_ethnicity
+        kit_a_id, kit_b_id = str(primary.kit_id), other_kit_id
+    else:
+        ethnicity_a, ethnicity_b = other_ethnicity, primary.kit_ethnicity
+        kit_a_id, kit_b_id = other_kit_id, str(primary.kit_id)
+
+    return {
+        "total_cm": float(primary.total_cm),
+        "longest_segment_cm": float(primary.largest_segment_cm or 0.0),
+        "segment_count": int(primary.segment_count or 0),
+        "ethnicity_population_a": ethnicity_a,
+        "ethnicity_population_b": ethnicity_b,
+        "source": "dna_match_list",
+        "kit_id_a": kit_a_id,
+        "kit_id_b": kit_b_id,
+    }
 
 
 def _to_orm_evidence(ev: inference_engine.Evidence) -> HypothesisEvidence:
