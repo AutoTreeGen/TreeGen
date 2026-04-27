@@ -53,6 +53,7 @@ from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from parser_service.services.dm_buckets import merge_dm_buckets
+from parser_service.services.metrics import import_completed_total
 
 _BATCH_SIZE = 5000
 
@@ -893,4 +894,9 @@ async def run_import(
             diff={"summary": stats, "source_sha256": sha, "fields": list(stats.keys())},
         )
     )
+    # Phase 9.0: success-инкремент. Error path — у caller'а
+    # (api/imports.py обёртывает в try/except и сообщает 500). Это
+    # чище, чем глобальный try внутри функции — caller знает контекст
+    # ошибки (parse vs DB), мы здесь только успех.
+    import_completed_total.labels(source="gedcom", outcome="success").inc()
     return job

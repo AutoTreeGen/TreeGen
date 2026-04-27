@@ -54,6 +54,8 @@ from shared_models.orm import (
 from shared_models.types import new_uuid
 from sqlalchemy import delete, insert, select
 
+from parser_service.services.metrics import import_completed_total
+
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -470,4 +472,6 @@ async def import_fs_pedigree(
         "generations": generations,
     }
     await session.flush()
+    # Phase 9.0: success-инкремент; error path — в api/familysearch.py.
+    import_completed_total.labels(source="fs", outcome="success").inc()
     return job
