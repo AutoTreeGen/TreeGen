@@ -11,7 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.12"]
+        # parser-service requires-python = ">=3.13"; root — ">=3.12". uv по
+        # умолчанию ставит latest (видели 3.14 в логах при matrix=3.12, потому
+        # что `uv python install 3.12` не пинит интерпретатор для последующих
+        # `uv sync` / `uv run`). Фиксируем 3.13 везде через UV_PYTHON.
+        python-version: ["3.13"]
+
+    env:
+      # Жёстко пинит Python для всех `uv sync` / `uv run` в job'е.
+      UV_PYTHON: ${{ matrix.python-version }}
 
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +33,10 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Синхронизировать зависимости
-        run: uv sync --all-extras
+        # --all-packages нужен чтобы подтянуть [project.optional-dependencies]
+        # из workspace-членов (shared-models, parser-service); без него
+        # `--all-extras` применяется только к root-проекту autotreegen.
+        run: uv sync --all-extras --all-packages
 
       - name: Прогнать ruff (lint)
         run: uv run ruff check .
