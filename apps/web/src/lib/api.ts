@@ -1,0 +1,94 @@
+/**
+ * Типизированный fetch-клиент к parser-service.
+ *
+ * Типы зеркалят ``services/parser-service/src/parser_service/schemas.py``.
+ * При изменении Pydantic-схем — обновлять руками. Phase 4.2 заменит ручной
+ * клиент на OpenAPI-codegen.
+ */
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
+
+// ---- Types (зеркало parser_service.schemas) ---------------------------------
+
+export type PersonSummary = {
+  id: string;
+  gedcom_xref: string | null;
+  sex: string;
+  confidence_score: number;
+  primary_name: string | null;
+};
+
+export type PersonListResponse = {
+  tree_id: string;
+  total: number;
+  limit: number;
+  offset: number;
+  items: PersonSummary[];
+};
+
+export type NameSummary = {
+  id: string;
+  given_name: string | null;
+  surname: string | null;
+  sort_order: number;
+};
+
+export type EventSummary = {
+  id: string;
+  event_type: string;
+  date_raw: string | null;
+  date_start: string | null;
+  date_end: string | null;
+  place_id: string | null;
+};
+
+export type PersonDetail = {
+  id: string;
+  tree_id: string;
+  gedcom_xref: string | null;
+  sex: string;
+  status: string;
+  confidence_score: number;
+  names: NameSummary[];
+  events: EventSummary[];
+};
+
+// ---- HTTP error -------------------------------------------------------------
+
+export class ApiError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
+async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers: { Accept: "application/json", ...init?.headers },
+  });
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `Request to ${path} failed with ${response.status} ${response.statusText}`,
+    );
+  }
+  return (await response.json()) as T;
+}
+
+// ---- Public surface ---------------------------------------------------------
+
+export function fetchPersons(treeId: string, limit = 50, offset = 0): Promise<PersonListResponse> {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  return getJson<PersonListResponse>(`/trees/${treeId}/persons?${params.toString()}`);
+}
+
+export function fetchPerson(personId: string): Promise<PersonDetail> {
+  return getJson<PersonDetail>(`/persons/${personId}`);
+}
