@@ -28,7 +28,7 @@ from __future__ import annotations
 import datetime as dt
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 from shared_models.enums import EntityStatus, HypothesisReviewStatus, HypothesisType
 from shared_models.orm import (
@@ -152,9 +152,7 @@ def _pick_default_survivor(a: Person, b: Person) -> uuid.UUID:
         winner = a if a.confidence_score > b.confidence_score else b
     else:
         winner = a if a.created_at <= b.created_at else b
-    # `cast` нужен для pre-commit mypy isolated env (без sqlalchemy[mypy]
-    # plugin'а Mapped[uuid.UUID] виден как Any).
-    return cast("uuid.UUID", winner.id)
+    return winner.id
 
 
 def _resolve_survivor_merged(
@@ -473,7 +471,7 @@ async def apply_merge(
     )
     for prior_log in existing_by_token.scalars().all():
         if {prior_log.survivor_id, prior_log.merged_id} == {a_id, b_id}:
-            return cast("PersonMergeLog", prior_log)
+            return prior_log
 
     diff = await compute_diff(session, a_id, b_id, survivor_choice)
     if diff.conflicts:
@@ -592,7 +590,7 @@ async def apply_merge(
         )
         existing_log = existing_after_race.scalar_one_or_none()
         if existing_log is not None:
-            return cast("PersonMergeLog", existing_log)
+            return existing_log
         msg = "Race during apply_merge"
         raise PersonMergerError(msg) from exc
 
@@ -714,7 +712,7 @@ async def undo_merge(
     log.undone_at = current_time
     log.undone_by_user_id = undone_by_user_id
     await session.flush()
-    return cast("PersonMergeLog", log)
+    return log
 
 
 # -----------------------------------------------------------------------------
