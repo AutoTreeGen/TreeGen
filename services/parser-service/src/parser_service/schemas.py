@@ -40,6 +40,14 @@ class PersonSummary(BaseModel):
         default=None,
         description="Первое имя из ``names`` (sort_order=0), если есть.",
     )
+    match_type: Literal["substring", "phonetic"] | None = Field(
+        default=None,
+        description=(
+            "Как этот ряд попал в результат: ``substring`` (ILIKE), "
+            "``phonetic`` (Daitch-Mokotoff bucket overlap), либо ``None`` "
+            "(простой list-эндпоинт без поиска). Phase 4.4.1."
+        ),
+    )
 
     model_config = ConfigDict(from_attributes=True)
 

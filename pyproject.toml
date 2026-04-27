@@ -38,6 +38,7 @@ members = [
     "packages/inference-engine",
     "services/parser-service",
     "services/dna-service",
+    "services/notification-service",
 ]
 
 # Резолвим workspace-имена из локальных путей, а не из PyPI.
@@ -50,6 +51,7 @@ familysearch-client = { workspace = true }
 inference-engine = { workspace = true }
 parser-service = { workspace = true }
 dna-service = { workspace = true }
+notification-service = { workspace = true }
 
 [tool.uv]
 package = false
@@ -188,6 +190,23 @@ extend-exclude = '''
 python_version = "3.13"
 strict = true
 plugins = ["pydantic.mypy"]
+# mypy_path позволяет hook'у (изолированный venv) находить workspace-пакеты
+# по их `src/`-layout без необходимости их предустановки в venv. Без этого
+# любой `from shared_models.orm import X` / `from inference_engine import X`
+# в service-коде попадал в `import-not-found` (заглушено disable_error_code),
+# а X становился Any — что давало false-positive `redundant-cast` ниже по
+# цепочке. См. PR fix/mypy-hook-workspace-packages.
+mypy_path = [
+    "packages/dna-analysis/src",
+    "packages/entity-resolution/src",
+    "packages/familysearch-client/src",
+    "packages/gedcom-parser/src",
+    "packages/inference-engine/src",
+    "packages/shared-models/src",
+    "services/dna-service/src",
+    "services/notification-service/src",
+    "services/parser-service/src",
+]
 exclude = [
     "samples/",
     "build/",
