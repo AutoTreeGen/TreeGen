@@ -6,6 +6,7 @@ hierarchy, parent-age sanity, sex match, DNA segment evidence rule.
 """
 
 from inference_engine.rules.base import InferenceRule
+from inference_engine.rules.birth_year_match import BirthYearMatchRule
 from inference_engine.rules.registry import (
     RuleAlreadyRegisteredError,
     RuleNotFoundError,
@@ -17,6 +18,7 @@ from inference_engine.rules.registry import (
 )
 
 __all__ = [
+    "BirthYearMatchRule",
     "InferenceRule",
     "RuleAlreadyRegisteredError",
     "RuleNotFoundError",
