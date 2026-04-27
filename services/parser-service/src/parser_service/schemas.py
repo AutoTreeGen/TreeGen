@@ -138,3 +138,43 @@ class PersonDetail(BaseModel):
     media: list[MultimediaSummary] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AncestorTreeNode(BaseModel):
+    """Узел pedigree-дерева для ``GET /persons/{id}/ancestors``.
+
+    Рекурсивная структура: у каждой персоны опционально есть ``father``
+    и ``mother`` — каждый сам же ``AncestorTreeNode``. Глубина рекурсии
+    ограничена параметром ``generations`` запроса (см. trees.py).
+
+    ``birth_year`` / ``death_year`` извлекаются из событий BIRT/DEAT
+    через ``date_start.year`` (для read-only chart полной даты не нужно).
+    """
+
+    id: uuid.UUID
+    primary_name: str | None = None
+    birth_year: int | None = None
+    death_year: int | None = None
+    sex: str
+    father: AncestorTreeNode | None = None
+    mother: AncestorTreeNode | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Pydantic v2 рекурсивные модели — finalize forward references.
+AncestorTreeNode.model_rebuild()
+
+
+class AncestorsResponse(BaseModel):
+    """Обёртка для ответа ``GET /persons/{id}/ancestors``.
+
+    Помимо корневого узла отдаём ``generations_requested`` и
+    ``generations_loaded`` — фронт показывает «загружено N из запрошенных M»,
+    если родительских записей в дереве меньше глубины запроса.
+    """
+
+    person_id: uuid.UUID
+    generations_requested: int
+    generations_loaded: int
+    root: AncestorTreeNode
