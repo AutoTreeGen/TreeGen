@@ -258,3 +258,91 @@ class FamilySearchImportRequest(BaseModel):
     )
 
     model_config = ConfigDict(extra="forbid")
+
+
+# -----------------------------------------------------------------------------
+# Phase 7.2 — hypothesis persistence (ADR-0021).
+# Pydantic-обёртки вокруг ORM моделей Hypothesis / HypothesisEvidence
+# (shared-models.orm.hypothesis). Здесь — read/write DTO для HTTP слоя.
+# -----------------------------------------------------------------------------
+
+
+class HypothesisEvidenceResponse(BaseModel):
+    """Один evidence-row для UI explainability."""
+
+    id: uuid.UUID
+    rule_id: str
+    direction: str  # "supports" | "contradicts" | "neutral"
+    weight: float
+    observation: str
+    source_provenance: dict[str, Any] = Field(default_factory=dict)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class HypothesisSummary(BaseModel):
+    """Облегчённый Hypothesis для list-эндпоинтов (без evidences[])."""
+
+    id: uuid.UUID
+    tree_id: uuid.UUID
+    hypothesis_type: str
+    subject_a_type: str
+    subject_a_id: uuid.UUID
+    subject_b_type: str
+    subject_b_id: uuid.UUID
+    composite_score: float
+    computed_at: datetime
+    rules_version: str
+    reviewed_status: str
+    reviewed_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class HypothesisResponse(HypothesisSummary):
+    """Полный Hypothesis с evidences[] — для GET /hypotheses/{id} и POST."""
+
+    review_note: str | None = None
+    reviewed_by_user_id: uuid.UUID | None = None
+    evidences: list[HypothesisEvidenceResponse] = Field(default_factory=list)
+
+
+class HypothesisListResponse(BaseModel):
+    """Пагинированный list для ``GET /trees/{id}/hypotheses``."""
+
+    tree_id: uuid.UUID
+    total: int
+    limit: int
+    offset: int
+    items: list[HypothesisSummary]
+
+
+class HypothesisCreateRequest(BaseModel):
+    """``POST /trees/{tree_id}/hypotheses`` body."""
+
+    subject_a_id: uuid.UUID
+    subject_b_id: uuid.UUID
+    hypothesis_type: Literal[
+        "same_person",
+        "parent_child",
+        "siblings",
+        "marriage",
+        "duplicate_source",
+        "duplicate_place",
+    ]
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class HypothesisReviewRequest(BaseModel):
+    """``PATCH /hypotheses/{id}/review`` body — user judgment.
+
+    CLAUDE.md §5: ``status='confirmed'`` НЕ автоматически мерджит entities.
+    Сервис только сохраняет user-judgment + actor; merge — отдельный
+    flow Phase 4.6.
+    """
+
+    status: Literal["pending", "confirmed", "rejected"]
+    note: str | None = Field(default=None, max_length=2000)
+
+    model_config = ConfigDict(extra="forbid")

@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from parser_service.api import dedup, familysearch, imports, trees
+from parser_service.api import dedup, familysearch, hypotheses, imports, trees
 from parser_service.config import get_settings
 from parser_service.database import dispose_engine, init_engine
 
@@ -51,6 +51,7 @@ app.include_router(familysearch.router, prefix="/imports", tags=["imports", "fam
 app.include_router(imports.router, prefix="/imports", tags=["imports"])
 app.include_router(trees.router, tags=["trees"])
 app.include_router(dedup.router, tags=["dedup"])
+app.include_router(hypotheses.router, tags=["hypotheses"])
 
 
 @app.get("/healthz", tags=["meta"])
