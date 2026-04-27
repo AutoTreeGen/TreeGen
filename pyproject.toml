@@ -33,6 +33,7 @@ members = [
     "packages/gedcom-parser",
     "packages/shared-models",
     "packages/dna-analysis",
+    "packages/familysearch-client",
     "services/parser-service",
 ]
 
@@ -41,6 +42,7 @@ members = [
 shared-models = { workspace = true }
 gedcom-parser = { workspace = true }
 dna-analysis = { workspace = true }
+familysearch-client = { workspace = true }
 parser-service = { workspace = true }
 
 [tool.uv]
@@ -254,4 +256,5 @@ markers = [
     "integration: требуют docker-compose сервисов",
     "gedcom_real: используют реальные GED-файлы (skipped в CI)",
     "db: требуют живой БД",
+    "familysearch_real: бьют по живому FamilySearch sandbox (skipped в CI)",
 ]
