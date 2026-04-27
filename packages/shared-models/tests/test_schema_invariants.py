@@ -44,6 +44,10 @@ SERVICE_TABLES = {
     # неактуальным для re-send), нет provenance (источник — internal
     # callers через POST /notify, не GEDCOM/DNA-import).
     "notifications",
+    # Bulk hypothesis-compute jobs (Phase 7.5): служебные job rows
+    # с прогрессом и cancel-флагом. Soft-delete не нужен — старые job'ы
+    # purge'аются retention-политикой (TBD).
+    "hypothesis_compute_jobs",
 }
 
 TREE_ENTITY_TABLES = {
