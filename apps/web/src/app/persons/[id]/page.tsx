@@ -53,9 +53,14 @@ function PersonDetailView({ person }: { person: PersonDetail }) {
   return (
     <article className="space-y-6">
       <header>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={`/trees/${person.tree_id}/persons`}>← Back to tree</Link>
-        </Button>
+        <div className="flex items-center justify-between gap-3">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href={`/trees/${person.tree_id}/persons`}>← Back to tree</Link>
+          </Button>
+          <Button variant="primary" size="sm" asChild>
+            <Link href={`/persons/${person.id}/tree`}>View family tree →</Link>
+          </Button>
+        </div>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight">{primaryDisplay}</h1>
         <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[color:var(--color-ink-500)]">
           {person.gedcom_xref ? <span className="font-mono">{person.gedcom_xref}</span> : null}
