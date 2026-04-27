@@ -1,0 +1,470 @@
+"""FamilySearch pedigree → ORM importer (Phase 5.1).
+
+Маппинг — см. ADR-0017. Pure-function importer:
+
+    job = await import_fs_pedigree(
+        session,
+        access_token=token,
+        fs_person_id="KW7S-VQJ",
+        tree_id=existing_tree.id,
+        owner_user_id=user.id,
+        generations=4,
+    )
+
+Идемпотентность по ``provenance.fs_person_id``:
+
+- Уже существующий FS-person с тем же id внутри ``tree_id`` → refresh
+  (drop FS-provenance Names/Events этого Person'а, вставить свежие из FS).
+  Manual-edited Names/Events (без FS-provenance) не трогаем.
+- Не существующий — INSERT.
+
+См. ADR-0017 §«Conflict resolution» — это **не** cross-person merge.
+"""
+
+from __future__ import annotations
+
+import datetime as dt
+import uuid
+from typing import TYPE_CHECKING, Any
+
+from familysearch_client import (
+    FamilySearchClient,
+    FamilySearchConfig,
+    FsPedigreeNode,
+    FsPerson,
+)
+from familysearch_client.models import FsGender
+from shared_models import set_audit_skip
+from shared_models.enums import (
+    EntityStatus,
+    EventType,
+    ImportJobStatus,
+    ImportSourceKind,
+    NameType,
+    Sex,
+)
+from shared_models.orm import (
+    Event,
+    EventParticipant,
+    ImportJob,
+    Name,
+    Person,
+    Place,
+)
+from shared_models.types import new_uuid
+from sqlalchemy import delete, insert, select
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+
+_BATCH_SIZE = 5000
+
+# GEDCOM-X fact short names (без http://gedcomx.org/-префикса) → наш
+# EventType. Phase 5.1: только Birth/Death. Marriage — Phase 5.2 (требует
+# /spouses endpoint, не входит в get_pedigree).
+_FACT_TYPE_MAP: dict[str, str] = {
+    "Birth": EventType.BIRTH.value,
+    "Death": EventType.DEATH.value,
+}
+
+
+def _gedcom_xref(fs_person_id: str) -> str:
+    """FamilySearch ID (``KW7S-VQJ``) → ORM gedcom_xref (``fs:KW7S-VQJ``).
+
+    Префикс ``fs:`` отделяет FS-импорты от GEDCOM-xref'ов. См. ADR-0017
+    §Person.
+    """
+    return f"fs:{fs_person_id}"
+
+
+def _fs_url(fs_person_id: str) -> str:
+    """Стабильный deeplink на FamilySearch UI."""
+    return f"https://www.familysearch.org/tree/person/details/{fs_person_id}"
+
+
+def _map_sex(gender: FsGender) -> str:
+    if gender == FsGender.MALE:
+        return Sex.MALE.value
+    if gender == FsGender.FEMALE:
+        return Sex.FEMALE.value
+    return Sex.UNKNOWN.value
+
+
+def _map_status(person: FsPerson) -> str:
+    """Living person'ы из FS — HYPOTHESIS, остальные — PROBABLE.
+
+    Mы не можем подтвердить чужие данные автоматически (CONFIRMED), но
+    living-флаг повышает риск ложного матча, поэтому ниже
+    (см. ADR-0017 §Person).
+    """
+    if person.living is True:
+        return EntityStatus.HYPOTHESIS.value
+    return EntityStatus.PROBABLE.value
+
+
+def _build_provenance(
+    fs_person_id: str,
+    *,
+    job_id: uuid.UUID,
+    imported_at: dt.datetime,
+) -> dict[str, Any]:
+    """Provenance JSON для Person/Name/Event.
+
+    Структура (см. ADR-0017 §«Provenance schema»):
+
+    .. code-block:: json
+
+        {
+          "source": "familysearch",
+          "fs_person_id": "KW7S-VQJ",
+          "fs_url": "https://www.familysearch.org/tree/person/details/KW7S-VQJ",
+          "imported_at": "2026-04-27T12:34:56+00:00",
+          "import_job_id": "<UUID>"
+        }
+    """
+    return {
+        "source": "familysearch",
+        "fs_person_id": fs_person_id,
+        "fs_url": _fs_url(fs_person_id),
+        "imported_at": imported_at.isoformat(),
+        "import_job_id": str(job_id),
+    }
+
+
+async def _existing_fs_person_ids(
+    session: AsyncSession, *, tree_id: uuid.UUID, fs_person_ids: list[str]
+) -> dict[str, uuid.UUID]:
+    """SELECT существующих Person'ов по provenance->>'fs_person_id'.
+
+    Возвращает map {fs_person_id: orm_person_id}. Используется для
+    идемпотентного upsert по ADR-0017 §«Conflict resolution».
+    """
+    if not fs_person_ids:
+        return {}
+    stmt = (
+        select(Person.id, Person.provenance["fs_person_id"].astext.label("fs_id"))
+        .where(Person.tree_id == tree_id)
+        .where(Person.provenance["fs_person_id"].astext.in_(fs_person_ids))
+    )
+    rows = (await session.execute(stmt)).all()
+    return {row.fs_id: row.id for row in rows}
+
+
+async def _existing_places(
+    session: AsyncSession, *, tree_id: uuid.UUID, names: list[str]
+) -> dict[str, uuid.UUID]:
+    """SELECT existing Place rows для tree_id по canonical_name."""
+    if not names:
+        return {}
+    stmt = (
+        select(Place.id, Place.canonical_name)
+        .where(Place.tree_id == tree_id)
+        .where(Place.canonical_name.in_(names))
+    )
+    rows = (await session.execute(stmt)).all()
+    return {row.canonical_name: row.id for row in rows}
+
+
+async def _drop_fs_owned_events(session: AsyncSession, *, person_ids: list[uuid.UUID]) -> int:
+    """Drop existing FS-provenance Events для refresh-сценария.
+
+    Удаляются только Event'ы с ``provenance->>'source' = 'familysearch'`` —
+    user-added и GEDCOM-imported не трогаем. См. ADR-0017
+    §«Сценарий 3 — events refresh».
+
+    :class:`Name` НЕ имеет ``provenance`` колонки, поэтому имена для уже
+    существующих FS-persons мы при refresh **не вставляем заново**
+    (скип на caller-уровне в :func:`import_fs_pedigree`). Это сохраняет
+    и уже импортированные FS-имена, и любые manually-added имена.
+
+    Возвращает количество удалённых event-id (для статистики).
+    """
+    if not person_ids:
+        return 0
+
+    # Events связаны через event_participants. Сначала находим event_id
+    # для FS-provenance events этих persons, удаляем participants, потом
+    # сам Event.
+    event_id_stmt = (
+        select(Event.id)
+        .join(EventParticipant, EventParticipant.event_id == Event.id)
+        .where(EventParticipant.person_id.in_(person_ids))
+        .where(Event.provenance["source"].astext == "familysearch")
+    )
+    event_ids = [row.id for row in (await session.execute(event_id_stmt)).all()]
+    if event_ids:
+        await session.execute(
+            delete(EventParticipant).where(EventParticipant.event_id.in_(event_ids))
+        )
+        await session.execute(delete(Event).where(Event.id.in_(event_ids)))
+    return len(event_ids)
+
+
+async def _bulk_insert(session: AsyncSession, model: Any, rows: list[dict[str, Any]]) -> None:
+    """Чанками вставляет rows в model. No-op если rows пустой."""
+    if not rows:
+        return
+    for start in range(0, len(rows), _BATCH_SIZE):
+        chunk = rows[start : start + _BATCH_SIZE]
+        await session.execute(insert(model), chunk)
+
+
+def _collect_persons(tree: FsPedigreeNode) -> list[FsPerson]:
+    """Pre-order collected persons (root → father subtree → mother subtree).
+
+    Локальная реализация, чтобы избежать Any-проброса через Pydantic-метод
+    при mypy strict (FsPedigreeNode.walk имеет ту же логику, но тип
+    выводится через рекурсивную ``FsPedigreeNode | None``, что mypy не
+    разворачивает).
+    """
+    result: list[FsPerson] = [tree.person]
+    if tree.father is not None:
+        result.extend(_collect_persons(tree.father))
+    if tree.mother is not None:
+        result.extend(_collect_persons(tree.mother))
+    return result
+
+
+def _collect_unique_places(persons: list[FsPerson]) -> list[str]:
+    """Unique non-empty Place originals across Birth/Death facts."""
+    seen: dict[str, None] = {}
+    for p in persons:
+        for fact in p.facts:
+            if fact.type not in _FACT_TYPE_MAP:
+                continue
+            place = (fact.place_original or "").strip()
+            if place:
+                seen.setdefault(place, None)
+    return list(seen.keys())
+
+
+async def import_fs_pedigree(
+    session: AsyncSession,
+    *,
+    access_token: str,
+    fs_person_id: str,
+    tree_id: uuid.UUID,
+    owner_user_id: uuid.UUID,
+    generations: int = 4,
+    fs_client: FamilySearchClient | None = None,
+    fs_config: FamilySearchConfig | None = None,
+) -> ImportJob:
+    """Импорт FS pedigree (focus + N поколений предков) в дерево.
+
+    Args:
+        session: async-сессия (commit/rollback — на caller).
+        access_token: OAuth токен пользователя; сюда не сохраняется,
+            используется только для одного HTTP-запроса.
+        fs_person_id: FamilySearch person id (``KW7S-VQJ``).
+        tree_id: существующее дерево; caller гарантирует его принадлежность
+            ``owner_user_id``.
+        owner_user_id: для ``ImportJob.created_by_user_id``.
+        generations: число поколений предков (1..8, см. ``FamilySearchClient``).
+        fs_client: optional injection — для тестов через ``pytest-httpx``;
+            если ``None``, создаём собственный с ``access_token``.
+        fs_config: используется только при создании собственного клиента;
+            по умолчанию sandbox.
+
+    Returns:
+        ``ImportJob`` со статусом ``succeeded`` и заполненными ``stats``.
+    """
+    now = dt.datetime.now(dt.UTC)
+
+    # ---- 1. Создаём ImportJob, status=running ----
+    job_id = new_uuid()
+    job = ImportJob(
+        id=job_id,
+        tree_id=tree_id,
+        created_by_user_id=owner_user_id,
+        source_kind=ImportSourceKind.FAMILYSEARCH.value,
+        source_filename=None,
+        source_sha256=None,
+        status=ImportJobStatus.RUNNING.value,
+        started_at=now,
+    )
+    session.add(job)
+    await session.flush()
+
+    # ---- 2. Тянем pedigree из FS ----
+    if fs_client is None:
+        async with FamilySearchClient(access_token=access_token, config=fs_config) as owned_client:
+            tree = await owned_client.get_pedigree(fs_person_id, generations=generations)
+    else:
+        tree = await fs_client.get_pedigree(fs_person_id, generations=generations)
+
+    persons = _collect_persons(tree)
+    fs_ids = [p.id for p in persons]
+
+    # ---- 3. Lookup existing FS-persons (refresh path) ----
+    existing_ids = await _existing_fs_person_ids(session, tree_id=tree_id, fs_person_ids=fs_ids)
+
+    set_audit_skip(session.sync_session, True)
+    try:
+        # Drop FS-provenance Events для refresh-набора (Names не трогаем —
+        # см. _drop_fs_owned_events docstring и ADR-0017 §«names/events refresh»).
+        events_deleted = await _drop_fs_owned_events(
+            session, person_ids=list(existing_ids.values())
+        )
+
+        # ---- 4. Resolve Place ids ----
+        place_originals = _collect_unique_places(persons)
+        existing_places = await _existing_places(session, tree_id=tree_id, names=place_originals)
+        place_id_by_name: dict[str, uuid.UUID] = dict(existing_places)
+
+        new_place_rows: list[dict[str, Any]] = []
+        for name in place_originals:
+            if name in place_id_by_name:
+                continue
+            new_id = new_uuid()
+            place_id_by_name[name] = new_id
+            new_place_rows.append(
+                {
+                    "id": new_id,
+                    "tree_id": tree_id,
+                    "canonical_name": name,
+                    "status": EntityStatus.PROBABLE.value,
+                    "confidence_score": 0.5,
+                    "version_id": 1,
+                    "provenance": _build_provenance(fs_person_id, job_id=job_id, imported_at=now),
+                    "created_at": now,
+                    "updated_at": now,
+                }
+            )
+        await _bulk_insert(session, Place, new_place_rows)
+
+        # ---- 5. Persons: insert new + ID-map для existing ----
+        person_rows_to_insert: list[dict[str, Any]] = []
+        person_id_by_fs_id: dict[str, uuid.UUID] = dict(existing_ids)
+        for fs_person in persons:
+            if fs_person.id in person_id_by_fs_id:
+                continue
+            new_id = new_uuid()
+            person_id_by_fs_id[fs_person.id] = new_id
+            person_rows_to_insert.append(
+                {
+                    "id": new_id,
+                    "tree_id": tree_id,
+                    "gedcom_xref": _gedcom_xref(fs_person.id),
+                    "sex": _map_sex(fs_person.gender),
+                    "status": _map_status(fs_person),
+                    "confidence_score": 0.5,
+                    "version_id": 1,
+                    "provenance": _build_provenance(fs_person.id, job_id=job_id, imported_at=now),
+                    "created_at": now,
+                    "updated_at": now,
+                }
+            )
+        await _bulk_insert(session, Person, person_rows_to_insert)
+
+        # ---- 6. Names: только для новых FS-persons ----
+        # Для refreshed persons (existing_ids) — НЕ вставляем имена заново
+        # (Name не имеет provenance-колонки, поэтому различить FS-добавленное
+        # от manual-добавленного нельзя; сохраняем и то, и другое).
+        # Trade-off: новые FS-варианты имён для существующих persons не
+        # подхватываются на refresh — Phase 5.2 если потребуется.
+        name_rows: list[dict[str, Any]] = []
+        new_person_ids = {p["id"] for p in person_rows_to_insert}
+        for fs_person in persons:
+            person_pk = person_id_by_fs_id[fs_person.id]
+            if person_pk not in new_person_ids:
+                continue
+            for sort_order, fs_name in enumerate(fs_person.names):
+                # Если parts пустые, но full_text есть — кладём full_text
+                # в given_name как фолбэк (Name.given_name nullable, но
+                # хотим что-то отображать в UI).
+                given = fs_name.given
+                surname = fs_name.surname
+                if given is None and surname is None and fs_name.full_text:
+                    given = fs_name.full_text
+                if fs_name.preferred:
+                    name_type = NameType.BIRTH.value
+                    sort_value = 0
+                else:
+                    name_type = NameType.AKA.value
+                    sort_value = sort_order + 1
+                name_rows.append(
+                    {
+                        "id": new_uuid(),
+                        "person_id": person_pk,
+                        "given_name": given,
+                        "surname": surname,
+                        "sort_order": sort_value,
+                        "name_type": name_type,
+                        "created_at": now,
+                        "updated_at": now,
+                    }
+                )
+        await _bulk_insert(session, Name, name_rows)
+
+        # ---- 7. Events + EventParticipants (Birth/Death only) ----
+        event_rows: list[dict[str, Any]] = []
+        participant_rows: list[dict[str, Any]] = []
+        skipped_facts = 0
+        for fs_person in persons:
+            person_pk = person_id_by_fs_id[fs_person.id]
+            for fact in fs_person.facts:
+                event_type = _FACT_TYPE_MAP.get(fact.type)
+                if event_type is None:
+                    skipped_facts += 1
+                    continue
+                event_id = new_uuid()
+                place_id = None
+                if fact.place_original:
+                    place_id = place_id_by_name.get(fact.place_original.strip())
+                event_rows.append(
+                    {
+                        "id": event_id,
+                        "tree_id": tree_id,
+                        "event_type": event_type,
+                        "custom_type": None,
+                        "place_id": place_id,
+                        "date_raw": fact.date_original,
+                        "date_start": None,
+                        "date_end": None,
+                        "date_qualifier": None,
+                        "date_calendar": None,
+                        "description": None,
+                        "status": EntityStatus.PROBABLE.value,
+                        "confidence_score": 0.5,
+                        "version_id": 1,
+                        "provenance": _build_provenance(
+                            fs_person.id, job_id=job_id, imported_at=now
+                        ),
+                        "created_at": now,
+                        "updated_at": now,
+                    }
+                )
+                participant_rows.append(
+                    {
+                        "id": new_uuid(),
+                        "event_id": event_id,
+                        "person_id": person_pk,
+                        "family_id": None,
+                        "role": "principal",
+                        "created_at": now,
+                        "updated_at": now,
+                    }
+                )
+        await _bulk_insert(session, Event, event_rows)
+        await _bulk_insert(session, EventParticipant, participant_rows)
+
+    finally:
+        set_audit_skip(session.sync_session, False)
+
+    # ---- 8. Mark job succeeded ----
+    job.status = ImportJobStatus.SUCCEEDED.value
+    job.finished_at = dt.datetime.now(dt.UTC)
+    job.stats = {
+        "persons": len(person_rows_to_insert),
+        "persons_refreshed": len(existing_ids),
+        "names": len(name_rows),
+        "events": len(event_rows),
+        "places": len(new_place_rows),
+        "skipped_facts": skipped_facts,
+        "events_dropped_for_refresh": events_deleted,
+        "fs_focus_person_id": fs_person_id,
+        "generations": generations,
+    }
+    await session.flush()
+    return job

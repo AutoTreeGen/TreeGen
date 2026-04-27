@@ -153,6 +153,7 @@ class ImportSourceKind(StrEnum):
     DNA_CSV = "dna_csv"
     ARCHIVE_MATCH = "archive_match"
     MANUAL = "manual"
+    FAMILYSEARCH = "familysearch"
 
 
 class DateQualifier(StrEnum):
