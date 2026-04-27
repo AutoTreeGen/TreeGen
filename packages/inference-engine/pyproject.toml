@@ -1,0 +1,25 @@
+[project]
+name = "inference-engine"
+version = "0.1.0"
+description = "AutoTreeGen inference engine — hypothesis-aware evidence composition (Phase 7.0)."
+requires-python = ">=3.13"
+readme = "README.md"
+license = { text = "Proprietary" }
+authors = [{ name = "AutoTreeGen" }]
+# Ровно одна зависимость:
+#  - pydantic: модели Hypothesis / Evidence + валидация.
+# Никаких sqlalchemy / fastapi / httpx — это pure-functions пакет
+# (см. ADR-0016 §«Pure functions без I/O»). ORM появится в Phase 7.2.
+dependencies = [
+    "pydantic>=2.10",
+]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/inference_engine"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
