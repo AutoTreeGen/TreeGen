@@ -8,9 +8,15 @@ Phase 6.1 поставляет:
 
 from __future__ import annotations
 
+from dna_analysis.matching.relationships import (
+    RelationshipRange,
+    predict_relationship,
+)
 from dna_analysis.matching.segments import SharedSegment, find_shared_segments
 
 __all__ = [
+    "RelationshipRange",
     "SharedSegment",
     "find_shared_segments",
+    "predict_relationship",
 ]
