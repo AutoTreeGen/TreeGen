@@ -67,6 +67,7 @@ dev = [
     "psycopg[binary]>=3.2",   # sync-драйвер для alembic offline-режима
     "python-dotenv>=1.0",     # авто-загрузка .env (Phase 2 alembic)
     "testcontainers[postgres]>=4.8",
+    "pyyaml>=6.0",            # парсинг .github/workflows/*.yml в tests/test_ci_parity.py
 ]
 
 # -----------------------------------------------------------------------------
