@@ -35,6 +35,7 @@ from parser_service.schemas import (
     HypothesisSummary,
 )
 from parser_service.services.hypothesis_runner import compute_hypothesis
+from parser_service.services.metrics import hypothesis_review_action_total
 
 router = APIRouter()
 
@@ -200,6 +201,9 @@ async def review_hypothesis(
     # reviewed_by_user_id — Phase 7.3 заполнит из auth context.
     # Пока не трогаем (None допустим в migration).
     await session.commit()
+    # Phase 9.0: review action counter (после commit — считаем только
+    # успешно сохранённые judgements).
+    hypothesis_review_action_total.labels(action=body.status).inc()
     await session.refresh(hyp, attribute_names=["evidences"])
     return HypothesisResponse.model_validate(hyp)
 
