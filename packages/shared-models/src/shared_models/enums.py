@@ -283,3 +283,19 @@ class HypothesisComputedBy(StrEnum):
     AUTOMATIC = "automatic"
     MANUAL = "manual"
     IMPORTED = "imported"
+
+
+class NotificationEventType(StrEnum):
+    """Тип события нотификации (Phase 8.0 — см. ADR-0024).
+
+    Каждый тип — отдельный шаблон сообщения и отдельный idempotency
+    namespace. Список расширяется по мере появления новых источников
+    нотификаций; неизвестный type на ``POST /notify`` отвергается 400.
+    """
+
+    HYPOTHESIS_PENDING_REVIEW = "hypothesis_pending_review"
+    DNA_MATCH_FOUND = "dna_match_found"
+    IMPORT_COMPLETED = "import_completed"
+    IMPORT_FAILED = "import_failed"
+    MERGE_UNDONE = "merge_undone"
+    DEDUP_SUGGESTION_NEW = "dedup_suggestion_new"
