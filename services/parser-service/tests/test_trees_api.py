@@ -46,6 +46,33 @@ _GED_WITH_PLACE = b"""\
 """
 
 
+_GED_WITH_CITATIONS_AND_MEDIA = b"""\
+0 HEAD
+1 SOUR test
+1 GEDC
+2 VERS 5.5.5
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME John /Smith/
+1 SEX M
+1 BIRT
+2 DATE 1850
+2 SOUR @S1@
+3 PAGE p. 42
+3 QUAY 3
+1 OBJE @M1@
+0 @S1@ SOUR
+1 TITL Lubelskie parish records 1838
+1 AUTH Lubelskie Archive
+0 @M1@ OBJE
+1 FILE photos/john_smith_1850.jpg
+1 FORM jpg
+1 TITL John Smith portrait, 1850
+0 TRLR
+"""
+
+
 @pytest.mark.asyncio
 async def test_list_persons_returns_imported(app_client) -> None:
     """После импорта: ``GET /trees/{id}/persons`` возвращает 2 персон."""
@@ -85,6 +112,40 @@ async def test_get_person_returns_404_for_unknown(app_client) -> None:
     """Несуществующий UUID → 404."""
     response = await app_client.get("/persons/00000000-0000-0000-0000-000000000000")
     assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_get_person_returns_citations_and_media(app_client) -> None:
+    """``GET /persons/{id}`` отдаёт events[].citations и top-level media[].
+
+    После импорта `_GED_WITH_CITATIONS_AND_MEDIA`:
+    - BIRT-event у I1 имеет ровно 1 citation с source_title из `sources.title`,
+      page_or_section "p. 42", quality 1.0 (QUAY 3 / 3).
+    - persona имеет media[] из 1 элемента с title, file_path и format jpg.
+    """
+    files = {"file": ("test.ged", _GED_WITH_CITATIONS_AND_MEDIA, "application/octet-stream")}
+    created = await app_client.post("/imports", files=files)
+    tree_id = created.json()["tree_id"]
+
+    listing = await app_client.get(f"/trees/{tree_id}/persons")
+    person_id = next(p["id"] for p in listing.json()["items"] if p["gedcom_xref"] == "I1")
+
+    response = await app_client.get(f"/persons/{person_id}")
+    assert response.status_code == 200
+    body = response.json()
+
+    birt = next(e for e in body["events"] if e["event_type"] == "BIRT")
+    assert len(birt["citations"]) == 1
+    cit = birt["citations"][0]
+    assert cit["source_title"] == "Lubelskie parish records 1838"
+    assert cit["page"] == "p. 42"
+    assert cit["quality"] == pytest.approx(1.0)
+
+    assert len(body["media"]) == 1
+    media = body["media"][0]
+    assert media["title"] == "John Smith portrait, 1850"
+    assert media["file_path"] == "photos/john_smith_1850.jpg"
+    assert media["format"] == "jpg"
 
 
 @pytest.mark.asyncio
