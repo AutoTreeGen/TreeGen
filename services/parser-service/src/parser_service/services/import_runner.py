@@ -33,6 +33,7 @@ from shared_models.enums import (
 )
 from shared_models.orm import (
     AuditLog,
+    Citation,
     Event,
     EventParticipant,
     Family,
@@ -129,6 +130,29 @@ def _map_date_calendar(calendar: str) -> str | None:
     return _CALENDAR_MAP.get(calendar)
 
 
+# GEDCOM QUAY (quality of evidence): 0 = unreliable, 3 = primary evidence.
+# В нашем `Citation.quality` (Float, default 0.5) семантика — нормализованный
+# 0..1 score, поэтому делим QUAY на 3. Невалидный/отсутствующий QUAY → None
+# (вызывающий ставит дефолт ORM — 0.5).
+_QUAY_MAX = 3
+
+
+def _quay_to_quality(value: str | None) -> float | None:
+    """GEDCOM QUAY ('0'..'3') → Citation.quality (0.0..1.0). None если не задан."""
+    if value is None:
+        return None
+    stripped = value.strip()
+    if not stripped:
+        return None
+    try:
+        quay = int(stripped)
+    except ValueError:
+        return None
+    if quay < 0 or quay > _QUAY_MAX:
+        return None
+    return quay / _QUAY_MAX
+
+
 def _chunk(seq: list[dict[str, Any]], size: int) -> list[list[dict[str, Any]]]:
     """Разбить список dict'ов на чанки фиксированного размера."""
     return [seq[i : i + size] for i in range(0, len(seq), size)]
@@ -220,12 +244,19 @@ async def run_import(
     session.add(job)
     await session.flush()
 
-    # Парсинг GEDCOM
-    from gedcom_parser import parse_document_file  # type: ignore[import-not-found]
+    # Парсинг GEDCOM. Используем parse_file (а не parse_document_file), чтобы
+    # получить и raw `records`, и encoding. Records нужны для извлечения
+    # SOUR-references с подтегами PAGE/QUAY (см. citations ниже): семантические
+    # entity'ы из `document` хранят только tuple xref'ов, без подробностей.
+    from gedcom_parser import (  # type: ignore[import-not-found]
+        GedcomDocument,
+        parse_file,
+    )
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        document = parse_document_file(ged_path)
+        records, encoding = parse_file(ged_path)
+        document = GedcomDocument.from_records(records, encoding=encoding)
 
     set_audit_skip(session.sync_session, True)
     try:
@@ -398,6 +429,10 @@ async def run_import(
         # чтобы соблюсти CHECK (person_id OR family_id).
         event_rows: list[dict[str, Any]] = []
         participant_rows: list[dict[str, Any]] = []
+        # Маппинг GEDCOM line_no события → event_id. Нужен Task 2 (citations),
+        # чтобы по raw GedcomRecord события найти соответствующий event_id
+        # без изменения парсера. line_no уникален в пределах файла.
+        event_id_by_line_no: dict[int, Any] = {}
 
         def _resolve_place_id(raw: str | None) -> Any | None:
             """Найти place_id по PLAC raw (после strip), либо None."""
@@ -408,6 +443,8 @@ async def run_import(
         def _append_event(ev: Any) -> Any:
             """Собрать одну запись Event и вернуть её id."""
             event_id = new_uuid()
+            if ev.line_no is not None:
+                event_id_by_line_no[ev.line_no] = event_id
             event_type, custom_type = _map_event_type(ev.tag)
 
             date_start = None
@@ -490,6 +527,83 @@ async def run_import(
         await _bulk_insert(session, Event, event_rows)
         await _bulk_insert(session, EventParticipant, participant_rows)
 
+        # ---- Citations ----
+        # Собираем SOUR-references из raw GedcomRecord. Семантический слой
+        # gedcom_parser хранит только tuple xref'ов — без подтегов PAGE/QUAY,
+        # поэтому идём по сырым записям.
+        # Citation.entity_type ∈ {"person", "family", "event"}; для каждого
+        # SOUR с xref-значением создаём одну строку.
+        citation_rows: list[dict[str, Any]] = []
+
+        def _collect_citations(
+            *,
+            owner_record: Any,
+            entity_type: str,
+            entity_id: Any,
+        ) -> None:
+            """Найти SOUR-children у `owner_record` и записать citations."""
+            for sour in owner_record.find_all("SOUR"):
+                value = sour.value
+                if not (value.startswith("@") and value.endswith("@")):
+                    # Inline-source (1 SOUR <text>) — без xref, в этой фазе
+                    # игнорируем (Phase 3.4: создавать ad-hoc Source).
+                    continue
+                src_xref = value.strip("@")
+                src_id = source_id_by_xref.get(src_xref)
+                if src_id is None:
+                    # Висячая ссылка — пропускаем тихо (verify_references
+                    # отдельно эмитит warning).
+                    continue
+                quality = _quay_to_quality(sour.get_value("QUAY") or None)
+                citation: dict[str, Any] = {
+                    "id": new_uuid(),
+                    "tree_id": tree.id,
+                    "source_id": src_id,
+                    "entity_type": entity_type,
+                    "entity_id": entity_id,
+                    "page_or_section": sour.get_value("PAGE") or None,
+                    "quoted_text": None,
+                    "note": None,
+                    "provenance": {"import_job_id": str(job.id)},
+                    "created_at": now,
+                    "updated_at": now,
+                }
+                if quality is not None:
+                    citation["quality"] = quality
+                citation_rows.append(citation)
+
+        # Идентифицируем event-children по line_no: если line_no попал
+        # в `event_id_by_line_no`, мы его реально вставили как Event.
+        # Это покрывает и custom-теги (CUSTOM event_type), без отдельного списка.
+        for root in records:
+            if root.xref_id is None:
+                continue
+            if root.tag == "INDI":
+                owner_pk = person_id_by_xref.get(root.xref_id)
+                owner_kind = "person"
+            elif root.tag == "FAM":
+                owner_pk = family_id_by_xref.get(root.xref_id)
+                owner_kind = "family"
+            else:
+                continue
+            if owner_pk is not None:
+                _collect_citations(
+                    owner_record=root,
+                    entity_type=owner_kind,
+                    entity_id=owner_pk,
+                )
+            for child in root.children:
+                event_pk = event_id_by_line_no.get(child.line_no)
+                if event_pk is None:
+                    continue
+                _collect_citations(
+                    owner_record=child,
+                    entity_type="event",
+                    entity_id=event_pk,
+                )
+
+        await _bulk_insert(session, Citation, citation_rows)
+
         stats = {
             "persons": len(person_rows),
             "names": len(name_rows),
@@ -499,6 +613,7 @@ async def run_import(
             "sources": len(source_rows),
             "events": len(event_rows),
             "event_participants": len(participant_rows),
+            "citations": len(citation_rows),
         }
     finally:
         set_audit_skip(session.sync_session, False)

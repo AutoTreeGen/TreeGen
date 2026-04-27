@@ -23,6 +23,9 @@ _MINIMAL_GED = b"""\
 1 BIRT
 2 DATE 1850
 2 PLAC Slonim, Grodno, Russian Empire
+2 SOUR @S1@
+3 PAGE p. 42
+3 QUAY 3
 0 @I2@ INDI
 1 NAME Mary /Smith/
 1 SEX F
@@ -58,6 +61,8 @@ async def test_post_import_creates_job_and_persons(app_client) -> None:
     assert body["stats"]["places"] == 2
     # Один SOUR-record в фикстуре.
     assert body["stats"]["sources"] == 1
+    # Одна SOUR-reference из BIRT(@I1@) → одна citation.
+    assert body["stats"]["citations"] == 1
     assert body["source_filename"] == "test.ged"
     assert body["tree_id"] is not None
     assert body["id"] is not None
@@ -168,6 +173,59 @@ async def test_import_persists_sources(app_client, postgres_dsn) -> None:
             assert src.author == "Lubelskie Archive"
             assert src.source_type == "other"
             assert src.provenance.get("gedcom_xref") == "S1"
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_event_has_citation(app_client, postgres_dsn) -> None:
+    """BIRT-событие @I1@ имеет citation на @S1@ с PAGE и QUAY.
+
+    Проверяет:
+    - ровно 1 citation после импорта (на BIRT-event @I1@);
+    - entity_type == "event", source_id ссылается на наш SOUR;
+    - page_or_section == "p. 42";
+    - quality нормализован: QUAY 3 → 1.0 (3 / 3).
+    """
+    from shared_models.orm import Citation, Event, Source
+    from sqlalchemy import select
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    files = {"file": ("test.ged", _MINIMAL_GED, "application/octet-stream")}
+    created = await app_client.post("/imports", files=files)
+    assert created.status_code == 201, created.text
+    tree_id = created.json()["tree_id"]
+
+    engine = create_async_engine(postgres_dsn, future=True)
+    try:
+        SessionMaker = async_sessionmaker(engine, expire_on_commit=False)  # noqa: N806
+        async with SessionMaker() as session:
+            citations = (
+                (await session.execute(select(Citation).where(Citation.tree_id == tree_id)))
+                .scalars()
+                .all()
+            )
+            assert len(citations) == 1
+            cit = citations[0]
+            assert cit.entity_type == "event"
+            assert cit.page_or_section == "p. 42"
+            # QUAY 3 → 3/3 = 1.0.
+            assert cit.quality == pytest.approx(1.0)
+
+            birth = (
+                await session.execute(
+                    select(Event).where(
+                        Event.tree_id == tree_id,
+                        Event.event_type == "BIRT",
+                    )
+                )
+            ).scalar_one()
+            assert cit.entity_id == birth.id
+
+            source = (
+                await session.execute(select(Source).where(Source.tree_id == tree_id))
+            ).scalar_one()
+            assert cit.source_id == source.id
     finally:
         await engine.dispose()
 
