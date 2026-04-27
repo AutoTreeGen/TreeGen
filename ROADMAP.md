@@ -271,13 +271,19 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 
 **Цель:** пользователь может зарегистрироваться, загрузить GED, увидеть дерево.
 
+### 8.0 Status
+
+| Подфаза | Содержание | Статус |
+|---|---|---|
+| **4.4** | `/trees/[id]/persons`: поиск по имени (ILIKE) + фильтр по году рождения (BIRT.date_start range), debounce 300 мс, URL-state, 18 интеграционных тестов на бэкенде. См. PR-Phase-4.4. | done (2026-04-27) |
+
 ### 8.1 Страницы
 
 - Лендинг (объяснение продукта, тарифы — пока заглушки).
 - `/login`, `/signup` (Clerk).
 - `/dashboard` — список деревьев, импортов.
 - `/trees/[id]` — обзор дерева: stats, recent imports.
-- `/trees/[id]/persons` — поиск по персонам.
+- `/trees/[id]/persons` — поиск по персонам (Phase 4.4: name ILIKE + birth-year range + URL-state).
 - `/trees/[id]/persons/[personId]` — карточка персоны.
 - `/trees/[id]/import` — загрузка GED с drag & drop.
 

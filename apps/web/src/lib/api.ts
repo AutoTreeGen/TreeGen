@@ -89,6 +89,32 @@ export function fetchPersons(treeId: string, limit = 50, offset = 0): Promise<Pe
   return getJson<PersonListResponse>(`/trees/${treeId}/persons?${params.toString()}`);
 }
 
+export type PersonSearchParams = {
+  q?: string;
+  birthYearMin?: number;
+  birthYearMax?: number;
+  limit?: number;
+  offset?: number;
+};
+
+export function searchPersons(
+  treeId: string,
+  { q, birthYearMin, birthYearMax, limit = 50, offset = 0 }: PersonSearchParams = {},
+): Promise<PersonListResponse> {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  if (q) params.set("q", q);
+  if (birthYearMin !== undefined && Number.isFinite(birthYearMin)) {
+    params.set("birth_year_min", String(birthYearMin));
+  }
+  if (birthYearMax !== undefined && Number.isFinite(birthYearMax)) {
+    params.set("birth_year_max", String(birthYearMax));
+  }
+  return getJson<PersonListResponse>(`/trees/${treeId}/persons/search?${params.toString()}`);
+}
+
 export function fetchPerson(personId: string): Promise<PersonDetail> {
   return getJson<PersonDetail>(`/persons/${personId}`);
 }
