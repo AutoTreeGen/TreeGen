@@ -183,3 +183,92 @@ export function fetchDuplicateSuggestions(
     `/trees/${treeId}/duplicate-suggestions?${params.toString()}`,
   );
 }
+
+// ---- Person merge (Phase 4.6 — ADR-0022) ----------------------------------
+
+export type SurvivorChoice = "left" | "right";
+export type HypothesisCheckStatus = "no_hypotheses_found" | "no_conflicts" | "conflicts_blocking";
+
+export type MergeFieldDiff = {
+  field: string;
+  survivor_value: unknown;
+  merged_value: unknown;
+  after_merge_value: unknown;
+};
+
+export type MergeNameDiff = {
+  name_id: string;
+  old_sort_order: number;
+  new_sort_order: number;
+};
+
+export type MergeEventDiff = {
+  event_id: string;
+  action: "reparent" | "collapse_into_survivor" | "keep_separate";
+  collapsed_into: string | null;
+};
+
+export type MergeFamilyMembershipDiff = {
+  table: "families.husband_id" | "families.wife_id" | "family_children.child_person_id";
+  row_id: string;
+};
+
+export type MergeHypothesisConflict = {
+  reason: "rejected_same_person" | "subject_already_merged" | "cross_relationship_conflict";
+  hypothesis_id: string | null;
+  detail: string;
+};
+
+export type MergePreviewResponse = {
+  survivor_id: string;
+  merged_id: string;
+  default_survivor_id: string;
+  fields: MergeFieldDiff[];
+  names: MergeNameDiff[];
+  events: MergeEventDiff[];
+  family_memberships: MergeFamilyMembershipDiff[];
+  hypothesis_check: HypothesisCheckStatus;
+  conflicts: MergeHypothesisConflict[];
+};
+
+export type MergeCommitRequest = {
+  target_id: string;
+  confirm: true;
+  confirm_token: string;
+  survivor_choice?: SurvivorChoice | null;
+};
+
+export type MergeCommitResponse = {
+  merge_id: string;
+  survivor_id: string;
+  merged_id: string;
+  merged_at: string;
+  confirm_token: string;
+};
+
+export function fetchMergePreview(
+  personId: string,
+  payload: { target_id: string; survivor_choice?: SurvivorChoice | null; confirm_token: string },
+): Promise<MergePreviewResponse> {
+  return getJson<MergePreviewResponse>(`/persons/${personId}/merge/preview`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      target_id: payload.target_id,
+      survivor_choice: payload.survivor_choice ?? null,
+      confirm: true,
+      confirm_token: payload.confirm_token,
+    }),
+  });
+}
+
+export async function commitMerge(
+  personId: string,
+  payload: MergeCommitRequest,
+): Promise<MergeCommitResponse> {
+  return getJson<MergeCommitResponse>(`/persons/${personId}/merge`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}

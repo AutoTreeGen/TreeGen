@@ -276,6 +276,7 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 | Подфаза | Содержание | Статус |
 |---|---|---|
 | **4.4** | `/trees/[id]/persons`: поиск по имени (ILIKE) + фильтр по году рождения (BIRT.date_start range), debounce 300 мс, URL-state, 18 интеграционных тестов на бэкенде. См. PR-Phase-4.4. | done (2026-04-27) |
+| **4.6** | Manual person merge UI: ADR-0022, `PersonMergeLog` ORM + миграция 0006, `services/person_merger.py` (compute_diff/apply_merge/undo_merge/check_hypothesis_conflicts), 4 эндпоинта в `api/persons.py` (preview/commit/undo/merge-history) с обязательным `confirm:true` (Pydantic `Literal[True]` → 422 без него), `/persons/[id]/merge/[targetId]` page (side-by-side, choose survivor, confirm dialog, success/undo state), Phase 4.5 «Mark as same» включён. CLAUDE.md §5 enforce'ится в коде. См. ADR-0022, PR-78/81/Phase-4.6-merge-ui. | done (2026-04-27) |
 
 ### 8.1 Страницы
 
