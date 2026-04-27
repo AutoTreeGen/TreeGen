@@ -18,6 +18,7 @@ dependencies = [
     "python-dotenv>=1.0",
     "shared-models",
     "gedcom-parser",
+    "entity-resolution",
 ]
 
 [project.optional-dependencies]

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -178,3 +179,46 @@ class AncestorsResponse(BaseModel):
     generations_requested: int
     generations_loaded: int
     root: AncestorTreeNode
+
+
+# -----------------------------------------------------------------------------
+# Phase 3.4 — entity resolution (dedup) suggestions.
+# Алгоритмы — pure functions в ``packages/entity-resolution/``;
+# сервисный слой возвращает только эти DTO. См. ADR-0015.
+# -----------------------------------------------------------------------------
+
+EntityType = Literal["source", "place", "person"]
+
+
+class DuplicateSuggestion(BaseModel):
+    """Пара кандидатов на дедупликацию с confidence score.
+
+    Никаких side-effects: просто read-only payload. Решение о merge —
+    через UI Phase 4.5 с manual approval (CLAUDE.md §5).
+
+    `components` — покомпонентный breakdown скорера для explainability:
+    UI показывает "совпали по DM-bucket + birth_year ±1".
+    `evidence` — human-readable diff (canonical names, dates etc.),
+    позволяет user'у принять решение без ещё одного round-trip.
+    """
+
+    entity_type: EntityType
+    entity_a_id: uuid.UUID
+    entity_b_id: uuid.UUID
+    confidence: float = Field(ge=0.0, le=1.0)
+    components: dict[str, float] = Field(default_factory=dict)
+    evidence: dict[str, Any] = Field(default_factory=dict)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DuplicateSuggestionListResponse(BaseModel):
+    """Пагинированный ответ ``GET /trees/{id}/duplicate-suggestions``."""
+
+    tree_id: uuid.UUID
+    entity_type: EntityType | None = None
+    min_confidence: float
+    total: int
+    limit: int
+    offset: int
+    items: list[DuplicateSuggestion]
