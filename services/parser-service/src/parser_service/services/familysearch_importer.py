@@ -56,7 +56,6 @@ from shared_models.types import new_uuid
 from sqlalchemy import and_, delete, insert, or_, select
 
 from parser_service.services.fs_dedup import find_fs_dedup_candidates
-
 from parser_service.services.metrics import import_completed_total
 
 if TYPE_CHECKING:
