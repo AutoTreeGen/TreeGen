@@ -133,26 +133,29 @@ def _map_date_calendar(calendar: str) -> str | None:
 
 
 # GEDCOM QUAY (quality of evidence): 0 = unreliable, 3 = primary evidence.
-# В нашем `Citation.quality` (Float, default 0.5) семантика — нормализованный
-# 0..1 score, поэтому делим QUAY на 3. Невалидный/отсутствующий QUAY → None
-# (вызывающий ставит дефолт ORM — 0.5).
-_QUAY_MAX = 3
+# Phase 3.6 (ADR-кандидат): таблица соответствия с асимметричным сдвигом
+# вверх для primary evidence — sensible defaults, можно переопределить.
+# Сырое значение QUAY при этом сохраняется в `Citation.quay_raw` для
+# round-trip и переоценки.
+_QUAY_TO_CONFIDENCE: dict[int, float] = {
+    0: 0.1,  # unreliable / hearsay
+    1: 0.4,  # questionable / secondary
+    2: 0.7,  # secondary с надёжной cross-reference
+    3: 0.95,  # direct primary evidence
+}
+_QUAY_MISSING_CONFIDENCE = 0.5
 
 
-def _quay_to_quality(value: str | None) -> float | None:
-    """GEDCOM QUAY ('0'..'3') → Citation.quality (0.0..1.0). None если не задан."""
-    if value is None:
-        return None
-    stripped = value.strip()
-    if not stripped:
-        return None
-    try:
-        quay = int(stripped)
-    except ValueError:
-        return None
-    if quay < 0 or quay > _QUAY_MAX:
-        return None
-    return quay / _QUAY_MAX
+def _quay_to_confidence(quay_raw: int | None) -> float:
+    """``Citation.quay_raw`` (int 0..3 или None) → ``Citation.quality`` (0..1).
+
+    None — источник не указал QUAY → нейтральный 0.5. Значения вне 0..3
+    парсер не пропускает (см. `gedcom_parser.entities.Citation.quality`),
+    но защищаемся от мусора всё равно.
+    """
+    if quay_raw is None:
+        return _QUAY_MISSING_CONFIDENCE
+    return _QUAY_TO_CONFIDENCE.get(quay_raw, _QUAY_MISSING_CONFIDENCE)
 
 
 def _chunk(seq: list[dict[str, Any]], size: int) -> list[list[dict[str, Any]]]:
@@ -173,7 +176,10 @@ async def _ensure_owner(session: AsyncSession, email: str) -> User:
     res = await session.execute(select(User).where(User.email == email))
     user = res.scalar_one_or_none()
     if user is not None:
-        return user
+        # mypy в pre-commit-hook идёт без SQLAlchemy в additional_deps,
+        # из-за чего scalar_one_or_none() видится как Any. Локально (uv run
+        # mypy) типы видны корректно. Игнор только для hook-окружения.
+        return user  # type: ignore[no-any-return]
     user = User(
         email=email,
         external_auth_id=f"local:{email}",
@@ -182,7 +188,7 @@ async def _ensure_owner(session: AsyncSession, email: str) -> User:
     )
     session.add(user)
     await session.flush()
-    return user
+    return user  # type: ignore[no-any-return]
 
 
 async def run_import(
@@ -247,9 +253,11 @@ async def run_import(
     await session.flush()
 
     # Парсинг GEDCOM. Используем parse_file (а не parse_document_file), чтобы
-    # получить и raw `records`, и encoding. Records нужны для извлечения
-    # SOUR-references с подтегами PAGE/QUAY (см. citations ниже): семантические
-    # entity'ы из `document` хранят только tuple xref'ов, без подробностей.
+    # получить и encoding отдельно (для provenance). Семантический слой
+    # `document` (Phase 1.x PR #55) уже несёт structured Citation внутри
+    # `event.citations` / `person.citations` / `family.citations`, так что
+    # raw `records` нужны теперь только для resolution event_id_by_line_no
+    # и для Phase 3.5 inline-OBJE round-trip.
     from gedcom_parser import GedcomDocument, parse_file
 
     with warnings.catch_warnings():
@@ -385,26 +393,35 @@ async def run_import(
 
         # ---- Sources ----
         # SOUR-записи документа → bulk insert в `sources`. Поля:
-        #  - title:       обязательно (NOT NULL); если у GEDCOM-источника TITL
-        #                 пуст — фолбэк на xref, чтобы соблюсти constraint.
-        #  - author/publication: TITL.AUTH/PUBL (опционально).
-        #  - source_type: пока всегда OTHER. Классификация (book/metric_record/...) —
-        #                 Phase 3.4 (entity resolution).
-        #  - repository:  free-form name; xref на `repositories` пока не разворачиваем
-        #                 (REPO импортируем в отдельной фазе).
-        # Дедупликация по title — Phase 3.4 (см. ROADMAP).
+        #  - title:        обязательно (NOT NULL); если у GEDCOM-источника TITL
+        #                  пуст — фолбэк сначала на ABBR, потом на xref.
+        #  - author / publication / abbreviation / text_excerpt: 1:1 с GEDCOM
+        #                  AUTH / PUBL / ABBR / TEXT (см. Phase 1.x PR #56).
+        #  - gedcom_xref:  оригинальный xref ("S1") для дедупликации
+        #                  при повторных импортах одного и того же файла
+        #                  (Phase 3.6.1 даст полноценный (tree_id, gedcom_xref)
+        #                  unique index; тут пока просто сохраняем).
+        #  - source_type:  пока всегда OTHER. Классификация (book/metric_record/...) —
+        #                  Phase 3.4 (entity resolution).
+        #  - repository:   free-form name; xref на `repositories` пока не разворачиваем
+        #                  (REPO импортируем в отдельной фазе).
         source_rows: list[dict[str, Any]] = []
         source_id_by_xref: dict[str, Any] = {}
         for xref, parsed_source in document.sources.items():
             sid = new_uuid()
             source_id_by_xref[xref] = sid
+            # title — NOT NULL: фолбэк цепочкой TITL → ABBR → xref.
+            title = parsed_source.title or parsed_source.abbreviation or xref
             source_rows.append(
                 {
                     "id": sid,
                     "tree_id": tree.id,
-                    "title": parsed_source.title or xref,
+                    "title": title,
                     "author": parsed_source.author,
+                    "abbreviation": parsed_source.abbreviation,
                     "publication": parsed_source.publication,
+                    "text_excerpt": parsed_source.text,
+                    "gedcom_xref": xref,
                     "source_type": SourceType.OTHER.value,
                     "repository": None,
                     "repository_id": None,
@@ -428,9 +445,10 @@ async def run_import(
         # чтобы соблюсти CHECK (person_id OR family_id).
         event_rows: list[dict[str, Any]] = []
         participant_rows: list[dict[str, Any]] = []
-        # Маппинг GEDCOM line_no события → event_id. Нужен Task 2 (citations),
-        # чтобы по raw GedcomRecord события найти соответствующий event_id
-        # без изменения парсера. line_no уникален в пределах файла.
+        # Маппинг GEDCOM line_no события → event_id. Используется в блоке
+        # Citations ниже, чтобы привязать `gedcom_parser.entities.Event.citations`
+        # (которые знают свой `line_no`, но не знают наш UUID) к свежевставленной
+        # строке events. line_no уникален в пределах файла.
         event_id_by_line_no: dict[int, Any] = {}
 
         def _resolve_place_id(raw: str | None) -> Any | None:
@@ -527,79 +545,115 @@ async def run_import(
         await _bulk_insert(session, EventParticipant, participant_rows)
 
         # ---- Citations ----
-        # Собираем SOUR-references из raw GedcomRecord. Семантический слой
-        # gedcom_parser хранит только tuple xref'ов — без подтегов PAGE/QUAY,
-        # поэтому идём по сырым записям.
-        # Citation.entity_type ∈ {"person", "family", "event"}; для каждого
-        # SOUR с xref-значением создаём одну строку.
+        # Phase 3.6 (после PR #55 в gedcom-parser): семантический слой теперь
+        # выставляет `Citation` first-class — с PAGE / QUAY / EVEN / ROLE /
+        # DATA(TEXT) / NOTE — поэтому больше НЕ обходим raw GedcomRecord.
+        #
+        # Маппинг ORM-полям:
+        #   parsed.page                 → page_or_section
+        #   parsed.quality (int 0..3)   → quay_raw + derived quality (через
+        #                                 _quay_to_confidence — таблица
+        #                                 0→0.1, 1→0.4, 2→0.7, 3→0.95)
+        #   parsed.event_type           → event_type
+        #   parsed.event_role           → role
+        #   parsed.data_text            → quoted_text (TEXT может быть
+        #                                 multi-line, склеен через \n
+        #                                 уже на парсе)
+        #   parsed.notes_inline (×N)    → склеены в `note` через \n;
+        #                                 inline-NOTE достаточно для UI.
+        #                                 NOTE @xref'ы пока не разворачиваем —
+        #                                 это будет в Phase 3.6.1 (общая
+        #                                 NOTE-таблица + linked).
+        #
+        # Citation.entity_type ∈ {"person", "family", "event"}.
+        # Inline-источники (`1 SOUR <text>` без xref) пока пропускаем —
+        # в Phase 3.6.1 создадим для них ad-hoc Source.
         citation_rows: list[dict[str, Any]] = []
 
-        def _collect_citations(
+        def _build_citation_row(
+            parsed: Any,
             *,
-            owner_record: Any,
             entity_type: str,
             entity_id: Any,
-        ) -> None:
-            """Найти SOUR-children у `owner_record` и записать citations."""
-            for sour in owner_record.find_all("SOUR"):
-                value = sour.value
-                if not (value.startswith("@") and value.endswith("@")):
-                    # Inline-source (1 SOUR <text>) — без xref, в этой фазе
-                    # игнорируем (Phase 3.4: создавать ad-hoc Source).
-                    continue
-                src_xref = value.strip("@")
-                src_id = source_id_by_xref.get(src_xref)
-                if src_id is None:
-                    # Висячая ссылка — пропускаем тихо (verify_references
-                    # отдельно эмитит warning).
-                    continue
-                quality = _quay_to_quality(sour.get_value("QUAY") or None)
-                citation: dict[str, Any] = {
-                    "id": new_uuid(),
-                    "tree_id": tree.id,
-                    "source_id": src_id,
-                    "entity_type": entity_type,
-                    "entity_id": entity_id,
-                    "page_or_section": sour.get_value("PAGE") or None,
-                    "quoted_text": None,
-                    "note": None,
-                    "provenance": {"import_job_id": str(job.id)},
-                    "created_at": now,
-                    "updated_at": now,
-                }
-                if quality is not None:
-                    citation["quality"] = quality
-                citation_rows.append(citation)
+        ) -> dict[str, Any] | None:
+            """Спроектировать одну строку `citations` из `gedcom_parser.Citation`.
 
-        # Идентифицируем event-children по line_no: если line_no попал
-        # в `event_id_by_line_no`, мы его реально вставили как Event.
-        # Это покрывает и custom-теги (CUSTOM event_type), без отдельного списка.
-        for root in records:
-            if root.xref_id is None:
+            Возвращает ``None`` если ссылка нерезолвима (inline без xref или
+            висячий xref) — caller просто пропустит без падения.
+            """
+            xref = parsed.source_xref
+            if xref is None:
+                # Inline-source: будет покрыт Phase 3.6.1.
+                return None
+            src_id = source_id_by_xref.get(xref)
+            if src_id is None:
+                # Висячая ссылка — verify_references отдельно эмитит warning.
+                return None
+            quality = _quay_to_confidence(parsed.quality)
+            note_text: str | None = None
+            if parsed.notes_inline:
+                note_text = "\n".join(parsed.notes_inline)
+            return {
+                "id": new_uuid(),
+                "tree_id": tree.id,
+                "source_id": src_id,
+                "entity_type": entity_type,
+                "entity_id": entity_id,
+                "page_or_section": parsed.page,
+                "quoted_text": parsed.data_text,
+                "quality": quality,
+                "quay_raw": parsed.quality,
+                "event_type": parsed.event_type,
+                "role": parsed.event_role,
+                "note": note_text,
+                "provenance": {"import_job_id": str(job.id)},
+                "created_at": now,
+                "updated_at": now,
+            }
+
+        # INDI-level + INDI events.
+        for xref, person in document.persons.items():
+            person_pk = person_id_by_xref.get(xref)
+            if person_pk is None:
                 continue
-            if root.tag == "INDI":
-                owner_pk = person_id_by_xref.get(root.xref_id)
-                owner_kind = "person"
-            elif root.tag == "FAM":
-                owner_pk = family_id_by_xref.get(root.xref_id)
-                owner_kind = "family"
-            else:
-                continue
-            if owner_pk is not None:
-                _collect_citations(
-                    owner_record=root,
-                    entity_type=owner_kind,
-                    entity_id=owner_pk,
+            for parsed_citation in person.citations:
+                row = _build_citation_row(
+                    parsed_citation, entity_type="person", entity_id=person_pk
                 )
-            for child in root.children:
-                event_pk = event_id_by_line_no.get(child.line_no)
+                if row is not None:
+                    citation_rows.append(row)
+            for ev in person.events:
+                event_pk = event_id_by_line_no.get(ev.line_no) if ev.line_no is not None else None
                 if event_pk is None:
                     continue
-                _collect_citations(
-                    owner_record=child,
-                    entity_type="event",
-                    entity_id=event_pk,
+                for parsed_citation in ev.citations:
+                    row = _build_citation_row(
+                        parsed_citation, entity_type="event", entity_id=event_pk
+                    )
+                    if row is not None:
+                        citation_rows.append(row)
+
+        # FAM-level + FAM events.
+        for xref, family in document.families.items():
+            family_pk = family_id_by_xref.get(xref)
+            if family_pk is None:
+                continue
+            for parsed_citation in family.citations:
+                row = _build_citation_row(
+                    parsed_citation, entity_type="family", entity_id=family_pk
                 )
+                if row is not None:
+                    citation_rows.append(row)
+            for ev in family.events:
+                event_pk = event_id_by_line_no.get(ev.line_no) if ev.line_no is not None else None
+                if event_pk is None:
+                    continue
+                for parsed_citation in ev.citations:
+                    row = _build_citation_row(
+                        parsed_citation, entity_type="event", entity_id=event_pk
+                    )
+                    if row is not None:
+                        citation_rows.append(row)
 
         await _bulk_insert(session, Citation, citation_rows)
 

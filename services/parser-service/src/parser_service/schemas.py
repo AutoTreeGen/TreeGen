@@ -225,6 +225,111 @@ class DuplicateSuggestionListResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Phase 3.6 — Source / Citation evidence read API.
+# Поддерживает «откуда мы это знаем»-UI: отдельный source viewer (Phase 4.7)
+# и citations-список на карточке персоны.
+# ---------------------------------------------------------------------------
+
+
+class SourceSummary(BaseModel):
+    """Краткое представление SOUR-записи для списка `/trees/{id}/sources`."""
+
+    id: uuid.UUID
+    gedcom_xref: str | None = None
+    title: str
+    abbreviation: str | None = None
+    author: str | None = None
+    publication: str | None = None
+    repository: str | None = None
+    source_type: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SourceListResponse(BaseModel):
+    """Пагинированный ответ ``GET /trees/{id}/sources``."""
+
+    tree_id: uuid.UUID
+    total: int
+    limit: int
+    offset: int
+    items: list[SourceSummary]
+
+
+class SourceLinkedEntity(BaseModel):
+    """Сущность, которая ссылается на источник через citation.
+
+    `table` ∈ ``{"person", "family", "event"}`` (полиморфная связь
+    `citations.entity_type` / `entity_id`). UI разрешает её в
+    конкретный card view на стороне клиента.
+    """
+
+    table: Literal["person", "family", "event"]
+    id: uuid.UUID
+    page: str | None = None
+    quay_raw: int | None = None
+    quality: float
+
+
+class SourceDetail(BaseModel):
+    """Детали SOUR-записи + список linked-сущностей.
+
+    Полный набор полей, нормализованный в Phase 3.6: TITL / AUTH / PUBL /
+    ABBR / TEXT / REPO. `linked` — все entity'ы которые цитируют этот
+    источник (любая комбинация person / family / event).
+    """
+
+    id: uuid.UUID
+    tree_id: uuid.UUID
+    gedcom_xref: str | None = None
+    title: str
+    abbreviation: str | None = None
+    author: str | None = None
+    publication: str | None = None
+    repository: str | None = None
+    text_excerpt: str | None = None
+    source_type: str
+    linked: list[SourceLinkedEntity] = Field(default_factory=list)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PersonCitationDetail(BaseModel):
+    """Один citation на странице `/persons/{id}/citations`.
+
+    Чем-то отличается от `CitationSummary` (используется внутри
+    EventSummary): денормализован источник целиком (title + abbreviation),
+    плюс QUAY raw + derived confidence + EVEN/ROLE для evidence-graph
+    рендера. `entity_type` и `entity_id` показывают, к какой сущности
+    привязан citation: к самой персоне или к одному из её событий.
+    """
+
+    id: uuid.UUID
+    source_id: uuid.UUID
+    source_title: str
+    source_abbreviation: str | None = None
+    entity_type: Literal["person", "family", "event"]
+    entity_id: uuid.UUID
+    page: str | None = None
+    quay_raw: int | None = None
+    quality: float
+    event_type: str | None = None
+    role: str | None = None
+    note: str | None = None
+    quoted_text: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PersonCitationsResponse(BaseModel):
+    """Ответ ``GET /persons/{id}/citations``."""
+
+    person_id: uuid.UUID
+    total: int
+    items: list[PersonCitationDetail]
+
+
+# ---------------------------------------------------------------------------
 # FamilySearch import (Phase 5.1) — см. ADR-0017
 # ---------------------------------------------------------------------------
 
