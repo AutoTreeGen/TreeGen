@@ -116,3 +116,44 @@ export function fetchAncestors(personId: string, generations = 5): Promise<Ances
   const params = new URLSearchParams({ generations: String(generations) });
   return getJson<AncestorsResponse>(`/persons/${personId}/ancestors?${params.toString()}`);
 }
+
+// ---- Duplicate suggestions (Phase 4.5) -------------------------------------
+
+export type DuplicateEntityType = "person" | "source" | "place";
+
+export type DuplicateSuggestion = {
+  entity_type: DuplicateEntityType;
+  entity_a_id: string;
+  entity_b_id: string;
+  confidence: number;
+  components: Record<string, number>;
+  evidence: Record<string, unknown>;
+};
+
+export type DuplicateSuggestionListResponse = {
+  tree_id: string;
+  entity_type: DuplicateEntityType | null;
+  min_confidence: number;
+  total: number;
+  limit: number;
+  offset: number;
+  items: DuplicateSuggestion[];
+};
+
+export function fetchDuplicateSuggestions(
+  treeId: string,
+  entityType: DuplicateEntityType,
+  minConfidence = 0.8,
+  limit = 100,
+  offset = 0,
+): Promise<DuplicateSuggestionListResponse> {
+  const params = new URLSearchParams({
+    entity_type: entityType,
+    min_confidence: String(minConfidence),
+    limit: String(limit),
+    offset: String(offset),
+  });
+  return getJson<DuplicateSuggestionListResponse>(
+    `/trees/${treeId}/duplicate-suggestions?${params.toString()}`,
+  );
+}
