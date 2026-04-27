@@ -30,6 +30,10 @@ SERVICE_TABLES = {
     # opt out of soft-delete and provenance — revocation is hard delete.
     "dna_consents",
     "dna_test_records",
+    # Inference engine evidences (Phase 7.2 / ADR-0021): атомарные
+    # доказательства, привязаны через FK CASCADE на hypothesis. Тоже
+    # service-table — не несут soft-delete (удаление вместе с гипотезой).
+    "hypothesis_evidences",
 }
 
 TREE_ENTITY_TABLES = {
@@ -47,6 +51,10 @@ TREE_ENTITY_TABLES = {
     # DNA tree-entities
     "dna_kits",
     "dna_matches",
+    # Inference engine hypotheses (Phase 7.2 / ADR-0021): TreeEntityMixins
+    # → имеют tree_id, soft-delete, provenance, version_id, status,
+    # confidence_score (в дополнение к специфичному composite_score).
+    "hypotheses",
 }
 
 
