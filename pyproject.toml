@@ -33,6 +33,7 @@ members = [
     "packages/gedcom-parser",
     "packages/shared-models",
     "packages/dna-analysis",
+    "packages/entity-resolution",
     "packages/familysearch-client",
     "services/parser-service",
 ]
@@ -42,6 +43,7 @@ members = [
 shared-models = { workspace = true }
 gedcom-parser = { workspace = true }
 dna-analysis = { workspace = true }
+entity-resolution = { workspace = true }
 familysearch-client = { workspace = true }
 parser-service = { workspace = true }
 
