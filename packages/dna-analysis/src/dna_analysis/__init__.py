@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dna_analysis.errors import DnaParseError, UnsupportedFormatError
 from dna_analysis.genetic_map import GeneticMap, GeneticMapError
+from dna_analysis.matching import SharedSegment, find_shared_segments
 from dna_analysis.models import (
     Chromosome,
     DnaTest,
@@ -27,6 +28,8 @@ __all__ = [
     "Genotype",
     "Provider",
     "ReferenceBuild",
+    "SharedSegment",
     "Snp",
     "UnsupportedFormatError",
+    "find_shared_segments",
 ]
