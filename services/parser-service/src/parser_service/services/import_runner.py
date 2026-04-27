@@ -34,11 +34,13 @@ from shared_models.enums import (
 from shared_models.orm import (
     AuditLog,
     Citation,
+    EntityMultimedia,
     Event,
     EventParticipant,
     Family,
     FamilyChild,
     ImportJob,
+    MultimediaObject,
     Name,
     Person,
     Place,
@@ -604,6 +606,97 @@ async def run_import(
 
         await _bulk_insert(session, Citation, citation_rows)
 
+        # ---- Multimedia (OBJE) ----
+        # Top-level OBJE-records → `multimedia_objects`. Бинарные данные
+        # НЕ скачиваем — только метаданные:
+        #  - storage_url:  значение тега FILE (relative или absolute path/URL).
+        #                  Поле NOT NULL: пустые/отсутствующие FILE → фолбэк
+        #                  на `gedcom://OBJE/<xref>` чтобы соблюсти constraint.
+        #  - object_type:  фолбэк "image" — gedcom_parser не классифицирует
+        #                  тип; FORM-расширение хранится в metadata.
+        #  - mime_type:    None (выводить из FORM — Phase 3.5).
+        #  - sha256:       None (мы не открываем файл).
+        #  - caption:      OBJE.TITL.
+        #  - object_metadata: {"format": ..., "gedcom_xref": ...} —
+        #                  всё, что относится к raw GEDCOM, без потерь.
+        # OBJE-references из INDI/FAM (`1 OBJE @M1@`) → entity_multimedia.
+        # Inline-OBJE (без xref) пока пропускаем — Phase 3.4.
+        multimedia_rows: list[dict[str, Any]] = []
+        multimedia_id_by_xref: dict[str, Any] = {}
+        for xref, obj in document.objects.items():
+            mid = new_uuid()
+            multimedia_id_by_xref[xref] = mid
+            metadata: dict[str, Any] = {"gedcom_xref": xref}
+            if obj.format_:
+                metadata["format"] = obj.format_
+            multimedia_rows.append(
+                {
+                    "id": mid,
+                    "tree_id": tree.id,
+                    "object_type": "image",
+                    "storage_url": obj.file or f"gedcom://OBJE/{xref}",
+                    "mime_type": None,
+                    "size_bytes": None,
+                    "sha256": None,
+                    "caption": obj.title,
+                    "taken_date": None,
+                    "object_metadata": metadata,
+                    "status": EntityStatus.PROBABLE.value,
+                    "confidence_score": 0.5,
+                    "version_id": 1,
+                    "provenance": {"import_job_id": str(job.id), "gedcom_xref": xref},
+                    "created_at": now,
+                    "updated_at": now,
+                }
+            )
+        await _bulk_insert(session, MultimediaObject, multimedia_rows)
+
+        # OBJE-references → entity_multimedia (полиморфная связь как у citations).
+        entity_multimedia_rows: list[dict[str, Any]] = []
+
+        def _add_media_links(
+            *,
+            owner_xref_iter: Any,
+            entity_type: str,
+            entity_id: Any,
+        ) -> None:
+            for obj_xref in owner_xref_iter:
+                mid = multimedia_id_by_xref.get(obj_xref)
+                if mid is None:
+                    continue
+                entity_multimedia_rows.append(
+                    {
+                        "id": new_uuid(),
+                        "multimedia_id": mid,
+                        "entity_type": entity_type,
+                        "entity_id": entity_id,
+                        "role": "primary",
+                        "created_at": now,
+                        "updated_at": now,
+                    }
+                )
+
+        for xref, person in document.persons.items():
+            person_pk = person_id_by_xref.get(xref)
+            if person_pk is None:
+                continue
+            _add_media_links(
+                owner_xref_iter=person.objects_xrefs,
+                entity_type="person",
+                entity_id=person_pk,
+            )
+        for xref, family in document.families.items():
+            family_pk = family_id_by_xref.get(xref)
+            if family_pk is None:
+                continue
+            _add_media_links(
+                owner_xref_iter=family.objects_xrefs,
+                entity_type="family",
+                entity_id=family_pk,
+            )
+
+        await _bulk_insert(session, EntityMultimedia, entity_multimedia_rows)
+
         stats = {
             "persons": len(person_rows),
             "names": len(name_rows),
@@ -614,6 +707,8 @@ async def run_import(
             "events": len(event_rows),
             "event_participants": len(participant_rows),
             "citations": len(citation_rows),
+            "multimedia": len(multimedia_rows),
+            "entity_multimedia": len(entity_multimedia_rows),
         }
     finally:
         set_audit_skip(session.sync_session, False)

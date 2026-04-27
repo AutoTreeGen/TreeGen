@@ -26,6 +26,7 @@ _MINIMAL_GED = b"""\
 2 SOUR @S1@
 3 PAGE p. 42
 3 QUAY 3
+1 OBJE @M1@
 0 @I2@ INDI
 1 NAME Mary /Smith/
 1 SEX F
@@ -38,6 +39,10 @@ _MINIMAL_GED = b"""\
 0 @S1@ SOUR
 1 TITL Lubelskie parish records 1838
 1 AUTH Lubelskie Archive
+0 @M1@ OBJE
+1 FILE photos/john_smith_1850.jpg
+1 FORM jpg
+1 TITL John Smith portrait, 1850
 0 TRLR
 """
 
@@ -63,6 +68,9 @@ async def test_post_import_creates_job_and_persons(app_client) -> None:
     assert body["stats"]["sources"] == 1
     # Одна SOUR-reference из BIRT(@I1@) → одна citation.
     assert body["stats"]["citations"] == 1
+    # Один OBJE-record (M1) и одна OBJE-reference от @I1@.
+    assert body["stats"]["multimedia"] == 1
+    assert body["stats"]["entity_multimedia"] == 1
     assert body["source_filename"] == "test.ged"
     assert body["tree_id"] is not None
     assert body["id"] is not None
@@ -173,6 +181,68 @@ async def test_import_persists_sources(app_client, postgres_dsn) -> None:
             assert src.author == "Lubelskie Archive"
             assert src.source_type == "other"
             assert src.provenance.get("gedcom_xref") == "S1"
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_person_has_multimedia(app_client, postgres_dsn) -> None:
+    """OBJE-запись попадает в `multimedia_objects`, link к @I1@ — в entity_multimedia.
+
+    Проверяем:
+    - 1 multimedia_object с caption и storage_url из FILE;
+    - 1 entity_multimedia с entity_type="person" и правильным person_id;
+    - format сохранён в metadata (jpg).
+    """
+    from shared_models.orm import EntityMultimedia, MultimediaObject, Person
+    from sqlalchemy import select
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    files = {"file": ("test.ged", _MINIMAL_GED, "application/octet-stream")}
+    created = await app_client.post("/imports", files=files)
+    assert created.status_code == 201, created.text
+    tree_id = created.json()["tree_id"]
+
+    engine = create_async_engine(postgres_dsn, future=True)
+    try:
+        SessionMaker = async_sessionmaker(engine, expire_on_commit=False)  # noqa: N806
+        async with SessionMaker() as session:
+            objects = (
+                (
+                    await session.execute(
+                        select(MultimediaObject).where(MultimediaObject.tree_id == tree_id)
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            assert len(objects) == 1
+            obj = objects[0]
+            assert obj.caption == "John Smith portrait, 1850"
+            assert obj.storage_url == "photos/john_smith_1850.jpg"
+            assert obj.object_metadata.get("format") == "jpg"
+            assert obj.object_metadata.get("gedcom_xref") == "M1"
+
+            links = (
+                (
+                    await session.execute(
+                        select(EntityMultimedia).where(
+                            EntityMultimedia.multimedia_id == obj.id,
+                        )
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            assert len(links) == 1
+            link = links[0]
+            assert link.entity_type == "person"
+            person_i1 = (
+                await session.execute(
+                    select(Person).where(Person.tree_id == tree_id, Person.gedcom_xref == "I1")
+                )
+            ).scalar_one()
+            assert link.entity_id == person_i1.id
     finally:
         await engine.dispose()
 
