@@ -39,6 +39,7 @@ from shared_models.orm import (
     ImportJob,
     Name,
     Person,
+    Place,
     Tree,
     User,
 )
@@ -311,6 +312,45 @@ async def run_import(
                 )
         await _bulk_insert(session, FamilyChild, fc_rows)
 
+        # ---- Places (dedup по raw text в пределах дерева) ----
+        # Собираем уникальные PLAC-строки из всех событий и инсёртим один раз.
+        # Полную канонизацию (PlaceAlias, исторические границы, geocoding)
+        # оставили на Phase 3.4+ — здесь только raw → places.canonical_name.
+        place_rows: list[dict[str, Any]] = []
+        place_id_by_raw: dict[str, Any] = {}
+
+        def _register_place(raw: str | None) -> None:
+            """Зарегистрировать уникальный PLAC raw для bulk insert."""
+            if not raw:
+                return
+            key = raw.strip()
+            if not key or key in place_id_by_raw:
+                return
+            pid = new_uuid()
+            place_id_by_raw[key] = pid
+            place_rows.append(
+                {
+                    "id": pid,
+                    "tree_id": tree.id,
+                    "canonical_name": key,
+                    "status": EntityStatus.PROBABLE.value,
+                    "confidence_score": 0.5,
+                    "version_id": 1,
+                    "provenance": {"import_job_id": str(job.id)},
+                    "created_at": now,
+                    "updated_at": now,
+                }
+            )
+
+        for person in document.persons.values():
+            for ev in person.events:
+                _register_place(ev.place_raw)
+        for family in document.families.values():
+            for ev in family.events:
+                _register_place(ev.place_raw)
+
+        await _bulk_insert(session, Place, place_rows)
+
         # ---- Events + EventParticipants ----
         # Каждое событие у персоны/семьи раскладывается в одну строку events
         # и одну строку event_participants (single principal). Multi-principal
@@ -318,6 +358,12 @@ async def run_import(
         # позже отдельно — Phase 3.2 (см. ROADMAP §7).
         event_rows: list[dict[str, Any]] = []
         participant_rows: list[dict[str, Any]] = []
+
+        def _resolve_place_id(raw: str | None) -> Any | None:
+            """Найти place_id по PLAC raw (после strip), либо None."""
+            if not raw:
+                return None
+            return place_id_by_raw.get(raw.strip())
 
         def _append_event(
             *,
@@ -349,13 +395,13 @@ async def run_import(
                     "tree_id": tree.id,
                     "event_type": event_type,
                     "custom_type": custom_type,
-                    "place_id": None,  # Place-импорт — Phase 3.2.
+                    "place_id": _resolve_place_id(ev.place_raw),
                     "date_raw": ev.date_raw,
                     "date_start": date_start,
                     "date_end": date_end,
                     "date_qualifier": date_qualifier,
                     "date_calendar": date_calendar,
-                    "description": None,  # PLAC raw сохраним при Place-импорте — Phase 3.2.
+                    "description": None,
                     "status": EntityStatus.PROBABLE.value,
                     "confidence_score": 0.5,
                     "version_id": 1,
@@ -394,6 +440,7 @@ async def run_import(
             "names": len(name_rows),
             "families": len(family_rows),
             "family_children": len(fc_rows),
+            "places": len(place_rows),
             "events": len(event_rows),
             "event_participants": len(participant_rows),
         }

@@ -22,6 +22,7 @@ _MINIMAL_GED = b"""\
 1 SEX M
 1 BIRT
 2 DATE 1850
+2 PLAC Slonim, Grodno, Russian Empire
 0 @I2@ INDI
 1 NAME Mary /Smith/
 1 SEX F
@@ -30,6 +31,7 @@ _MINIMAL_GED = b"""\
 1 WIFE @I2@
 1 MARR
 2 DATE 1875
+2 PLAC Vilna, Russian Empire
 0 TRLR
 """
 
@@ -48,6 +50,8 @@ async def test_post_import_creates_job_and_persons(app_client) -> None:
     # 1 BIRT (I1) + 1 MARR (F1) = 2 events, плюс по 1 participant на каждое.
     assert body["stats"]["events"] == 2
     assert body["stats"]["event_participants"] == 2
+    # BIRT и MARR ссылаются на разные PLAC → 2 уникальных места.
+    assert body["stats"]["places"] == 2
     assert body["source_filename"] == "test.ged"
     assert body["tree_id"] is not None
     assert body["id"] is not None
@@ -78,6 +82,52 @@ async def test_import_persists_birth_event_for_first_person(app_client) -> None:
     birt_events = [e for e in events if e["event_type"] == "BIRT"]
     assert len(birt_events) == 1, f"expected 1 BIRT, got events={events}"
     assert birt_events[0]["date_raw"] == "1850"
+
+
+@pytest.mark.asyncio
+async def test_import_creates_places_and_links_events(app_client, postgres_dsn) -> None:
+    """После импорта в ``places`` лежат уникальные PLAC, событие имеет place_id.
+
+    Проверяем напрямую через AsyncSession, поскольку API эндпоинта /places ещё
+    нет (Phase 3.4). BIRT у I1 ссылается на "Slonim, Grodno, Russian Empire".
+    """
+    from shared_models.orm import Event, Place
+    from sqlalchemy import select
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    files = {"file": ("test.ged", _MINIMAL_GED, "application/octet-stream")}
+    created = await app_client.post("/imports", files=files)
+    assert created.status_code == 201, created.text
+    tree_id = created.json()["tree_id"]
+
+    engine = create_async_engine(postgres_dsn, future=True)
+    try:
+        SessionMaker = async_sessionmaker(engine, expire_on_commit=False)  # noqa: N806
+        async with SessionMaker() as session:
+            places = (
+                (await session.execute(select(Place).where(Place.tree_id == tree_id)))
+                .scalars()
+                .all()
+            )
+            assert len(places) == 2, [p.canonical_name for p in places]
+
+            names = {p.canonical_name for p in places}
+            assert "Slonim, Grodno, Russian Empire" in names
+            assert "Vilna, Russian Empire" in names
+
+            birth = (
+                await session.execute(
+                    select(Event).where(
+                        Event.tree_id == tree_id,
+                        Event.event_type == "BIRT",
+                    )
+                )
+            ).scalar_one()
+            assert birth.place_id is not None
+            slonim = next(p for p in places if p.canonical_name.startswith("Slonim"))
+            assert birth.place_id == slonim.id
+    finally:
+        await engine.dispose()
 
 
 @pytest.mark.asyncio
