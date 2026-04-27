@@ -1,17 +1,20 @@
 [project]
 name = "inference-engine"
 version = "0.1.0"
-description = "AutoTreeGen inference engine — hypothesis-aware evidence composition (Phase 7.0)."
+description = "AutoTreeGen inference engine — hypothesis-aware evidence composition (Phase 7.0+)."
 requires-python = ">=3.13"
 readme = "README.md"
 license = { text = "Proprietary" }
 authors = [{ name = "AutoTreeGen" }]
-# Ровно одна зависимость:
+# Зависимости:
 #  - pydantic: модели Hypothesis / Evidence + валидация.
+#  - entity-resolution: pure-function скоринг для rules
+#    (Daitch-Mokotoff, place_match_score). См. Phase 7.1 rules.
 # Никаких sqlalchemy / fastapi / httpx — это pure-functions пакет
 # (см. ADR-0016 §«Pure functions без I/O»). ORM появится в Phase 7.2.
 dependencies = [
     "pydantic>=2.10",
+    "entity-resolution",
 ]
 
 [build-system]

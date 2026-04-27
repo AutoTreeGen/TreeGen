@@ -769,11 +769,15 @@ name = "inference-engine"
 version = "0.1.0"
 source = { editable = "packages/inference-engine" }
 dependencies = [
+    { name = "entity-resolution" },
     { name = "pydantic" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pydantic", specifier = ">=2.10" }]
+requires-dist = [
+    { name = "entity-resolution", editable = "packages/entity-resolution" },
+    { name = "pydantic", specifier = ">=2.10" },
+]
 
 [[package]]
 name = "iniconfig"
