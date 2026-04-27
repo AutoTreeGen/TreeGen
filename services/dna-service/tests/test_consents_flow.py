@@ -138,37 +138,40 @@ async def test_upload_rejects_empty_file(app_client, seeded_user_and_tree) -> No
 
 @pytest.mark.db
 @pytest.mark.integration
-async def test_upload_rejected_when_encryption_required(
-    app_client, seeded_user_and_tree, monkeypatch
-) -> None:
+async def test_upload_rejected_when_encryption_required(app_client, seeded_user_and_tree) -> None:
     """С DNA_SERVICE_REQUIRE_ENCRYPTION=true plaintext должен 400'ить.
 
-    Patch get_settings, чтобы не плодить per-test app fixture.
+    Override через FastAPI dependency_overrides — это надёжнее чем
+    monkeypatch на module-level globals, которые FastAPI кеширует на
+    время startup.
     """
-    from dna_service import config
+    from dna_service.config import Settings, get_settings
+    from dna_service.main import app
 
-    real_settings = config.get_settings()
+    real_settings = get_settings()
 
-    def fake_settings() -> config.Settings:
-        return config.Settings(
+    def fake_settings() -> Settings:
+        return Settings(
             database_url=real_settings.database_url,
             storage_root=real_settings.storage_root,
             require_encryption=True,
             max_upload_mb=real_settings.max_upload_mb,
         )
 
-    monkeypatch.setattr(config, "get_settings", fake_settings)
-
-    user_id, tree_id = seeded_user_and_tree
-    consent_id = await _create_consent(app_client, user_id, tree_id)
-    with _SYNTHETIC_23ANDME.open("rb") as fh:
-        resp = await app_client.post(
-            "/dna-uploads",
-            data={"consent_id": consent_id},
-            files={"file": ("x.txt", fh, "text/plain")},
-        )
-    assert resp.status_code == 400
-    assert "encryption" in resp.json()["detail"].lower()
+    app.dependency_overrides[get_settings] = fake_settings
+    try:
+        user_id, tree_id = seeded_user_and_tree
+        consent_id = await _create_consent(app_client, user_id, tree_id)
+        with _SYNTHETIC_23ANDME.open("rb") as fh:
+            resp = await app_client.post(
+                "/dna-uploads",
+                data={"consent_id": consent_id},
+                files={"file": ("x.txt", fh, "text/plain")},
+            )
+        assert resp.status_code == 400
+        assert "encryption" in resp.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.pop(get_settings, None)
 
 
 # ---------------------------------------------------------------------------
