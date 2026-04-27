@@ -12,7 +12,16 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from parser_service.api import dedup, familysearch, imports, trees
+from parser_service.api import (
+    dedup,
+    familysearch,
+    hypotheses,
+    imports,
+    metrics,
+    persons,
+    sources,
+    trees,
+)
 from parser_service.config import get_settings
 from parser_service.database import dispose_engine, init_engine
 
@@ -50,7 +59,15 @@ app.add_middleware(
 app.include_router(familysearch.router, prefix="/imports", tags=["imports", "familysearch"])
 app.include_router(imports.router, prefix="/imports", tags=["imports"])
 app.include_router(trees.router, tags=["trees"])
+app.include_router(sources.router, tags=["sources"])
 app.include_router(dedup.router, tags=["dedup"])
+app.include_router(hypotheses.router, tags=["hypotheses"])
+# persons router включается ПОСЛЕ trees (тот владеет `GET /persons/{id}`),
+# но имена путей не пересекаются: тут `/persons/{id}/merge*`.
+app.include_router(persons.router, tags=["persons", "merge"])
+# /metrics — Prometheus exposition (Phase 9.0). Без префикса, чтобы scrape
+# конфиг был стандартным.
+app.include_router(metrics.router, tags=["meta"])
 
 
 @app.get("/healthz", tags=["meta"])

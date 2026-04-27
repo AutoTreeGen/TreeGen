@@ -242,17 +242,24 @@ class HypothesisType(StrEnum):
 
 
 class HypothesisReviewStatus(StrEnum):
-    """Статус ручной проверки гипотезы пользователем (Phase 7.2).
+    """Статус ручной проверки гипотезы пользователем (Phase 7.2 + 4.9).
 
     ``CONFIRMED``/``REJECTED`` — это user-judgment, не auto-merge.
     CLAUDE.md §5: подтверждение гипотезы НЕ мутирует доменные сущности.
     Слияние entities — отдельный явный flow (Phase 4.6 UI), отдельный
     endpoint, отдельная audit-log запись.
+
+    ``DEFERRED`` (Phase 4.9): «вернусь позже» — отдельно от REJECTED.
+    UI прячет из дефолтного pending-queue, но не считает отказом для
+    metrics. ``person_merger`` не блокирует merge на DEFERRED (только
+    REJECTED блокирует), что позволяет юзеру отложить и вернуться
+    после сбора дополнительных evidence.
     """
 
     PENDING = "pending"
     CONFIRMED = "confirmed"
     REJECTED = "rejected"
+    DEFERRED = "deferred"
 
 
 class HypothesisSubjectType(StrEnum):
@@ -283,3 +290,41 @@ class HypothesisComputedBy(StrEnum):
     AUTOMATIC = "automatic"
     MANUAL = "manual"
     IMPORTED = "imported"
+
+
+class NotificationEventType(StrEnum):
+    """Тип события нотификации (Phase 8.0 — см. ADR-0024).
+
+    Каждый тип — отдельный шаблон сообщения и отдельный idempotency
+    namespace. Список расширяется по мере появления новых источников
+    нотификаций; неизвестный type на ``POST /notify`` отвергается 400.
+    """
+
+    HYPOTHESIS_PENDING_REVIEW = "hypothesis_pending_review"
+    DNA_MATCH_FOUND = "dna_match_found"
+    IMPORT_COMPLETED = "import_completed"
+    IMPORT_FAILED = "import_failed"
+    MERGE_UNDONE = "merge_undone"
+    DEDUP_SUGGESTION_NEW = "dedup_suggestion_new"
+
+
+class HypothesisComputeJobStatus(StrEnum):
+    """Статус bulk hypothesis-compute job (Phase 7.5).
+
+    Lifecycle: ``QUEUED`` → ``RUNNING`` → ``SUCCEEDED``/``FAILED``/``CANCELLED``.
+
+    ``QUEUED`` — job создан, ещё не стартовал (sync-mode моментально
+    переходит в ``RUNNING``).
+    ``RUNNING`` — обрабатывает batch'и, прогресс в ``progress.processed``.
+    ``SUCCEEDED`` — все pairs обработаны.
+    ``FAILED`` — exception в одном из batch'ей; ``error`` поле заполнено,
+    предыдущие закоммиченные batch'и остаются.
+    ``CANCELLED`` — user через PATCH /cancel, worker увидел флаг между
+    batch'ами и остановился.
+    """
+
+    QUEUED = "queued"
+    RUNNING = "running"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    CANCELLED = "cancelled"

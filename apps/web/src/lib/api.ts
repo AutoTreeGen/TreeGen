@@ -10,12 +10,15 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://
 
 // ---- Types (зеркало parser_service.schemas) ---------------------------------
 
+export type PersonMatchType = "substring" | "phonetic";
+
 export type PersonSummary = {
   id: string;
   gedcom_xref: string | null;
   sex: string;
   confidence_score: number;
   primary_name: string | null;
+  match_type: PersonMatchType | null;
 };
 
 export type PersonListResponse = {
@@ -89,6 +92,35 @@ export function fetchPersons(treeId: string, limit = 50, offset = 0): Promise<Pe
   return getJson<PersonListResponse>(`/trees/${treeId}/persons?${params.toString()}`);
 }
 
+export type PersonSearchParams = {
+  q?: string;
+  /** Phonetic mode: Daitch-Mokotoff bucket overlap (Phase 4.4.1). */
+  phonetic?: boolean;
+  birthYearMin?: number;
+  birthYearMax?: number;
+  limit?: number;
+  offset?: number;
+};
+
+export function searchPersons(
+  treeId: string,
+  { q, phonetic, birthYearMin, birthYearMax, limit = 50, offset = 0 }: PersonSearchParams = {},
+): Promise<PersonListResponse> {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  if (q) params.set("q", q);
+  if (phonetic) params.set("phonetic", "true");
+  if (birthYearMin !== undefined && Number.isFinite(birthYearMin)) {
+    params.set("birth_year_min", String(birthYearMin));
+  }
+  if (birthYearMax !== undefined && Number.isFinite(birthYearMax)) {
+    params.set("birth_year_max", String(birthYearMax));
+  }
+  return getJson<PersonListResponse>(`/trees/${treeId}/persons/search?${params.toString()}`);
+}
+
 export function fetchPerson(personId: string): Promise<PersonDetail> {
   return getJson<PersonDetail>(`/persons/${personId}`);
 }
@@ -156,4 +188,193 @@ export function fetchDuplicateSuggestions(
   return getJson<DuplicateSuggestionListResponse>(
     `/trees/${treeId}/duplicate-suggestions?${params.toString()}`,
   );
+}
+
+// ---- Person merge (Phase 4.6 — ADR-0022) ----------------------------------
+
+export type SurvivorChoice = "left" | "right";
+export type HypothesisCheckStatus = "no_hypotheses_found" | "no_conflicts" | "conflicts_blocking";
+
+export type MergeFieldDiff = {
+  field: string;
+  survivor_value: unknown;
+  merged_value: unknown;
+  after_merge_value: unknown;
+};
+
+export type MergeNameDiff = {
+  name_id: string;
+  old_sort_order: number;
+  new_sort_order: number;
+};
+
+export type MergeEventDiff = {
+  event_id: string;
+  action: "reparent" | "collapse_into_survivor" | "keep_separate";
+  collapsed_into: string | null;
+};
+
+export type MergeFamilyMembershipDiff = {
+  table: "families.husband_id" | "families.wife_id" | "family_children.child_person_id";
+  row_id: string;
+};
+
+export type MergeHypothesisConflict = {
+  reason: "rejected_same_person" | "subject_already_merged" | "cross_relationship_conflict";
+  hypothesis_id: string | null;
+  detail: string;
+};
+
+export type MergePreviewResponse = {
+  survivor_id: string;
+  merged_id: string;
+  default_survivor_id: string;
+  fields: MergeFieldDiff[];
+  names: MergeNameDiff[];
+  events: MergeEventDiff[];
+  family_memberships: MergeFamilyMembershipDiff[];
+  hypothesis_check: HypothesisCheckStatus;
+  conflicts: MergeHypothesisConflict[];
+};
+
+export type MergeCommitRequest = {
+  target_id: string;
+  confirm: true;
+  confirm_token: string;
+  survivor_choice?: SurvivorChoice | null;
+};
+
+export type MergeCommitResponse = {
+  merge_id: string;
+  survivor_id: string;
+  merged_id: string;
+  merged_at: string;
+  confirm_token: string;
+};
+
+export function fetchMergePreview(
+  personId: string,
+  payload: { target_id: string; survivor_choice?: SurvivorChoice | null; confirm_token: string },
+): Promise<MergePreviewResponse> {
+  return getJson<MergePreviewResponse>(`/persons/${personId}/merge/preview`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      target_id: payload.target_id,
+      survivor_choice: payload.survivor_choice ?? null,
+      confirm: true,
+      confirm_token: payload.confirm_token,
+    }),
+  });
+}
+
+export async function commitMerge(
+  personId: string,
+  payload: MergeCommitRequest,
+): Promise<MergeCommitResponse> {
+  return getJson<MergeCommitResponse>(`/persons/${personId}/merge`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+// ---- Hypotheses (Phase 4.9: review UI; Phase 7.2: persistence) -------------
+
+export type HypothesisReviewStatus = "pending" | "confirmed" | "rejected" | "deferred";
+
+export type HypothesisType =
+  | "same_person"
+  | "parent_child"
+  | "siblings"
+  | "marriage"
+  | "duplicate_source"
+  | "duplicate_place";
+
+export type HypothesisSummary = {
+  id: string;
+  tree_id: string;
+  hypothesis_type: HypothesisType;
+  subject_a_type: string;
+  subject_a_id: string;
+  subject_b_type: string;
+  subject_b_id: string;
+  composite_score: number;
+  computed_at: string;
+  rules_version: string;
+  reviewed_status: HypothesisReviewStatus;
+  reviewed_at: string | null;
+};
+
+export type HypothesisEvidence = {
+  id: string;
+  rule_id: string;
+  direction: "supports" | "contradicts" | "neutral";
+  weight: number;
+  observation: string;
+  source_provenance: Record<string, unknown>;
+};
+
+export type HypothesisResponse = HypothesisSummary & {
+  review_note: string | null;
+  reviewed_by_user_id: string | null;
+  evidences: HypothesisEvidence[];
+};
+
+export type HypothesisListResponse = {
+  tree_id: string;
+  total: number;
+  limit: number;
+  offset: number;
+  items: HypothesisSummary[];
+};
+
+export type HypothesisListFilters = {
+  reviewStatus?: HypothesisReviewStatus | null;
+  hypothesisType?: HypothesisType | null;
+  subjectId?: string | null;
+  minConfidence?: number;
+  limit?: number;
+  offset?: number;
+};
+
+export function fetchHypotheses(
+  treeId: string,
+  filters: HypothesisListFilters = {},
+): Promise<HypothesisListResponse> {
+  const {
+    reviewStatus,
+    hypothesisType,
+    subjectId,
+    minConfidence = 0.5,
+    limit = 50,
+    offset = 0,
+  } = filters;
+  const params = new URLSearchParams({
+    min_confidence: String(minConfidence),
+    limit: String(limit),
+    offset: String(offset),
+  });
+  if (reviewStatus) params.set("review_status", reviewStatus);
+  if (hypothesisType) params.set("hypothesis_type", hypothesisType);
+  if (subjectId) params.set("subject_id", subjectId);
+  return getJson<HypothesisListResponse>(`/trees/${treeId}/hypotheses?${params.toString()}`);
+}
+
+export function fetchHypothesis(hypothesisId: string): Promise<HypothesisResponse> {
+  return getJson<HypothesisResponse>(`/hypotheses/${hypothesisId}`);
+}
+
+export function reviewHypothesis(
+  hypothesisId: string,
+  payload: { status: HypothesisReviewStatus; note?: string | null },
+): Promise<HypothesisResponse> {
+  return getJson<HypothesisResponse>(`/hypotheses/${hypothesisId}/review`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      status: payload.status,
+      note: payload.note ?? null,
+    }),
+  });
 }

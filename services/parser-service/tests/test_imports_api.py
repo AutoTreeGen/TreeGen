@@ -255,7 +255,8 @@ async def test_event_has_citation(app_client, postgres_dsn) -> None:
     - ровно 1 citation после импорта (на BIRT-event @I1@);
     - entity_type == "event", source_id ссылается на наш SOUR;
     - page_or_section == "p. 42";
-    - quality нормализован: QUAY 3 → 1.0 (3 / 3).
+    - quay_raw сохранён как 3 (raw GEDCOM значение);
+    - quality (derived confidence) — Phase 3.6 mapping: QUAY 3 → 0.95.
     """
     from shared_models.orm import Citation, Event, Source
     from sqlalchemy import select
@@ -279,8 +280,10 @@ async def test_event_has_citation(app_client, postgres_dsn) -> None:
             cit = citations[0]
             assert cit.entity_type == "event"
             assert cit.page_or_section == "p. 42"
-            # QUAY 3 → 3/3 = 1.0.
-            assert cit.quality == pytest.approx(1.0)
+            # Phase 3.6: raw QUAY сохраняется в quay_raw, derived confidence
+            # — в quality (0→0.1, 1→0.4, 2→0.7, 3→0.95, missing→0.5).
+            assert cit.quay_raw == 3
+            assert cit.quality == pytest.approx(0.95)
 
             birth = (
                 await session.execute(
@@ -387,3 +390,181 @@ async def test_get_import_returns_404_for_unknown_job(app_client) -> None:
     """Несуществующий UUID → 404."""
     response = await app_client.get("/imports/00000000-0000-0000-0000-000000000000")
     assert response.status_code == 404
+
+
+# Phase 3.5 follow-up: inline OBJE без xref'а должны попадать в multimedia_objects
+# + entity_multimedia. Раньше дропались (TODO в import_runner).
+_INLINE_OBJE_GED = b"""\
+0 HEAD
+1 SOUR test
+1 GEDC
+2 VERS 5.5.5
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME John /Smith/
+1 SEX M
+1 OBJE
+2 FILE photos/inline_portrait.jpg
+2 FORM jpeg
+2 TITL Inline portrait
+2 TYPE photo
+1 OBJE
+2 FILE docs/birth_cert.pdf
+2 FORM pdf
+0 @I2@ INDI
+1 NAME Mary /Smith/
+1 SEX F
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 OBJE
+2 FILE photos/wedding_inline.jpg
+2 FORM jpeg
+2 TITL Wedding 1923
+0 TRLR
+"""
+
+
+@pytest.mark.asyncio
+async def test_import_persists_inline_obje_objects(app_client, postgres_dsn) -> None:
+    """Inline OBJE (без xref) — сохраняются в multimedia_objects + entity_multimedia.
+
+    @I1@ имеет 2 inline OBJE → 2 multimedia rows + 2 person-links.
+    @F1@ имеет 1 inline OBJE → 1 multimedia row + 1 family-link.
+    Top-level OBJE отсутствует, поэтому всего 3 multimedia rows.
+    """
+    from shared_models.orm import EntityMultimedia, Family, MultimediaObject, Person
+    from sqlalchemy import select
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    files = {"file": ("inline.ged", _INLINE_OBJE_GED, "application/octet-stream")}
+    created = await app_client.post("/imports", files=files)
+    assert created.status_code == 201, created.text
+    body = created.json()
+    tree_id = body["tree_id"]
+    # Все 3 inline OBJE учтены в stats.multimedia.
+    assert body["stats"]["multimedia"] == 3
+    # Каждому соответствует ровно один link.
+    assert body["stats"]["entity_multimedia"] == 3
+
+    engine = create_async_engine(postgres_dsn, future=True)
+    try:
+        SessionMaker = async_sessionmaker(engine, expire_on_commit=False)  # noqa: N806
+        async with SessionMaker() as session:
+            objects = (
+                (
+                    await session.execute(
+                        select(MultimediaObject).where(MultimediaObject.tree_id == tree_id)
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            assert len(objects) == 3
+            # У всех inline-метаданные → inline=true.
+            assert all(o.object_metadata.get("inline") is True for o in objects)
+            captions = {o.caption for o in objects}
+            assert "Inline portrait" in captions
+            assert "Wedding 1923" in captions
+            # Birth cert у I1 без TITL — caption=None.
+            assert None in captions
+            # owner_xref правильно прокинут.
+            i1_objects = [o for o in objects if o.object_metadata.get("inline_owner_xref") == "I1"]
+            f1_objects = [o for o in objects if o.object_metadata.get("inline_owner_xref") == "F1"]
+            assert len(i1_objects) == 2
+            assert len(f1_objects) == 1
+            # type Ancestry-style сохранён.
+            portrait = next(o for o in i1_objects if o.caption == "Inline portrait")
+            assert portrait.object_metadata.get("type") == "photo"
+
+            # Links: I1 → 2 объекта, F1 → 1.
+            i1 = (
+                await session.execute(
+                    select(Person).where(Person.tree_id == tree_id, Person.gedcom_xref == "I1")
+                )
+            ).scalar_one()
+            f1 = (
+                await session.execute(
+                    select(Family).where(Family.tree_id == tree_id, Family.gedcom_xref == "F1")
+                )
+            ).scalar_one()
+            person_links = (
+                (
+                    await session.execute(
+                        select(EntityMultimedia).where(
+                            EntityMultimedia.entity_type == "person",
+                            EntityMultimedia.entity_id == i1.id,
+                        )
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            family_links = (
+                (
+                    await session.execute(
+                        select(EntityMultimedia).where(
+                            EntityMultimedia.entity_type == "family",
+                            EntityMultimedia.entity_id == f1.id,
+                        )
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            assert len(person_links) == 2
+            assert len(family_links) == 1
+    finally:
+        await engine.dispose()
+
+
+# Ancestry-style top-level OBJE с _CREA + TYPE → metadata содержит оба поля.
+_ANCESTRY_OBJE_GED = b"""\
+0 HEAD
+1 SOUR Ancestry.com
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME John /Smith/
+1 SEX M
+1 OBJE @M1@
+0 @M1@ OBJE
+1 FILE https://www.ancestry.com/img/abc.jpg
+2 FORM jpeg
+2 TYPE photo
+1 TITL Ancestry photo
+1 _CREA 2024-01-15 09:12:34
+0 TRLR
+"""
+
+
+@pytest.mark.asyncio
+async def test_import_captures_ancestry_crea_and_type_in_metadata(app_client, postgres_dsn) -> None:
+    """Ancestry экспорт: _CREA → provenance.gedcom_crea, TYPE → metadata.type."""
+    from shared_models.orm import MultimediaObject
+    from sqlalchemy import select
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    files = {"file": ("ancestry.ged", _ANCESTRY_OBJE_GED, "application/octet-stream")}
+    created = await app_client.post("/imports", files=files)
+    assert created.status_code == 201, created.text
+    tree_id = created.json()["tree_id"]
+
+    engine = create_async_engine(postgres_dsn, future=True)
+    try:
+        SessionMaker = async_sessionmaker(engine, expire_on_commit=False)  # noqa: N806
+        async with SessionMaker() as session:
+            obj = (
+                await session.execute(
+                    select(MultimediaObject).where(MultimediaObject.tree_id == tree_id)
+                )
+            ).scalar_one()
+            assert obj.object_metadata.get("type") == "photo"
+            assert obj.object_metadata.get("format") == "jpeg"
+            assert obj.object_metadata.get("created_raw") == "2024-01-15 09:12:34"
+            assert obj.provenance.get("gedcom_crea") == "2024-01-15 09:12:34"
+    finally:
+        await engine.dispose()

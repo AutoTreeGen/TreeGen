@@ -93,6 +93,36 @@ def _xrefs_under(record: GedcomRecord, tag: str) -> tuple[str, ...]:
     return tuple(out)
 
 
+def _split_obje_children(
+    record: GedcomRecord,
+) -> tuple[tuple[str, ...], tuple[InlineMultimediaObject, ...]]:
+    """Разделить OBJE-дочерние узлы на xref-ссылки и inline-объекты.
+
+    GEDCOM 5.5.5 §3.5 (MULTIMEDIA_LINK) допускает обе формы под INDI/FAM/SOUR:
+
+    .. code-block:: text
+
+        1 OBJE @M1@                # xref-ссылка
+        1 OBJE                     # inline-объект
+        2 FILE photos/wedding.jpg
+        2 FORM jpeg
+        2 TITL Wedding 1923
+
+    Раньше парсер сохранял только xref'ы (``Person.objects_xrefs``); inline
+    OBJE терялись на round-trip (см. ROADMAP §3.5 про multimedia import).
+    Возвращает пару ``(xrefs, inline)`` — оба порядка соответствуют порядку
+    в файле.
+    """
+    xrefs: list[str] = []
+    inline: list[InlineMultimediaObject] = []
+    for child in record.find_all("OBJE"):
+        if child.value.startswith("@") and child.value.endswith("@"):
+            xrefs.append(_strip_xref(child.value))
+        else:
+            inline.append(InlineMultimediaObject.from_record(child))
+    return tuple(xrefs), tuple(inline)
+
+
 def _is_xref_value(value: str) -> bool:
     """``True``, если строка имеет вид ``@xref@`` (минимум ``@x@``)."""
     return len(value) >= 3 and value.startswith("@") and value.endswith("@")
@@ -579,6 +609,14 @@ class Person(BaseModel):
         description="Все SOUR-children персоны в виде структурированных Citation.",
     )
     objects_xrefs: tuple[str, ...] = ()
+    inline_objects: tuple[InlineMultimediaObject, ...] = Field(
+        default=(),
+        description=(
+            "OBJE-children без xref'а (inline-форма GEDCOM 5.5.5 §3.5 "
+            "MULTIMEDIA_LINK). Раньше дропались — теперь сохраняются для "
+            "round-trip. См. ROADMAP §3.5."
+        ),
+    )
     line_no: int | None = None
 
     model_config = _FROZEN
@@ -592,6 +630,7 @@ class Person(BaseModel):
 
         names = tuple(Name.from_record(c) for c in record.find_all("NAME"))
         events = tuple(Event.from_record(c) for c in record.children if c.tag in _INDI_EVENT_TAGS)
+        objects_xrefs, inline_objects = _split_obje_children(record)
 
         return cls(
             xref_id=record.xref_id,
@@ -603,7 +642,8 @@ class Person(BaseModel):
             notes_xrefs=_xrefs_under(record, "NOTE"),
             sources_xrefs=_xrefs_under(record, "SOUR"),
             citations=_collect_citations(record),
-            objects_xrefs=_xrefs_under(record, "OBJE"),
+            objects_xrefs=objects_xrefs,
+            inline_objects=inline_objects,
             line_no=record.line_no,
         )
 
@@ -633,6 +673,13 @@ class Family(BaseModel):
         description="Все SOUR-children семьи в виде структурированных Citation.",
     )
     objects_xrefs: tuple[str, ...] = ()
+    inline_objects: tuple[InlineMultimediaObject, ...] = Field(
+        default=(),
+        description=(
+            "OBJE-children без xref'а (inline-форма GEDCOM 5.5.5 §3.5 "
+            "MULTIMEDIA_LINK). Аналогично Person.inline_objects."
+        ),
+    )
     line_no: int | None = None
 
     model_config = _FROZEN
@@ -647,6 +694,7 @@ class Family(BaseModel):
         husb = record.find("HUSB")
         wife = record.find("WIFE")
         events = tuple(Event.from_record(c) for c in record.children if c.tag in _FAM_EVENT_TAGS)
+        objects_xrefs, inline_objects = _split_obje_children(record)
 
         return cls(
             xref_id=record.xref_id,
@@ -657,7 +705,8 @@ class Family(BaseModel):
             notes_xrefs=_xrefs_under(record, "NOTE"),
             sources_xrefs=_xrefs_under(record, "SOUR"),
             citations=_collect_citations(record),
-            objects_xrefs=_xrefs_under(record, "OBJE"),
+            objects_xrefs=objects_xrefs,
+            inline_objects=inline_objects,
             line_no=record.line_no,
         )
 
@@ -741,6 +790,86 @@ class Note(BaseModel):
         return cls(xref_id=record.xref_id, text=record.value, line_no=record.line_no)
 
 
+def _extract_obje_fields(
+    record: GedcomRecord,
+) -> tuple[str | None, str | None, str | None, str | None]:
+    """Достать (file, format, title, type_) из узла ``OBJE``.
+
+    FORM может стоять как под ``FILE`` (GEDCOM 5.5.5 предпочтительно), так и
+    под самим ``OBJE`` (5.5.1 и проприетарные экспорты). TYPE — внутри FILE
+    у Ancestry, реже под OBJE напрямую. Возвращаем raw-значения; нормализация
+    (`jpg → image/jpeg`, и т.п.) — задача mapping-слоя в parser-service.
+    """
+    file_node = record.find("FILE")
+    file_value = file_node.value if file_node is not None else None
+
+    format_value: str | None = None
+    type_value: str | None = None
+    if file_node is not None:
+        form_under_file = file_node.find("FORM")
+        if form_under_file is not None:
+            format_value = form_under_file.value or None
+        type_under_file = file_node.find("TYPE")
+        if type_under_file is not None:
+            type_value = type_under_file.value or None
+    if format_value is None:
+        format_value = record.get_value("FORM") or None
+    if type_value is None:
+        type_value = record.get_value("TYPE") or None
+
+    title = record.get_value("TITL") or None
+    return file_value, format_value, title, type_value
+
+
+class InlineMultimediaObject(BaseModel):
+    """Inline-OBJE без xref'а — встречается прямо под ``INDI``/``FAM``/``SOUR``.
+
+    GEDCOM 5.5.5 §3.5 (MULTIMEDIA_LINK) допускает inline-форму:
+
+    .. code-block:: text
+
+        1 OBJE
+        2 FILE photos/wedding.jpg
+        2 FORM jpeg
+        2 TITL Wedding 1923
+        2 _CREA Ancestry-style provenance
+
+    Эти объекты не имеют top-level xref, поэтому хранятся прямо у владельца
+    (Person/Family) — отличие от :class:`MultimediaObject`, которая всегда
+    с xref. Round-trip обязателен — см. CLAUDE.md §11.
+    """
+
+    file: str | None = Field(default=None, description="Подтег FILE (путь/URL).")
+    format_: str | None = Field(
+        default=None,
+        description="Подтег FORM (jpg, png, pdf, ...). Может стоять под FILE или OBJE.",
+    )
+    title: str | None = Field(default=None, description="Подтег TITL.")
+    type_: str | None = Field(
+        default=None,
+        description="Подтег TYPE (photo, document, audio, …). Под FILE или OBJE.",
+    )
+    line_no: int | None = None
+
+    model_config = _FROZEN
+
+    @classmethod
+    def from_record(cls, record: GedcomRecord) -> InlineMultimediaObject:
+        """Построить из inline-OBJE-узла (без xref).
+
+        Если узел всё-таки с xref — это ошибка caller'а; используйте
+        :class:`MultimediaObject` для top-level OBJE.
+        """
+        file_value, format_value, title, type_value = _extract_obje_fields(record)
+        return cls(
+            file=file_value,
+            format_=format_value,
+            title=title,
+            type_=type_value,
+            line_no=record.line_no,
+        )
+
+
 class MultimediaObject(BaseModel):
     """Запись ``OBJE`` верхнего уровня — медиа-объект (фото, скан, документ).
 
@@ -752,6 +881,18 @@ class MultimediaObject(BaseModel):
     file: str | None = Field(default=None, description="Подтег FILE (путь/URL).")
     format_: str | None = Field(default=None, description="Подтег FORM (jpg, png, pdf, ...).")
     title: str | None = Field(default=None, description="Подтег TITL.")
+    type_: str | None = Field(
+        default=None,
+        description="Подтег TYPE (photo, document, audio, …). Опционален.",
+    )
+    created_raw: str | None = Field(
+        default=None,
+        description=(
+            "Подтег ``_CREA`` (Ancestry-style provenance: дата создания записи). "
+            "GEDCOM 5.5.5 не определяет этот тег — это проприетарное расширение. "
+            "См. docs/gedcom-extensions.md §OBJE."
+        ),
+    )
     line_no: int | None = None
 
     model_config = _FROZEN
@@ -763,21 +904,16 @@ class MultimediaObject(BaseModel):
             msg = f"OBJE record without xref at line {record.line_no}"
             raise ValueError(msg)
 
-        file_node = record.find("FILE")
-        format_value: str | None = None
-        if file_node is not None:
-            # FORM может быть как под FILE, так и под OBJE напрямую.
-            form_under_file = file_node.find("FORM")
-            if form_under_file is not None:
-                format_value = form_under_file.value or None
-        if format_value is None:
-            format_value = record.get_value("FORM") or None
+        file_value, format_value, title, type_value = _extract_obje_fields(record)
+        created_raw = record.get_value("_CREA") or None
 
         return cls(
             xref_id=record.xref_id,
-            file=file_node.value if file_node is not None else None,
+            file=file_value,
             format_=format_value,
-            title=record.get_value("TITL") or None,
+            title=title,
+            type_=type_value,
+            created_raw=created_raw,
             line_no=record.line_no,
         )
 

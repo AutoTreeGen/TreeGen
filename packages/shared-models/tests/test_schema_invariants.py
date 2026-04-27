@@ -34,6 +34,20 @@ SERVICE_TABLES = {
     # доказательства, привязаны через FK CASCADE на hypothesis. Тоже
     # service-table — не несут soft-delete (удаление вместе с гипотезой).
     "hypothesis_evidences",
+    # Manual person-merge audit (Phase 4.6 / ADR-0022): лог-trail с
+    # собственной retention-политикой (90-дневное undo-окно + purge).
+    # ``undone_at`` и ``purged_at`` — отдельные indicators событий,
+    # не soft-delete этой строки.
+    "person_merge_logs",
+    # Notification deliveries (Phase 8.0 / ADR-0024): per-user, не
+    # per-tree; нет soft-delete (idempotency-окно 1 час делает delete
+    # неактуальным для re-send), нет provenance (источник — internal
+    # callers через POST /notify, не GEDCOM/DNA-import).
+    "notifications",
+    # Bulk hypothesis-compute jobs (Phase 7.5): служебные job rows
+    # с прогрессом и cancel-флагом. Soft-delete не нужен — старые job'ы
+    # purge'аются retention-политикой (TBD).
+    "hypothesis_compute_jobs",
 }
 
 TREE_ENTITY_TABLES = {
