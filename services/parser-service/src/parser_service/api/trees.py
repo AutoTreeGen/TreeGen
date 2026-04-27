@@ -19,7 +19,7 @@ from shared_models.orm import (
     Source,
     Tree,
 )
-from sqlalchemy import and_, exists, func, or_, select
+from sqlalchemy import ColumnElement, and_, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -35,6 +35,7 @@ from parser_service.schemas import (
     PersonListResponse,
     PersonSummary,
 )
+from parser_service.services.dm_buckets import compute_dm_buckets
 
 router = APIRouter()
 
@@ -97,7 +98,7 @@ async def list_persons(
 @router.get(
     "/trees/{tree_id}/persons/search",
     response_model=PersonListResponse,
-    summary="Search persons in a tree by name and birth-year range",
+    summary="Search persons in a tree by name (substring or phonetic) and birth-year range",
 )
 async def search_persons(
     tree_id: uuid.UUID,
@@ -106,13 +107,26 @@ async def search_persons(
         str | None,
         Query(
             description=(
-                "Case-insensitive substring search across given_name, surname, "
-                "и их конкатенацию. ILIKE %q%. Пусто/None — не фильтрует. "
-                "Параметр SQL-injection-safe (SQLAlchemy parameterizes)."
+                "По умолчанию — case-insensitive substring search (ILIKE) "
+                "по given_name / surname / их конкатенации. С ``phonetic=true`` "
+                "переключается на Daitch-Mokotoff bucket-overlap по "
+                "``persons.surname_dm`` / ``persons.given_name_dm``. "
+                "Пусто/None — не фильтрует. SQL-injection-safe."
             ),
             max_length=200,
         ),
     ] = None,
+    phonetic: Annotated[
+        bool,
+        Query(
+            description=(
+                "Phonetic-режим (Daitch-Mokotoff). Когда ``true``, ``q`` "
+                "транслитерируется (cyrillic→latin), считаются DM-buckets, "
+                "и Postgres ARRAY overlap (``&&``) находит персон, чьи "
+                "``surname_dm`` или ``given_name_dm`` пересекаются. Phase 4.4.1."
+            ),
+        ),
+    ] = False,
     birth_year_min: Annotated[
         int | None,
         Query(
@@ -132,20 +146,29 @@ async def search_persons(
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> PersonListResponse:
-    """Search persons by name substring + birth-year range.
+    """Search persons by name + birth-year range, with optional phonetic mode.
 
-    Возвращает тот же ``PersonListResponse`` что и list-эндпоинт.
-    Если все три фильтра пустые — endpoint эквивалентен пагинированному
-    list (полезно как унифицированный entry point из UI с lazy-фильтрами).
+    Возвращает тот же ``PersonListResponse`` что и list-эндпоинт. ``items[].match_type``
+    подсказывает фронту, через какой механизм найден ряд: ``substring`` для
+    дефолтного ILIKE, ``phonetic`` когда сработал DM bucket-overlap, ``None``
+    если ``q`` не передан (просто list).
 
-    Tree existence: 404 если ``tree_id`` не существует в БД (в отличие
-    от list-эндпоинта, который возвращает пустой результат — search
-    делает явный roundtrip и должен сообщать «такого дерева нет»).
+    Tree existence: 404 если ``tree_id`` не существует.
 
-    Birth year — опциональный фильтр через ``EXISTS`` подзапрос на
-    BIRT-событие с ``date_start`` в указанном диапазоне. Персоны без
-    BIRT (или без ``date_start``) исключаются когда хотя бы один из
-    ``birth_year_min`` / ``birth_year_max`` задан.
+    Phonetic-режим (Phase 4.4.1):
+    - ``q`` транслитерируется через ``transliterate_cyrillic`` (Ж→ZH, …),
+      потому что DM работает только на A-Z. Так фамилия ``Жытницкий``
+      даёт те же DM-bucket'ы что и ``Zhitnitzky``.
+    - Поиск идёт по предвычисленным колонкам ``persons.surname_dm`` /
+      ``persons.given_name_dm`` через operator ``&&`` (arrays overlap),
+      покрытым GIN-индексами. Без JOIN'а на ``names`` — sub-50ms на 12k
+      персонах.
+    - Если по ``q`` не получилось DM-кодов (например, ``q="123"`` или ``q="-"``),
+      ничего не возвращаем (а не fall back в substring) — иначе UI
+      отдаёт ``substring`` matches при включённой Phonetic-галочке, что путает.
+
+    Birth year фильтр через EXISTS-подзапрос на BIRT-событие с
+    ``date_start.year`` в диапазоне. Можно комбинировать с любым из q-режимов.
     """
     tree_exists = await session.scalar(
         select(func.count()).select_from(Tree).where(Tree.id == tree_id)
@@ -157,13 +180,39 @@ async def search_persons(
         )
 
     base_filters = [Person.tree_id == tree_id, Person.deleted_at.is_(None)]
+    # match_type вычисляется отдельно для items; один и тот же endpoint
+    # отдаёт substring или phonetic в зависимости от ?phonetic=true.
+    item_match_type: str | None = None
 
-    if q:
+    if q and phonetic:
+        # Phonetic путь: DM-bucket overlap по surname_dm / given_name_dm.
+        dm_codes = compute_dm_buckets(q)
+        if not dm_codes:
+            # Запрос не даёт ни одного DM-кода (только цифры / пунктуация).
+            # Эквивалентно «ничего не нашли», без fallback в substring.
+            return PersonListResponse(
+                tree_id=tree_id,
+                total=0,
+                limit=limit,
+                offset=offset,
+                items=[],
+            )
+        item_match_type = "phonetic"
+        # SQLAlchemy ARRAY.overlap — Postgres operator `&&`.
+        base_filters.append(
+            or_(
+                Person.surname_dm.overlap(dm_codes),
+                Person.given_name_dm.overlap(dm_codes),
+            )
+        )
+    elif q:
+        # Дефолтный путь: ILIKE по given/surname/concat.
         # Pattern с escape'ом ILIKE-метасимволов: % и _ внутри пользовательского
         # ввода не должны работать как wildcard'ы, иначе `q='%'` вернёт всё.
         # Backslash-escape работает в Postgres ILIKE без явного ESCAPE clause.
         safe = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         pattern = f"%{safe}%"
+        item_match_type = "substring"
         # Подзапрос: персоны, у которых хоть одно имя удовлетворяет ILIKE.
         # Конкатенация given+surname обрабатывает запросы вида "John Smith".
         name_match = exists(
@@ -183,7 +232,10 @@ async def search_persons(
         base_filters.append(name_match)
 
     if birth_year_min is not None or birth_year_max is not None:
-        date_filters = [Event.date_start.is_not(None)]
+        # Explicit ColumnElement[bool] на list — иначе mypy сужает тип
+        # до BinaryExpression[bool] от первого элемента и не принимает
+        # func.extract(...) сравнения (ColumnElement[bool]).
+        date_filters: list[ColumnElement[bool]] = [Event.date_start.is_not(None)]
         if birth_year_min is not None:
             date_filters.append(func.extract("year", Event.date_start) >= birth_year_min)
         if birth_year_max is not None:
@@ -229,6 +281,7 @@ async def search_persons(
                 sex=p.sex,
                 confidence_score=p.confidence_score,
                 primary_name=primary,
+                match_type=item_match_type,
             )
         )
     return PersonListResponse(

@@ -10,12 +10,15 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://
 
 // ---- Types (зеркало parser_service.schemas) ---------------------------------
 
+export type PersonMatchType = "substring" | "phonetic";
+
 export type PersonSummary = {
   id: string;
   gedcom_xref: string | null;
   sex: string;
   confidence_score: number;
   primary_name: string | null;
+  match_type: PersonMatchType | null;
 };
 
 export type PersonListResponse = {
@@ -91,6 +94,8 @@ export function fetchPersons(treeId: string, limit = 50, offset = 0): Promise<Pe
 
 export type PersonSearchParams = {
   q?: string;
+  /** Phonetic mode: Daitch-Mokotoff bucket overlap (Phase 4.4.1). */
+  phonetic?: boolean;
   birthYearMin?: number;
   birthYearMax?: number;
   limit?: number;
@@ -99,13 +104,14 @@ export type PersonSearchParams = {
 
 export function searchPersons(
   treeId: string,
-  { q, birthYearMin, birthYearMax, limit = 50, offset = 0 }: PersonSearchParams = {},
+  { q, phonetic, birthYearMin, birthYearMax, limit = 50, offset = 0 }: PersonSearchParams = {},
 ): Promise<PersonListResponse> {
   const params = new URLSearchParams({
     limit: String(limit),
     offset: String(offset),
   });
   if (q) params.set("q", q);
+  if (phonetic) params.set("phonetic", "true");
   if (birthYearMin !== undefined && Number.isFinite(birthYearMin)) {
     params.set("birth_year_min", String(birthYearMin));
   }
