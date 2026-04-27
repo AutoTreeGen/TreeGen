@@ -32,6 +32,7 @@ dependencies = [
 members = [
     "packages/gedcom-parser",
     "packages/shared-models",
+    "packages/dna-analysis",
     "services/parser-service",
 ]
 
@@ -39,6 +40,7 @@ members = [
 [tool.uv.sources]
 shared-models = { workspace = true }
 gedcom-parser = { workspace = true }
+dna-analysis = { workspace = true }
 parser-service = { workspace = true }
 
 [tool.uv]
