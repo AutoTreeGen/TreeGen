@@ -123,6 +123,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "pytest-xdist" },
     { name = "python-dotenv" },
+    { name = "pyyaml" },
     { name = "ruff" },
     { name = "testcontainers" },
 ]
@@ -148,6 +149,7 @@ dev = [
     { name = "pytest-cov", specifier = ">=6.0" },
     { name = "pytest-xdist", specifier = ">=3.6" },
     { name = "python-dotenv", specifier = ">=1.0" },
+    { name = "pyyaml", specifier = ">=6.0" },
     { name = "ruff", specifier = ">=0.7" },
     { name = "testcontainers", extras = ["postgres"], specifier = ">=4.8" },
 ]

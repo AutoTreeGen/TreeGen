@@ -131,13 +131,26 @@ def parse_gedcom_date(value: str) -> ParsedDate:
 |---|---|
 | Покрытие тестами новой логики | > 80% |
 | Mypy / TypeScript strict | без `any`, без `# type: ignore` без комментария-обоснования |
-| Линтеры | ruff, black, biome — passing |
+| Линтеры | ruff (lint + format), biome — passing |
 | p95 API latency | < 300 мс (для эндпоинтов без LLM) |
 | Размер PR | < 500 строк диффа желательно |
 
 > **Mypy в pre-commit** запускается только на `^(packages|services)/.+\.py$`,
 > исключая `tests/` и `samples/` — strict-онбординг постепенный, новый код
 > в этих путях должен проходить strict сразу.
+
+**`--no-verify` запрещён.** Если pre-commit падает — чинить причину, не
+обходить. Для AI-агентов это правило тем более жёсткое: bypass превращает
+red CI в норму (см. ADR-0008).
+
+**Перед `git push` обязательно прогнать полный `check`-скрипт:**
+
+- Windows: `pwsh scripts/check.ps1`
+- Linux / macOS: `bash scripts/check.sh`
+
+Это локальное зеркало шагов CI job `lint-and-test`. Парность гарантирует
+`tests/test_ci_parity.py` — он сравнивает множества команд в `check.{sh,ps1}`
+и `.github/workflows/ci.yml` и падает при расхождении.
 
 ---
 
