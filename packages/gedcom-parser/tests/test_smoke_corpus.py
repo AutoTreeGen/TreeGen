@@ -67,3 +67,48 @@ def test_corpus_file_parses_without_errors(ged_path: Path) -> None:
     tags = [r.tag for r in records]
     assert "HEAD" in tags, f"{ged_path.name}: no HEAD record"
     assert "TRLR" in tags, f"{ged_path.name}: no TRLR record"
+
+
+# Phase 3.5 follow-up: гарантируем, что ≥1 файл в корпусе содержит ≥100
+# OBJE-записей (любой формы — top-level или inline). Это canary-проверка
+# того, что multimedia-парсер не падает на больших Ancestry/MyHeritage
+# экспортах с тысячами фотографий.
+_OBJE_COVERAGE_MIN_FILES = 1
+_OBJE_COVERAGE_MIN_PER_FILE = 100
+
+
+def _count_obje(records: list) -> int:  # type: ignore[type-arg]
+    """Рекурсивно посчитать все OBJE-узлы в дереве (top-level и nested)."""
+    count = 0
+    for rec in records:
+        if rec.tag == "OBJE":
+            count += 1
+        # Спускаемся внутрь — inline OBJE под INDI/FAM/SOUR.
+        count += _count_obje(rec.children)
+    return count
+
+
+def test_corpus_has_files_with_substantial_obje_coverage() -> None:
+    """Хотя бы один файл из корпуса содержит ≥100 OBJE.
+
+    Это canary против регрессии «мы перестали парсить OBJE» — если ни у
+    одного экспорта не оказалось ≥100 medium records, либо корпус
+    деградировал, либо парсер их пропускает.
+    """
+    if not _CORPUS:
+        pytest.skip(f"Corpus directory not found: {_CORPUS_DIR}")
+
+    files_with_substantial_obje = 0
+    obje_counts: dict[str, int] = {}
+    for ged_path in _CORPUS:
+        records, _encoding = parse_file(ged_path)
+        n = _count_obje(records)
+        obje_counts[ged_path.name] = n
+        if n >= _OBJE_COVERAGE_MIN_PER_FILE:
+            files_with_substantial_obje += 1
+
+    assert files_with_substantial_obje >= _OBJE_COVERAGE_MIN_FILES, (
+        f"Expected ≥{_OBJE_COVERAGE_MIN_FILES} corpus file(s) with "
+        f"≥{_OBJE_COVERAGE_MIN_PER_FILE} OBJE records, got per-file counts: "
+        f"{obje_counts}"
+    )

@@ -155,3 +155,89 @@ GEDCOM-нотация: `John /Smith/ Jr.` где `/Smith/` — фамилия.
 - Проприетарные теги без документации.
 
 Стратегия: парсить best-effort, всё подозрительное — в отчёт валидатора.
+
+---
+
+## 9. OBJE — мультимедиа-объекты (фото, документы, аудио)
+
+GEDCOM 5.5.5 §3.5 определяет две формы привязки медиа:
+
+- **Top-level запись** с собственным xref:
+
+  ```text
+  0 @M1@ OBJE
+  1 FILE photos/portrait.jpg
+  2 FORM jpeg
+  2 TYPE photo
+  1 TITL John Smith portrait, 1850
+  ```
+
+  Ссылка из INDI/FAM/SOUR — `1 OBJE @M1@`.
+
+- **Inline-форма без xref** (та же спецификация, форма §MULTIMEDIA_LINK):
+
+  ```text
+  0 @I1@ INDI
+  1 NAME John /Smith/
+  1 OBJE
+  2 FILE photos/wedding.jpg
+  2 FORM jpeg
+  2 TITL Wedding 1923
+  ```
+
+  Inline-OBJE никем больше не цитируется и логически принадлежит владельцу
+  (INDI/FAM). Parser сохраняет её в `Person.inline_objects` /
+  `Family.inline_objects`. См. `gedcom_parser.entities.InlineMultimediaObject`.
+
+### Подтеги
+
+| Тег     | Версия       | Где встречается              | Семантика |
+|---------|--------------|------------------------------|-----------|
+| `FILE`  | 5.5.5 / 5.5.1 | Под OBJE                     | Путь / URL медиа. Может быть относительным к корню GED, абсолютным или полноценным URL. |
+| `FORM`  | 5.5.5         | Под `FILE` (предпочтительно) | MIME-расширение: `jpeg`, `png`, `pdf`, `mp3`, …. Хранится как сырое значение, нормализация в mime_type — отдельная фаза. |
+| `FORM`  | 5.5.1         | Под `OBJE` напрямую          | Legacy-форма; парсер её распознаёт. |
+| `TITL`  | 5.5.5 / 5.5.1 | Под OBJE                     | Человеко-читаемое название (caption). |
+| `TYPE`  | 5.5.5         | Под `FILE` (предпочтительно) | Категория: `photo`, `document`, `audio`, `video`, `electronic` и т.д. Ancestry часто экспортирует `photo`. |
+| `TYPE`  | —             | Под `OBJE` напрямую          | Встречается у Geni / старых FTM. Парсер обрабатывает оба места. |
+
+### Проприетарные теги
+
+| Тег     | Платформа   | Где            | Значение |
+|---------|-------------|----------------|----------|
+| `_CREA` | Ancestry    | Под OBJE верхнего уровня | Дата/время создания записи в формате `YYYY-MM-DD HH:MM:SS` (или короче). У нас сохраняется в `MultimediaObject.created_raw` и в `provenance.gedcom_crea` после импорта. Не нормализуется в `taken_date` (это дата фотосъёмки, что разное). |
+| `_PRIM` | MyHeritage  | Под OBJE        | Признак primary photo персоны. Не парсится семантически, доступен через сырой `GedcomRecord` — будет добавлен в провенанс при необходимости. |
+| `_MTTAG` | MyHeritage | Под OBJE        | Тэги (geo-tag, person-tag). См. также §3 этого документа. |
+| `_NOTE` | Ancestry    | Под OBJE        | Произвольная пометка. Не отличается от стандартного `NOTE`. |
+
+### Сохранение в БД (parser-service)
+
+Для каждой записи (top-level **или** inline) создаётся одна строка в
+`multimedia_objects`:
+
+- `storage_url` = `FILE` или fallback `gedcom://OBJE/<xref>` /
+  `gedcom://OBJE/inline/<owner_xref>/<line_no>`.
+- `caption` = `TITL`.
+- `object_metadata`:
+  - `format` — из FORM
+  - `type` — из TYPE
+  - либо `gedcom_xref` (top-level), либо `inline=true` + `inline_owner_xref` (inline)
+  - `created_raw` — для Ancestry `_CREA`
+- `provenance.gedcom_crea` — копия `_CREA` для traceability.
+
+Связь с владельцем — строка в `entity_multimedia` с
+`entity_type ∈ {"person", "family"}` (полиморфно).
+
+### Round-trip
+
+Inline-OBJE round-trip-совместим: `parse → write_records → parse` сохраняет
+все подтеги (FILE/FORM/TITL/TYPE). См.
+`tests/test_entities.py::TestInlineMultimedia::test_round_trip_inline_obje_preserved`.
+Top-level OBJE сохраняется через AST-writer без потерь
+(см. `gedcom_parser.writer`).
+
+### Что не делается
+
+- Скачивание файлов по URL — отдельная Phase 3.5.1.
+- Парсинг EXIF / OCR — Phase 10 (LLM-aware).
+- Дедуп по `sha256` — Phase 3.5.2 (требует open + hash).
+- Inline OBJE под `SOUR` / `EVEN` — TODO (сейчас только INDI/FAM).

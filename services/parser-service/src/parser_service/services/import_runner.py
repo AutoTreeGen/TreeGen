@@ -250,10 +250,7 @@ async def run_import(
     # получить и raw `records`, и encoding. Records нужны для извлечения
     # SOUR-references с подтегами PAGE/QUAY (см. citations ниже): семантические
     # entity'ы из `document` хранят только tuple xref'ов, без подробностей.
-    from gedcom_parser import (  # type: ignore[import-not-found]
-        GedcomDocument,
-        parse_file,
-    )
+    from gedcom_parser import GedcomDocument, parse_file
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -607,28 +604,62 @@ async def run_import(
         await _bulk_insert(session, Citation, citation_rows)
 
         # ---- Multimedia (OBJE) ----
-        # Top-level OBJE-records → `multimedia_objects`. Бинарные данные
-        # НЕ скачиваем — только метаданные:
+        # Top-level OBJE-records → `multimedia_objects` + ссылки из INDI/FAM
+        # (`1 OBJE @M1@`) → `entity_multimedia`. Phase 3.5 follow-up: inline
+        # OBJE (`1 OBJE\n2 FILE foo.jpg`) тоже теперь сохраняются — каждый
+        # как отдельный multimedia_objects row + entity_multimedia link.
+        # Бинарные данные НЕ скачиваем — только метаданные:
         #  - storage_url:  значение тега FILE (relative или absolute path/URL).
         #                  Поле NOT NULL: пустые/отсутствующие FILE → фолбэк
-        #                  на `gedcom://OBJE/<xref>` чтобы соблюсти constraint.
+        #                  на `gedcom://OBJE/<xref>` (top-level) или
+        #                  `gedcom://OBJE/inline/<line_no>` (inline).
         #  - object_type:  фолбэк "image" — gedcom_parser не классифицирует
-        #                  тип; FORM-расширение хранится в metadata.
-        #  - mime_type:    None (выводить из FORM — Phase 3.5).
+        #                  тип; FORM/TYPE-расширение хранится в metadata.
+        #  - mime_type:    None (выводить из FORM — Phase 3.5.1).
         #  - sha256:       None (мы не открываем файл).
         #  - caption:      OBJE.TITL.
-        #  - object_metadata: {"format": ..., "gedcom_xref": ...} —
-        #                  всё, что относится к raw GEDCOM, без потерь.
-        # OBJE-references из INDI/FAM (`1 OBJE @M1@`) → entity_multimedia.
-        # Inline-OBJE (без xref) пока пропускаем — Phase 3.4.
+        #  - object_metadata: {format, type, gedcom_xref|inline_owner_xref,
+        #                  created_raw} — всё, что относится к raw GEDCOM, без потерь.
         multimedia_rows: list[dict[str, Any]] = []
         multimedia_id_by_xref: dict[str, Any] = {}
+
+        def _build_object_metadata(
+            *,
+            obje: Any,
+            owner_kind: str,
+            owner_ref: str,
+        ) -> dict[str, Any]:
+            """Собрать ``object_metadata`` для одного OBJE row.
+
+            owner_kind: ``"top"`` (top-level OBJE с xref) или ``"inline"``
+                (inline OBJE на INDI/FAM/SOUR).
+            owner_ref: gedcom_xref top-level OBJE, либо xref INDI/FAM-владельца
+                (для inline формы).
+            """
+            md: dict[str, Any] = {}
+            if owner_kind == "top":
+                md["gedcom_xref"] = owner_ref
+            else:
+                md["inline"] = True
+                md["inline_owner_xref"] = owner_ref
+            if obje.format_:
+                md["format"] = obje.format_
+            type_ = getattr(obje, "type_", None)
+            if type_:
+                md["type"] = type_
+            created_raw = getattr(obje, "created_raw", None)
+            if created_raw:
+                md["created_raw"] = created_raw
+            return md
+
+        # Top-level OBJE (с xref).
         for xref, obj in document.objects.items():
             mid = new_uuid()
             multimedia_id_by_xref[xref] = mid
-            metadata: dict[str, Any] = {"gedcom_xref": xref}
-            if obj.format_:
-                metadata["format"] = obj.format_
+            md = _build_object_metadata(obje=obj, owner_kind="top", owner_ref=xref)
+            prov: dict[str, Any] = {"import_job_id": str(job.id), "gedcom_xref": xref}
+            if obj.created_raw:
+                prov["gedcom_crea"] = obj.created_raw
             multimedia_rows.append(
                 {
                     "id": mid,
@@ -640,18 +671,17 @@ async def run_import(
                     "sha256": None,
                     "caption": obj.title,
                     "taken_date": None,
-                    "object_metadata": metadata,
+                    "object_metadata": md,
                     "status": EntityStatus.PROBABLE.value,
                     "confidence_score": 0.5,
                     "version_id": 1,
-                    "provenance": {"import_job_id": str(job.id), "gedcom_xref": xref},
+                    "provenance": prov,
                     "created_at": now,
                     "updated_at": now,
                 }
             )
-        await _bulk_insert(session, MultimediaObject, multimedia_rows)
 
-        # OBJE-references → entity_multimedia (полиморфная связь как у citations).
+        # OBJE-references + inline OBJE → entity_multimedia (полиморфно).
         entity_multimedia_rows: list[dict[str, Any]] = []
 
         def _add_media_links(
@@ -660,10 +690,70 @@ async def run_import(
             entity_type: str,
             entity_id: Any,
         ) -> None:
+            """Для каждого xref-объекта в owner_xref_iter — добавить
+            entity_multimedia link на уже созданный top-level multimedia row."""
             for obj_xref in owner_xref_iter:
                 mid = multimedia_id_by_xref.get(obj_xref)
                 if mid is None:
                     continue
+                entity_multimedia_rows.append(
+                    {
+                        "id": new_uuid(),
+                        "multimedia_id": mid,
+                        "entity_type": entity_type,
+                        "entity_id": entity_id,
+                        "role": "primary",
+                        "created_at": now,
+                        "updated_at": now,
+                    }
+                )
+
+        def _add_inline_objects(
+            *,
+            owner_xref: str,
+            inline_iter: Any,
+            entity_type: str,
+            entity_id: Any,
+        ) -> None:
+            """Для каждого inline-OBJE — создать multimedia_objects row + link.
+
+            Inline OBJE не имеет gedcom_xref — мы кодируем владельца в
+            ``object_metadata.inline_owner_xref`` для traceability.
+            """
+            for inline in inline_iter:
+                mid = new_uuid()
+                line_no = inline.line_no or 0
+                md = _build_object_metadata(
+                    obje=inline,
+                    owner_kind="inline",
+                    owner_ref=owner_xref,
+                )
+                fallback = f"gedcom://OBJE/inline/{owner_xref}/{line_no}"
+                multimedia_rows.append(
+                    {
+                        "id": mid,
+                        "tree_id": tree.id,
+                        "object_type": "image",
+                        "storage_url": inline.file or fallback,
+                        "mime_type": None,
+                        "size_bytes": None,
+                        "sha256": None,
+                        "caption": inline.title,
+                        "taken_date": None,
+                        "object_metadata": md,
+                        "status": EntityStatus.PROBABLE.value,
+                        "confidence_score": 0.5,
+                        "version_id": 1,
+                        "provenance": {
+                            "import_job_id": str(job.id),
+                            "inline": True,
+                            "inline_owner_xref": owner_xref,
+                            "inline_line_no": line_no,
+                        },
+                        "created_at": now,
+                        "updated_at": now,
+                    }
+                )
                 entity_multimedia_rows.append(
                     {
                         "id": new_uuid(),
@@ -685,6 +775,12 @@ async def run_import(
                 entity_type="person",
                 entity_id=person_pk,
             )
+            _add_inline_objects(
+                owner_xref=xref,
+                inline_iter=person.inline_objects,
+                entity_type="person",
+                entity_id=person_pk,
+            )
         for xref, family in document.families.items():
             family_pk = family_id_by_xref.get(xref)
             if family_pk is None:
@@ -694,7 +790,14 @@ async def run_import(
                 entity_type="family",
                 entity_id=family_pk,
             )
+            _add_inline_objects(
+                owner_xref=xref,
+                inline_iter=family.inline_objects,
+                entity_type="family",
+                entity_id=family_pk,
+            )
 
+        await _bulk_insert(session, MultimediaObject, multimedia_rows)
         await _bulk_insert(session, EntityMultimedia, entity_multimedia_rows)
 
         stats = {
