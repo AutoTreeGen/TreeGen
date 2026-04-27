@@ -39,6 +39,9 @@ eggs/
 .eggs/
 lib/
 lib64/
+# Frontend src/lib не относится к Python-сборкам выше — явно возвращаем его обратно.
+!apps/*/src/lib/
+!apps/*/src/lib/**
 parts/
 sdist/
 var/
