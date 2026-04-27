@@ -1081,6 +1081,7 @@ version = "0.1.0"
 source = { editable = "services/parser-service" }
 dependencies = [
     { name = "asyncpg" },
+    { name = "entity-resolution" },
     { name = "fastapi" },
     { name = "gedcom-parser" },
     { name = "pydantic" },
@@ -1104,6 +1105,7 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "asyncpg", specifier = ">=0.30" },
+    { name = "entity-resolution", editable = "packages/entity-resolution" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "gedcom-parser", editable = "packages/gedcom-parser" },
     { name = "httpx", marker = "extra == 'test'", specifier = ">=0.27" },
