@@ -92,3 +92,27 @@ export function fetchPersons(treeId: string, limit = 50, offset = 0): Promise<Pe
 export function fetchPerson(personId: string): Promise<PersonDetail> {
   return getJson<PersonDetail>(`/persons/${personId}`);
 }
+
+// ---- Pedigree (Phase 4.3) ---------------------------------------------------
+
+export type AncestorTreeNode = {
+  id: string;
+  primary_name: string | null;
+  birth_year: number | null;
+  death_year: number | null;
+  sex: string;
+  father: AncestorTreeNode | null;
+  mother: AncestorTreeNode | null;
+};
+
+export type AncestorsResponse = {
+  person_id: string;
+  generations_requested: number;
+  generations_loaded: number;
+  root: AncestorTreeNode;
+};
+
+export function fetchAncestors(personId: string, generations = 5): Promise<AncestorsResponse> {
+  const params = new URLSearchParams({ generations: String(generations) });
+  return getJson<AncestorsResponse>(`/persons/${personId}/ancestors?${params.toString()}`);
+}
