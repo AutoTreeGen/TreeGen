@@ -222,3 +222,64 @@ class EthnicityPopulation(StrEnum):
     SEPHARDI = "sephardi"  # multiplier ≈ 1.4
     AMISH = "amish"  # multiplier ≈ 2.0
     LDS_PIONEER = "lds_pioneer"  # multiplier ≈ 1.5
+
+
+class HypothesisType(StrEnum):
+    """Тип гипотезы о связи между двумя сущностями (Phase 7.2 persistence).
+
+    Зеркалирует ``inference_engine.types.HypothesisType`` плюс расширяет
+    его DUPLICATE_* для гипотез про non-person сущности (которые нельзя
+    хранить как SAME_PERSON). Persistence-слой держит StrEnum здесь —
+    inference-engine остаётся pure-functions без зависимости на shared-models.
+    """
+
+    SAME_PERSON = "same_person"
+    PARENT_CHILD = "parent_child"
+    SIBLINGS = "siblings"
+    MARRIAGE = "marriage"
+    DUPLICATE_SOURCE = "duplicate_source"
+    DUPLICATE_PLACE = "duplicate_place"
+
+
+class HypothesisReviewStatus(StrEnum):
+    """Статус ручной проверки гипотезы пользователем (Phase 7.2).
+
+    ``CONFIRMED``/``REJECTED`` — это user-judgment, не auto-merge.
+    CLAUDE.md §5: подтверждение гипотезы НЕ мутирует доменные сущности.
+    Слияние entities — отдельный явный flow (Phase 4.6 UI), отдельный
+    endpoint, отдельная audit-log запись.
+    """
+
+    PENDING = "pending"
+    CONFIRMED = "confirmed"
+    REJECTED = "rejected"
+
+
+class HypothesisSubjectType(StrEnum):
+    """Тип сущности-субъекта гипотезы (полиморфные subject FK).
+
+    То же семейство что у ``Citation.entity_type`` /
+    ``EntityMultimedia.entity_type``: целостность на уровне приложения,
+    БД хранит как text. Допустимый набор фиксируется здесь, чтобы
+    UI и hypothesis_runner не разъезжались по строковым значениям.
+    """
+
+    PERSON = "person"
+    FAMILY = "family"
+    SOURCE = "source"
+    PLACE = "place"
+
+
+class HypothesisComputedBy(StrEnum):
+    """Кто/что породил гипотезу.
+
+    ``AUTOMATIC`` — bulk_compute_for_dedup_suggestions через
+    inference-engine.
+    ``MANUAL`` — user явно создал гипотезу через UI/API.
+    ``IMPORTED`` — гипотеза пришла из external source (FamilySearch
+    suggestions, Phase 5.x).
+    """
+
+    AUTOMATIC = "automatic"
+    MANUAL = "manual"
+    IMPORTED = "imported"

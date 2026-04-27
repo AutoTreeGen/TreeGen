@@ -15,6 +15,7 @@ from shared_models.orm.dna_match import DnaMatch
 from shared_models.orm.dna_test_record import DnaTestRecord
 from shared_models.orm.event import Event, EventParticipant
 from shared_models.orm.family import Family, FamilyChild
+from shared_models.orm.hypothesis import Hypothesis, HypothesisEvidence
 from shared_models.orm.import_job import ImportJob
 from shared_models.orm.multimedia import EntityMultimedia, MultimediaObject
 from shared_models.orm.name import Name
@@ -41,6 +42,8 @@ __all__ = [
     "EventParticipant",
     "Family",
     "FamilyChild",
+    "Hypothesis",
+    "HypothesisEvidence",
     "ImportJob",
     "MultimediaObject",
     "Name",
