@@ -465,6 +465,91 @@ class HypothesisReviewRequest(BaseModel):
 
 
 # -----------------------------------------------------------------------------
+# Phase 7.5 — bulk hypothesis compute (extension of Phase 7.2).
+# Эндпоинты, обёртывающие ``services/bulk_hypothesis_runner.py``: один
+# job на всё дерево, batched processing, прогресс в jsonb, cancel-флаг.
+# -----------------------------------------------------------------------------
+
+
+class HypothesisComputeJobProgress(BaseModel):
+    """Прогресс одного bulk-compute job'а.
+
+    Зеркалирует ``HypothesisComputeJob.progress`` (jsonb): обновляется
+    worker'ом между batch'ами. UI читает по polling'у GET-эндпоинта.
+    """
+
+    processed: int = Field(ge=0, description="Кол-во обработанных pair'ов.")
+    total: int = Field(ge=0, description="Общее кол-во candidate pair'ов на старте.")
+    hypotheses_created: int = Field(
+        ge=0,
+        description=(
+            "Кол-во hypothesis row'ов, попавших в результат job'а "
+            "(включая идемпотентные re-fetch'и существующих)."
+        ),
+    )
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class HypothesisComputeJobResponse(BaseModel):
+    """Ответ POST /compute-all и GET/PATCH compute-jobs эндпоинтов.
+
+    Из ORM ``HypothesisComputeJob`` (см. shared_models.orm.hypothesis_compute_job).
+    Используется как 200/201/202 body — конкретный код зависит от endpoint'а
+    (см. router в ``api/hypotheses.py``).
+    """
+
+    id: uuid.UUID
+    tree_id: uuid.UUID
+    status: Literal["queued", "running", "succeeded", "failed", "cancelled"]
+    rule_ids: list[str] | None = Field(
+        default=None,
+        description=(
+            "Whitelist rule_id'ов, которые worker должен исполнять. "
+            "Currently informational: сохраняется в job-row для audit, "
+            "но worker использует default rules pack из hypothesis_runner. "
+            "Полная фильтрация — отдельный follow-up PR (см. PR #87 TODO)."
+        ),
+    )
+    progress: HypothesisComputeJobProgress
+    cancel_requested: bool = Field(
+        description=(
+            "True если PATCH /cancel был вызван. Worker проверяет флаг между "
+            "batch'ами и переводит status → cancelled."
+        ),
+    )
+    error: str | None = Field(
+        default=None,
+        description="Краткий текст ошибки (для FAILED). Полный traceback — в logs.",
+    )
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class BulkComputeRequest(BaseModel):
+    """Тело POST /trees/{id}/hypotheses/compute-all.
+
+    ``rule_ids`` — опциональный whitelist. Сейчас informational
+    (см. ``HypothesisComputeJobResponse.rule_ids``); сохраняется в job-row,
+    но worker исполняет defaults. Тестам и UI важно, что поле принимается
+    без 400 — это forward-compatible.
+    """
+
+    rule_ids: list[str] | None = Field(
+        default=None,
+        description=(
+            "Optional whitelist rule_id'ов. None = use defaults. "
+            "Currently informational (см. PR #87 TODO для full filter)."
+        ),
+    )
+
+    model_config = ConfigDict(extra="forbid")
+
+
+# -----------------------------------------------------------------------------
 # Phase 4.6 — manual person merge (ADR-0022)
 # -----------------------------------------------------------------------------
 
