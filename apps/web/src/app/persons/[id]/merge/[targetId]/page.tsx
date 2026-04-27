@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -32,8 +32,13 @@ function makeConfirmToken(): string {
 export default function MergePage() {
   const router = useRouter();
   const params = useParams<{ id: string; targetId: string }>();
+  const searchParams = useSearchParams();
   const personId = params.id;
   const targetId = params.targetId;
+  // Phase 4.9: Hypothesis review UI deep-links сюда с from_hypothesis=ID,
+  // чтобы пользователь видел контекст («слияние из гипотезы #N rule X»).
+  // Не используется в логике коммита — только banner.
+  const fromHypothesisId = searchParams.get("from_hypothesis");
 
   const [survivorChoice, setSurvivorChoice] = useState<SurvivorChoice | null>(null);
   const [reviewed, setReviewed] = useState(false);
@@ -84,6 +89,21 @@ export default function MergePage() {
           <code>merge-history</code>.
         </p>
       </header>
+
+      {fromHypothesisId ? (
+        <div className="mb-6 rounded-md border border-[color:var(--color-border)] bg-[color:var(--color-surface-muted)] px-4 py-3 text-sm">
+          <span className="font-semibold">Merging based on hypothesis</span>{" "}
+          <Link
+            href={`/hypotheses/${fromHypothesisId}`}
+            className="font-mono text-xs text-[color:var(--color-accent)] underline-offset-4 hover:underline"
+          >
+            #{fromHypothesisId.slice(0, 8)}
+          </Link>
+          <span className="ml-2 text-[color:var(--color-ink-500)]">
+            · the hypothesis stays approved even if you cancel here.
+          </span>
+        </div>
+      ) : null}
 
       {previewQuery.isLoading ? <MergeLoadingSkeleton /> : null}
       {previewQuery.isError ? (

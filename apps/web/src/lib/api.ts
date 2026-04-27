@@ -278,3 +278,103 @@ export async function commitMerge(
     body: JSON.stringify(payload),
   });
 }
+
+// ---- Hypotheses (Phase 4.9: review UI; Phase 7.2: persistence) -------------
+
+export type HypothesisReviewStatus = "pending" | "confirmed" | "rejected" | "deferred";
+
+export type HypothesisType =
+  | "same_person"
+  | "parent_child"
+  | "siblings"
+  | "marriage"
+  | "duplicate_source"
+  | "duplicate_place";
+
+export type HypothesisSummary = {
+  id: string;
+  tree_id: string;
+  hypothesis_type: HypothesisType;
+  subject_a_type: string;
+  subject_a_id: string;
+  subject_b_type: string;
+  subject_b_id: string;
+  composite_score: number;
+  computed_at: string;
+  rules_version: string;
+  reviewed_status: HypothesisReviewStatus;
+  reviewed_at: string | null;
+};
+
+export type HypothesisEvidence = {
+  id: string;
+  rule_id: string;
+  direction: "supports" | "contradicts" | "neutral";
+  weight: number;
+  observation: string;
+  source_provenance: Record<string, unknown>;
+};
+
+export type HypothesisResponse = HypothesisSummary & {
+  review_note: string | null;
+  reviewed_by_user_id: string | null;
+  evidences: HypothesisEvidence[];
+};
+
+export type HypothesisListResponse = {
+  tree_id: string;
+  total: number;
+  limit: number;
+  offset: number;
+  items: HypothesisSummary[];
+};
+
+export type HypothesisListFilters = {
+  reviewStatus?: HypothesisReviewStatus | null;
+  hypothesisType?: HypothesisType | null;
+  subjectId?: string | null;
+  minConfidence?: number;
+  limit?: number;
+  offset?: number;
+};
+
+export function fetchHypotheses(
+  treeId: string,
+  filters: HypothesisListFilters = {},
+): Promise<HypothesisListResponse> {
+  const {
+    reviewStatus,
+    hypothesisType,
+    subjectId,
+    minConfidence = 0.5,
+    limit = 50,
+    offset = 0,
+  } = filters;
+  const params = new URLSearchParams({
+    min_confidence: String(minConfidence),
+    limit: String(limit),
+    offset: String(offset),
+  });
+  if (reviewStatus) params.set("review_status", reviewStatus);
+  if (hypothesisType) params.set("hypothesis_type", hypothesisType);
+  if (subjectId) params.set("subject_id", subjectId);
+  return getJson<HypothesisListResponse>(`/trees/${treeId}/hypotheses?${params.toString()}`);
+}
+
+export function fetchHypothesis(hypothesisId: string): Promise<HypothesisResponse> {
+  return getJson<HypothesisResponse>(`/hypotheses/${hypothesisId}`);
+}
+
+export function reviewHypothesis(
+  hypothesisId: string,
+  payload: { status: HypothesisReviewStatus; note?: string | null },
+): Promise<HypothesisResponse> {
+  return getJson<HypothesisResponse>(`/hypotheses/${hypothesisId}/review`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      status: payload.status,
+      note: payload.note ?? null,
+    }),
+  });
+}

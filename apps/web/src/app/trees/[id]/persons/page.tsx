@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ApiError, searchPersons } from "@/lib/api";
+import { ApiError, fetchHypotheses, searchPersons } from "@/lib/api";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
 
 const PAGE_SIZE = 50;
@@ -105,6 +105,23 @@ export default function PersonsListPage() {
   const canNext = total > 0 && offset + PAGE_SIZE < total;
   const hasFilters = Boolean(debouncedQ || debouncedMin || debouncedMax || phonetic);
 
+  // Phase 4.9: pending-hypotheses count для бейджа в шапке. Лёгкий запрос
+  // (`limit=1`) — нам нужно только `total` поле; ряды не материализуем.
+  const pendingQuery = useQuery({
+    queryKey: ["hypotheses-pending-count", treeId],
+    queryFn: () =>
+      fetchHypotheses(treeId, {
+        reviewStatus: "pending",
+        minConfidence: 0,
+        limit: 1,
+        offset: 0,
+      }),
+    enabled: Boolean(treeId),
+    // Считаем счётчик минутами — обновляется при каждом возврате на страницу.
+    staleTime: 60_000,
+  });
+  const pendingCount = pendingQuery.data?.total ?? 0;
+
   const setOffset = (next: number) => {
     const sp = new URLSearchParams(searchParams.toString());
     if (next <= 0) {
@@ -143,13 +160,28 @@ export default function PersonsListPage() {
             </p>
           ) : null}
         </div>
-        {/* Без pending-count: dedup-scoring проходит по всему дереву и при
-            61k персон занимает секунды. Запускать его на каждый рендер
-            списка персон — регрессия. Точное число пар видно на самой
-            странице duplicates после применения slider'ом порога. */}
-        <Button variant="secondary" size="md" asChild>
-          <Link href={`/trees/${treeId}/duplicates`}>Review duplicates →</Link>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Phase 4.9: pending-hypotheses бейдж + ссылка в queue. Запрос
+              лёгкий (limit=1, считаем total), staleTime=60s. */}
+          {pendingCount > 0 ? (
+            <Button variant="secondary" size="md" asChild>
+              <Link href={`/trees/${treeId}/hypotheses`}>
+                {pendingCount.toLocaleString("en-US")} pending hypotheses →
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="ghost" size="md" asChild>
+              <Link href={`/trees/${treeId}/hypotheses`}>Hypotheses</Link>
+            </Button>
+          )}
+          {/* Без pending-count для duplicates: dedup-scoring проходит по
+              всему дереву и при 61k персон занимает секунды. Запускать
+              на каждый рендер списка персон — регрессия. Точное число
+              пар видно на самой странице duplicates после slider'а. */}
+          <Button variant="secondary" size="md" asChild>
+            <Link href={`/trees/${treeId}/duplicates`}>Review duplicates →</Link>
+          </Button>
+        </div>
       </header>
 
       <section

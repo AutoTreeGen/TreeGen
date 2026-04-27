@@ -306,3 +306,60 @@ async def test_patch_review_404_on_unknown_id(app_client) -> None:
         json={"status": "confirmed"},
     )
     assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_patch_review_deferred(app_client) -> None:
+    """Phase 4.9: ``status='deferred'`` сохраняется как 4-й валидный статус."""
+    tree_id, i1, i2 = await _import_and_get_persons(app_client)
+    created = await app_client.post(
+        f"/trees/{tree_id}/hypotheses",
+        json={
+            "subject_a_id": i1,
+            "subject_b_id": i2,
+            "hypothesis_type": "same_person",
+        },
+    )
+    hyp_id = created.json()["id"]
+
+    response = await app_client.patch(
+        f"/hypotheses/{hyp_id}/review",
+        json={"status": "deferred", "note": "Нужно дождаться ДНК-сегментов"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["reviewed_status"] == "deferred"
+    assert body["review_note"] == "Нужно дождаться ДНК-сегментов"
+
+
+@pytest.mark.asyncio
+async def test_list_filters_by_deferred_status(app_client) -> None:
+    """``GET /trees/{id}/hypotheses?review_status=deferred`` возвращает только deferred."""
+    tree_id, i1, i2 = await _import_and_get_persons(app_client)
+    created = await app_client.post(
+        f"/trees/{tree_id}/hypotheses",
+        json={
+            "subject_a_id": i1,
+            "subject_b_id": i2,
+            "hypothesis_type": "same_person",
+        },
+    )
+    hyp_id = created.json()["id"]
+    await app_client.patch(f"/hypotheses/{hyp_id}/review", json={"status": "deferred"})
+
+    listing = await app_client.get(
+        f"/trees/{tree_id}/hypotheses",
+        params={"review_status": "deferred", "min_confidence": 0.0},
+    )
+    assert listing.status_code == 200
+    body = listing.json()
+    assert body["total"] == 1
+    assert body["items"][0]["id"] == hyp_id
+    assert body["items"][0]["reviewed_status"] == "deferred"
+
+    # И обратное: pending — пусто.
+    pending_listing = await app_client.get(
+        f"/trees/{tree_id}/hypotheses",
+        params={"review_status": "pending", "min_confidence": 0.0},
+    )
+    assert pending_listing.json()["total"] == 0

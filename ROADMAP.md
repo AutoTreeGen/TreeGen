@@ -278,6 +278,7 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 | **4.4** | `/trees/[id]/persons`: поиск по имени (ILIKE) + фильтр по году рождения (BIRT.date_start range), debounce 300 мс, URL-state, 18 интеграционных тестов на бэкенде. См. PR-Phase-4.4. | done (2026-04-27) |
 | **4.4.1** | Daitch-Mokotoff phonetic search: `persons.surname_dm` / `persons.given_name_dm` TEXT[] columns + GIN-индексы (миграция 0007), import_runner и backfill-скрипт заполняют DM с auto-транслитерацией кириллицы, `?phonetic=true` на search-эндпоинте использует Postgres ARRAY overlap (`&&`), UI checkbox + «via phonetic match» badge. Zhitnitzky / Жытницкий / Zhytnicki / Schitnitzky → один bucket-set. См. PR-Phase-4.4.1. | done (2026-04-27) |
 | **4.6** | Manual person merge UI: ADR-0022, `PersonMergeLog` ORM + миграция 0006, `services/person_merger.py` (compute_diff/apply_merge/undo_merge/check_hypothesis_conflicts), 4 эндпоинта в `api/persons.py` (preview/commit/undo/merge-history) с обязательным `confirm:true` (Pydantic `Literal[True]` → 422 без него), `/persons/[id]/merge/[targetId]` page (side-by-side, choose survivor, confirm dialog, success/undo state), Phase 4.5 «Mark as same» включён. CLAUDE.md §5 enforce'ится в коде. См. ADR-0022, PR-78/81/Phase-4.6-merge-ui. | done (2026-04-27) |
+| **4.9** | Hypothesis review UI закрывает критическую дыру workflow (Phase 7.x ORM + API уже есть, но юзер их не видел): `/trees/[id]/hypotheses` (filter status / type / min_confidence + URL state + pagination) → `/hypotheses/[id]` (subjects, score meter, evidence breakdown по rule_id с DNA segments / source citations агрегатами, sticky action row Approve/Reject/Defer). Approve same_person → редирект в Phase 4.6 merge UI с `?from_hypothesis=N` баннером. Добавлен `DEFERRED` в `HypothesisReviewStatus` enum (4-й валидный статус, не блокирует merge как REJECTED). Light notification: `parser_service.services.notifications` POST'ит в notification-service на каждую новую `pending_review` гипотезу, fire-and-forget с graceful skip если сервис недоступен или env-var не задан. Pending-count badge на persons page header. См. PR-Phase-4.9. | done (2026-04-27) |
 
 ### 8.1 Страницы
 
@@ -285,8 +286,10 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 - `/login`, `/signup` (Clerk).
 - `/dashboard` — список деревьев, импортов.
 - `/trees/[id]` — обзор дерева: stats, recent imports.
-- `/trees/[id]/persons` — поиск по персонам (Phase 4.4: ILIKE + год; Phase 4.4.1: phonetic Daitch-Mokotoff toggle).
+- `/trees/[id]/persons` — поиск по персонам (Phase 4.4: ILIKE + год; Phase 4.4.1: phonetic Daitch-Mokotoff toggle; Phase 4.9: pending-hypotheses badge в шапке).
 - `/trees/[id]/persons/[personId]` — карточка персоны.
+- `/trees/[id]/hypotheses` — Phase 4.9 review queue (filter status/type/confidence).
+- `/hypotheses/[id]` — Phase 4.9 detail + approve/reject/defer (approve same_person → Phase 4.6 merge UI).
 - `/trees/[id]/import` — загрузка GED с drag & drop.
 
 ### 8.2 Подзадачи
