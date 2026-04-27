@@ -93,6 +93,11 @@ def _xrefs_under(record: GedcomRecord, tag: str) -> tuple[str, ...]:
     return tuple(out)
 
 
+def _is_xref_value(value: str) -> bool:
+    """``True``, если строка имеет вид ``@xref@`` (минимум ``@x@``)."""
+    return len(value) >= 3 and value.startswith("@") and value.endswith("@")
+
+
 def _try_parse_date(date_raw: str | None, line_no: int | None) -> ParsedDate | None:
     """Попытаться разобрать ``date_raw``. На ошибке — warning + ``None``.
 
@@ -239,6 +244,163 @@ def _collect_name_variants(record: GedcomRecord) -> tuple[NameVariant, ...]:
 
 
 # -----------------------------------------------------------------------------
+# Источник-ссылка (SOURCE_CITATION)
+# -----------------------------------------------------------------------------
+
+
+class Citation(BaseModel):
+    """Ссылка на источник (`SOURCE_CITATION` per GEDCOM 5.5.5 §3.5).
+
+    В отличие от верхнеуровневой записи :class:`Source`, это **ссылка** на
+    источник из конкретной записи (``INDI``, ``FAM``, или событие). Один
+    источник может цитироваться многократно с разными ``PAGE`` / ``QUAY``.
+
+    Структура GEDCOM (упрощённо)::
+
+        n SOUR @<XREF:SOUR>@           (либо inline-text)
+          +1 PAGE  <where_within_source>
+          +1 EVEN  <event_type>
+            +2 ROLE <role>
+          +1 DATA
+            +2 DATE <recording_date>
+            +2 TEXT <text_from_source>      (может повторяться)
+          +1 OBJE  @<XREF:OBJE>@           (может повторяться)
+          +1 NOTE  @<XREF:NOTE>@           (может повторяться)
+          +1 NOTE  <inline-text>           (может повторяться)
+          +1 QUAY  <0..3>
+
+    Атрибуты:
+        source_xref: xref-цели (``"S1"`` для ``@S1@``). ``None``, если SOUR
+            был задан как inline-текст.
+        inline_text: Сырой текст SOUR, если value не xref. Иначе ``None``.
+            Для round-trip полезно сохранять оригинал.
+        page: Подтег PAGE (where within source).
+        quality: Подтег QUAY как целое 0..3. ``None``, если QUAY отсутствует
+            или его значение не парсится как 0..3 (мы не выкидываем — храним
+            ``None``, тонкую обработку оставим вызывающим).
+        event_type: Подтег EVEN — тип события, упомянутого в источнике.
+        event_role: Подтег EVEN > ROLE — роль персоны в этом событии.
+        data_date_raw: Подтег DATA > DATE (recording date).
+        data_text: Подтег DATA > TEXT. Если TEXT повторяется, объединяется
+            через ``\\n`` (round-trip упрощённый).
+        notes_xrefs: xref'ы NOTE-children, у которых value — ``@N…@``.
+        notes_inline: inline-NOTE значения (без xref). В порядке встречи.
+        objects_xrefs: xref'ы OBJE-children (мультимедиа, привязанные к
+            самой ссылке, а не к persona).
+        line_no: Номер строки исходного SOUR-узла.
+    """
+
+    source_xref: str | None = Field(
+        default=None,
+        description="xref-цели источника (без обрамляющих @). None — inline-text SOUR.",
+    )
+    inline_text: str | None = Field(
+        default=None,
+        description="Inline-текст SOUR, если value не xref. None — для xref-цитаты.",
+    )
+    page: str | None = Field(default=None, description="Подтег PAGE.")
+    quality: int | None = Field(
+        default=None,
+        ge=0,
+        le=3,
+        description=(
+            "Подтег QUAY (0..3). None — не задан или нераспознаваем. "
+            "Семантика 0..3 — см. GEDCOM 5.5.5 §QUAY."
+        ),
+    )
+    event_type: str | None = Field(default=None, description="Подтег EVEN (event_type).")
+    event_role: str | None = Field(default=None, description="Подтег EVEN > ROLE.")
+    data_date_raw: str | None = Field(default=None, description="Подтег DATA > DATE.")
+    data_text: str | None = Field(
+        default=None,
+        description="Подтег DATA > TEXT. Множественные TEXT соединяются через \\n.",
+    )
+    notes_xrefs: tuple[str, ...] = ()
+    notes_inline: tuple[str, ...] = ()
+    objects_xrefs: tuple[str, ...] = ()
+    line_no: int | None = None
+
+    model_config = _FROZEN
+
+    @classmethod
+    def from_record(cls, record: GedcomRecord) -> Citation:
+        """Построить ``Citation`` из одного SOUR-узла (под INDI/FAM/событием).
+
+        ``record.tag`` обязан быть ``"SOUR"``. Сам узел может быть как
+        xref-ссылкой (``1 SOUR @S1@``), так и inline-текстом (``1 SOUR
+        Census 1897``). В последнем случае ``source_xref`` будет ``None``,
+        а ``inline_text`` — ``record.value``.
+        """
+        value = record.value
+        if _is_xref_value(value):
+            source_xref: str | None = _strip_xref(value)
+            inline_text: str | None = None
+        else:
+            source_xref = None
+            inline_text = value or None
+
+        # PAGE
+        page = record.get_value("PAGE") or None
+
+        # QUAY → int 0..3 либо None
+        quay_node = record.find("QUAY")
+        quality: int | None = None
+        if quay_node is not None and quay_node.value:
+            stripped = quay_node.value.strip()
+            if stripped.isdigit():
+                value_int = int(stripped)
+                if 0 <= value_int <= 3:
+                    quality = value_int
+
+        # EVEN + ROLE
+        even_node = record.find("EVEN")
+        event_type = even_node.value.strip() or None if even_node is not None else None
+        event_role = (even_node.get_value("ROLE") or None) if even_node is not None else None
+
+        # DATA / DATE / TEXT (TEXT может повторяться)
+        data_node = record.find("DATA")
+        data_date_raw: str | None = None
+        data_text: str | None = None
+        if data_node is not None:
+            data_date_raw = data_node.get_value("DATE") or None
+            text_values = [t.value for t in data_node.find_all("TEXT")]
+            if text_values:
+                data_text = "\n".join(text_values)
+
+        # NOTE: split на xref'ы и inline.
+        notes_xrefs: list[str] = []
+        notes_inline: list[str] = []
+        for note_child in record.find_all("NOTE"):
+            if _is_xref_value(note_child.value):
+                notes_xrefs.append(_strip_xref(note_child.value))
+            else:
+                notes_inline.append(note_child.value)
+
+        # OBJE: только xref-ссылки (inline OBJE — отдельная история).
+        objects_xrefs = _xrefs_under(record, "OBJE")
+
+        return cls(
+            source_xref=source_xref,
+            inline_text=inline_text,
+            page=page,
+            quality=quality,
+            event_type=event_type,
+            event_role=event_role,
+            data_date_raw=data_date_raw,
+            data_text=data_text,
+            notes_xrefs=tuple(notes_xrefs),
+            notes_inline=tuple(notes_inline),
+            objects_xrefs=objects_xrefs,
+            line_no=record.line_no,
+        )
+
+
+def _collect_citations(record: GedcomRecord) -> tuple[Citation, ...]:
+    """Собрать все прямые SOUR-children записи в кортеж :class:`Citation`."""
+    return tuple(Citation.from_record(child) for child in record.find_all("SOUR"))
+
+
+# -----------------------------------------------------------------------------
 # Событие
 # -----------------------------------------------------------------------------
 
@@ -274,7 +436,20 @@ class Event(BaseModel):
     type_: str | None = Field(default=None, description="Подтег TYPE.")
     age_raw: str | None = Field(default=None, description="Подтег AGE.")
     notes_xrefs: tuple[str, ...] = ()
-    sources_xrefs: tuple[str, ...] = ()
+    sources_xrefs: tuple[str, ...] = Field(
+        default=(),
+        description=(
+            "xref'ы SOUR-children с value=`@S…@` (без обрамляющих @). "
+            "Узкий API; для PAGE/QUAY/NOTE/EVEN/ROLE — используйте `citations`."
+        ),
+    )
+    citations: tuple[Citation, ...] = Field(
+        default=(),
+        description=(
+            "Все SOUR-children события в виде структурированных Citation, "
+            "включая inline-источники. Сохраняет порядок встречи в файле."
+        ),
+    )
     line_no: int | None = None
 
     model_config = _FROZEN
@@ -298,6 +473,7 @@ class Event(BaseModel):
             age_raw=record.get_value("AGE") or None,
             notes_xrefs=_xrefs_under(record, "NOTE"),
             sources_xrefs=_xrefs_under(record, "SOUR"),
+            citations=_collect_citations(record),
             line_no=record.line_no,
         )
 
@@ -391,7 +567,17 @@ class Person(BaseModel):
         description="xref'ы семей из тега FAMC (без обрамляющих @).",
     )
     notes_xrefs: tuple[str, ...] = ()
-    sources_xrefs: tuple[str, ...] = ()
+    sources_xrefs: tuple[str, ...] = Field(
+        default=(),
+        description=(
+            "xref'ы SOUR-children с value=`@S…@` (без обрамляющих @). "
+            "Узкий API; для PAGE/QUAY/NOTE/EVEN/ROLE — используйте `citations`."
+        ),
+    )
+    citations: tuple[Citation, ...] = Field(
+        default=(),
+        description="Все SOUR-children персоны в виде структурированных Citation.",
+    )
     objects_xrefs: tuple[str, ...] = ()
     line_no: int | None = None
 
@@ -416,6 +602,7 @@ class Person(BaseModel):
             families_as_child=_xrefs_under(record, "FAMC"),
             notes_xrefs=_xrefs_under(record, "NOTE"),
             sources_xrefs=_xrefs_under(record, "SOUR"),
+            citations=_collect_citations(record),
             objects_xrefs=_xrefs_under(record, "OBJE"),
             line_no=record.line_no,
         )
@@ -434,7 +621,17 @@ class Family(BaseModel):
     children_xrefs: tuple[str, ...] = ()
     events: tuple[Event, ...] = ()
     notes_xrefs: tuple[str, ...] = ()
-    sources_xrefs: tuple[str, ...] = ()
+    sources_xrefs: tuple[str, ...] = Field(
+        default=(),
+        description=(
+            "xref'ы SOUR-children с value=`@S…@` (без обрамляющих @). "
+            "Узкий API; для PAGE/QUAY/NOTE/EVEN/ROLE — используйте `citations`."
+        ),
+    )
+    citations: tuple[Citation, ...] = Field(
+        default=(),
+        description="Все SOUR-children семьи в виде структурированных Citation.",
+    )
     objects_xrefs: tuple[str, ...] = ()
     line_no: int | None = None
 
@@ -459,6 +656,7 @@ class Family(BaseModel):
             events=events,
             notes_xrefs=_xrefs_under(record, "NOTE"),
             sources_xrefs=_xrefs_under(record, "SOUR"),
+            citations=_collect_citations(record),
             objects_xrefs=_xrefs_under(record, "OBJE"),
             line_no=record.line_no,
         )
@@ -681,6 +879,7 @@ class Header(BaseModel):
 
 
 __all__ = [
+    "Citation",
     "Event",
     "Family",
     "Header",
