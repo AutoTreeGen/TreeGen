@@ -47,9 +47,10 @@ async def test_post_import_creates_job_and_persons(app_client) -> None:
     assert body["status"] == "succeeded"
     assert body["stats"]["persons"] == 2
     assert body["stats"]["families"] == 1
-    # 1 BIRT (I1) + 1 MARR (F1) = 2 events, плюс по 1 participant на каждое.
+    # 1 BIRT (I1) + 1 MARR (F1) = 2 events.
+    # Participants: BIRT принципал (1) + MARR husband + wife (2) = 3.
     assert body["stats"]["events"] == 2
-    assert body["stats"]["event_participants"] == 2
+    assert body["stats"]["event_participants"] == 3
     # BIRT и MARR ссылаются на разные PLAC → 2 уникальных места.
     assert body["stats"]["places"] == 2
     assert body["source_filename"] == "test.ged"
@@ -126,6 +127,68 @@ async def test_import_creates_places_and_links_events(app_client, postgres_dsn) 
             assert birth.place_id is not None
             slonim = next(p for p in places if p.canonical_name.startswith("Slonim"))
             assert birth.place_id == slonim.id
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_marr_has_both_spouses_as_participants(app_client, postgres_dsn) -> None:
+    """MARR-событие в FAM имеет ровно husband + wife как participants.
+
+    После импорта `_MINIMAL_GED` находим единственный MARR-event и проверяем,
+    что у него два participants: один с role=husband (person_id = I1) и
+    второй с role=wife (person_id = I2).
+    """
+    from shared_models.orm import Event, EventParticipant, Person
+    from sqlalchemy import select
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    files = {"file": ("test.ged", _MINIMAL_GED, "application/octet-stream")}
+    created = await app_client.post("/imports", files=files)
+    assert created.status_code == 201, created.text
+    tree_id = created.json()["tree_id"]
+
+    engine = create_async_engine(postgres_dsn, future=True)
+    try:
+        SessionMaker = async_sessionmaker(engine, expire_on_commit=False)  # noqa: N806
+        async with SessionMaker() as session:
+            marr = (
+                await session.execute(
+                    select(Event).where(
+                        Event.tree_id == tree_id,
+                        Event.event_type == "MARR",
+                    )
+                )
+            ).scalar_one()
+
+            participants = (
+                (
+                    await session.execute(
+                        select(EventParticipant).where(EventParticipant.event_id == marr.id)
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            assert len(participants) == 2, [(p.role, p.person_id) for p in participants]
+
+            roles = {p.role: p for p in participants}
+            assert set(roles) == {"husband", "wife"}
+
+            husband = (
+                await session.execute(
+                    select(Person).where(Person.tree_id == tree_id, Person.gedcom_xref == "I1")
+                )
+            ).scalar_one()
+            wife = (
+                await session.execute(
+                    select(Person).where(Person.tree_id == tree_id, Person.gedcom_xref == "I2")
+                )
+            ).scalar_one()
+            assert roles["husband"].person_id == husband.id
+            assert roles["wife"].person_id == wife.id
+            assert roles["husband"].family_id is None
+            assert roles["wife"].family_id is None
     finally:
         await engine.dispose()
 

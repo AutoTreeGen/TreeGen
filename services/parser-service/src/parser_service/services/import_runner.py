@@ -352,10 +352,11 @@ async def run_import(
         await _bulk_insert(session, Place, place_rows)
 
         # ---- Events + EventParticipants ----
-        # Каждое событие у персоны/семьи раскладывается в одну строку events
-        # и одну строку event_participants (single principal). Multi-principal
-        # события (например MARR с обоими супругами как participants) добавим
-        # позже отдельно — Phase 3.2 (см. ROADMAP §7).
+        # Persona events → один participant с role="principal".
+        # FAM events → оба супруга participants (role="husband"/"wife"), если
+        # они указаны в FAM. Если нет ни одного супруга (редкий случай —
+        # broken GEDCOM), оставляем family-level participant как fallback,
+        # чтобы соблюсти CHECK (person_id OR family_id).
         event_rows: list[dict[str, Any]] = []
         participant_rows: list[dict[str, Any]] = []
 
@@ -365,13 +366,8 @@ async def run_import(
                 return None
             return place_id_by_raw.get(raw.strip())
 
-        def _append_event(
-            *,
-            owner_kind: str,
-            owner_id: Any,
-            ev: Any,
-        ) -> None:
-            """Собрать одну запись Event + один EventParticipant."""
+        def _append_event(ev: Any) -> Any:
+            """Собрать одну запись Event и вернуть её id."""
             event_id = new_uuid()
             event_type, custom_type = _map_event_type(ev.tag)
 
@@ -410,27 +406,47 @@ async def run_import(
                     "updated_at": now,
                 }
             )
+            return event_id
+
+        def _append_participant(
+            *,
+            event_id: Any,
+            person_id: Any | None = None,
+            family_id: Any | None = None,
+            role: str,
+        ) -> None:
+            """Зарегистрировать одну строку event_participants."""
             participant_rows.append(
                 {
                     "id": new_uuid(),
                     "event_id": event_id,
-                    "person_id": owner_id if owner_kind == "person" else None,
-                    "family_id": owner_id if owner_kind == "family" else None,
-                    "role": "principal",
+                    "person_id": person_id,
+                    "family_id": family_id,
+                    "role": role,
                     "created_at": now,
                     "updated_at": now,
                 }
             )
 
         for xref, person in document.persons.items():
-            owner_id = person_id_by_xref[xref]
+            person_pk = person_id_by_xref[xref]
             for ev in person.events:
-                _append_event(owner_kind="person", owner_id=owner_id, ev=ev)
+                eid = _append_event(ev)
+                _append_participant(event_id=eid, person_id=person_pk, role="principal")
 
         for xref, family in document.families.items():
-            owner_id = family_id_by_xref[xref]
+            family_pk = family_id_by_xref[xref]
+            husband_pk = person_id_by_xref.get(family.husband_xref or "")
+            wife_pk = person_id_by_xref.get(family.wife_xref or "")
             for ev in family.events:
-                _append_event(owner_kind="family", owner_id=owner_id, ev=ev)
+                eid = _append_event(ev)
+                if husband_pk is not None:
+                    _append_participant(event_id=eid, person_id=husband_pk, role="husband")
+                if wife_pk is not None:
+                    _append_participant(event_id=eid, person_id=wife_pk, role="wife")
+                if husband_pk is None and wife_pk is None:
+                    # Fallback: FAM без обоих супругов — привязываем семью.
+                    _append_participant(event_id=eid, family_id=family_pk, role="principal")
 
         await _bulk_insert(session, Event, event_rows)
         await _bulk_insert(session, EventParticipant, participant_rows)
