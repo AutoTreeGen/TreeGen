@@ -457,4 +457,3 @@ export function fetchSource(sourceId: string): Promise<SourceDetail> {
 export function fetchPersonCitations(personId: string): Promise<PersonCitationsResponse> {
   return getJson<PersonCitationsResponse>(`/persons/${personId}/citations`);
 }
-}
