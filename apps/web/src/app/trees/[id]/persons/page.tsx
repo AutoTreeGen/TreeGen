@@ -66,29 +66,41 @@ export default function PersonsListPage() {
       {data ? (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {data.items.map((person) => (
-            <Link
-              key={person.id}
-              href={`/persons/${person.id}`}
-              className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2"
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle>{person.primary_name ?? "Unnamed"}</CardTitle>
-                  <CardDescription>
-                    {[
-                      person.gedcom_xref,
-                      person.sex !== "U" ? `sex: ${person.sex}` : null,
-                      `confidence: ${person.confidence_score.toFixed(2)}`,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="font-mono text-xs text-[color:var(--color-ink-500)]">{person.id}</p>
-                </CardContent>
-              </Card>
-            </Link>
+            <Card key={person.id} className="relative">
+              <CardHeader>
+                <CardTitle>
+                  {/* Основная ссылка карточки растянута через ::after — клик
+                      по любому неинтерактивному месту ведёт на `/persons/[id]`.
+                      Кнопка «Tree» лежит поверх через z-index. */}
+                  <Link
+                    href={`/persons/${person.id}`}
+                    className="after:absolute after:inset-0 after:rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2"
+                  >
+                    {person.primary_name ?? "Unnamed"}
+                  </Link>
+                </CardTitle>
+                <CardDescription>
+                  {[
+                    person.gedcom_xref,
+                    person.sex !== "U" ? `sex: ${person.sex}` : null,
+                    `confidence: ${person.confidence_score.toFixed(2)}`,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex items-center justify-between gap-2">
+                <p className="font-mono text-xs text-[color:var(--color-ink-500)]">{person.id}</p>
+                <Button variant="secondary" size="sm" asChild className="relative z-10">
+                  <Link
+                    href={`/persons/${person.id}/tree`}
+                    aria-label={`View family tree for ${person.primary_name ?? "this person"}`}
+                  >
+                    Tree
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
           ))}
         </div>
       ) : null}
