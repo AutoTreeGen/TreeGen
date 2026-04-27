@@ -39,6 +39,11 @@ SERVICE_TABLES = {
     # ``undone_at`` и ``purged_at`` — отдельные indicators событий,
     # не soft-delete этой строки.
     "person_merge_logs",
+    # Notification deliveries (Phase 8.0 / ADR-0024): per-user, не
+    # per-tree; нет soft-delete (idempotency-окно 1 час делает delete
+    # неактуальным для re-send), нет provenance (источник — internal
+    # callers через POST /notify, не GEDCOM/DNA-import).
+    "notifications",
 }
 
 TREE_ENTITY_TABLES = {

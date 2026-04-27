@@ -38,6 +38,7 @@ members = [
     "packages/inference-engine",
     "services/parser-service",
     "services/dna-service",
+    "services/notification-service",
 ]
 
 # Резолвим workspace-имена из локальных путей, а не из PyPI.
@@ -50,6 +51,7 @@ familysearch-client = { workspace = true }
 inference-engine = { workspace = true }
 parser-service = { workspace = true }
 dna-service = { workspace = true }
+notification-service = { workspace = true }
 
 [tool.uv]
 package = false
