@@ -131,7 +131,7 @@ def parse_gedcom_date(value: str) -> ParsedDate:
 |---|---|
 | Покрытие тестами новой логики | > 80% |
 | Mypy / TypeScript strict | без `any`, без `# type: ignore` без комментария-обоснования |
-| Линтеры | ruff, black, biome — passing |
+| Линтеры | ruff (lint + format), biome — passing |
 | p95 API latency | < 300 мс (для эндпоинтов без LLM) |
 | Размер PR | < 500 строк диффа желательно |
 

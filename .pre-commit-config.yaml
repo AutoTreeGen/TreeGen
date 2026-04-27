@@ -32,20 +32,16 @@ repos:
       - id: detect-private-key
 
   # ---- Python: ruff (lint + format) ----
+  # Версия pinned под `uv run ruff` из .venv (см. dev-deps), иначе CI и
+  # pre-commit формат-чек расходятся (см. ADR-0008 — собственно ради этого
+  # и существует tests/test_ci_parity.py).
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.7.4
+    rev: v0.15.12
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
         args: [--check]
-
-  # ---- Python: black (двойная подстраховка форматирования) ----
-  - repo: https://github.com/psf/black
-    rev: 24.10.0
-    hooks:
-      - id: black
-        args: [--line-length=100, --target-version=py313]
 
   # ---- Python: mypy (типы) ----
   - repo: https://github.com/pre-commit/mirrors-mypy

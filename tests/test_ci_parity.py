@@ -104,6 +104,6 @@ def test_check_ps1_matches_ci_commands() -> None:
 
 def test_check_sh_and_ps1_have_same_commands() -> None:
     """Windows и Unix обёртки эквивалентны по набору шагов."""
-    assert (
-        _check_sh_commands() == _check_ps1_commands()
-    ), "scripts/check.sh и scripts/check.ps1 разошлись."
+    assert _check_sh_commands() == _check_ps1_commands(), (
+        "scripts/check.sh и scripts/check.ps1 разошлись."
+    )
