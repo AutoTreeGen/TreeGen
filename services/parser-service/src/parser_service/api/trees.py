@@ -1,4 +1,4 @@
-"""Trees API: list persons in a tree + person detail."""
+"""Trees API: list persons in a tree + person detail + ancestors pedigree."""
 
 from __future__ import annotations
 
@@ -11,6 +11,8 @@ from shared_models.orm import (
     EntityMultimedia,
     Event,
     EventParticipant,
+    Family,
+    FamilyChild,
     MultimediaObject,
     Name,
     Person,
@@ -18,10 +20,12 @@ from shared_models.orm import (
 )
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 
 from parser_service.database import get_session
 from parser_service.schemas import (
+    AncestorsResponse,
+    AncestorTreeNode,
     CitationSummary,
     EventSummary,
     MultimediaSummary,
@@ -186,4 +190,158 @@ async def get_person(
         names=names,
         events=events,
         media=media,
+    )
+
+
+_MAX_GENERATIONS = 10
+
+
+def _primary_name(names: list[Name]) -> str | None:
+    """Собрать ``primary_name`` из имён, отсортированных по ``sort_order``."""
+    for name in sorted(names, key=lambda n: n.sort_order):
+        composed = f"{name.given_name or ''} {name.surname or ''}".strip()
+        if composed:
+            return composed
+    return None
+
+
+@router.get(
+    "/persons/{person_id}/ancestors",
+    response_model=AncestorsResponse,
+    summary="Pedigree-дерево предков (BFS на N поколений)",
+)
+async def get_ancestors(
+    person_id: uuid.UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    generations: int = Query(
+        5,
+        ge=1,
+        le=_MAX_GENERATIONS,
+        description=(
+            "Сколько поколений предков загружать (root считается 0-м). "
+            f"Максимум {_MAX_GENERATIONS}: 2^N узлов растёт быстро."
+        ),
+    ),
+) -> AncestorsResponse:
+    """Возвращает рекурсивный pedigree корневой персоны.
+
+    Алгоритм — BFS по поколениям:
+
+    1. Резолвим root (404 если не найден).
+    2. На каждом уровне берём ``family_children`` для текущего множества и
+       по ``families.husband_id``/``wife_id`` собираем родителей. Один
+       round-trip per generation вместо N+1 — детерминированно по
+       ``FamilyChild.created_at`` берём первую семью на ребёнка
+       (для MVP; mixed-parentage / step-parents — Phase 4.5).
+    3. Параллельно ведём ``visited``-сет, чтобы зацикленные данные
+       (corruption) не привели к бесконечному рекурсу.
+    4. Один батч-запрос подгружает Person + Names для всех найденных
+       UUID; ещё один — BIRT/DEAT-события для извлечения годов.
+    5. Собираем дерево рекурсивно из словарей в памяти.
+    """
+    root_person = (
+        await session.execute(
+            select(Person).where(Person.id == person_id, Person.deleted_at.is_(None))
+        )
+    ).scalar_one_or_none()
+    if root_person is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Person {person_id} not found",
+        )
+
+    # parent_map: child_id -> (father_id|None, mother_id|None)
+    parent_map: dict[uuid.UUID, tuple[uuid.UUID | None, uuid.UUID | None]] = {}
+    visited: set[uuid.UUID] = {person_id}
+    current_level: set[uuid.UUID] = {person_id}
+    generations_loaded = 0
+
+    for _ in range(generations):
+        if not current_level:
+            break
+        rows = (
+            await session.execute(
+                select(
+                    FamilyChild.child_person_id,
+                    FamilyChild.created_at,
+                    Family.husband_id,
+                    Family.wife_id,
+                )
+                .join(Family, Family.id == FamilyChild.family_id)
+                .where(FamilyChild.child_person_id.in_(current_level))
+                .order_by(FamilyChild.child_person_id, FamilyChild.created_at)
+            )
+        ).all()
+
+        # На ребёнка — первая встреченная семья (детерминированно
+        # по created_at). Альтернативные родители — Phase 4.5.
+        next_level: set[uuid.UUID] = set()
+        for child_id, _created_at, husband_id, wife_id in rows:
+            if child_id in parent_map:
+                continue
+            parent_map[child_id] = (husband_id, wife_id)
+            for parent_id in (husband_id, wife_id):
+                if parent_id is not None and parent_id not in visited:
+                    visited.add(parent_id)
+                    next_level.add(parent_id)
+
+        if next_level:
+            generations_loaded += 1
+        current_level = next_level
+
+    # Батч-загрузка Person + Names всех собранных UUID одним round-trip.
+    persons_res = await session.execute(
+        select(Person)
+        .options(selectinload(Person.names))
+        .where(Person.id.in_(visited), Person.deleted_at.is_(None))
+    )
+    persons_by_id: dict[uuid.UUID, Person] = {p.id: p for p in persons_res.scalars().all()}
+
+    # Годы рождения / смерти — из BIRT / DEAT (date_start.year).
+    birth_year: dict[uuid.UUID, int | None] = {}
+    death_year: dict[uuid.UUID, int | None] = {}
+    if visited:
+        events_res = await session.execute(
+            select(EventParticipant.person_id, Event.event_type, Event.date_start)
+            .join(Event, Event.id == EventParticipant.event_id)
+            .where(
+                EventParticipant.person_id.in_(visited),
+                Event.event_type.in_(("BIRT", "DEAT")),
+                Event.deleted_at.is_(None),
+            )
+        )
+        for pid, event_type, date_start in events_res.all():
+            year = date_start.year if date_start is not None else None
+            if event_type == "BIRT" and year is not None:
+                birth_year[pid] = year
+            elif event_type == "DEAT" and year is not None:
+                death_year[pid] = year
+
+    def _build(node_id: uuid.UUID | None) -> AncestorTreeNode | None:
+        """Собрать ``AncestorTreeNode`` из in-memory словарей."""
+        if node_id is None:
+            return None
+        person = persons_by_id.get(node_id)
+        if person is None:
+            return None
+        father_id, mother_id = parent_map.get(node_id, (None, None))
+        return AncestorTreeNode(
+            id=person.id,
+            primary_name=_primary_name(list(person.names)),
+            birth_year=birth_year.get(node_id),
+            death_year=death_year.get(node_id),
+            sex=person.sex,
+            father=_build(father_id),
+            mother=_build(mother_id),
+        )
+
+    root = _build(person_id)
+    # Root существует — мы его выше резолвили, persons_by_id точно содержит его.
+    assert root is not None
+
+    return AncestorsResponse(
+        person_id=person_id,
+        generations_requested=generations,
+        generations_loaded=generations_loaded,
+        root=root,
     )
