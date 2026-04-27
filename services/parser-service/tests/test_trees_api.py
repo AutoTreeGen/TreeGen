@@ -29,6 +29,23 @@ _MINIMAL_GED = b"""\
 """
 
 
+_GED_WITH_PLACE = b"""\
+0 HEAD
+1 SOUR test
+1 GEDC
+2 VERS 5.5.5
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME John /Smith/
+1 SEX M
+1 BIRT
+2 DATE 1850
+2 PLAC Slonim, Grodno, Russian Empire
+0 TRLR
+"""
+
+
 @pytest.mark.asyncio
 async def test_list_persons_returns_imported(app_client) -> None:
     """После импорта: ``GET /trees/{id}/persons`` возвращает 2 персон."""
@@ -68,3 +85,29 @@ async def test_get_person_returns_404_for_unknown(app_client) -> None:
     """Несуществующий UUID → 404."""
     response = await app_client.get("/persons/00000000-0000-0000-0000-000000000000")
     assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_get_person_returns_event_with_place(app_client) -> None:
+    """``GET /persons/{id}`` отдаёт ``events[].place`` с canonical_name.
+
+    Для импорта с PLAC у BIRT-события в ответе должен быть объект place
+    с id и name (под алиасом для canonical_name).
+    """
+    files = {"file": ("test.ged", _GED_WITH_PLACE, "application/octet-stream")}
+    created = await app_client.post("/imports", files=files)
+    tree_id = created.json()["tree_id"]
+
+    listing = await app_client.get(f"/trees/{tree_id}/persons")
+    items = listing.json()["items"]
+    assert items, "no persons returned"
+    person_id = items[0]["id"]
+
+    response = await app_client.get(f"/persons/{person_id}")
+    assert response.status_code == 200
+    events = response.json()["events"]
+    birt = next(e for e in events if e["event_type"] == "BIRT")
+    assert birt["place_id"] is not None
+    assert birt["place"] is not None
+    assert birt["place"]["name"] == "Slonim, Grodno, Russian Empire"
+    assert birt["place"]["id"] == birt["place_id"]

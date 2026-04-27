@@ -53,6 +53,18 @@ class PersonListResponse(BaseModel):
     items: list[PersonSummary]
 
 
+class PlaceSummary(BaseModel):
+    """Краткое представление места для встраивания в EventSummary."""
+
+    id: uuid.UUID
+    name: str = Field(
+        validation_alias="canonical_name",
+        description="Каноническое имя места (place.canonical_name).",
+    )
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+
 class EventSummary(BaseModel):
     """Событие персоны в карточке."""
 
@@ -62,6 +74,7 @@ class EventSummary(BaseModel):
     date_start: datetime | None = None
     date_end: datetime | None = None
     place_id: uuid.UUID | None = None
+    place: PlaceSummary | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
