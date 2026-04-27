@@ -451,3 +451,154 @@ class HypothesisReviewRequest(BaseModel):
     note: str | None = Field(default=None, max_length=2000)
 
     model_config = ConfigDict(extra="forbid")
+
+
+# -----------------------------------------------------------------------------
+# Phase 4.6 — manual person merge (ADR-0022)
+# -----------------------------------------------------------------------------
+
+
+SurvivorChoice = Literal["left", "right"]
+HypothesisCheckStatus = Literal[
+    "no_hypotheses_found",
+    "no_conflicts",
+    "conflicts_blocking",
+]
+
+
+class MergeFieldDiff(BaseModel):
+    """Изменение одного скалярного поля Person после merge'а."""
+
+    field: str
+    survivor_value: Any
+    merged_value: Any
+    after_merge_value: Any
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class MergeNameDiff(BaseModel):
+    """Имя merged'а с новым sort_order (offset +1000)."""
+
+    name_id: uuid.UUID
+    old_sort_order: int
+    new_sort_order: int
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class MergeEventDiff(BaseModel):
+    """Что произойдёт с событием при merge'е."""
+
+    event_id: uuid.UUID
+    action: Literal["reparent", "collapse_into_survivor", "keep_separate"]
+    collapsed_into: uuid.UUID | None = None
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class MergeFamilyMembershipDiff(BaseModel):
+    """Family-FK переключается с merged на survivor."""
+
+    table: Literal[
+        "families.husband_id",
+        "families.wife_id",
+        "family_children.child_person_id",
+    ]
+    row_id: uuid.UUID
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class MergeHypothesisConflict(BaseModel):
+    """Одна блокирующая проблема Hypothesis-gate."""
+
+    reason: Literal[
+        "rejected_same_person",
+        "subject_already_merged",
+        "cross_relationship_conflict",
+    ]
+    hypothesis_id: uuid.UUID | None = None
+    detail: str
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class MergePreviewResponse(BaseModel):
+    """Ответ ``POST /persons/{id}/merge/preview`` — диффы без mutation'а."""
+
+    survivor_id: uuid.UUID
+    merged_id: uuid.UUID
+    default_survivor_id: uuid.UUID = Field(
+        description=(
+            "Дефолтный выбор survivor'а по ADR-0022 §Survivor selection "
+            "(provenance count → confidence → created_at). UI может "
+            "переключить через survivor_choice в commit body."
+        )
+    )
+    fields: list[MergeFieldDiff] = Field(default_factory=list)
+    names: list[MergeNameDiff] = Field(default_factory=list)
+    events: list[MergeEventDiff] = Field(default_factory=list)
+    family_memberships: list[MergeFamilyMembershipDiff] = Field(default_factory=list)
+    hypothesis_check: HypothesisCheckStatus = "no_hypotheses_found"
+    conflicts: list[MergeHypothesisConflict] = Field(default_factory=list)
+
+
+class MergeCommitRequest(BaseModel):
+    """Тело ``POST /persons/{id}/merge``.
+
+    `confirm` обязателен и должен быть ``True`` — без этого 400.
+    `confirm_token` — клиентский UUID для идемпотентности повторного POST.
+    """
+
+    target_id: uuid.UUID
+    confirm: Literal[True]
+    confirm_token: str = Field(min_length=8, max_length=64)
+    survivor_choice: SurvivorChoice | None = Field(
+        default=None,
+        description=(
+            "Выбор UI: 'left' = текущая (path) персона survivor, 'right' = "
+            "target_id survivor. Если None — берётся default_survivor_id."
+        ),
+    )
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class MergeCommitResponse(BaseModel):
+    """Ответ ``POST /persons/{id}/merge`` после успешного коммита."""
+
+    merge_id: uuid.UUID
+    survivor_id: uuid.UUID
+    merged_id: uuid.UUID
+    merged_at: datetime
+    confirm_token: str
+
+
+class MergeUndoResponse(BaseModel):
+    """Ответ ``POST /persons/merge/{id}/undo``."""
+
+    merge_id: uuid.UUID
+    survivor_id: uuid.UUID
+    merged_id: uuid.UUID
+    undone_at: datetime
+
+
+class MergeHistoryItem(BaseModel):
+    """Одна merge-запись в `GET /persons/{id}/merge-history`."""
+
+    merge_id: uuid.UUID
+    survivor_id: uuid.UUID
+    merged_id: uuid.UUID
+    merged_at: datetime
+    undone_at: datetime | None = None
+    purged_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MergeHistoryResponse(BaseModel):
+    """Список merge'ей где person участвовала (как survivor или merged)."""
+
+    person_id: uuid.UUID
+    items: list[MergeHistoryItem]
