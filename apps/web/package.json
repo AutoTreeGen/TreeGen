@@ -18,6 +18,7 @@
     "clsx": "^2.1.1",
     "next": "^15.1.0",
     "react": "^19.0.0",
+    "react-d3-tree": "^3.6.6",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^2.5.0"
   },
