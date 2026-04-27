@@ -8,13 +8,11 @@ from __future__ import annotations
 
 import pytest
 
-from tests.conftest import seed_user_and_tree
-
 
 @pytest.mark.db
 @pytest.mark.integration
-async def test_create_and_get_consent(app_client, postgres_dsn) -> None:
-    user_id, tree_id = await seed_user_and_tree(postgres_dsn)
+async def test_create_and_get_consent(app_client, seeded_user_and_tree) -> None:
+    user_id, tree_id = seeded_user_and_tree
 
     create_resp = await app_client.post(
         "/consents",
@@ -46,8 +44,8 @@ async def test_get_consent_returns_404_for_unknown(app_client) -> None:
 
 @pytest.mark.db
 @pytest.mark.integration
-async def test_revoke_consent_marks_inactive(app_client, postgres_dsn) -> None:
-    user_id, tree_id = await seed_user_and_tree(postgres_dsn)
+async def test_revoke_consent_marks_inactive(app_client, seeded_user_and_tree) -> None:
+    user_id, tree_id = seeded_user_and_tree
 
     create_resp = await app_client.post(
         "/consents",
@@ -71,8 +69,8 @@ async def test_revoke_consent_marks_inactive(app_client, postgres_dsn) -> None:
 
 @pytest.mark.db
 @pytest.mark.integration
-async def test_revoke_is_idempotent(app_client, postgres_dsn) -> None:
-    user_id, tree_id = await seed_user_and_tree(postgres_dsn)
+async def test_revoke_is_idempotent(app_client, seeded_user_and_tree) -> None:
+    user_id, tree_id = seeded_user_and_tree
     create_resp = await app_client.post(
         "/consents",
         json={

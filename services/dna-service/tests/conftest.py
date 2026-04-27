@@ -97,8 +97,13 @@ async def app_client(postgres_dsn: str, storage_root: Path) -> AsyncIterator:
     await dispose_engine()
 
 
-async def seed_user_and_tree(postgres_dsn: str) -> tuple[uuid.UUID, uuid.UUID]:
-    """Создать User + Tree напрямую через async-сессию для тестов."""
+@pytest_asyncio.fixture
+async def seeded_user_and_tree(postgres_dsn: str) -> tuple[uuid.UUID, uuid.UUID]:
+    """Создать User + Tree напрямую через async-сессию для тестов.
+
+    Возвращает `(user_id, tree_id)` для использования в payload'ах
+    consent / upload эндпоинтов.
+    """
     from shared_models.orm import Tree, User
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
