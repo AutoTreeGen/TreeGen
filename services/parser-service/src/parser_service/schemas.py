@@ -453,9 +453,12 @@ class HypothesisReviewRequest(BaseModel):
     CLAUDE.md §5: ``status='confirmed'`` НЕ автоматически мерджит entities.
     Сервис только сохраняет user-judgment + actor; merge — отдельный
     flow Phase 4.6.
+
+    ``deferred`` (Phase 4.9): «вернусь позже» — UI прячет из default
+    pending queue, но не блокирует merge как ``rejected``.
     """
 
-    status: Literal["pending", "confirmed", "rejected"]
+    status: Literal["pending", "confirmed", "rejected", "deferred"]
     note: str | None = Field(default=None, max_length=2000)
 
     model_config = ConfigDict(extra="forbid")

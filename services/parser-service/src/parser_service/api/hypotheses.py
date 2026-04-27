@@ -102,9 +102,12 @@ async def list_hypotheses(
         description=("Фильтр по subject_a_id ИЛИ subject_b_id — все гипотезы про одну сущность."),
     ),
     min_confidence: float = Query(default=0.5, ge=0.0, le=1.0),
-    review_status: Literal["pending", "confirmed", "rejected"] | None = Query(
+    review_status: Literal["pending", "confirmed", "rejected", "deferred"] | None = Query(
         default=None,
-        description="Фильтр по reviewed_status (для UI инкремента pending).",
+        description=(
+            "Фильтр по reviewed_status. ``deferred`` (Phase 4.9) — пользователь "
+            "решил отложить решение; UI обычно прячет из дефолтного pending queue."
+        ),
     ),
     hypothesis_type: Literal[
         "same_person",

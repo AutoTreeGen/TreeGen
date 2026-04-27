@@ -242,17 +242,24 @@ class HypothesisType(StrEnum):
 
 
 class HypothesisReviewStatus(StrEnum):
-    """Статус ручной проверки гипотезы пользователем (Phase 7.2).
+    """Статус ручной проверки гипотезы пользователем (Phase 7.2 + 4.9).
 
     ``CONFIRMED``/``REJECTED`` — это user-judgment, не auto-merge.
     CLAUDE.md §5: подтверждение гипотезы НЕ мутирует доменные сущности.
     Слияние entities — отдельный явный flow (Phase 4.6 UI), отдельный
     endpoint, отдельная audit-log запись.
+
+    ``DEFERRED`` (Phase 4.9): «вернусь позже» — отдельно от REJECTED.
+    UI прячет из дефолтного pending-queue, но не считает отказом для
+    metrics. ``person_merger`` не блокирует merge на DEFERRED (только
+    REJECTED блокирует), что позволяет юзеру отложить и вернуться
+    после сбора дополнительных evidence.
     """
 
     PENDING = "pending"
     CONFIRMED = "confirmed"
     REJECTED = "rejected"
+    DEFERRED = "deferred"
 
 
 class HypothesisSubjectType(StrEnum):
