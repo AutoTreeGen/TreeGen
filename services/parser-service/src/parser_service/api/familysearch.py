@@ -36,7 +36,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from parser_service.database import get_session
-from parser_service.schemas import FamilySearchImportRequest, ImportJobResponse
+from parser_service.schemas import (
+    FamilySearchImportRequest,
+    FamilySearchImportResponse,
+    ImportJobResponse,
+)
 from parser_service.services.familysearch_importer import import_fs_pedigree
 
 logger = logging.getLogger(__name__)
@@ -51,14 +55,14 @@ def _token_fingerprint(access_token: str) -> str:
 
 @router.post(
     "/familysearch",
-    response_model=ImportJobResponse,
+    response_model=FamilySearchImportResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Импортировать FamilySearch person + N поколений предков",
 )
 async def create_familysearch_import(
     request: FamilySearchImportRequest,
     session: Annotated[AsyncSession, Depends(get_session)],
-) -> ImportJobResponse:
+) -> FamilySearchImportResponse:
     """Импорт FS pedigree в существующее дерево.
 
     Маппинг FS GEDCOM-X → ORM — см. ADR-0017. Идемпотентность:
@@ -129,7 +133,13 @@ async def create_familysearch_import(
             detail=f"FamilySearch client error: {e}",
         ) from e
 
-    return ImportJobResponse.model_validate(job)
+    base = ImportJobResponse.model_validate(job)
+    fs_attempts = base.stats.get("fs_dedup_attempts_created", 0) if base.stats else 0
+    review_url = f"/trees/{request.tree_id}/dedup-attempts" if fs_attempts else None
+    return FamilySearchImportResponse(
+        **base.model_dump(),
+        review_url=review_url,
+    )
 
 
 @router.get(
