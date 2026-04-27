@@ -43,7 +43,7 @@ export default function PersonsListPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
-      <header className="mb-8 flex items-end justify-between">
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-wide text-[color:var(--color-ink-500)]">Tree</p>
           <h1 className="font-mono text-sm text-[color:var(--color-ink-700)]">{treeId}</h1>
@@ -55,6 +55,13 @@ export default function PersonsListPage() {
             </p>
           ) : null}
         </div>
+        {/* Без pending-count: dedup-scoring проходит по всему дереву и при
+            61k персон занимает секунды. Запускать его на каждый рендер
+            списка персон — регрессия. Точное число пар видно на самой
+            странице duplicates после применения slider'ом порога. */}
+        <Button variant="secondary" size="md" asChild>
+          <Link href={`/trees/${treeId}/duplicates`}>Review duplicates →</Link>
+        </Button>
       </header>
 
       {query.isLoading ? <PersonsListSkeleton /> : null}
