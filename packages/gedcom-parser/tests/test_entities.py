@@ -8,6 +8,7 @@ from gedcom_parser.entities import (
     Event,
     Family,
     Header,
+    InlineMultimediaObject,
     MultimediaObject,
     Name,
     Note,
@@ -17,6 +18,7 @@ from gedcom_parser.entities import (
     Submitter,
 )
 from gedcom_parser.parser import parse_text
+from gedcom_parser.writer import write_records
 from pydantic import ValidationError
 
 
@@ -211,6 +213,35 @@ class TestSimpleEntities:
         assert obj.file == "photos/grave.jpg"
         assert obj.format_ == "jpg"
         assert obj.title == "Tombstone in Slonim"
+        assert obj.type_ is None
+        assert obj.created_raw is None
+
+    def test_multimedia_object_captures_type_and_crea(self) -> None:
+        """Ancestry-style: TYPE под FILE, _CREA как proprietary tag."""
+        text = (
+            "0 @O2@ OBJE\n"
+            "1 FILE https://ancestry.com/img/abc.jpg\n"
+            "2 FORM jpeg\n"
+            "2 TYPE photo\n"
+            "1 TITL Wedding 1923\n"
+            "1 _CREA 2023-04-12 12:34:56\n"
+        )
+        rec = parse_text(text)[0]
+        obj = MultimediaObject.from_record(rec)
+        assert obj.file == "https://ancestry.com/img/abc.jpg"
+        assert obj.format_ == "jpeg"
+        assert obj.type_ == "photo"
+        assert obj.title == "Wedding 1923"
+        assert obj.created_raw == "2023-04-12 12:34:56"
+
+    def test_multimedia_object_form_under_obje_legacy_5_5_1(self) -> None:
+        """GEDCOM 5.5.1 / некоторые legacy экспорты: FORM под OBJE напрямую."""
+        text = "0 @O3@ OBJE\n1 FORM jpeg\n1 FILE old/doc.pdf\n1 TITL Cert\n"
+        rec = parse_text(text)[0]
+        obj = MultimediaObject.from_record(rec)
+        assert obj.file == "old/doc.pdf"
+        assert obj.format_ == "jpeg"
+        assert obj.title == "Cert"
 
     def test_repository(self) -> None:
         text = "0 @R1@ REPO\n1 NAME Vilnius Archive\n1 ADDR Tilto 12\n"
@@ -399,3 +430,91 @@ class TestCitations:
         c = Citation(source_xref="S1", page="p. 1")
         with pytest.raises(ValidationError):
             c.page = "p. 2"  # type: ignore[misc]
+
+
+class TestInlineMultimedia:
+    """OBJE-children без xref'а, прикреплённые к INDI/FAM (Phase 3.5 follow-up).
+
+    Раньше эти записи дропались — round-trip терял media. Теперь captures.
+    """
+
+    def test_inline_obje_under_indi_captured(self) -> None:
+        text = (
+            "0 @I1@ INDI\n"
+            "1 NAME John /Smith/\n"
+            "1 OBJE @M1@\n"  # xref-ссылка — попадает в objects_xrefs
+            "1 OBJE\n"  # inline — попадает в inline_objects
+            "2 FILE photos/portrait.jpg\n"
+            "2 FORM jpeg\n"
+            "2 TITL John Smith portrait\n"
+            "2 TYPE photo\n"
+        )
+        indi = parse_text(text)[0]
+        person = Person.from_record(indi)
+        assert person.objects_xrefs == ("M1",)
+        assert len(person.inline_objects) == 1
+        inline = person.inline_objects[0]
+        assert inline.file == "photos/portrait.jpg"
+        assert inline.format_ == "jpeg"
+        assert inline.title == "John Smith portrait"
+        assert inline.type_ == "photo"
+
+    def test_inline_obje_under_fam_captured(self) -> None:
+        text = (
+            "0 @F1@ FAM\n"
+            "1 HUSB @I1@\n"
+            "1 WIFE @I2@\n"
+            "1 OBJE\n"
+            "2 FILE photos/wedding.jpg\n"
+            "2 FORM jpeg\n"
+            "2 TITL Wedding 1923\n"
+        )
+        fam = parse_text(text)[0]
+        family = Family.from_record(fam)
+        assert family.objects_xrefs == ()
+        assert len(family.inline_objects) == 1
+        assert family.inline_objects[0].file == "photos/wedding.jpg"
+        assert family.inline_objects[0].title == "Wedding 1923"
+
+    def test_inline_obje_only_file_minimum(self) -> None:
+        """Inline OBJE может содержать только FILE (форма необязательна)."""
+        text = "0 @I1@ INDI\n1 OBJE\n2 FILE doc.pdf\n"
+        indi = parse_text(text)[0]
+        person = Person.from_record(indi)
+        assert len(person.inline_objects) == 1
+        inline = person.inline_objects[0]
+        assert inline.file == "doc.pdf"
+        assert inline.format_ is None
+        assert inline.title is None
+
+    def test_xref_obje_does_not_pollute_inline_list(self) -> None:
+        """Чисто xref-форма не должна попадать в inline_objects."""
+        text = "0 @I1@ INDI\n1 OBJE @M1@\n1 OBJE @M2@\n"
+        indi = parse_text(text)[0]
+        person = Person.from_record(indi)
+        assert person.objects_xrefs == ("M1", "M2")
+        assert person.inline_objects == ()
+
+    def test_round_trip_inline_obje_preserved(self) -> None:
+        """parse → write_records → parse: inline OBJE остаётся."""
+        text = (
+            "0 @I1@ INDI\n"
+            "1 NAME John /Smith/\n"
+            "1 OBJE\n"
+            "2 FILE photos/p.jpg\n"
+            "2 FORM jpeg\n"
+            "2 TITL Portrait\n"
+        )
+        records = parse_text(text)
+        roundtripped = write_records(records)
+        records2 = parse_text(roundtripped)
+        person = Person.from_record(records2[0])
+        assert len(person.inline_objects) == 1
+        assert person.inline_objects[0].file == "photos/p.jpg"
+        assert person.inline_objects[0].format_ == "jpeg"
+        assert person.inline_objects[0].title == "Portrait"
+
+    def test_inline_obje_is_frozen(self) -> None:
+        obj = InlineMultimediaObject(file="x.jpg", format_="jpeg")
+        with pytest.raises(ValidationError):
+            obj.title = "y"  # type: ignore[misc]
