@@ -10,6 +10,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from parser_service.api import imports, trees
 from parser_service.config import get_settings
@@ -30,6 +31,16 @@ app = FastAPI(
     description="GEDCOM import + tree-read API (Phase 3).",
     version="0.1.0",
     lifespan=lifespan,
+)
+
+# CORS для локального dev-режима веб-приложения (Phase 4.1).
+# Прод-конфиг — на API gateway / Cloud Run, отдельным ADR в Phase 4.x.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
 )
 
 app.include_router(imports.router, prefix="/imports", tags=["imports"])
