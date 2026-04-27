@@ -251,7 +251,7 @@ async def test_import_single_person_creates_person_with_provenance(
     assert job.stats["events"] == 1
     assert job.stats["names"] == 1
     assert job.stats["places"] == 1
-    assert job.stats["fs_focus_person_id"] == "SOLO"
+    assert job.stats["generations"] == 1
 
     async with factory() as session:
         row = (await session.execute(select(Person).where(Person.tree_id == tree_id))).scalar_one()
