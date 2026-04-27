@@ -1,20 +1,25 @@
 [project]
 name = "dna-analysis"
-version = "0.1.0"
-description = "AutoTreeGen DNA analysis — pure-function parsers and algorithms (Phase 6.0)."
+version = "0.2.0"
+description = "AutoTreeGen DNA analysis — parsers, matching, relationship prediction (Phase 6.1)."
 requires-python = ">=3.13"
 readme = "README.md"
 license = { text = "Proprietary" }
 authors = [{ name = "AutoTreeGen" }]
-# Ровно две зависимости:
-#  - pydantic: модели DnaTest/Snp/Genotype с валидацией.
-#  - cryptography: helpers для Phase 6.1 (key derivation, AES-GCM).
+# Зависимости:
+#  - pydantic: модели DnaTest/Snp/Genotype/RelationshipRange с валидацией.
+#  - cryptography: helpers для Phase 6.2 (key derivation, AES-GCM).
+#  - click: CLI `dna-analysis match` (Phase 6.1 Task 5).
 # Никаких sqlalchemy / fastapi / httpx — это pure-functions пакет
 # (см. ADR-0012 §«Architectural separation»).
 dependencies = [
     "pydantic>=2.10",
     "cryptography>=42",
+    "click>=8.1",
 ]
+
+[project.scripts]
+dna-analysis = "dna_analysis.cli:cli"
 
 [build-system]
 requires = ["hatchling>=1.27"]
