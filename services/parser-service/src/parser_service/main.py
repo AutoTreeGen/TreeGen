@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from parser_service.api import dedup, imports, trees
+from parser_service.api import dedup, familysearch, imports, trees
 from parser_service.config import get_settings
 from parser_service.database import dispose_engine, init_engine
 
@@ -43,6 +43,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# familysearch router включается ПЕРВЫМ среди /imports/* — иначе
+# legacy `GET /imports/{job_id:UUID}` маршрут перехватит `/imports/familysearch`
+# до того, как FastAPI попадёт в наш роутер (UUID-валидация даст 422
+# вместо нашего 201/404).
+app.include_router(familysearch.router, prefix="/imports", tags=["imports", "familysearch"])
 app.include_router(imports.router, prefix="/imports", tags=["imports"])
 app.include_router(trees.router, tags=["trees"])
 app.include_router(dedup.router, tags=["dedup"])

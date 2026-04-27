@@ -222,3 +222,39 @@ class DuplicateSuggestionListResponse(BaseModel):
     limit: int
     offset: int
     items: list[DuplicateSuggestion]
+
+
+# ---------------------------------------------------------------------------
+# FamilySearch import (Phase 5.1) — см. ADR-0017
+# ---------------------------------------------------------------------------
+
+
+class FamilySearchImportRequest(BaseModel):
+    """Параметры ``POST /imports/familysearch``.
+
+    ``access_token`` обрабатывается **stateless**: используется только для
+    одного запроса в FamilySearch API и не сохраняется ни в БД, ни в
+    логах. Для traceability логируется ``sha256(access_token)[:8]``.
+    """
+
+    access_token: str = Field(
+        min_length=10,
+        description="OAuth access token (получает caller через PKCE flow).",
+    )
+    fs_person_id: str = Field(
+        pattern=r"^[A-Z0-9-]+$",
+        max_length=64,
+        description="FamilySearch person id (например, KW7S-VQJ).",
+    )
+    tree_id: uuid.UUID = Field(description="ID существующего дерева в AutoTreeGen.")
+    generations: int = Field(
+        default=4,
+        ge=1,
+        le=8,
+        description=(
+            "Глубина pedigree (FamilySearch personal apps cap = 8). "
+            "1 — только родители, 8 — максимум."
+        ),
+    )
+
+    model_config = ConfigDict(extra="forbid")

@@ -84,11 +84,12 @@ def _fs_url(fs_person_id: str) -> str:
 
 
 def _map_sex(gender: FsGender) -> str:
+    # str(...) explicit — pydantic.mypy infers StrEnum.value as Any в strict.
     if gender == FsGender.MALE:
-        return Sex.MALE.value
+        return str(Sex.MALE.value)
     if gender == FsGender.FEMALE:
-        return Sex.FEMALE.value
-    return Sex.UNKNOWN.value
+        return str(Sex.FEMALE.value)
+    return str(Sex.UNKNOWN.value)
 
 
 def _map_status(person: FsPerson) -> str:
@@ -99,8 +100,8 @@ def _map_status(person: FsPerson) -> str:
     (см. ADR-0017 §Person).
     """
     if person.living is True:
-        return EntityStatus.HYPOTHESIS.value
-    return EntityStatus.PROBABLE.value
+        return str(EntityStatus.HYPOTHESIS.value)
+    return str(EntityStatus.PROBABLE.value)
 
 
 def _build_provenance(
@@ -455,6 +456,9 @@ async def import_fs_pedigree(
     # ---- 8. Mark job succeeded ----
     job.status = ImportJobStatus.SUCCEEDED.value
     job.finished_at = dt.datetime.now(dt.UTC)
+    # ImportJobResponse.stats типизирован как dict[str, int] — поэтому
+    # значения только числовые. fs_focus_person_id восстанавливается из
+    # provenance любой импортированной Person.
     job.stats = {
         "persons": len(person_rows_to_insert),
         "persons_refreshed": len(existing_ids),
@@ -463,7 +467,6 @@ async def import_fs_pedigree(
         "places": len(new_place_rows),
         "skipped_facts": skipped_facts,
         "events_dropped_for_refresh": events_deleted,
-        "fs_focus_person_id": fs_person_id,
         "generations": generations,
     }
     await session.flush()
