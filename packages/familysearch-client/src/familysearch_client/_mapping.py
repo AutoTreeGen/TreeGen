@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .models import FsFact, FsGender, FsName, FsPerson, FsRelationship
+from .models import FsFact, FsGender, FsName, FsPedigreeNode, FsPerson, FsRelationship
 
 _GEDCOMX_PREFIX = "http://gedcomx.org/"
 
@@ -140,6 +140,71 @@ def _resource_id_from_reference(ref: dict[str, Any] | None) -> str | None:
     if not isinstance(resource, str):
         return None
     return resource[1:] if resource.startswith("#") else resource
+
+
+def _ascendancy_number(payload: dict[str, Any]) -> int | None:
+    """Извлекает Ahnentafel ``display.ascendancyNumber`` (как int).
+
+    FamilySearch возвращает его строкой (``"1"``, ``"2"``, …). ``None`` —
+    если поле отсутствует или не парсится. Для focus-person'а (root)
+    ascendancyNumber = ``1``.
+    """
+    display = payload.get("display") or {}
+    raw = display.get("ascendancyNumber")
+    if raw is None:
+        return None
+    try:
+        value = int(str(raw))
+    except (TypeError, ValueError):
+        return None
+    return value if value >= 1 else None
+
+
+def parse_pedigree_response(payload: dict[str, Any]) -> FsPedigreeNode:
+    """Парсит ответ ``/platform/tree/persons/{id}/ancestry?generations=N``.
+
+    FamilySearch отдаёт коллекцию persons с Ahnentafel-нумерацией. Из неё
+    собираем рекурсивное дерево :class:`FsPedigreeNode` по правилу:
+    предок с номером ``n`` имеет отца с номером ``2n`` и мать с номером
+    ``2n+1``. Дерево может быть неполным — отсутствующие предки = ``None``.
+
+    Raises:
+        ValueError: если в ответе нет root persona (``ascendancyNumber=1``)
+            — тогда непонятно, чьи предки вернулись.
+    """
+    persons_raw = payload.get("persons") or []
+    by_number: dict[int, FsPerson] = {}
+    for raw in persons_raw:
+        if not isinstance(raw, dict):
+            continue
+        number = _ascendancy_number(raw)
+        if number is None:
+            continue
+        # Используем уже существующий parser — так получим FsPerson с
+        # gender / names / facts полностью нормализованными.
+        try:
+            person = parse_person(raw)
+        except ValueError:
+            # Person без id в pedigree — пропускаем (FS иногда возвращает
+            # «пробел» для отсутствующих ancestors).
+            continue
+        by_number[number] = person
+
+    if 1 not in by_number:
+        msg = "GEDCOM-X pedigree response has no root person (ascendancyNumber=1)"
+        raise ValueError(msg)
+
+    return _build_pedigree_node(1, by_number)
+
+
+def _build_pedigree_node(number: int, by_number: dict[int, FsPerson]) -> FsPedigreeNode:
+    """Рекурсивно строит :class:`FsPedigreeNode` по Ahnentafel-нумерации."""
+    person = by_number[number]
+    father_n = number * 2
+    mother_n = number * 2 + 1
+    father = _build_pedigree_node(father_n, by_number) if father_n in by_number else None
+    mother = _build_pedigree_node(mother_n, by_number) if mother_n in by_number else None
+    return FsPedigreeNode(person=person, father=father, mother=mother)
 
 
 def parse_relationship(payload: dict[str, Any]) -> FsRelationship:

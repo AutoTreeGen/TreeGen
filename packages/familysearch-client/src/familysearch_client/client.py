@@ -29,7 +29,13 @@ from .errors import (
     RateLimitError,
     ServerError,
 )
-from .models import FsPerson
+from .models import FsPedigreeNode, FsPerson
+
+# FamilySearch /ancestry endpoint поддерживает 1..8 поколений для personal
+# apps. Bulk запросы выше партнёр-only (см. ADR-0011 §«Sandbox app
+# registration ограничен»).
+PEDIGREE_MIN_GENERATIONS = 1
+PEDIGREE_MAX_GENERATIONS = 8
 
 ACCEPT_HEADER = "application/x-fs-v1+json"
 
@@ -124,6 +130,36 @@ class FamilySearchClient:
         url = f"{self.config.api_base_url}/platform/tree/persons/{person_id}"
         response = await self._request("GET", url)
         return _mapping.parse_person_response(response.json())
+
+    async def get_pedigree(self, person_id: str, *, generations: int = 4) -> FsPedigreeNode:
+        """Возвращает дерево предков (Phase 5.1).
+
+        Делает один запрос на ``/platform/tree/persons/{id}/ancestry?generations=N``
+        и собирает плоский GEDCOM-X collection в рекурсивный
+        :class:`FsPedigreeNode` по Ahnentafel-нумерации.
+
+        Args:
+            person_id: focus person, чьи предки нужны (Ahnentafel = 1).
+            generations: число поколений предков (1 — только родители,
+                8 — максимум для personal apps; >8 требует партнёр-доступ).
+
+        Raises:
+            ValueError: ``generations`` вне ``[1, 8]``.
+            NotFoundError: 404 на focus person'е.
+            AuthError / RateLimitError / ServerError / ClientError: по
+                таблице маппинга `_raise_for_api_status`.
+        """
+        if not (PEDIGREE_MIN_GENERATIONS <= generations <= PEDIGREE_MAX_GENERATIONS):
+            msg = (
+                f"generations must be in "
+                f"[{PEDIGREE_MIN_GENERATIONS}, {PEDIGREE_MAX_GENERATIONS}], "
+                f"got {generations}"
+            )
+            raise ValueError(msg)
+        url = f"{self.config.api_base_url}/platform/tree/persons/{person_id}/ancestry"
+        params = {"generations": str(generations)}
+        response = await self._request("GET", url, params=params)
+        return _mapping.parse_pedigree_response(response.json())
 
     # -----------------------------------------------------------------
     # Internal HTTP plumbing

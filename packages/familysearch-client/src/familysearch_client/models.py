@@ -129,3 +129,42 @@ class FsRelationship(BaseModel):
     )
     person1_id: str = Field(description="ID первой персоны (ResourceReference).")
     person2_id: str = Field(description="ID второй персоны (ResourceReference).")
+
+
+class FsPedigreeNode(BaseModel):
+    """Один узел в pedigree-дереве (Phase 5.1).
+
+    FamilySearch endpoint ``/platform/tree/persons/{id}/ancestry?generations=N``
+    возвращает GEDCOM-X collection persons с Ahnentafel-нумерацией
+    (``display.ascendancyNumber``: root=1, father=2, mother=3, …, отец отца=4
+    и т.д.). Маппер ``_mapping.parse_pedigree_response`` собирает плоский
+    массив в дерево по этой нумерации.
+
+    Phase 5.1: только parent-связи (father/mother). Spouses/children — Phase 5.2.
+
+    Attributes:
+        person: основной :class:`FsPerson`
+        father: предок по отцовской линии (Ahnentafel = 2N) или ``None``
+        mother: предок по материнской линии (Ahnentafel = 2N+1) или ``None``
+    """
+
+    model_config = ConfigDict(extra="ignore", frozen=True)
+
+    person: FsPerson
+    father: FsPedigreeNode | None = None
+    mother: FsPedigreeNode | None = None
+
+    def walk(self) -> list[FsPerson]:
+        """Pre-order обход дерева: root → father subtree → mother subtree.
+
+        Удобен для импорта: persons возвращаются в порядке, в котором
+        importer'у дешевле строить parent-child связи. Дубликатов не
+        возникает — каждый persona встречается ровно один раз
+        (Ahnentafel — функция, не отношение).
+        """
+        result: list[FsPerson] = [self.person]
+        if self.father is not None:
+            result.extend(self.father.walk())
+        if self.mother is not None:
+            result.extend(self.mother.walk())
+        return result
