@@ -8,9 +8,11 @@ from __future__ import annotations
 
 from shared_models.orm.audit_log import AuditLog
 from shared_models.orm.citation import Citation
+from shared_models.orm.dna_consent import DnaConsent
 from shared_models.orm.dna_import import DnaImport
 from shared_models.orm.dna_kit import DnaKit
 from shared_models.orm.dna_match import DnaMatch
+from shared_models.orm.dna_test_record import DnaTestRecord
 from shared_models.orm.event import Event, EventParticipant
 from shared_models.orm.family import Family, FamilyChild
 from shared_models.orm.import_job import ImportJob
@@ -28,9 +30,11 @@ from shared_models.orm.version import Version
 __all__ = [
     "AuditLog",
     "Citation",
+    "DnaConsent",
     "DnaImport",
     "DnaKit",
     "DnaMatch",
+    "DnaTestRecord",
     "EntityMultimedia",
     "EntityNote",
     "Event",

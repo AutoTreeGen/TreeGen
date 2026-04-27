@@ -26,6 +26,10 @@ SERVICE_TABLES = {
     # DNA service tables
     "shared_matches",
     "dna_imports",
+    # DNA consent + storage records (Phase 6.2 / ADR-0020): explicitly
+    # opt out of soft-delete and provenance — revocation is hard delete.
+    "dna_consents",
+    "dna_test_records",
 }
 
 TREE_ENTITY_TABLES = {
