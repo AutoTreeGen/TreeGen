@@ -1,4 +1,4 @@
-"""Hypotheses HTTP API (Phase 7.2 Task 4).
+"""Hypotheses HTTP API (Phase 7.2 Task 4 + Phase 7.5 bulk-compute).
 
 Эндпоинты:
 
@@ -6,6 +6,12 @@
 * ``GET /trees/{tree_id}/hypotheses`` — paginated list.
 * ``GET /hypotheses/{id}`` — детальный view с evidences[].
 * ``PATCH /hypotheses/{id}/review`` — user judgment (NO auto-merge).
+
+Phase 7.5 — bulk-compute job:
+
+* ``POST /trees/{tree_id}/hypotheses/compute-all`` — enqueue + sync execute.
+* ``GET /trees/{tree_id}/hypotheses/compute-jobs/{job_id}`` — статус.
+* ``PATCH /hypotheses/compute-jobs/{job_id}/cancel`` — cancel-флаг.
 
 CLAUDE.md §5 enforcement:
 ``PATCH .../review`` сохраняет ``reviewed_status='confirmed'`` и
@@ -28,13 +34,22 @@ from sqlalchemy.orm import selectinload
 
 from parser_service.database import get_session
 from parser_service.schemas import (
+    BulkComputeRequest,
+    HypothesisComputeJobResponse,
     HypothesisCreateRequest,
     HypothesisListResponse,
     HypothesisResponse,
     HypothesisReviewRequest,
     HypothesisSummary,
 )
+from parser_service.services.bulk_hypothesis_runner import (
+    cancel_compute_job,
+    enqueue_compute_job,
+    execute_compute_job,
+    get_compute_job,
+)
 from parser_service.services.hypothesis_runner import compute_hypothesis
+from parser_service.services.metrics import hypothesis_review_action_total
 
 router = APIRouter()
 
@@ -88,9 +103,12 @@ async def list_hypotheses(
         description=("Фильтр по subject_a_id ИЛИ subject_b_id — все гипотезы про одну сущность."),
     ),
     min_confidence: float = Query(default=0.5, ge=0.0, le=1.0),
-    review_status: Literal["pending", "confirmed", "rejected"] | None = Query(
+    review_status: Literal["pending", "confirmed", "rejected", "deferred"] | None = Query(
         default=None,
-        description="Фильтр по reviewed_status (для UI инкремента pending).",
+        description=(
+            "Фильтр по reviewed_status. ``deferred`` (Phase 4.9) — пользователь "
+            "решил отложить решение; UI обычно прячет из дефолтного pending queue."
+        ),
     ),
     hypothesis_type: Literal[
         "same_person",
@@ -197,8 +215,95 @@ async def review_hypothesis(
     # reviewed_by_user_id — Phase 7.3 заполнит из auth context.
     # Пока не трогаем (None допустим в migration).
     await session.commit()
+    # Phase 9.0: review action counter (после commit — считаем только
+    # успешно сохранённые judgements).
+    hypothesis_review_action_total.labels(action=body.status).inc()
     await session.refresh(hyp, attribute_names=["evidences"])
     return HypothesisResponse.model_validate(hyp)
+
+
+# -----------------------------------------------------------------------------
+# Phase 7.5 — bulk hypothesis compute.
+# Sync-mode: POST блокирует HTTP-respond до завершения (или CANCELLED/FAILED).
+# Idempotency на стороне сервиса: повторный POST в течение часа возвращает
+# существующий job без переисполнения.
+# -----------------------------------------------------------------------------
+
+
+@router.post(
+    "/trees/{tree_id}/hypotheses/compute-all",
+    response_model=HypothesisComputeJobResponse,
+    status_code=status.HTTP_201_CREATED,
+    tags=["hypotheses", "bulk-compute"],
+    summary="Запустить bulk hypothesis-compute по всему дереву.",
+    description=(
+        "Создаёт `HypothesisComputeJob` и синхронно драйвит его до "
+        "терминального статуса (succeeded / failed / cancelled). "
+        "Idempotency 1 час: повторный POST возвращает существующий job "
+        "(тот же id) без нового исполнения. `rule_ids` — optional whitelist; "
+        "сейчас informational (см. PR #87 TODO для full filter)."
+    ),
+)
+async def compute_all_hypotheses(
+    tree_id: uuid.UUID,
+    body: BulkComputeRequest,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> HypothesisComputeJobResponse:
+    job = await enqueue_compute_job(session, tree_id, rule_ids=body.rule_ids)
+    # ``execute_compute_job`` сам идемпотентен по статусу: если job уже
+    # RUNNING/SUCCEEDED/FAILED/CANCELLED — early-return. Поэтому безопасно
+    # вызывать всегда (идемпотентный re-fetch возвращает существующий job).
+    job = await execute_compute_job(session, job.id)
+    return HypothesisComputeJobResponse.model_validate(job)
+
+
+@router.get(
+    "/trees/{tree_id}/hypotheses/compute-jobs/{job_id}",
+    response_model=HypothesisComputeJobResponse,
+    tags=["hypotheses", "bulk-compute"],
+    summary="Статус bulk-compute job (для polling'а UI).",
+)
+async def get_compute_job_status(
+    tree_id: uuid.UUID,
+    job_id: uuid.UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> HypothesisComputeJobResponse:
+    job = await get_compute_job(session, job_id)
+    if job is None or job.tree_id != tree_id:
+        # Tree-mismatch trades information leak (existence vs cross-tree)
+        # за чистый 404 для UI: «нет такого job'а в этом дереве». Полная
+        # auth/RBAC — Phase 9.x, сейчас все деревья пользователя open.
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Compute job {job_id} not found in tree {tree_id}",
+        )
+    return HypothesisComputeJobResponse.model_validate(job)
+
+
+@router.patch(
+    "/hypotheses/compute-jobs/{job_id}/cancel",
+    response_model=HypothesisComputeJobResponse,
+    tags=["hypotheses", "bulk-compute"],
+    summary="Запросить cancel job'а (worker увидит между batch'ами).",
+    description=(
+        "Выставляет `cancel_requested = true`. Сам статус переходит в "
+        "`cancelled` worker'ом при следующем batch-cycle. Для уже "
+        "терминальных job'ов (succeeded/failed/cancelled) — no-op (200 + "
+        "current state)."
+    ),
+)
+async def request_cancel_compute_job(
+    job_id: uuid.UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> HypothesisComputeJobResponse:
+    job = await get_compute_job(session, job_id)
+    if job is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Compute job {job_id} not found",
+        )
+    job = await cancel_compute_job(session, job_id)
+    return HypothesisComputeJobResponse.model_validate(job)
 
 
 # -----------------------------------------------------------------------------

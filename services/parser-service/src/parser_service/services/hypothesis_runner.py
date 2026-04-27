@@ -61,6 +61,7 @@ from shared_models.orm import (
     Person,
     Place,
     Source,
+    Tree,
 )
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -71,6 +72,11 @@ from parser_service.services.dedup_finder import (
     find_place_duplicates,
     find_source_duplicates,
 )
+from parser_service.services.metrics import (
+    hypothesis_compute_duration_seconds,
+    hypothesis_created_total,
+)
+from parser_service.services.notifications import notify_hypothesis_pending_review
 
 
 def _engine_version() -> str:
@@ -299,6 +305,18 @@ async def compute_hypothesis(
         hypothesis_type_value=hypothesis_type.value,
         dna_evidence=dna_evidence,
     )
+    # 3+4. Compose с временной регистрацией дефолтных правил.
+    # Phase 9.0: timing вокруг compose даёт P95 latency композиции;
+    # rule_id="compose_default" — синтетический label (per-rule timing
+    # потребовал бы wrap каждого InferenceRule, сейчас не оправдано).
+    engine_type = _ENGINE_TYPE_FOR_PERSISTENT[hypothesis_type]
+    with hypothesis_compute_duration_seconds.labels(rule_id="compose_default").time():
+        in_memory = _compose_with_default_rules(
+            engine_type=engine_type,
+            subject_a=subject_a,
+            subject_b=subject_b,
+            hypothesis_type_value=hypothesis_type.value,
+        )
 
     rules_version = _compute_rules_version()
 
@@ -355,6 +373,30 @@ async def compute_hypothesis(
     new_hyp.evidences = [_to_orm_evidence(ev) for ev in in_memory.evidences]
     session.add(new_hyp)
     await session.flush()
+
+    # Phase 9.0: counter инкрементится ТОЛЬКО на свежий insert (см. UPSERT
+    # branch выше — refresh existing → не считаем как новую гипотезу).
+    # rule_id label = hypothesis_type, чтобы отделять SAME_PERSON-create
+    # от DUPLICATE_SOURCE-create в Grafana.
+    hypothesis_created_total.labels(
+        rule_id=hypothesis_type.value,
+        tree_id=str(tree_id),
+    ).inc()
+
+    # Phase 4.9: light notification — оповещаем tree-owner'а о новой
+    # pending-review гипотезе. Fire-and-forget: ошибки/недоступность
+    # notification-service'а логируются, но не блокируют persist.
+    # Уведомления отправляем только на свежий INSERT — re-compute с
+    # новой rules_version — silent (юзер уже видел исходную гипотезу).
+    owner_id = await session.scalar(select(Tree.owner_user_id).where(Tree.id == tree_id))
+    if owner_id is not None:
+        await notify_hypothesis_pending_review(
+            user_id=owner_id,
+            hypothesis_id=new_hyp.id,
+            tree_id=tree_id,
+            composite_score=in_memory.composite_score,
+            hypothesis_type=hypothesis_type.value,
+        )
     return new_hyp
 
 

@@ -29,6 +29,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from parser_service.schemas import DuplicateSuggestion
+from parser_service.services.metrics import dedup_finder_duration_seconds
 
 _DEFAULT_THRESHOLD = 0.80
 # Sentinel: список tree_id-фильтра одного дерева (cross-tree dedup —
@@ -53,44 +54,45 @@ async def find_source_duplicates(
     abbreviation column, поэтому передаём ``None`` — ADR-0015 это
     допускает (вес перераспределяется).
     """
-    result = await session.execute(
-        select(Source).where(
-            Source.tree_id == tree_id,
-            Source.deleted_at.is_(None),
+    with dedup_finder_duration_seconds.labels(entity_type="source").time():
+        result = await session.execute(
+            select(Source).where(
+                Source.tree_id == tree_id,
+                Source.deleted_at.is_(None),
+            )
         )
-    )
-    sources = list(result.scalars().all())
+        sources = list(result.scalars().all())
 
-    suggestions: list[DuplicateSuggestion] = []
-    for i, a in enumerate(sources):
-        for b in sources[i + 1 :]:
-            score = source_match_score(
-                a.title,
-                a.author,
-                None,  # abbreviation: пока не храним, см. ADR-0015
-                b.title,
-                b.author,
-                None,
-            )
-            if score < threshold:
-                continue
-            suggestions.append(
-                DuplicateSuggestion(
-                    entity_type="source",
-                    entity_a_id=a.id,
-                    entity_b_id=b.id,
-                    confidence=score,
-                    components={"composite": score},
-                    evidence={
-                        "a_title": a.title,
-                        "b_title": b.title,
-                        "a_author": a.author,
-                        "b_author": b.author,
-                    },
+        suggestions: list[DuplicateSuggestion] = []
+        for i, a in enumerate(sources):
+            for b in sources[i + 1 :]:
+                score = source_match_score(
+                    a.title,
+                    a.author,
+                    None,  # abbreviation: пока не храним, см. ADR-0015
+                    b.title,
+                    b.author,
+                    None,
                 )
-            )
-    suggestions.sort(key=lambda s: s.confidence, reverse=True)
-    return suggestions
+                if score < threshold:
+                    continue
+                suggestions.append(
+                    DuplicateSuggestion(
+                        entity_type="source",
+                        entity_a_id=a.id,
+                        entity_b_id=b.id,
+                        confidence=score,
+                        components={"composite": score},
+                        evidence={
+                            "a_title": a.title,
+                            "b_title": b.title,
+                            "a_author": a.author,
+                            "b_author": b.author,
+                        },
+                    )
+                )
+        suggestions.sort(key=lambda s: s.confidence, reverse=True)
+        return suggestions
 
 
 # -----------------------------------------------------------------------------
@@ -108,35 +110,36 @@ async def find_place_duplicates(
     O(N²) на canonical_name. Иерархический prefix-subset boost
     встроен в ``place_match_score`` (Slonim ⊂ Slonim, Grodno → ≥0.85).
     """
-    result = await session.execute(
-        select(Place).where(
-            Place.tree_id == tree_id,
-            Place.deleted_at.is_(None),
-        )
-    )
-    places = list(result.scalars().all())
-
-    suggestions: list[DuplicateSuggestion] = []
-    for i, a in enumerate(places):
-        for b in places[i + 1 :]:
-            score = place_match_score(a.canonical_name, b.canonical_name)
-            if score < threshold:
-                continue
-            suggestions.append(
-                DuplicateSuggestion(
-                    entity_type="place",
-                    entity_a_id=a.id,
-                    entity_b_id=b.id,
-                    confidence=score,
-                    components={"composite": score},
-                    evidence={
-                        "a_name": a.canonical_name,
-                        "b_name": b.canonical_name,
-                    },
-                )
+    with dedup_finder_duration_seconds.labels(entity_type="place").time():
+        result = await session.execute(
+            select(Place).where(
+                Place.tree_id == tree_id,
+                Place.deleted_at.is_(None),
             )
-    suggestions.sort(key=lambda s: s.confidence, reverse=True)
-    return suggestions
+        )
+        places = list(result.scalars().all())
+
+        suggestions: list[DuplicateSuggestion] = []
+        for i, a in enumerate(places):
+            for b in places[i + 1 :]:
+                score = place_match_score(a.canonical_name, b.canonical_name)
+                if score < threshold:
+                    continue
+                suggestions.append(
+                    DuplicateSuggestion(
+                        entity_type="place",
+                        entity_a_id=a.id,
+                        entity_b_id=b.id,
+                        confidence=score,
+                        components={"composite": score},
+                        evidence={
+                            "a_name": a.canonical_name,
+                            "b_name": b.canonical_name,
+                        },
+                    )
+                )
+        suggestions.sort(key=lambda s: s.confidence, reverse=True)
+        return suggestions
 
 
 # -----------------------------------------------------------------------------
@@ -162,47 +165,48 @@ async def find_person_duplicates(
             незаметна; для крупных деревьев blocking снижает время на
             порядки.
     """
-    persons_data = await _load_persons_for_matching(session, tree_id)
-    if not persons_data:
-        return []
+    with dedup_finder_duration_seconds.labels(entity_type="person").time():
+        persons_data = await _load_persons_for_matching(session, tree_id)
+        if not persons_data:
+            return []
 
-    if use_blocking:
-        candidate_pairs = _candidate_pairs_via_blocking(persons_data)
-    else:
-        candidate_pairs = _candidate_pairs_naive(persons_data)
+        if use_blocking:
+            candidate_pairs = _candidate_pairs_via_blocking(persons_data)
+        else:
+            candidate_pairs = _candidate_pairs_naive(persons_data)
 
-    suggestions: list[DuplicateSuggestion] = []
-    seen: set[tuple[uuid.UUID, uuid.UUID]] = set()
-    for a_id, a, b_id, b in candidate_pairs:
-        # Один и тот же кандидат может попасть в несколько DM-bucket'ов
-        # → дедупим явно по упорядоченной паре id.
-        pair_key = (a_id, b_id) if str(a_id) < str(b_id) else (b_id, a_id)
-        if pair_key in seen:
-            continue
-        seen.add(pair_key)
+        suggestions: list[DuplicateSuggestion] = []
+        seen: set[tuple[uuid.UUID, uuid.UUID]] = set()
+        for a_id, a, b_id, b in candidate_pairs:
+            # Один и тот же кандидат может попасть в несколько DM-bucket'ов
+            # → дедупим явно по упорядоченной паре id.
+            pair_key = (a_id, b_id) if str(a_id) < str(b_id) else (b_id, a_id)
+            if pair_key in seen:
+                continue
+            seen.add(pair_key)
 
-        score, components = person_match_score(a, b)
-        if score < threshold:
-            continue
-        suggestions.append(
-            DuplicateSuggestion(
-                entity_type="person",
-                entity_a_id=a_id,
-                entity_b_id=b_id,
-                confidence=score,
-                components=components,
-                evidence={
-                    "a_name": _format_name(a),
-                    "b_name": _format_name(b),
-                    "a_birth_year": a.birth_year,
-                    "b_birth_year": b.birth_year,
-                    "a_birth_place": a.birth_place,
-                    "b_birth_place": b.birth_place,
-                },
+            score, components = person_match_score(a, b)
+            if score < threshold:
+                continue
+            suggestions.append(
+                DuplicateSuggestion(
+                    entity_type="person",
+                    entity_a_id=a_id,
+                    entity_b_id=b_id,
+                    confidence=score,
+                    components=components,
+                    evidence={
+                        "a_name": _format_name(a),
+                        "b_name": _format_name(b),
+                        "a_birth_year": a.birth_year,
+                        "b_birth_year": b.birth_year,
+                        "a_birth_place": a.birth_place,
+                        "b_birth_place": b.birth_place,
+                    },
+                )
             )
-        )
-    suggestions.sort(key=lambda s: s.confidence, reverse=True)
-    return suggestions
+        suggestions.sort(key=lambda s: s.confidence, reverse=True)
+        return suggestions
 
 
 # -----------------------------------------------------------------------------

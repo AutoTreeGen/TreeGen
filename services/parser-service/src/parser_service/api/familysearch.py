@@ -38,6 +38,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from parser_service.database import get_session
 from parser_service.schemas import FamilySearchImportRequest, ImportJobResponse
 from parser_service.services.familysearch_importer import import_fs_pedigree
+from parser_service.services.metrics import import_completed_total
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +96,7 @@ async def create_familysearch_import(
             generations=request.generations,
         )
     except FsNotFoundError as e:
+        import_completed_total.labels(source="fs", outcome="error").inc()
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"FamilySearch person {request.fs_person_id} not found",
@@ -102,6 +104,7 @@ async def create_familysearch_import(
     except AuthError as e:
         # 401 от FS = битый/просроченный токен (наш FS, не наш user).
         # Возвращаем 401, чтобы фронт инициировал re-auth-flow.
+        import_completed_total.labels(source="fs", outcome="error").inc()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"FamilySearch rejected access token: {e}",
@@ -111,6 +114,7 @@ async def create_familysearch_import(
         headers: dict[str, str] = {}
         if retry_after is not None:
             headers["Retry-After"] = str(retry_after)
+        import_completed_total.labels(source="fs", outcome="error").inc()
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="FamilySearch rate limit exceeded",
@@ -118,12 +122,14 @@ async def create_familysearch_import(
         ) from e
     except ServerError as e:
         # FS down/overloaded — сообщаем 502 (наш upstream — FS).
+        import_completed_total.labels(source="fs", outcome="error").inc()
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"FamilySearch upstream error: {e}",
         ) from e
     except ClientError as e:
         # 400/422 от FS — обычно невалидный запрос от нашей стороны.
+        import_completed_total.labels(source="fs", outcome="error").inc()
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"FamilySearch client error: {e}",
