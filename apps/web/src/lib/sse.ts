@@ -200,7 +200,51 @@ export function useEventSource<T = ImportJobProgressEvent>(
 function defaultIsTerminal<T>(event: T): boolean {
   if (event && typeof event === "object" && "stage" in event) {
     const stage = (event as { stage: unknown }).stage;
-    return typeof stage === "string" && (TERMINAL_STAGES as readonly string[]).includes(stage);
+    if (typeof stage !== "string") return false;
+    return (
+      (TERMINAL_STAGES as readonly string[]).includes(stage) ||
+      (BULK_COMPUTE_TERMINAL_STAGES as readonly string[]).includes(stage)
+    );
   }
   return false;
 }
+
+// ---- Bulk hypothesis-compute (Phase 7.5) ----------------------------------
+//
+// Тонкий типизированный фрейм поверх того же ``data: {json}\n\n`` контракта,
+// что использует import-SSE: backend сериализует один формат события
+// (см. ``services.progress.ProgressPublisher.publish``), а стадии
+// различаются по доменам. В этом домене стадии описывают bulk-compute
+// runner: загрузка реестра правил → итерация по парам → persisting →
+// терминал.
+
+export type BulkComputeStage =
+  | "loading_rules"
+  | "iterating_pairs"
+  | "persisting"
+  | "succeeded"
+  | "failed"
+  | "cancelled";
+
+export const BULK_COMPUTE_TERMINAL_STAGES: readonly BulkComputeStage[] = [
+  "succeeded",
+  "failed",
+  "cancelled",
+];
+
+export function isBulkComputeTerminalStage(stage: BulkComputeStage): boolean {
+  return BULK_COMPUTE_TERMINAL_STAGES.includes(stage);
+}
+
+/**
+ * Прогресс-кадр bulk hypothesis-compute. Поля повторяют формат, который
+ * пишет ``ProgressPublisher.publish``: ``stage`` строкой, ``current`` /
+ * ``total`` — счётчики стадии (для ``iterating_pairs`` это processed/total
+ * pair'ов), ``message`` — человекочитаемое описание для UI.
+ */
+export type BulkComputeProgressEvent = {
+  stage: BulkComputeStage;
+  current: number;
+  total: number;
+  message?: string | null;
+};

@@ -22,10 +22,12 @@ CLAUDE.md §5 enforcement:
 from __future__ import annotations
 
 import datetime as dt
+import os
 import uuid
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from arq.connections import ArqRedis
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from shared_models.enums import HypothesisType
 from shared_models.orm import Hypothesis
 from sqlalchemy import func, select
@@ -33,6 +35,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from parser_service.database import get_session
+from parser_service.queue import get_arq_pool
 from parser_service.schemas import (
     BulkComputeRequest,
     HypothesisComputeJobResponse,
@@ -52,6 +55,27 @@ from parser_service.services.hypothesis_runner import compute_hypothesis
 from parser_service.services.metrics import hypothesis_review_action_total
 
 router = APIRouter()
+
+# Имя arq-функции, которую вызывает worker для bulk hypothesis compute.
+# Захардкожено как строка чтобы не плодить cross-import между HTTP-слоем
+# и worker-модулем (см. зеркальную RUN_IMPORT_JOB_NAME в imports.py).
+RUN_BULK_HYPOTHESIS_JOB_NAME = "run_bulk_hypothesis_job"
+
+# Шаблон относительного URL SSE-эндпоинта для bulk-compute job'а.
+# Полный путь монтируется в main.py: /trees/{tree_id}/hypotheses/compute-jobs/{job_id}/events.
+_EVENTS_URL_TEMPLATE = "/trees/{tree_id}/hypotheses/compute-jobs/{job_id}/events"
+
+# Env-флаг для inline-режима (зеркало imports._INLINE_ENV_VAR): когда
+# выставлен в "1", POST /compute-all исполняется синхронно (как до
+# Phase 7.5 finalize). Используется conftest.py чтобы старые тесты
+# (test_bulk_hypothesis_compute.py) видели готовый succeeded-job в
+# response, а не 202 + worker-driven flow. Async-путь — дефолт.
+_INLINE_ENV_VAR = "PARSER_SERVICE_BULK_COMPUTE_INLINE"
+
+
+def _events_url(tree_id: uuid.UUID, job_id: uuid.UUID) -> str:
+    """Сформировать относительный URL SSE-эндпоинта для bulk-compute job."""
+    return _EVENTS_URL_TEMPLATE.format(tree_id=tree_id, job_id=job_id)
 
 
 @router.post(
@@ -233,28 +257,52 @@ async def review_hypothesis(
 @router.post(
     "/trees/{tree_id}/hypotheses/compute-all",
     response_model=HypothesisComputeJobResponse,
-    status_code=status.HTTP_201_CREATED,
+    status_code=status.HTTP_202_ACCEPTED,
     tags=["hypotheses", "bulk-compute"],
     summary="Запустить bulk hypothesis-compute по всему дереву.",
     description=(
-        "Создаёт `HypothesisComputeJob` и синхронно драйвит его до "
-        "терминального статуса (succeeded / failed / cancelled). "
+        "Создаёт `HypothesisComputeJob`, ставит его в arq-очередь "
+        "``imports`` под job-функцией ``run_bulk_hypothesis_job`` и "
+        "возвращает 202 Accepted с ``events_url`` (SSE-стрим прогресса). "
         "Idempotency 1 час: повторный POST возвращает существующий job "
-        "(тот же id) без нового исполнения. `rule_ids` — optional whitelist; "
-        "сейчас informational (см. PR #87 TODO для full filter)."
+        "(тот же id) без нового enqueue. `rule_ids` — optional whitelist; "
+        "сейчас informational (см. PR #87 TODO для full filter).\n\n"
+        "**Inline-режим:** если ``PARSER_SERVICE_BULK_COMPUTE_INLINE=1``, "
+        "хендлер исполняет ``execute_compute_job`` синхронно и возвращает "
+        "201 Created с уже-терминальным job'ом. Используется в тестах и "
+        "CLI-сценариях без воркера."
     ),
 )
 async def compute_all_hypotheses(
     tree_id: uuid.UUID,
     body: BulkComputeRequest,
     session: Annotated[AsyncSession, Depends(get_session)],
+    pool: Annotated[ArqRedis, Depends(get_arq_pool)],
+    response: Response,
 ) -> HypothesisComputeJobResponse:
     job = await enqueue_compute_job(session, tree_id, rule_ids=body.rule_ids)
-    # ``execute_compute_job`` сам идемпотентен по статусу: если job уже
-    # RUNNING/SUCCEEDED/FAILED/CANCELLED — early-return. Поэтому безопасно
-    # вызывать всегда (идемпотентный re-fetch возвращает существующий job).
-    job = await execute_compute_job(session, job.id)
-    return HypothesisComputeJobResponse.model_validate(job)
+    await session.commit()
+
+    if os.environ.get(_INLINE_ENV_VAR) == "1":
+        # Legacy-синхронный путь: исполнить job-loop в текущей коротине.
+        # ``execute_compute_job`` сам идемпотентен по статусу — повторный
+        # вызов на не-QUEUED job отдаёт его как есть. Возвращаем 201 +
+        # events_url=None (SSE для inline-job'а смысла не имеет).
+        job = await execute_compute_job(session, job.id)
+        response.status_code = status.HTTP_201_CREATED
+        return HypothesisComputeJobResponse.model_validate(job)
+
+    # Async-путь (дефолт): ставим job в очередь, отдаём 202 Accepted.
+    # Передаём только UUID-строку — worker сам подгружает row и драйвит.
+    # _job_id здесь = arq-job id (для дедупа постановок); HypothesisComputeJob.id
+    # — наш бизнес-id, его и используем как arq job_id (один-к-одному).
+    await pool.enqueue_job(
+        RUN_BULK_HYPOTHESIS_JOB_NAME,
+        str(job.id),
+        _job_id=f"bulk-hypothesis:{job.id}",
+    )
+    payload = HypothesisComputeJobResponse.model_validate(job)
+    return payload.model_copy(update={"events_url": _events_url(tree_id, job.id)})
 
 
 @router.get(
@@ -303,7 +351,11 @@ async def request_cancel_compute_job(
             detail=f"Compute job {job_id} not found",
         )
     job = await cancel_compute_job(session, job_id)
-    return HypothesisComputeJobResponse.model_validate(job)
+    payload = HypothesisComputeJobResponse.model_validate(job)
+    # events_url возвращаем чтобы UI не сбрасывал SSE — он подождёт
+    # терминального события от worker'а (CANCELLED). Для уже-terminal
+    # job'ов worker не публикует ничего нового, но и SSE не подключён.
+    return payload.model_copy(update={"events_url": _events_url(job.tree_id, job.id)})
 
 
 # -----------------------------------------------------------------------------

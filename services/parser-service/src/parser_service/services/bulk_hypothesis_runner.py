@@ -66,6 +66,20 @@ from parser_service.services.dedup_finder import (
     find_source_duplicates,
 )
 from parser_service.services.hypothesis_runner import compute_hypothesis
+from parser_service.services.progress import ProgressPublisher
+
+# Стадии bulk-compute job'а — публикуются в Redis pub/sub-канале
+# ``job-events:{job_id}`` и форвардятся в браузер через SSE.
+# Намеренно используем строковые литералы (а не общий ``Stage`` enum
+# из ``progress.py``): import-pipeline и bulk-compute — разные домены,
+# enum import'а не описывает «загрузка реестра правил» / «итерация
+# по парам». Канал/формат события общие, набор стадий — нет.
+STAGE_LOADING_RULES = "loading_rules"
+STAGE_ITERATING_PAIRS = "iterating_pairs"
+STAGE_PERSISTING = "persisting"
+STAGE_SUCCEEDED = "succeeded"
+STAGE_FAILED = "failed"
+STAGE_CANCELLED = "cancelled"
 
 # Idempotency window: повторный POST /compute-all внутри этого окна
 # возвращает существующий job (если он QUEUED/RUNNING/SUCCEEDED).
@@ -167,6 +181,7 @@ async def execute_compute_job(
     job_id: uuid.UUID,
     *,
     batch_size: int = _DEFAULT_BATCH_SIZE,
+    progress: ProgressPublisher | None = None,
 ) -> HypothesisComputeJob:
     """Drain'нуть один job: candidate pairs → compute_hypothesis loop.
 
@@ -176,7 +191,14 @@ async def execute_compute_job(
 
     Используется sync-режим: caller awaits, всё считается до return.
     Для prod-async (arq) сигнатура та же, но caller — отдельный worker.
+
+    ``progress`` — опциональный publisher. Если задан, публикуем стадии
+    ``loading_rules`` → ``iterating_pairs`` (между batch'ами) →
+    ``persisting`` (последний batch) → ``succeeded`` / ``failed`` /
+    ``cancelled``. Если ``None`` — bulk-runner работает молча (legacy
+    sync-путь, БД-progress единственный источник истины).
     """
+    publisher: ProgressPublisher = progress if progress is not None else ProgressPublisher(None, "")
     job = await _get_job_or_raise(session, job_id)
 
     if job.status != HypothesisComputeJobStatus.QUEUED.value:
@@ -189,6 +211,15 @@ async def execute_compute_job(
     await session.commit()
 
     try:
+        # «Loading rule registry» — короткая стадия до того, как мы
+        # начали enumerate'ить пары. Полезна в UI как первый сигнал
+        # «job стартовал», даже если total=0 candidate pair'ов.
+        await publisher.publish(
+            STAGE_LOADING_RULES,
+            current=0,
+            total=1,
+            message="Loading rule registry",
+        )
         pairs = await _enumerate_candidate_pairs(session, job.tree_id)
 
         # Pre-fill total. hypotheses_created copy-pre-existing? Нет —
@@ -202,6 +233,12 @@ async def execute_compute_job(
             "hypotheses_created": 0,
         }
         await session.commit()
+        await publisher.publish(
+            STAGE_ITERATING_PAIRS,
+            current=0,
+            total=len(pairs),
+            message=f"Iterating person pairs (0/{len(pairs)})",
+        )
 
         processed = 0
         created = 0
@@ -225,6 +262,16 @@ async def execute_compute_job(
                     "hypotheses_created": created,
                 }
                 await session.commit()
+                # Persisting — короткая нота для UI: «commit прошёл,
+                # вот свежие counters». Финальный batch отдельно
+                # маркируем (см. ниже после loop'а).
+                if processed < len(pairs):
+                    await publisher.publish(
+                        STAGE_ITERATING_PAIRS,
+                        current=processed,
+                        total=len(pairs),
+                        message=f"Iterating person pairs ({processed}/{len(pairs)})",
+                    )
 
                 # Cancel-check: re-read row freshly (после commit'а
                 # SQLAlchemy expire'ает все объекты — refresh подтянет
@@ -234,8 +281,20 @@ async def execute_compute_job(
                     job.status = HypothesisComputeJobStatus.CANCELLED.value
                     job.finished_at = dt.datetime.now(dt.UTC)
                     await session.commit()
+                    await publisher.publish(
+                        STAGE_CANCELLED,
+                        current=processed,
+                        total=len(pairs),
+                        message="Cancelled by user",
+                    )
                     return job
 
+        await publisher.publish(
+            STAGE_PERSISTING,
+            current=processed,
+            total=len(pairs),
+            message="Persisting hypotheses",
+        )
         job.status = HypothesisComputeJobStatus.SUCCEEDED.value
         job.finished_at = dt.datetime.now(dt.UTC)
         # Финальный progress (на случай если последний batch не выровнялся).
@@ -245,6 +304,12 @@ async def execute_compute_job(
             "hypotheses_created": created,
         }
         await session.commit()
+        await publisher.publish(
+            STAGE_SUCCEEDED,
+            current=processed,
+            total=len(pairs),
+            message=f"Created {created} hypotheses",
+        )
         return job
 
     except Exception as exc:
@@ -256,6 +321,12 @@ async def execute_compute_job(
         job.error = (str(exc) or type(exc).__name__)[:2000]
         job.finished_at = dt.datetime.now(dt.UTC)
         await session.commit()
+        await publisher.publish(
+            STAGE_FAILED,
+            current=0,
+            total=1,
+            message=f"failed: {exc}",
+        )
         raise
 
 
