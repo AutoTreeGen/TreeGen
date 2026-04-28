@@ -174,6 +174,9 @@ export default function PersonsListPage() {
               <Link href={`/trees/${treeId}/hypotheses`}>Hypotheses</Link>
             </Button>
           )}
+          <Button variant="secondary" size="md" asChild>
+            <Link href={`/trees/${treeId}/sources`}>Sources →</Link>
+          </Button>
           {/* Без pending-count для duplicates: dedup-scoring проходит по
               всему дереву и при 61k персон занимает секунды. Запускать
               на каждый рендер списка персон — регрессия. Точное число

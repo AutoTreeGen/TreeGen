@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
+import { QuayBadge } from "@/components/quay-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,8 +14,10 @@ import {
   ApiError,
   type EventSummary,
   type NameSummary,
+  type PersonCitationDetail,
   type PersonDetail,
   fetchPerson,
+  fetchPersonCitations,
 } from "@/lib/api";
 
 export default function PersonDetailPage() {
@@ -27,6 +30,16 @@ export default function PersonDetailPage() {
     enabled: Boolean(personId),
   });
 
+  // Citations грузим отдельным query'ем, чтобы блок Sources/citations не
+  // блокировал рендер карточки персоны (это extra round-trip к
+  // /persons/{id}/citations, который и так может быть сравнительно
+  // тяжёлым на больших деревьях).
+  const citationsQuery = useQuery({
+    queryKey: ["person-citations", personId],
+    queryFn: () => fetchPersonCitations(personId),
+    enabled: Boolean(personId),
+  });
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
       {query.isLoading ? <PersonDetailSkeleton /> : null}
@@ -35,12 +48,29 @@ export default function PersonDetailPage() {
         <PersonDetailError error={query.error} onRetry={() => query.refetch()} />
       ) : null}
 
-      {query.data ? <PersonDetailView person={query.data} /> : null}
+      {query.data ? (
+        <PersonDetailView
+          person={query.data}
+          citations={citationsQuery.data?.items ?? null}
+          citationsLoading={citationsQuery.isLoading}
+          citationsError={citationsQuery.isError}
+        />
+      ) : null}
     </main>
   );
 }
 
-function PersonDetailView({ person }: { person: PersonDetail }) {
+function PersonDetailView({
+  person,
+  citations,
+  citationsLoading,
+  citationsError,
+}: {
+  person: PersonDetail;
+  citations: PersonCitationDetail[] | null;
+  citationsLoading: boolean;
+  citationsError: boolean;
+}) {
   const primaryName = person.names.find((name) => name.sort_order === 0) ?? person.names[0] ?? null;
   const primaryDisplay = primaryName ? formatName(primaryName) : "Unnamed";
   const otherNames = person.names.filter((name) => name !== primaryName);
@@ -130,7 +160,99 @@ function PersonDetailView({ person }: { person: PersonDetail }) {
           </ul>
         )}
       </section>
+
+      <Separator />
+
+      <section aria-labelledby="sources-heading">
+        <h2 id="sources-heading" className="text-lg font-semibold">
+          Sources
+        </h2>
+        <PersonSources citations={citations} loading={citationsLoading} hasError={citationsError} />
+      </section>
     </article>
+  );
+}
+
+function PersonSources({
+  citations,
+  loading,
+  hasError,
+}: {
+  citations: PersonCitationDetail[] | null;
+  loading: boolean;
+  hasError: boolean;
+}) {
+  if (loading) {
+    return (
+      <ul className="mt-3 space-y-2">
+        <li>
+          <Skeleton className="h-16 w-full" />
+        </li>
+        <li>
+          <Skeleton className="h-16 w-full" />
+        </li>
+      </ul>
+    );
+  }
+  if (hasError) {
+    return (
+      <p className="mt-2 text-sm text-[color:var(--color-ink-500)]">
+        Couldn&apos;t load citations — try refreshing the page.
+      </p>
+    );
+  }
+  if (!citations || citations.length === 0) {
+    return <p className="mt-2 text-sm text-[color:var(--color-ink-500)]">No citations recorded.</p>;
+  }
+  return (
+    <ul className="mt-3 space-y-2">
+      {citations.map((citation) => (
+        <li key={citation.id}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex flex-wrap items-center gap-2 text-sm">
+                <Link
+                  href={`/sources/${citation.source_id}`}
+                  className="underline-offset-4 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2"
+                >
+                  {citation.source_title}
+                </Link>
+                {citation.source_abbreviation ? (
+                  <Badge variant="outline">{citation.source_abbreviation}</Badge>
+                ) : null}
+                <QuayBadge raw={citation.quay_raw} />
+              </CardTitle>
+              <CardDescription className="flex flex-wrap items-center gap-2">
+                <Badge variant="neutral">
+                  {citation.entity_type === "person" ? "person-level" : "event-level"}
+                </Badge>
+                {citation.event_type ? (
+                  <Badge variant="outline">event: {citation.event_type}</Badge>
+                ) : null}
+                {citation.role ? <Badge variant="outline">role: {citation.role}</Badge> : null}
+                {citation.page ? (
+                  <span className="text-[color:var(--color-ink-500)]">page: {citation.page}</span>
+                ) : null}
+              </CardDescription>
+            </CardHeader>
+            {citation.quoted_text || citation.note ? (
+              <CardContent>
+                {citation.quoted_text ? (
+                  <p className="whitespace-pre-wrap text-sm text-[color:var(--color-ink-700)]">
+                    “{citation.quoted_text}”
+                  </p>
+                ) : null}
+                {citation.note ? (
+                  <p className="mt-1 text-xs italic text-[color:var(--color-ink-500)]">
+                    {citation.note}
+                  </p>
+                ) : null}
+              </CardContent>
+            ) : null}
+          </Card>
+        </li>
+      ))}
+    </ul>
   );
 }
 

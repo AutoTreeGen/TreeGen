@@ -240,7 +240,12 @@ class DuplicateSuggestionListResponse(BaseModel):
 
 
 class SourceSummary(BaseModel):
-    """Краткое представление SOUR-записи для списка `/trees/{id}/sources`."""
+    """Краткое представление SOUR-записи для списка `/trees/{id}/sources`.
+
+    `citation_count` — сколько entity-ссылок на этот источник (persons +
+    families + events). Денормализован одним LEFT JOIN COUNT в эндпоинте,
+    чтобы UI не делал N round-trip'ов за деталями каждого Source.
+    """
 
     id: uuid.UUID
     gedcom_xref: str | None = None
@@ -250,6 +255,7 @@ class SourceSummary(BaseModel):
     publication: str | None = None
     repository: str | None = None
     source_type: str
+    citation_count: int = 0
 
     model_config = ConfigDict(from_attributes=True)
 

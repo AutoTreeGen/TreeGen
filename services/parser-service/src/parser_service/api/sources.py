@@ -56,14 +56,27 @@ async def list_sources(
             Source.deleted_at.is_(None),
         )
     )
+    # citation_count денормализуем одним LEFT JOIN GROUP BY: цена — один
+    # дополнительный COUNT-агрегат на запрос, экономия — N round-trip'ов
+    # с фронта (по одному `/sources/{id}` на каждую строку списка).
+    citation_count = func.count(Citation.id).label("citation_count")
     res = await session.execute(
-        select(Source)
+        select(Source, citation_count)
+        .outerjoin(
+            Citation,
+            (Citation.source_id == Source.id) & (Citation.deleted_at.is_(None)),
+        )
         .where(Source.tree_id == tree_id, Source.deleted_at.is_(None))
+        .group_by(Source.id)
         .order_by(Source.created_at)
         .limit(limit)
         .offset(offset)
     )
-    items = [SourceSummary.model_validate(s) for s in res.scalars().all()]
+    items: list[SourceSummary] = []
+    for source_row, count_value in res.all():
+        summary = SourceSummary.model_validate(source_row)
+        summary.citation_count = int(count_value or 0)
+        items.append(summary)
     return SourceListResponse(
         tree_id=tree_id,
         total=int(total or 0),

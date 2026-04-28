@@ -378,3 +378,82 @@ export function reviewHypothesis(
     }),
   });
 }
+
+// ---- Sources & citations (Phase 4.7) --------------------------------------
+
+export type SourceSummary = {
+  id: string;
+  gedcom_xref: string | null;
+  title: string;
+  abbreviation: string | null;
+  author: string | null;
+  publication: string | null;
+  repository: string | null;
+  source_type: string;
+  citation_count: number;
+};
+
+export type SourceListResponse = {
+  tree_id: string;
+  total: number;
+  limit: number;
+  offset: number;
+  items: SourceSummary[];
+};
+
+export type SourceLinkedEntity = {
+  table: "person" | "family" | "event";
+  id: string;
+  page: string | null;
+  quay_raw: number | null;
+  quality: number;
+};
+
+export type SourceDetail = {
+  id: string;
+  tree_id: string;
+  gedcom_xref: string | null;
+  title: string;
+  abbreviation: string | null;
+  author: string | null;
+  publication: string | null;
+  repository: string | null;
+  text_excerpt: string | null;
+  source_type: string;
+  linked: SourceLinkedEntity[];
+};
+
+export type PersonCitationDetail = {
+  id: string;
+  source_id: string;
+  source_title: string;
+  source_abbreviation: string | null;
+  entity_type: "person" | "family" | "event";
+  entity_id: string;
+  page: string | null;
+  quay_raw: number | null;
+  quality: number;
+  event_type: string | null;
+  role: string | null;
+  note: string | null;
+  quoted_text: string | null;
+};
+
+export type PersonCitationsResponse = {
+  person_id: string;
+  total: number;
+  items: PersonCitationDetail[];
+};
+
+export function fetchSources(treeId: string, limit = 50, offset = 0): Promise<SourceListResponse> {
+  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+  return getJson<SourceListResponse>(`/trees/${treeId}/sources?${params.toString()}`);
+}
+
+export function fetchSource(sourceId: string): Promise<SourceDetail> {
+  return getJson<SourceDetail>(`/sources/${sourceId}`);
+}
+
+export function fetchPersonCitations(personId: string): Promise<PersonCitationsResponse> {
+  return getJson<PersonCitationsResponse>(`/persons/${personId}/citations`);
+}

@@ -89,6 +89,10 @@ async def test_list_sources_returns_imported_sources(app_client) -> None:
     assert by_xref["S1"]["author"] == "Anna Smith"
     assert by_xref["S2"]["publication"] == "1898"
     assert by_xref["S2"]["abbreviation"] is None
+    # Phase 4.7: citation_count денормализован для списочного UI.
+    # S1 цитируется дважды (INDI-level + BIRT-event), S2 — один раз (BIRT).
+    assert by_xref["S1"]["citation_count"] == 2
+    assert by_xref["S2"]["citation_count"] == 1
 
 
 @pytest.mark.asyncio
