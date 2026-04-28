@@ -24,7 +24,7 @@ const NODE_HEIGHT = 88;
  * это его родители (отец, мать). Корень слева, родители раскручиваются
  * вправо при ``orientation="horizontal"``.
  */
-function toRawNode(node: AncestorTreeNode): RawNodeDatum {
+export function toRawNode(node: AncestorTreeNode): RawNodeDatum {
   const children: RawNodeDatum[] = [];
   if (node.father) children.push(toRawNode(node.father));
   if (node.mother) children.push(toRawNode(node.mother));
@@ -36,6 +36,7 @@ function toRawNode(node: AncestorTreeNode): RawNodeDatum {
       sex: node.sex,
       birthYear: node.birth_year ?? "",
       deathYear: node.death_year ?? "",
+      dnaTested: node.dna_tested ?? false,
     },
     children: children.length > 0 ? children : undefined,
   };
@@ -85,6 +86,7 @@ export function PedigreeTree({ root }: { root: AncestorTreeNode }) {
     const personId = String(nodeDatum.attributes?.personId ?? "");
     const sex = String(nodeDatum.attributes?.sex ?? "U");
     const years = lifeYears(nodeDatum.attributes?.birthYear, nodeDatum.attributes?.deathYear);
+    const dnaTested = nodeDatum.attributes?.dnaTested === true;
     const isRoot = hierarchyPointNode.depth === 0;
 
     const handleNavigate = () => {
@@ -104,7 +106,7 @@ export function PedigreeTree({ root }: { root: AncestorTreeNode }) {
             onClick={handleNavigate}
             aria-label={`Open pedigree for ${nodeDatum.name}`}
             className={cn(
-              "flex h-full w-full cursor-pointer flex-col items-start justify-center gap-0.5",
+              "relative flex h-full w-full cursor-pointer flex-col items-start justify-center gap-0.5",
               "rounded-lg border bg-[color:var(--color-surface)] px-3 py-2 text-left",
               "shadow-sm transition-shadow",
               "hover:shadow-md hover:bg-[color:var(--color-surface-muted)]",
@@ -125,6 +127,17 @@ export function PedigreeTree({ root }: { root: AncestorTreeNode }) {
             <span className="text-xs text-[color:var(--color-ink-500)]">
               {years ?? "dates unknown"}
             </span>
+            {dnaTested ? (
+              <span
+                title="DNA tested"
+                className={cn(
+                  "absolute right-1.5 top-1.5 rounded-full px-1.5 py-0.5",
+                  "bg-[color:var(--color-accent)] text-[10px] font-semibold leading-none text-white",
+                )}
+              >
+                DNA
+              </span>
+            ) : null}
           </button>
         </foreignObject>
       </g>
