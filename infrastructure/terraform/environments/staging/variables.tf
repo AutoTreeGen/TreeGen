@@ -31,3 +31,20 @@ variable "images" {
   type        = map(string)
   default     = {}
 }
+
+variable "github_repository" {
+  description = "GitHub repository allowed to deploy via Workload Identity Federation, in `owner/name` form."
+  type        = string
+  default     = "AutoTreeGen/TreeGen"
+}
+
+variable "gha_allowed_refs" {
+  description = "Refs allowed to deploy via OIDC. Empty list = any ref in the repo."
+  type        = list(string)
+  default     = ["refs/heads/main"]
+}
+
+variable "alert_email" {
+  description = "Recipient for monitoring alert notifications. The address must be confirmed in Cloud Monitoring once on first apply."
+  type        = string
+}

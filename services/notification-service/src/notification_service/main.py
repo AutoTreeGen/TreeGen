@@ -6,14 +6,23 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from shared_models.observability import configure_json_logging, init_sentry
 
 from notification_service.api import health, notifications, preferences
 from notification_service.config import get_settings
 from notification_service.database import dispose_engine, init_engine
+
+# Phase 13.1 — observability bootstrap (no-op без LOG_FORMAT_JSON / SENTRY_DSN).
+configure_json_logging(service_name="notification-service")
+init_sentry(
+    service_name="notification-service",
+    environment=os.environ.get("ENVIRONMENT"),
+)
 
 
 @asynccontextmanager

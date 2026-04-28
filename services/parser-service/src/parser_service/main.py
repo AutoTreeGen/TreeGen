@@ -6,11 +6,13 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from shared_models.observability import configure_json_logging, init_sentry
 
 from parser_service.api import (
     dedup,
@@ -28,6 +30,14 @@ from parser_service.api import (
 from parser_service.config import get_settings
 from parser_service.database import dispose_engine, init_engine
 from parser_service.queue import close_arq_pool
+
+# Phase 13.1 — observability bootstrap. Оба вызова no-op без соответствующих
+# ENV (``LOG_FORMAT_JSON``, ``SENTRY_DSN``), поэтому локальный dev не страдает.
+configure_json_logging(service_name="parser-service")
+init_sentry(
+    service_name="parser-service",
+    environment=os.environ.get("ENVIRONMENT"),
+)
 
 
 @asynccontextmanager

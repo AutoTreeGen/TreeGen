@@ -50,6 +50,13 @@ cloud-tasks = [
     "google-cloud-tasks>=2.16",
 ]
 
+# Phase 13.1 — Sentry SDK для error reporting в проде. configure_json_logging
+# и init_sentry в shared_models.observability — no-op без SENTRY_DSN env,
+# поэтому extra нужен только в прод-образе.
+observability = [
+    "sentry-sdk[fastapi]>=2.20",
+]
+
 [build-system]
 requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"

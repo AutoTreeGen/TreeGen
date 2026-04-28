@@ -27,6 +27,11 @@ test = [
     "psycopg[binary]>=3.2",
 ]
 
+# Phase 13.1 — Sentry SDK. Init no-op без SENTRY_DSN.
+observability = [
+    "sentry-sdk[fastapi]>=2.20",
+]
+
 [build-system]
 requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"

@@ -3,19 +3,19 @@ name: Deploy staging
 # Build images, push to Artifact Registry, deploy to Cloud Run on push to main.
 # Gated on `lint-and-test` (CI workflow) — `workflow_run` waits for it to pass.
 #
-# Auth: Workload Identity Federation (recommended) — operator must configure
-#       once via the README in infrastructure/terraform/. Falls back to
-#       GOOGLE_CREDENTIALS JSON if WIF is not set up.
+# Auth: Workload Identity Federation only (Phase 13.1 — ADR-0032).
+#       No long-lived JSON keys are accepted. The OIDC trust is provisioned
+#       by `infrastructure/terraform/modules/gha-oidc/`; first-time setup
+#       instructions live in `infrastructure/terraform/README.md` §0.
 #
-# Required GitHub repository secrets (one of these auth options):
-#   - GCP_WORKLOAD_IDENTITY_PROVIDER  (preferred — no long-lived keys)
-#   - GCP_DEPLOY_SA_EMAIL             (paired with WIF)
-#   - GCP_CREDENTIALS_JSON            (fallback — service account key JSON)
-#
-# Required repo *variables*:
+# Required GitHub repository *variables* (Settings → Secrets and variables → Variables):
 #   - GCP_PROJECT_ID
 #   - GCP_REGION                       e.g. europe-west1
 #   - GCP_ARTIFACT_REGISTRY_REPO       e.g. autotreegen
+#   - GCP_WORKLOAD_IDENTITY_PROVIDER   full resource name; from terraform output
+#                                      `gha_workload_identity_provider`
+#   - GCP_DEPLOY_SA_EMAIL              from terraform output
+#                                      `gha_deployer_service_account_email`
 #
 # This workflow does NOT run terraform — Terraform is owner-applied.
 
@@ -32,7 +32,7 @@ concurrency:
 
 permissions:
   contents: read
-  id-token: write   # required for Workload Identity Federation
+  id-token: write   # required to mint the OIDC token GitHub passes to GCP
 
 jobs:
   deploy:
@@ -45,9 +45,9 @@ jobs:
           && github.event.workflow_run.head_branch == 'main')
 
     env:
-      PROJECT_ID:    ${{ vars.GCP_PROJECT_ID }}
-      REGION:        ${{ vars.GCP_REGION }}
-      AR_REPO:       ${{ vars.GCP_ARTIFACT_REGISTRY_REPO }}
+      PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      REGION:     ${{ vars.GCP_REGION }}
+      AR_REPO:    ${{ vars.GCP_ARTIFACT_REGISTRY_REPO }}
 
     strategy:
       fail-fast: false
@@ -70,19 +70,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Auth — prefer Workload Identity Federation (no long-lived keys).
-      - name: Authenticate to GCP (WIF)
-        if: vars.GCP_WORKLOAD_IDENTITY_PROVIDER != ''
+      - name: Authenticate to GCP via OIDC
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_DEPLOY_SA_EMAIL }}
-
-      - name: Authenticate to GCP (SA key fallback)
-        if: vars.GCP_WORKLOAD_IDENTITY_PROVIDER == ''
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
 
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v2
@@ -98,8 +90,8 @@ jobs:
         run: |
           set -euo pipefail
           BASE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/${{ matrix.name }}"
-          echo "image_sha=${BASE}:${GITHUB_SHA}"     >> "$GITHUB_OUTPUT"
-          echo "image_latest=${BASE}:latest"          >> "$GITHUB_OUTPUT"
+          echo "image_sha=${BASE}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "image_latest=${BASE}:latest"     >> "$GITHUB_OUTPUT"
 
       - name: Build image
         run: |
@@ -127,17 +119,11 @@ jobs:
     needs: deploy
     steps:
       - uses: actions/checkout@v4
-      - name: Authenticate to GCP (WIF)
-        if: vars.GCP_WORKLOAD_IDENTITY_PROVIDER != ''
+      - name: Authenticate to GCP via OIDC
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_DEPLOY_SA_EMAIL }}
-      - name: Authenticate to GCP (SA key fallback)
-        if: vars.GCP_WORKLOAD_IDENTITY_PROVIDER == ''
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v2
         with:

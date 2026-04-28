@@ -26,7 +26,8 @@ COPY packages/gedcom-parser/src/ packages/gedcom-parser/src/
 COPY packages/dna-analysis/src/ packages/dna-analysis/src/
 COPY services/dna-service/src/ services/dna-service/src/
 
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev \
+ && uv pip install "sentry-sdk[fastapi]>=2.20"
 
 ENV PORT=8001
 EXPOSE 8001

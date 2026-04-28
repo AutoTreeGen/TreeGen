@@ -35,3 +35,4 @@
 | 0009 | Подход к гипотезам и evidence-graph | TBD |
 | 0010 | Аутентификация (Clerk vs Auth0 vs self-hosted) | TBD |
 | 0031 | [GCP deployment architecture (staging)](./0031-gcp-deployment-architecture.md) | Accepted |
+| 0032 | [Secrets management](./0032-secrets-management.md) | Accepted |

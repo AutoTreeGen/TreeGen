@@ -35,11 +35,13 @@ COPY packages/familysearch-client/src/ packages/familysearch-client/src/
 COPY packages/inference-engine/src/ packages/inference-engine/src/
 COPY services/parser-service/src/ services/parser-service/src/
 
-# Now install workspace members + Cloud Tasks extra (Phase 13.0, ADR-0031).
-# google-cloud-tasks is in parser-service's optional-dependencies.cloud-tasks;
-# `uv pip install` adds it to the same .venv after the workspace sync.
+# Workspace members + Cloud Tasks (Phase 13.0) + Sentry (Phase 13.1).
+# Both are optional-extras for the local dev image; here we install them
+# explicitly so the prod image gets them. init_sentry / cloud_tasks adapters
+# are env-gated, so the absence of SENTRY_DSN / PARSER_SERVICE_QUEUE_BACKEND
+# leaves them dormant.
 RUN uv sync --frozen --no-dev \
- && uv pip install "google-cloud-tasks>=2.16"
+ && uv pip install "google-cloud-tasks>=2.16" "sentry-sdk[fastapi]>=2.20"
 
 # Cloud Run sets PORT (default 8080); fall back to 8000 for local parity.
 ENV PORT=8000

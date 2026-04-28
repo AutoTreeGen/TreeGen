@@ -22,7 +22,9 @@ infrastructure/terraform/
     ├── services/                 ← Cloud Run services + VPC connector + IAM
     ├── queue/                    ← Cloud Tasks queues (imports/hypotheses/notifications)
     ├── storage/                  ← GCS buckets (ged-uploads, dna-data, multimedia)
-    └── secrets/                  ← Secret Manager containers (values set out-of-band)
+    ├── secrets/                  ← Secret Manager containers (values set out-of-band)
+    ├── gha-oidc/                 ← Workload Identity Federation for GitHub Actions
+    └── monitoring/               ← log-based metrics + alert policies + email channel
 ```
 
 The reusable modules are intentionally environment-agnostic. To stand up a
@@ -32,6 +34,26 @@ prod environment later, copy `environments/staging/` and adjust:
 - swap `database` for the managed AlloyDB resource,
 - enable `INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER` on every Cloud Run service,
 - add Cloud Armor and an external HTTPS LB in front of `web`.
+
+## 0. CI authentication — GitHub Actions OIDC
+
+CI authenticates to GCP via Workload Identity Federation (no JSON keys).
+The pool/provider/SA are provisioned by the `gha-oidc` module on first
+`terraform apply`. After apply, take two values from `terraform output`
+and add them as **GitHub repository variables** (Settings → Secrets and
+variables → Variables — *not* Secrets, these are public resource names):
+
+| GitHub variable | Value (from `terraform output`) |
+|---|---|
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | `gha_workload_identity_provider` |
+| `GCP_DEPLOY_SA_EMAIL`            | `gha_deployer_service_account_email` |
+| `GCP_PROJECT_ID`                 | your project id |
+| `GCP_REGION`                     | e.g. `europe-west1` |
+| `GCP_ARTIFACT_REGISTRY_REPO`     | e.g. `autotreegen` |
+
+The OIDC trust is restricted to repository `AutoTreeGen/TreeGen` and
+ref `refs/heads/main` by default. Adjust via
+`var.github_repository` / `var.gha_allowed_refs`.
 
 ## 1. One-time GCP project bootstrap
 
@@ -51,8 +73,12 @@ gcloud services enable \
   artifactregistry.googleapis.com \
   vpcaccess.googleapis.com \
   iam.googleapis.com \
+  iamcredentials.googleapis.com \
+  sts.googleapis.com \
   cloudresourcemanager.googleapis.com \
   servicenetworking.googleapis.com \
+  monitoring.googleapis.com \
+  logging.googleapis.com \
   iap.googleapis.com
 ```
 
@@ -213,14 +239,30 @@ terraform destroy
 > `force_destroy` should be flipped to `false` in the prod copy of this
 > module to make accidental deletion impossible.
 
-## Known follow-ups
+## 8. Monitoring & alerts (Phase 13.1)
 
-- `apps/web/Dockerfile` is structurally complete (multi-stage, standalone
-  output, non-root runtime), but the Next.js build currently fails for
-  pages that hit the backend at build time (e.g. `/familysearch/connect`).
-  Mark those pages with `export const dynamic = "force-dynamic"` (or
-  `export const revalidate = 0`) before the staging deploy. Tracking in
-  Phase 13.0 follow-up.
+The `monitoring` module ships three alert policies bound to one email
+channel (`var.alert_email`):
+
+- Cloud Run 5xx > 5% over 5 min.
+- AlloyDB Omni VM CPU > 80% for 10 min.
+- Cloud Run container memory > 90% for 5 min.
+
+After first apply, **confirm the email** — Google sends a verification link
+to `var.alert_email`. Until you click it, alerts are silently dropped.
+
+To wire Sentry, add the DSN as a Cloud Run env var (the apps init Sentry
+only when `SENTRY_DSN` is set):
+
+```bash
+for SVC in parser-service dna-service notification-service; do
+  gcloud run services update staging-$SVC \
+    --region=europe-west1 \
+    --update-env-vars=SENTRY_DSN=https://YOUR_DSN@sentry.io/PROJECT
+done
+```
+
+Removing the env var brings the services back to no-Sentry mode (no redeploy).
 
 ## What this scaffolding does *not* do
 
@@ -232,8 +274,8 @@ terraform destroy
   owner is the only user.
 - No managed AlloyDB. Staging uses AlloyDB Omni on a single VM (cost
   trade-off — see ADR-0031 §AlloyDB).
-- No Sentry, no Cloud Audit Log → BigQuery sink. Cloud Logging default
+- No Cloud Audit Log → BigQuery sink. Cloud Logging default
   retention (30 d) is enough for staging.
 
 These belong in the prod environment, which is a separate Terraform root
-module to be added in Phase 13.1.
+module deferred to Phase 13.2.

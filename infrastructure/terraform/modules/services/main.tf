@@ -37,6 +37,14 @@ resource "google_vpc_access_connector" "connector" {
 }
 
 locals {
+  // Phase 13.1 — common observability env vars for every Cloud Run service.
+  // Both are read by `shared_models.observability` at startup; if
+  // SENTRY_DSN is empty, init_sentry is a no-op.
+  observability_env = {
+    LOG_FORMAT_JSON = "true"
+    ENVIRONMENT     = var.name
+  }
+
   // Service definitions — keep the secret list per-service narrow
   // (least privilege). `web` doesn't need the Anthropic key; only
   // parser-service touches FamilySearch.
@@ -47,7 +55,7 @@ locals {
       cpu           = "1"
       memory        = "1Gi"
       max_instances = 5
-      env_extra     = {}
+      env_extra     = local.observability_env
       secrets = {
         DATABASE_PASSWORD               = var.secret_short_names["db-password"]
         ANTHROPIC_API_KEY               = var.secret_short_names["anthropic-api-key"]
@@ -62,7 +70,7 @@ locals {
       cpu           = "1"
       memory        = "1Gi"
       max_instances = 3
-      env_extra     = {}
+      env_extra     = local.observability_env
       secrets = {
         DATABASE_PASSWORD = var.secret_short_names["db-password"]
         ENCRYPTION_KEY    = var.secret_short_names["encryption-key"]
@@ -74,7 +82,7 @@ locals {
       cpu           = "1"
       memory        = "512Mi"
       max_instances = 3
-      env_extra     = {}
+      env_extra     = local.observability_env
       secrets = {
         DATABASE_PASSWORD = var.secret_short_names["db-password"]
       }
@@ -85,7 +93,7 @@ locals {
       cpu           = "1"
       memory        = "512Mi"
       max_instances = 5
-      env_extra     = {}
+      env_extra     = local.observability_env
       secrets       = {}
     }
   }

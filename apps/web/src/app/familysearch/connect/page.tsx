@@ -14,7 +14,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,6 +39,17 @@ const FAILURE_REASONS: Record<string, string> = {
 };
 
 export default function FamilySearchConnectPage() {
+  // Phase 13.1: Next 15 requires `useSearchParams` to live inside a Suspense
+  // boundary, otherwise standalone build fails to prerender the route. Body
+  // вынесен во внутренний компонент; Suspense на корне страницы.
+  return (
+    <Suspense fallback={null}>
+      <ConnectInner />
+    </Suspense>
+  );
+}
+
+function ConnectInner() {
   const search = useSearchParams();
   const status = search.get("status");
   const reason = search.get("reason");

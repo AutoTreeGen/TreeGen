@@ -24,7 +24,8 @@ COPY packages/shared-models/src/ packages/shared-models/src/
 COPY packages/gedcom-parser/src/ packages/gedcom-parser/src/
 COPY services/notification-service/src/ services/notification-service/src/
 
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev \
+ && uv pip install "sentry-sdk[fastapi]>=2.20"
 
 ENV PORT=8002
 EXPOSE 8002

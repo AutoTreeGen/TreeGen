@@ -7,15 +7,24 @@
 from __future__ import annotations
 
 import logging
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Final
 
 from fastapi import FastAPI
+from shared_models.observability import configure_json_logging, init_sentry
 
 from dna_service.api import consents, kits, matches, uploads
 from dna_service.config import get_settings
 from dna_service.database import dispose_engine, init_engine
+
+# Phase 13.1 — observability bootstrap (no-op без LOG_FORMAT_JSON / SENTRY_DSN).
+configure_json_logging(service_name="dna-service")
+init_sentry(
+    service_name="dna-service",
+    environment=os.environ.get("ENVIRONMENT"),
+)
 
 _LOG: Final = logging.getLogger(__name__)
 
