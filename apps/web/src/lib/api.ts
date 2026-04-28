@@ -458,3 +458,69 @@ export function fetchSource(sourceId: string): Promise<SourceDetail> {
 export function fetchPersonCitations(personId: string): Promise<PersonCitationsResponse> {
   return getJson<PersonCitationsResponse>(`/persons/${personId}/citations`);
 }
+
+// ---- Imports (Phase 3.5) ---------------------------------------------------
+
+export type ImportJobStatus = "queued" | "processing" | "succeeded" | "failed" | "canceled";
+
+export type ImportJobResponse = {
+  id: string;
+  tree_id: string;
+  status: ImportJobStatus | string;
+  source_filename: string | null;
+  source_sha256: string | null;
+  stats: Record<string, number>;
+  error: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+};
+
+/**
+ * URL для подписки на SSE-стрим прогресса. Возвращается строкой —
+ * используется в ``useEventSource(url)``.
+ */
+export function importEventsUrl(jobId: string): string {
+  return `${API_BASE}/imports/${jobId}/events`;
+}
+
+export async function postImport(file: File): Promise<ImportJobResponse> {
+  const body = new FormData();
+  body.append("file", file);
+  const response = await fetch(`${API_BASE}/imports`, {
+    method: "POST",
+    body,
+  });
+  if (!response.ok) {
+    const detail = await safeReadDetail(response);
+    throw new ApiError(response.status, detail ?? `Upload failed with ${response.status}`);
+  }
+  return (await response.json()) as ImportJobResponse;
+}
+
+export function fetchImport(jobId: string): Promise<ImportJobResponse> {
+  return getJson<ImportJobResponse>(`/imports/${jobId}`);
+}
+
+export async function cancelImport(jobId: string): Promise<ImportJobResponse> {
+  const response = await fetch(`${API_BASE}/imports/${jobId}/cancel`, {
+    method: "PATCH",
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) {
+    const detail = await safeReadDetail(response);
+    throw new ApiError(response.status, detail ?? `Cancel failed with ${response.status}`);
+  }
+  return (await response.json()) as ImportJobResponse;
+}
+
+async function safeReadDetail(response: Response): Promise<string | null> {
+  // FastAPI кладёт человекочитаемое сообщение в `detail`; если его нет
+  // или body пустой — отдадим null, чтобы caller сделал fallback на статус.
+  try {
+    const payload = (await response.json()) as { detail?: unknown };
+    if (typeof payload.detail === "string") return payload.detail;
+    return null;
+  } catch {
+    return null;
+  }
+}
