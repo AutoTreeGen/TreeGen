@@ -19,13 +19,14 @@ ADR-0026 для координации между PR'ами Phase 3.5.
 
 from __future__ import annotations
 
+import os
 import tempfile
 import uuid
 from pathlib import Path
 from typing import Annotated
 
 from arq.connections import ArqRedis
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile, status
 from shared_models.enums import (
     ImportJobStatus,
     ImportSourceKind,
@@ -39,6 +40,17 @@ from parser_service.config import Settings, get_settings
 from parser_service.database import get_session
 from parser_service.queue import get_arq_pool
 from parser_service.schemas import ImportJobResponse
+from parser_service.services.import_runner import run_import
+from parser_service.services.metrics import import_completed_total
+
+# Env var, переключающий ``POST /imports`` в legacy-синхронный режим:
+# хендлер сам вызывает ``run_import`` и возвращает 201 с готовым
+# ImportJob, как было до Phase 3.5. Нужно для:
+#   1) тестов, которые ходят через HTTP и ожидают целиком импортированное
+#      дерево в response (test_metrics, test_persons_search и т.п.);
+#   2) CLI / локального dev-запуска без arq-воркера.
+# Async path (202 + enqueue) — дефолт; inline-режим включается явно.
+_INLINE_ENV_VAR = "PARSER_SERVICE_IMPORT_INLINE"
 
 router = APIRouter()
 
@@ -100,6 +112,7 @@ async def _ensure_owner(session: AsyncSession, email: str) -> User:
 )
 async def create_import(
     file: UploadFile,
+    response: Response,
     settings: Annotated[Settings, Depends(get_settings)],
     session: Annotated[AsyncSession, Depends(get_session)],
     pool: Annotated[ArqRedis, Depends(get_arq_pool)],
@@ -114,6 +127,10 @@ async def create_import(
 
     Returns 202 с ``id`` и ``events_url`` — UI подключается к SSE и
     показывает live-прогресс до терминальной стадии.
+
+    **Legacy-inline режим:** если ``PARSER_SERVICE_IMPORT_INLINE=1``,
+    хендлер вызывает ``run_import`` синхронно и возвращает 201 (как до
+    Phase 3.5). Используется в тестах и CLI-сценариях без воркера.
     """
     if not file.filename or not file.filename.lower().endswith((".ged", ".gedcom")):
         raise HTTPException(
@@ -130,12 +147,36 @@ async def create_import(
         )
 
     # Tempfile живёт между запросом API и worker'ом. Worker отвечает за
-    # cleanup (см. зависимый PR runner'а). Если worker никогда не
-    # стартовал — оставшиеся tmp-файлы подметаются janitor-cron'ом
-    # (Phase 3.5+).
+    # cleanup (см. зависимый PR runner'а). В inline-режиме файл удаляем
+    # сами сразу после run_import. Если worker никогда не стартовал —
+    # оставшиеся tmp-файлы подметаются janitor-cron'ом (Phase 3.5+).
     with tempfile.NamedTemporaryFile(delete=False, suffix=".ged") as tmp:
         tmp.write(contents)
         tmp_path = Path(tmp.name)
+
+    if os.environ.get(_INLINE_ENV_VAR) == "1":
+        # Legacy-синхронный путь: ``run_import`` создаёт User+Tree+ImportJob
+        # самостоятельно (см. import_runner._ensure_owner / _create_tree), так
+        # что upfront-сетап здесь не нужен. Возвращаем 201 + готовый job.
+        try:
+            job = await run_import(
+                session,
+                tmp_path,
+                owner_email=settings.owner_email,
+                tree_name=Path(file.filename).stem,
+                source_filename=file.filename,
+            )
+        except Exception as e:
+            # Phase 9.0: error-сторона счётчика; success — внутри run_import.
+            import_completed_total.labels(source="gedcom", outcome="error").inc()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Import failed: {e}",
+            ) from e
+        finally:
+            tmp_path.unlink(missing_ok=True)
+        response.status_code = status.HTTP_201_CREATED
+        return _job_to_response(job)
 
     owner = await _ensure_owner(session, settings.owner_email)
 

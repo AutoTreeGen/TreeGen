@@ -15,14 +15,34 @@ import asyncio
 import contextlib
 import datetime as dt
 import json
+import os
 import uuid
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Iterator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+
+
+@pytest.fixture(autouse=True)
+def _disable_inline_import_mode() -> Iterator[None]:
+    """Локально снимаем ``PARSER_SERVICE_IMPORT_INLINE=1``, который выставлен
+    session-scoped автохуком в ``conftest.py``.
+
+    Эти тесты проверяют именно асинхронный контракт (202 + enqueue + SSE);
+    в inline-режиме endpoint вызывает ``run_import`` синхронно и возвращает
+    201 — поведение, которое здесь как раз нельзя, чтобы тесты были
+    репрезентативны для прод-пути.
+    """
+    saved = os.environ.pop("PARSER_SERVICE_IMPORT_INLINE", None)
+    try:
+        yield
+    finally:
+        if saved is not None:
+            os.environ["PARSER_SERVICE_IMPORT_INLINE"] = saved
+
 
 _MINIMAL_GED = b"""\
 0 HEAD

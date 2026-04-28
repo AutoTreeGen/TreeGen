@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import sys
 from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
@@ -16,6 +17,28 @@ import pytest_asyncio
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _import_inline_for_tests() -> Iterator[None]:
+    """Включить ``PARSER_SERVICE_IMPORT_INLINE=1`` для всех тестов сессии.
+
+    Phase 3.5 сделал ``POST /imports`` асинхронным (202 + arq enqueue),
+    но большинство существующих тестов ожидают синхронный 201 с готовым
+    деревом в response. Включаем legacy-inline режим по умолчанию,
+    чтобы не переписывать десятки тестов. Тесты, которые проверяют
+    именно асинхронный путь (``test_imports_async.py``), отключают
+    флаг локально.
+    """
+    saved = os.environ.get("PARSER_SERVICE_IMPORT_INLINE")
+    os.environ["PARSER_SERVICE_IMPORT_INLINE"] = "1"
+    try:
+        yield
+    finally:
+        if saved is None:
+            os.environ.pop("PARSER_SERVICE_IMPORT_INLINE", None)
+        else:
+            os.environ["PARSER_SERVICE_IMPORT_INLINE"] = saved
 
 
 def _repo_root() -> Path:
