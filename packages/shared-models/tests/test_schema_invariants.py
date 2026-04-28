@@ -57,6 +57,11 @@ SERVICE_TABLES = {
     # с прогрессом и cancel-флагом. Soft-delete не нужен — старые job'ы
     # purge'аются retention-политикой (TBD).
     "hypothesis_compute_jobs",
+    # Public landing waitlist (Phase 4.12 / ADR-0035): pre-launch email
+    # capture, не доменная сущность дерева. Без tree_id и soft-delete —
+    # одноразовая запись, идемпотентная по email; обработка через batch
+    # export, не tombstone-recovery.
+    "waitlist_entries",
 }
 
 TREE_ENTITY_TABLES = {
