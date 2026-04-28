@@ -60,7 +60,14 @@ class ChannelAttempt(BaseModel):
 class NotifyResponse(BaseModel):
     """Ответ ``POST /notify``."""
 
-    notification_id: uuid.UUID
+    notification_id: uuid.UUID | None = Field(
+        default=None,
+        description=(
+            "ID созданной (или дедуплицированной) нотификации. "
+            "``None`` — user отключил этот ``event_type`` в preferences "
+            "и dispatch не создал row (см. ADR-0029)."
+        ),
+    )
     delivered: list[str] = Field(
         description="Каналы, которые подтвердили доставку (success=True).",
     )
@@ -70,6 +77,14 @@ class NotifyResponse(BaseModel):
             "True — повторная отправка свернулась к существующей "
             "нотификации (idempotency-окно). delivered тогда совпадает "
             "с прежним результатом, а второй INSERT не выполнялся."
+        ),
+    )
+    skipped_by_pref: bool = Field(
+        default=False,
+        description=(
+            "True — user явно отключил этот ``event_type`` через "
+            "``PATCH /users/me/notification-preferences/{event_type}``. "
+            "delivered=[], notification_id=None — row не создавался."
         ),
     )
 
@@ -105,3 +120,55 @@ class MarkReadResponse(BaseModel):
 
     id: uuid.UUID
     read_at: dt.datetime
+
+
+# ---- Notification preferences (Phase 8.0 wire-up, ADR-0029) ----------------
+
+
+class PreferenceItem(BaseModel):
+    """Один элемент карты preferences (один event_type)."""
+
+    event_type: str
+    enabled: bool
+    channels: list[str]
+    is_default: bool = Field(
+        description=(
+            "True — для этого ``event_type`` пользователь не сохранял "
+            "явных настроек, dispatcher применяет дефолты."
+        ),
+    )
+
+
+class PreferenceListResponse(BaseModel):
+    """Ответ ``GET /users/me/notification-preferences``.
+
+    Возвращает строки для **всех** известных ``NotificationEventType``,
+    материализуя дефолты для отсутствующих в БД — frontend получает
+    цельную карту без дозапросов.
+    """
+
+    user_id: int
+    items: list[PreferenceItem]
+
+
+class PreferenceUpdateRequest(BaseModel):
+    """Тело ``PATCH /users/me/notification-preferences/{event_type}``.
+
+    Оба поля опциональны — patch-семантика. Если оба ``None`` — 400
+    (бессмысленный запрос). Если ``channels=[]`` — валидно, означает
+    «не доставлять никуда» (эквивалент ``enabled=False``, но явно).
+    """
+
+    enabled: bool | None = None
+    channels: list[str] | None = None
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class PreferenceUpdateResponse(BaseModel):
+    """Ответ ``PATCH /users/me/notification-preferences/{event_type}``."""
+
+    user_id: int
+    event_type: str
+    enabled: bool
+    channels: list[str]
