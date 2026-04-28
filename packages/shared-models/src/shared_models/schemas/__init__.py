@@ -47,7 +47,9 @@ from shared_models.schemas.entities import (
     SourceUpdate,
 )
 from shared_models.schemas.management import (
+    ImportJobProgress,
     ImportJobRead,
+    ImportStage,
     TreeCreate,
     TreeRead,
     TreeUpdate,
@@ -66,7 +68,9 @@ __all__ = [
     "FamilyCreate",
     "FamilyRead",
     "FamilyUpdate",
+    "ImportJobProgress",
     "ImportJobRead",
+    "ImportStage",
     "NameCreate",
     "NameRead",
     "NameUpdate",

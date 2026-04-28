@@ -6,7 +6,7 @@ import datetime as dt
 import uuid
 from typing import Any
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, String, func, text
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, String, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -20,6 +20,15 @@ class ImportJob(IdMixin, Base):
 
     Идемпотентность по ``source_sha256`` + ``tree_id`` (UNIQUE-индекс).
     Повторный импорт того же файла не дублирует данные — entity resolution в Phase 7.
+
+    Phase 3.5 — async-импорт через arq:
+
+    * ``progress`` (jsonb) — снапшот текущего шага worker'а (stage, current,
+      total, message, ts). Обновляется ProgressPublisher между стадиями;
+      также публикуется в Redis pubsub-канал ``job-events:{job_id}`` для
+      live-стрима через SSE.
+    * ``cancel_requested`` — флаг graceful cancel'а. Worker читает между
+      стадиями и переводит status → cancelled.
     """
 
     __tablename__ = "import_jobs"
@@ -63,6 +72,24 @@ class ImportJob(IdMixin, Base):
         default=list,
         server_default=text("'[]'::jsonb"),
     )
+
+    # Снапшот прогресса (Phase 3.5). NULL — worker ещё не публиковал.
+    # Структура совпадает с ``ImportJobProgress`` Pydantic-схемой.
+    progress: Mapped[dict[str, Any] | None] = mapped_column(
+        JSONB,
+        nullable=True,
+        default=None,
+    )
+
+    # Cancel-сигнал (Phase 3.5). Ставится PATCH /imports/{id}/cancel,
+    # читается worker'ом между стадиями.
+    cancel_requested: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("false"),
+    )
+
     started_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     finished_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[dt.datetime] = mapped_column(

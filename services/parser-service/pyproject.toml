@@ -22,7 +22,10 @@ dependencies = [
     "entity-resolution",
     "familysearch-client",
     "inference-engine",
+    # Phase 3.5 — async imports через arq + Redis pubsub для SSE.
     "arq>=0.26",
+    "redis[hiredis]>=5.0",
+    "sse-starlette>=2.0",
 ]
 
 [project.optional-dependencies]
