@@ -22,7 +22,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dna_service.database import get_session
-from dna_service.schemas import KitLinkPersonRequest, KitResponse
+from dna_service.schemas import KitLinkPersonRequest, KitListResponse, KitResponse
 
 router = APIRouter()
 
@@ -39,6 +39,42 @@ def _to_response(kit: DnaKit) -> KitResponse:
         external_kit_id=kit.external_kit_id,
         display_name=kit.display_name,
         ethnicity_population=kit.ethnicity_population,
+    )
+
+
+@router.get(
+    "/dna-kits",
+    response_model=KitListResponse,
+    tags=["kits"],
+)
+async def list_kits(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    owner_user_id: uuid.UUID,
+) -> KitListResponse:
+    """Список kit'ов одного пользователя.
+
+    Phase 6.3 без auth: ``owner_user_id`` передаётся query-параметром.
+    Soft-deleted kit'ы (``deleted_at IS NOT NULL``) скрываются — owner
+    revoke'нул consent → kit не должен светиться в UI.
+    """
+    rows = (
+        (
+            await session.execute(
+                select(DnaKit)
+                .where(
+                    DnaKit.owner_user_id == owner_user_id,
+                    DnaKit.deleted_at.is_(None),
+                )
+                .order_by(DnaKit.created_at.desc())
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return KitListResponse(
+        owner_user_id=owner_user_id,
+        total=len(rows),
+        items=[_to_response(kit) for kit in rows],
     )
 
 

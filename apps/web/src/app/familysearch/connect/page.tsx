@@ -14,7 +14,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,6 +39,17 @@ const FAILURE_REASONS: Record<string, string> = {
 };
 
 export default function FamilySearchConnectPage() {
+  // Next 15 требует Suspense-boundary вокруг useSearchParams() в client
+  // page'ах, иначе static export бьётся (CSR bailout). Pre-existing fix
+  // вытащен сюда побочно при работе над Phase 6.3 — иначе build не проходит.
+  return (
+    <Suspense fallback={null}>
+      <FamilySearchConnectContent />
+    </Suspense>
+  );
+}
+
+function FamilySearchConnectContent() {
   const search = useSearchParams();
   const status = search.get("status");
   const reason = search.get("reason");
