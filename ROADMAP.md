@@ -450,39 +450,92 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 
 **Цель:** автоматический поиск по внешним базам.
 
-### 13.1 Сначала — юридическое исследование (ОБЯЗАТЕЛЬНО)
+### 13.1 Юридическое исследование
 
-Для каждой платформы составить таблицу:
+> **Status (2026-04-28):** Research done — see
+> [`docs/research/archive-integrations-2026.md`](./docs/research/archive-integrations-2026.md).
+> Phase 5.1 (FamilySearch) is integrated; the research note ranks remaining
+> sources by readiness and partnership cost.
 
-| Платформа | Public API | Commercial use | Auth | Rate limits | TOS-ограничения |
-|---|---|---|---|---|---|
-| FamilySearch | Да | С разрешения | OAuth2 | Есть | Нельзя массово выгружать |
-| Geni | Да | С условиями | OAuth2 | Есть | Соблюдать privacy |
-| MyHeritage | Да | По договору | API key | Есть | Платный tier для бизнеса |
-| Ancestry | Нет публичного | Запрещено без партнёрства | — | — | Скрейпинг = бан |
-| 23andMe | Закрыт | Нет | — | — | — |
-| FTDNA | Ограничен | По договору | — | — | — |
-| GEDmatch | Через UI | Ограничено | — | — | TOS меняется |
-| JewishGen | Search UI, нет API | Серая зона | — | — | Уважать атрибуцию |
-| JRI-Poland | Search UI | Серая зона | — | — | — |
-| genealogyindexer.org | Search UI | Серая зона | — | — | — |
-| Szukaj w Archiwach | Открытые данные | Свободно (CC) | — | — | Атрибуция |
-| BillionGraves | API есть | По tier | API key | Есть | — |
-| Wikimedia Commons | API | Свободно (CC) | — | Есть | Атрибуция |
+Для каждой платформы составлена таблица в research note (auth, rate limits,
+licensing, EE-Jewish coverage, partnership effort). Краткая сводка:
 
-> **Принцип:** не делать ничего, что нарушает TOS. Для платформ без API — только функция «помочь пользователю поискать там вручную» (deep links, готовые запросы), без скрейпинга.
+| Платформа | Public API | Commercial use | Auth | TOS-ограничения |
+|---|---|---|---|---|
+| FamilySearch | ✅ (integrated, Phase 5.1) | С разрешения | OAuth2+PKCE | Compatible Solution для prod |
+| MyHeritage | ✅ (gated) | По договору | App key (manual) | Bound to MH privacy |
+| Geni | ✅ | С условиями | OAuth2 | Bound to Geni privacy |
+| Ancestry | ❌ | B2B-only | — | Скрейпинг = бан |
+| WikiTree | ✅ | **Запрещено без consent** | None / cookie | CC-BY-SA, AUP |
+| JewishGen / JRI-Poland | ❌ | Партнёрство | — | Атрибуция, per-collection |
+| GenTeam.eu | ❌ | Партнёрство | — | Volunteer-indexed |
+| YIVO | ❌ (ArchivesSpace API возможно) | Per-permission | CJH account | YIVO copyright |
+| BillionGraves | ✅ | По tier | API key | Overlap с FamilySearch |
+| Wikimedia Commons | ✅ | Свободно | None / OAuth | CC, атрибуция обязательна |
+| Szukaj w Archiwach (PL) | ❌ (OAI-PMH revival?) | Свободно | — | Атрибуция |
+| Lithuania (EAIS) | ⚠️ partial OAI-PMH | — | — | Атрибуция |
+| Belarus (NIAB / NARB) | ❌ | — | Correspondence | Заблокировано политически |
+| Ukraine (State Archival Service) | ❌ (через FS) | — | Correspondence | Заблокировано военной обстановкой |
 
-### 13.2 Подзадачи
+> **Принцип:** не делать ничего, что нарушает TOS. Для платформ без API —
+> только функция «помочь пользователю поискать там вручную» (deep links,
+> готовые запросы), без скрейпинга.
 
-1. `archive-service` — отдельный сервис со своими адаптерами под каждый источник.
-2. Адаптер `FamilySearchAdapter` — search by name/date/place, fetch person.
-3. Адаптер `GeniAdapter` — search profiles, fetch family.
-4. Адаптер `MyHeritageAdapter` (по доступу).
-5. Адаптер `WikimediaAdapter` — поиск изображений мест/документов.
-6. Адаптер `SzukajWArchiwachAdapter` — поиск польских архивов (CC-данные).
-7. Smart query builder: из персоны генерирует запросы во все источники с учётом транслитерации.
-8. Deduplication results across sources.
-9. UI: для каждой персоны — вкладка «External matches» со списком найденных в архивах.
+### 13.2 Phase 9.x ordering
+
+Полное обоснование — в research note. Кратко (Tier A — engineering можно
+начинать сейчас; Tier B — заблокировано на approval-аппрувал; Tier C —
+многомесячный partnership):
+
+**Tier A — public API, ship first:**
+
+1. **Phase 9.1 — Wikimedia Commons** (place imagery, ~3 дня, тривиально).
+2. **Phase 9.2 — WikiTree adapter** (read-only public profiles, ~1 неделя;
+   commercial-consent paperwork требуется для Phase 12).
+3. **Phase 9.3 — BillionGraves** (cemetery records, ~1 неделя; пересмотреть
+   после 9.1, частично перекрывается с FamilySearch).
+
+**Tier B — engineering после approval (outreach в параллель с 9.1):**
+
+1. **Phase 9.4 — MyHeritage Family Graph** (app-key approval 4–8 нед,
+   затем ~1.5 нед engineering).
+2. **Phase 9.5 — Geni** (сначала подтвердить strategic support от
+   MyHeritage/Geni, затем ~1 неделя; пропустить если поддержка не
+   подтверждена).
+
+**Tier C — partnership-only, multi-month timelines:**
+
+1. **Phase 9.6 — JewishGen + JRI-Poland data partnership**
+   (8–16+ нед outreach; engineering ~2–3 нед per data feed). **Highest
+   strategic value** для нашей EE Jewish ниши. Промежуточный deliverable —
+   deep-link smart-search helper (weekend-hackable).
+2. **Phase 9.7 — GenTeam.eu** (Vienna / former AT-HU, 4–12 нед outreach).
+3. **Phase 9.8 — YIVO ArchivesSpace API** (4–8 нед outreach; ~1 неделя
+   engineering если включат REST API).
+4. **Phase 9.9 — Polish State Archives OAI-PMH revival** (8–16+ нед).
+
+**Deferred:** Ancestry (B2B disproportionate to scale), Belarus (political
+блок), Ukraine direct (через FamilySearch).
+
+### 13.3 Подзадачи (engineering scaffold)
+
+1. `archive-service` — отдельный сервис со своими адаптерами под каждый
+   источник. Reuse pattern из `packages/familysearch-client/` (ADR-0011).
+2. Адаптер `WikimediaAdapter` (Phase 9.1).
+3. Адаптер `WikiTreeAdapter` (Phase 9.2).
+4. Адаптер `BillionGravesAdapter` (Phase 9.3).
+5. Smart query builder: из персоны генерирует запросы во все источники
+   с учётом транслитерации (используется и для адаптеров, и для
+   deep-link smart-search).
+6. Deep-link smart-search helper для no-API источников (JewishGen,
+   JRI-Poland, Szukaj w Archiwach, GenTeam, YIVO, Ancestry, Geni как
+   fallback). Per-person UI panel «External searches».
+7. Deduplication results across sources (расширение Phase 7 entity
+   resolution).
+8. UI: для каждой персоны — вкладка «External matches» со списком
+   найденных в архивах + «External searches» для no-API источников.
+9. Адаптеры Tier B (MyHeritage, Geni) — после approval.
+10. Адаптеры Tier C (JewishGen и т.д.) — после partnership signed.
 
 ---
 
