@@ -56,8 +56,34 @@ export default function PersonTreePage() {
         <TreeErrorState error={query.error} onRetry={() => query.refetch()} />
       ) : null}
 
-      {query.data ? <PedigreeTree root={query.data.root} /> : null}
+      {query.data ? (
+        query.data.root.father === null && query.data.root.mother === null ? (
+          <TreeEmptyState personId={personId} />
+        ) : (
+          <PedigreeTree root={query.data.root} />
+        )
+      ) : null}
     </main>
+  );
+}
+
+// Пустое состояние: у корневой персоны нет ни отца, ни матери в данных.
+function TreeEmptyState({ personId }: { personId: string }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>No ancestors recorded yet</CardTitle>
+        <CardDescription>
+          We don&apos;t have any parents linked to this person, so there&apos;s no tree to draw.
+          Import a GEDCOM file or add parents manually to see the pedigree here.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button variant="primary" size="sm" asChild>
+          <Link href={`/persons/${personId}`}>← Back to person</Link>
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
