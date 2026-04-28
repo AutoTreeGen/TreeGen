@@ -314,6 +314,67 @@ class NotificationEventType(StrEnum):
     DEDUP_SUGGESTION_NEW = "dedup_suggestion_new"
 
 
+class Plan(StrEnum):
+    """Подписочный план пользователя (Phase 12.0, ADR-0034).
+
+    Хранится в ``stripe_subscriptions.plan`` (для PRO+) и резолвится
+    в ``Plan.FREE`` для users без активной подписки.
+
+    Бизнес-смысл — см. ADR-0034 §«Plan limits»:
+
+    * ``FREE`` — 1 tree, 100 persons, без DNA, без FS-импорта.
+    * ``PRO`` — без лимитов на trees/persons, DNA, FS-импорт
+      (rate-limited 5/день, см. ADR-0028).
+
+    Имена сознательно НЕ совпадают с тарифами в ROADMAP §16
+    (Beginner/Advanced/Super) — те — маркетинговые плашки UI, а
+    ``Plan`` — техническая enum для feature-gating. Phase 12.x может
+    добавить ``ADVANCED`` / ``SUPER``, когда появятся реальные тарифы;
+    пока — двухуровневая модель.
+    """
+
+    FREE = "free"
+    PRO = "pro"
+
+
+class SubscriptionStatus(StrEnum):
+    """Статус Stripe-подписки.
+
+    Зеркалирует подмножество значений из Stripe API
+    (``subscription.status``), которое мы реально используем для
+    feature-gating. См. ADR-0034 §«Failed payment policy».
+
+    * ``ACTIVE`` — подписка платится, фичи включены.
+    * ``PAST_DUE`` — последний платёж не прошёл, grace period 7 дней.
+      В этом окне фичи остаются включены — даём шанс обновить карту.
+    * ``CANCELED`` — отменена пользователем (или нами после grace period).
+      Фичи сразу off; запись остаётся для history.
+    * ``INCOMPLETE`` — checkout открыт, оплата ещё не подтверждена.
+      Фичи off, не блокируем повторную попытку чекаута.
+    """
+
+    ACTIVE = "active"
+    PAST_DUE = "past_due"
+    CANCELED = "canceled"
+    INCOMPLETE = "incomplete"
+
+
+class StripeEventStatus(StrEnum):
+    """Статус обработки Stripe webhook event'а (idempotency log).
+
+    * ``RECEIVED`` — event попал в БД, но обработчик ещё не отработал.
+      Должен быть редок (только если процесс упал между insert и dispatch).
+    * ``PROCESSED`` — event успешно применён к ORM, дубль будет проигнорирован.
+    * ``FAILED`` — обработчик бросил exception. Stripe пере-доставит event,
+      и тогда мы попробуем заново (idempotency-чек смотрит на
+      ``PROCESSED`` only).
+    """
+
+    RECEIVED = "received"
+    PROCESSED = "processed"
+    FAILED = "failed"
+
+
 class HypothesisComputeJobStatus(StrEnum):
     """Статус bulk hypothesis-compute job (Phase 7.5).
 

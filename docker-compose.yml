@@ -120,6 +120,35 @@ services:
     command: ["uv", "run", "arq", "parser_service.worker.WorkerSettings"]
 
   # ---------------------------------------------------------------------------
+  # billing-service — Stripe checkout + webhook + entitlements (Phase 12.0).
+  # Запускать локально только при работе над биллингом; для других сервисов
+  # установить ``BILLING_SERVICE_BILLING_ENABLED=false`` и не поднимать.
+  # См. ADR-0034.
+  # ---------------------------------------------------------------------------
+  billing-service:
+    build:
+      context: .
+      dockerfile: services/billing-service/Dockerfile
+    container_name: autotreegen-billing-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      BILLING_SERVICE_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-autotreegen}:${POSTGRES_PASSWORD:-change-me-in-local-env}@postgres:5432/${POSTGRES_DB:-autotreegen}
+      BILLING_SERVICE_STRIPE_API_KEY: ${STRIPE_API_KEY:-}
+      BILLING_SERVICE_STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      BILLING_SERVICE_STRIPE_PRICE_PRO: ${STRIPE_PRICE_PRO:-}
+      # Default OFF локально: фронт без Stripe-аккаунта работает с
+      # bypass-режимом (все юзеры на PRO). См. ADR-0034 §«Feature flag».
+      BILLING_SERVICE_BILLING_ENABLED: ${BILLING_ENABLED:-false}
+      BILLING_SERVICE_CHECKOUT_SUCCESS_URL: ${CHECKOUT_SUCCESS_URL:-http://localhost:3000/settings/billing?checkout=success}
+      BILLING_SERVICE_CHECKOUT_CANCEL_URL: ${CHECKOUT_CANCEL_URL:-http://localhost:3000/pricing?checkout=cancel}
+      BILLING_SERVICE_PORTAL_RETURN_URL: ${PORTAL_RETURN_URL:-http://localhost:3000/settings/billing}
+    ports:
+      - "8003:8003"
+
+  # ---------------------------------------------------------------------------
   # MinIO bucket bootstrapper — однократно создаёт buckets при первом запуске.
   # ---------------------------------------------------------------------------
   minio-init:

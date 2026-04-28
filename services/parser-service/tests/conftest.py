@@ -20,6 +20,31 @@ if sys.platform == "win32":
 
 
 @pytest.fixture(autouse=True, scope="session")
+def _billing_disabled_for_tests() -> Iterator[None]:
+    """Phase 12.0: отключить billing-gating во всех parser-service тестах.
+
+    Existing tests не передают ``X-User-Id`` header, и ``require_feature``
+    вернул бы 401 для всех. С BILLING_ENABLED=false dependency пропускает
+    запросы (FREE-bypass mode). Тесты, которые проверяют именно гейтинг —
+    в ``test_billing_gates.py``, переопределяют флаг локально.
+    """
+    saved = os.environ.get("BILLING_SERVICE_BILLING_ENABLED")
+    os.environ["BILLING_SERVICE_BILLING_ENABLED"] = "false"
+    try:
+        # сбрасываем lru_cache get_settings, если он уже что-то закешировал.
+        from billing_service.config import get_settings
+
+        get_settings.cache_clear()
+        yield
+        get_settings.cache_clear()
+    finally:
+        if saved is None:
+            os.environ.pop("BILLING_SERVICE_BILLING_ENABLED", None)
+        else:
+            os.environ["BILLING_SERVICE_BILLING_ENABLED"] = saved
+
+
+@pytest.fixture(autouse=True, scope="session")
 def _import_inline_for_tests() -> Iterator[None]:
     """Включить ``PARSER_SERVICE_IMPORT_INLINE=1`` для всех тестов сессии.
 

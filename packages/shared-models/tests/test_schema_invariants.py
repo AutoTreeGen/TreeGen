@@ -57,6 +57,15 @@ SERVICE_TABLES = {
     # с прогрессом и cancel-флагом. Soft-delete не нужен — старые job'ы
     # purge'аются retention-политикой (TBD).
     "hypothesis_compute_jobs",
+    # Stripe billing tables (Phase 12.0 / ADR-0034): user → Stripe
+    # customer/subscription mapping и idempotency-log webhook event'ов.
+    # Personal billing data (PAN, addresses) на стороне Stripe — у нас
+    # только связи. Soft-delete намеренно отсутствует: подписка либо
+    # ACTIVE, либо CANCELED (status) — отдельный жизненный цикл, не
+    # наш domain-soft-delete.
+    "stripe_customers",
+    "stripe_subscriptions",
+    "stripe_events",
 }
 
 TREE_ENTITY_TABLES = {

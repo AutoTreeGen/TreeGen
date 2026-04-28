@@ -79,6 +79,26 @@ locals {
         DATABASE_PASSWORD = var.secret_short_names["db-password"]
       }
     }
+    // Phase 12.0 — billing-service. Stripe API key и webhook secret
+    // живут в Secret Manager; см. ADR-0034 §«Webhook security».
+    "billing-service" = {
+      image         = lookup(var.images, "billing-service", var.placeholder_image)
+      port          = 8003
+      cpu           = "1"
+      memory        = "512Mi"
+      max_instances = 3
+      env_extra = {
+        // Production: всегда true. Override на false только для
+        // нестандартного forensic-режима, не для regular operations.
+        BILLING_SERVICE_BILLING_ENABLED = "true"
+      }
+      secrets = {
+        DATABASE_PASSWORD                     = var.secret_short_names["db-password"]
+        BILLING_SERVICE_STRIPE_API_KEY        = var.secret_short_names["stripe-api-key"]
+        BILLING_SERVICE_STRIPE_WEBHOOK_SECRET = var.secret_short_names["stripe-webhook-secret"]
+        BILLING_SERVICE_STRIPE_PRICE_PRO      = var.secret_short_names["stripe-price-pro"]
+      }
+    }
     "web" = {
       image         = lookup(var.images, "web", var.placeholder_image)
       port          = 3000

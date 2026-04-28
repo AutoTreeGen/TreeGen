@@ -20,6 +20,29 @@ if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
+@pytest.fixture(autouse=True, scope="session")
+def _billing_disabled_for_tests() -> Iterator[None]:
+    """Phase 12.0: отключить billing-gating во всех dna-service тестах.
+
+    DNA upload защищён ``require_feature("dna_enabled")``. С
+    ``BILLING_ENABLED=false`` dependency пропускает запросы. Тесты
+    гейтинга — отдельный файл, переопределяющий флаг локально.
+    """
+    saved = os.environ.get("BILLING_SERVICE_BILLING_ENABLED")
+    os.environ["BILLING_SERVICE_BILLING_ENABLED"] = "false"
+    try:
+        from billing_service.config import get_settings
+
+        get_settings.cache_clear()
+        yield
+        get_settings.cache_clear()
+    finally:
+        if saved is None:
+            os.environ.pop("BILLING_SERVICE_BILLING_ENABLED", None)
+        else:
+            os.environ["BILLING_SERVICE_BILLING_ENABLED"] = saved
+
+
 def _repo_root() -> Path:
     """Корень репо — где живёт alembic.ini."""
     here = Path(__file__).resolve()

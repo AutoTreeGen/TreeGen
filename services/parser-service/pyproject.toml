@@ -22,6 +22,10 @@ dependencies = [
     "entity-resolution",
     "familysearch-client",
     "inference-engine",
+    # Phase 12.0 — entitlement-gating через billing-service.
+    # Импортируем только check_entitlement / get_user_plan; webhook-handlers
+    # и stripe SDK в parser-service не нужны.
+    "billing-service",
     # Phase 3.5 — async imports через arq + Redis pubsub для SSE.
     "arq>=0.26",
     "redis[hiredis]>=5.0",

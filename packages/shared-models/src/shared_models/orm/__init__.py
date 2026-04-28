@@ -29,6 +29,9 @@ from shared_models.orm.person_merge_log import PersonMergeLog
 from shared_models.orm.place import Place, PlaceAlias
 from shared_models.orm.shared_match import SharedMatch
 from shared_models.orm.source import Source
+from shared_models.orm.stripe_customer import StripeCustomer
+from shared_models.orm.stripe_event import StripeEvent
+from shared_models.orm.stripe_subscription import StripeSubscription
 from shared_models.orm.tree import Tree, TreeCollaborator
 from shared_models.orm.user import User
 from shared_models.orm.version import Version
@@ -63,6 +66,9 @@ __all__ = [
     "PlaceAlias",
     "SharedMatch",
     "Source",
+    "StripeCustomer",
+    "StripeEvent",
+    "StripeSubscription",
     "Tree",
     "TreeCollaborator",
     "User",

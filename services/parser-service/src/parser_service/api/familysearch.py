@@ -74,6 +74,7 @@ from shared_models.orm import ImportJob, Tree, User
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from parser_service.billing import require_feature
 from parser_service.config import Settings, get_settings
 from parser_service.database import get_session
 from parser_service.fs_oauth import (
@@ -239,12 +240,16 @@ def _stored_token_from_oauth(token: Token, *, fs_user_id: str | None) -> FsStore
 async def create_familysearch_import(
     request: FamilySearchImportRequest,
     session: Annotated[AsyncSession, Depends(get_session)],
+    # Phase 12.0: FS-импорт доступен только на Pro-плане.
+    _entitlement: Annotated[None, require_feature("fs_import_enabled")] = None,
 ) -> FamilySearchImportResponse:
     """Импорт FS pedigree в существующее дерево (синхронный, stateless).
 
     Маппинг FS GEDCOM-X → ORM — см. ADR-0017. Идемпотентность:
     повторный запрос с тем же ``fs_person_id`` обновит существующих
     persons, не создаст дубликаты.
+
+    Pro-only: см. ADR-0034 §«Plan limits».
     """
     tree = (
         await session.execute(select(Tree).where(Tree.id == request.tree_id))
@@ -702,6 +707,8 @@ async def create_async_import(
     settings: Annotated[Settings, Depends(get_settings)],
     session: Annotated[AsyncSession, Depends(get_session)],
     pool: Annotated[ArqRedis, Depends(get_arq_pool)],
+    # Phase 12.0: FS-импорт доступен только на Pro-плане.
+    _entitlement: Annotated[None, require_feature("fs_import_enabled")] = None,
 ) -> ImportJobResponse:
     """Создать ``ImportJob`` (queued) и enqueue ``run_fs_import_job`` в arq.
 
