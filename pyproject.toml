@@ -39,6 +39,7 @@ members = [
     "services/parser-service",
     "services/dna-service",
     "services/notification-service",
+    "services/email-service",
 ]
 
 # Резолвим workspace-имена из локальных путей, а не из PyPI.
@@ -52,6 +53,7 @@ inference-engine = { workspace = true }
 parser-service = { workspace = true }
 dna-service = { workspace = true }
 notification-service = { workspace = true }
+email-service = { workspace = true }
 
 [tool.uv]
 package = false
@@ -204,6 +206,7 @@ mypy_path = [
     "packages/inference-engine/src",
     "packages/shared-models/src",
     "services/dna-service/src",
+    "services/email-service/src",
     "services/notification-service/src",
     "services/parser-service/src",
 ]

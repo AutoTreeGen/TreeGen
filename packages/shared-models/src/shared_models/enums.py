@@ -379,3 +379,49 @@ class HypothesisComputeJobStatus(StrEnum):
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
+
+class EmailKind(StrEnum):
+    """Тип transactional-email сообщения (Phase 12.2a, ADR-0039).
+
+    Каждый kind — отдельный шаблон в
+    ``services/email-service/templates/{kind}/{locale}.{html,txt}`` +
+    ``subject.txt``. Список расширяется по мере появления новых событий;
+    неизвестный kind на ``POST /email/send`` отвергается 422.
+
+    Phase 12.2a (this PR) поддерживает три kind'а — minimal launch surface:
+
+    * ``WELCOME`` — после первого Clerk-signup'а (Phase 4.10 hook).
+    * ``PAYMENT_SUCCEEDED`` / ``PAYMENT_FAILED`` — Stripe webhook
+      ``invoice.paid`` / ``invoice.payment_failed`` (Phase 12.0 hook).
+
+    Phase 12.2b добавит остальные:
+
+    * ``SHARE_INVITE`` — приглашение на дерево (Phase 11.0 / Agent 4).
+    * ``EXPORT_READY`` — async GEDCOM-экспорт готов.
+    * ``ERASURE_CONFIRMATION`` — GDPR right-to-erasure подтверждение
+      (Phase 13.x / Agent 5).
+    * ``PASSWORD_RESET_NOTICE`` — Clerk password-reset hook.
+    """
+
+    WELCOME = "welcome"
+    PAYMENT_SUCCEEDED = "payment_succeeded"
+    PAYMENT_FAILED = "payment_failed"
+
+
+class EmailSendStatus(StrEnum):
+    """Статус попытки отправки transactional-email (Phase 12.2).
+
+    * ``QUEUED`` — запись создана, провайдер ещё не вызван (редкое
+      переходное состояние; happy path сразу пишет SENT).
+    * ``SENT`` — Resend принял запрос и вернул ``message_id``.
+    * ``FAILED`` — провайдер вернул ошибку (после возможных retry).
+      ``error`` хранит сообщение для debugging.
+    * ``SKIPPED_OPTOUT`` — у пользователя ``email_opt_out=True``.
+      Сохраняем строку для audit, провайдер не вызывается.
+    """
+
+    QUEUED = "queued"
+    SENT = "sent"
+    FAILED = "failed"
+    SKIPPED_OPTOUT = "skipped_optout"

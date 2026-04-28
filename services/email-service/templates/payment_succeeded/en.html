@@ -1,0 +1,13 @@
+{% extends "_base.html" %}
+{% block content %}
+<h1 style="font-size:22px;margin:0 0 16px 0;font-weight:normal;">Payment received.</h1>
+<p>Your {{ plan_name }} subscription is active.</p>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:16px 0 24px 0;font-size:14px;color:#5C5448;">
+  <tr><td style="padding:6px 0;width:160px;">Amount</td><td><strong>{{ '%.2f' | format(amount_cents / 100) }} {{ currency | upper }}</strong></td></tr>
+  <tr><td style="padding:6px 0;">Billing period</td><td>{{ billing_period_start }} &mdash; {{ billing_period_end }}</td></tr>
+</table>
+{% if invoice_url %}
+<p><a href="{{ invoice_url }}" style="color:#A14E2A;">Download invoice</a></p>
+{% endif %}
+<p>Manage your subscription at <a href="{{ web_base_url }}/settings/billing" style="color:#A14E2A;">{{ web_base_url }}/settings/billing</a>.</p>
+{% endblock %}

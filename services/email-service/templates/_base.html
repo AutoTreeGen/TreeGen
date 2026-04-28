@@ -1,0 +1,35 @@
+{# Base HTML wrapper. Inline styles only — many email clients strip <style>. #}
+<!doctype html>
+<html lang="{{ locale }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="margin:0;padding:0;background:#F4F1EA;font-family:Georgia,'Times New Roman',serif;color:#2A2926;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F4F1EA;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+               style="max-width:560px;background:#FFFFFF;border:1px solid #E5DFD2;border-radius:6px;padding:32px;">
+          <tr>
+            <td style="font-size:14px;color:#7B6F58;letter-spacing:.08em;text-transform:uppercase;padding-bottom:16px;">
+              {{ brand_name }}
+            </td>
+          </tr>
+          <tr>
+            <td style="font-size:16px;line-height:1.55;color:#2A2926;">
+              {% block content %}{% endblock %}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding-top:32px;border-top:1px solid #EFE8D7;margin-top:24px;font-size:12px;color:#7B6F58;line-height:1.5;">
+              {{ brand_name }} &middot;
+              <a href="mailto:{{ support_email }}" style="color:#7B6F58;">{{ support_email }}</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

@@ -13,6 +13,7 @@ from shared_models.orm.dna_import import DnaImport
 from shared_models.orm.dna_kit import DnaKit
 from shared_models.orm.dna_match import DnaMatch
 from shared_models.orm.dna_test_record import DnaTestRecord
+from shared_models.orm.email_send_log import EmailSendLog
 from shared_models.orm.event import Event, EventParticipant
 from shared_models.orm.family import Family, FamilyChild
 from shared_models.orm.fs_dedup_attempt import FsDedupAttempt
@@ -43,6 +44,7 @@ __all__ = [
     "DnaKit",
     "DnaMatch",
     "DnaTestRecord",
+    "EmailSendLog",
     "EntityMultimedia",
     "EntityNote",
     "Event",

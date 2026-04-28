@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import String, Text
+from sqlalchemy import Boolean, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from shared_models.base import Base
@@ -19,6 +19,11 @@ class User(IdMixin, TimestampMixin, SoftDeleteMixin, Base):
     JSON-payload с FamilySearch OAuth-токенами (access + refresh +
     expires_at). NULL = пользователь ещё не подключал FS-аккаунт.
     Расшифровка — :func:`parser_service.fs_oauth.tokens.decrypt_fs_token`.
+
+    ``email_opt_out`` (Phase 12.2, ADR-0039) — пользователь отключил
+    transactional-email. Email-service ставит ``status=skipped_optout``
+    и не вызывает провайдера. Phase 12.x добавит per-kind opt-out
+    (как notification_preferences); пока — глобальный флаг.
     """
 
     __tablename__ = "users"
@@ -36,4 +41,10 @@ class User(IdMixin, TimestampMixin, SoftDeleteMixin, Base):
         Text,
         nullable=True,
         default=None,
+    )
+    email_opt_out: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
     )

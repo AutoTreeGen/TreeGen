@@ -1,0 +1,8 @@
+{# Base plain-text wrapper. Just brand + content + footer. #}
+{{ brand_name }}
+
+{% block content %}{% endblock %}
+
+--
+{{ brand_name }}
+{{ support_email }}
