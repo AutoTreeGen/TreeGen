@@ -41,6 +41,53 @@ class Settings(BaseSettings):
         description="Имя arq-очереди для async-импортов (синхронизировано с воркером).",
     )
 
+    # ---- FamilySearch OAuth (Phase 5.1, ADR-0027) ---------------------------
+    fs_client_id: str = Field(
+        default="",
+        description=(
+            "FamilySearch app key (developer.familysearch.org). Пустая строка — "
+            "OAuth-эндпоинты возвращают 503 (для тестов / dev-окружения без "
+            "ключа)."
+        ),
+    )
+    fs_oauth_redirect_uri: str = Field(
+        default="http://localhost:8000/imports/familysearch/oauth/callback",
+        description=(
+            "Зарегистрированный в FamilySearch redirect URI. "
+            "Должен совпадать (схема+хост+путь) с тем, что выдан в developer console."
+        ),
+    )
+    fs_oauth_scope: str | None = Field(
+        default=None,
+        description="OAuth scope (через пробел). None = FamilySearch-дефолт.",
+    )
+    fs_environment: str = Field(
+        default="sandbox",
+        description="``sandbox`` или ``production`` — выбирает FamilySearchConfig.",
+    )
+    fs_token_key: str = Field(
+        default="",
+        description=(
+            "Fernet-ключ (32-байт base64url) для шифрования OAuth-токенов "
+            "в users.fs_token_encrypted. Сгенерировать: "
+            "``python -c 'from cryptography.fernet import Fernet; "
+            "print(Fernet.generate_key().decode())'``. Пустая строка = "
+            "FS server-side OAuth отключён."
+        ),
+    )
+    fs_oauth_state_ttl: int = Field(
+        default=600,
+        description="TTL Redis-ключа state (секунды). FamilySearch отдаёт callback ≤ 10 мин.",
+    )
+    fs_frontend_success_url: str = Field(
+        default="http://localhost:3000/familysearch/connect?status=ok",
+        description="Куда редиректить после успешного OAuth callback'а (фронт).",
+    )
+    fs_frontend_failure_url: str = Field(
+        default="http://localhost:3000/familysearch/connect?status=error",
+        description="Куда редиректить при OAuth ошибке.",
+    )
+
     model_config = SettingsConfigDict(
         env_prefix="PARSER_SERVICE_",
         env_file=".env",

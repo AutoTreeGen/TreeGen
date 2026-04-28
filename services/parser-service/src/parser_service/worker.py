@@ -32,15 +32,22 @@ from uuid import UUID
 
 from arq.connections import RedisSettings
 from shared_models.enums import HypothesisComputeJobStatus, ImportJobStatus
-from shared_models.orm import HypothesisComputeJob, ImportJob
+from shared_models.orm import HypothesisComputeJob, ImportJob, User
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
+from parser_service.config import get_settings
 from parser_service.database import get_engine
+from parser_service.fs_oauth import (
+    TokenCryptoError,
+    get_token_storage,
+    is_fs_token_storage_configured,
+)
 from parser_service.services.bulk_hypothesis_runner import (
     STAGE_FAILED,
     execute_compute_job,
 )
+from parser_service.services.familysearch_importer import import_fs_pedigree
 from parser_service.services.import_runner import run_import
 from parser_service.services.notifications import post_notify_request
 from parser_service.services.progress import ProgressPublisher, Stage
@@ -183,6 +190,133 @@ async def run_import_job(
         }
 
 
+async def run_fs_import_job(
+    ctx: dict[str, Any],
+    import_job_id: str,
+    user_id: str,
+    fs_person_id: str,
+    generations: int,
+) -> dict[str, Any]:
+    """arq job: тянет FamilySearch pedigree и заливает в существующее дерево.
+
+    Зеркалит :func:`run_import_job` по форме (job-row → publisher →
+    success/fail-транзакция), но источник данных — FS API, не локальный
+    .ged-файл. Токен берётся из ``users.fs_token_encrypted`` (см.
+    ADR-0027) и **не** передаётся через arq-payload — Redis-стрим в
+    общем случае может быть прочитан другими подписчиками.
+
+    Args:
+        ctx: arq-контекст. Ожидаем ключ ``redis`` (``ArqRedis``-клиент);
+            если его нет — публикация прогресса деградирует в no-op.
+        import_job_id: UUID существующего ``ImportJob`` row (status=queued).
+        user_id: UUID пользователя, у которого хранится FS-токен.
+        fs_person_id: focus-persona на FamilySearch (pedigree root).
+        generations: глубина (1..8), уже валидирована HTTP-слоем.
+
+    Returns:
+        Сводный dict с финальным статусом и stats (см. ImportJob.stats).
+    """
+    redis_client = ctx.get("redis")
+    channel = f"job-events:{import_job_id}"
+    publisher = ProgressPublisher(redis_client, channel)
+
+    settings = get_settings()
+    if not is_fs_token_storage_configured(settings.fs_token_key):
+        msg = "PARSER_SERVICE_FS_TOKEN_KEY is not configured"
+        await publisher.publish(Stage.FINALIZING, current=0, total=1, message=msg)
+        raise RuntimeError(msg)
+    storage = get_token_storage(settings.fs_token_key)
+
+    engine = get_engine()
+    session_maker = async_sessionmaker(engine, expire_on_commit=False)
+
+    job_uuid = UUID(import_job_id)
+    user_uuid = UUID(user_id)
+
+    async with session_maker() as session:
+        job = (
+            await session.execute(select(ImportJob).where(ImportJob.id == job_uuid))
+        ).scalar_one_or_none()
+        if job is None:
+            msg = f"ImportJob {import_job_id} not found"
+            raise LookupError(msg)
+        user = (
+            await session.execute(select(User).where(User.id == user_uuid))
+        ).scalar_one_or_none()
+        if user is None:
+            msg = f"User {user_id} not found"
+            raise LookupError(msg)
+        if not user.fs_token_encrypted:
+            msg = f"User {user_id} has no FamilySearch token (disconnected mid-job?)"
+            raise RuntimeError(msg)
+
+        try:
+            stored = storage.decrypt(user.fs_token_encrypted)
+        except TokenCryptoError as e:
+            msg = f"Cannot decrypt FS token for user {user_id}: {e}"
+            raise RuntimeError(msg) from e
+
+        # Перевод в RUNNING до начала тяжёлой работы — UI видит «крутилку».
+        job.status = ImportJobStatus.RUNNING.value
+        job.started_at = dt.datetime.now(dt.UTC)
+        await session.flush()
+        await publisher.publish(
+            Stage.PARSING,
+            current=0,
+            total=generations,
+            message=f"fetching pedigree for {fs_person_id} ({generations} generations)",
+        )
+
+        try:
+            await import_fs_pedigree(
+                session,
+                access_token=stored.access_token,
+                fs_person_id=fs_person_id,
+                tree_id=job.tree_id,
+                owner_user_id=user.id,
+                generations=generations,
+                existing_job_id=job.id,
+            )
+            await session.commit()
+        except Exception as exc:
+            await session.rollback()
+            async with session_maker() as fail_session:
+                fail_job = (
+                    await fail_session.execute(select(ImportJob).where(ImportJob.id == job_uuid))
+                ).scalar_one_or_none()
+                if fail_job is not None:
+                    fail_job.status = ImportJobStatus.FAILED.value
+                    fail_job.errors = [
+                        *(fail_job.errors or []),
+                        {
+                            "kind": type(exc).__name__,
+                            "message": str(exc),
+                            "at": dt.datetime.now(dt.UTC).isoformat(),
+                        },
+                    ]
+                    fail_job.finished_at = dt.datetime.now(dt.UTC)
+                    await fail_session.commit()
+            await publisher.publish(
+                Stage.FINALIZING,
+                current=0,
+                total=1,
+                message=f"failed: {exc}",
+            )
+            raise
+
+        await publisher.publish(
+            Stage.FINALIZING,
+            current=1,
+            total=1,
+            message="succeeded",
+        )
+        return {
+            "import_job_id": import_job_id,
+            "status": job.status,
+            "stats": job.stats,
+        }
+
+
 async def run_bulk_hypothesis_job(
     ctx: dict[str, Any],
     compute_job_id: str,
@@ -315,6 +449,7 @@ class WorkerSettings:
         run_import_job,
         run_bulk_hypothesis_job,
         dispatch_notification_job,
+        run_fs_import_job,
     ]
     on_startup = startup
     on_shutdown = shutdown
