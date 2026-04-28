@@ -17,6 +17,7 @@ from parser_service.api import (
     dedup_attempts,
     familysearch,
     hypotheses,
+    hypotheses_sse,
     imports,
     imports_sse,
     metrics,
@@ -70,6 +71,10 @@ app.include_router(trees.router, tags=["trees"])
 app.include_router(sources.router, tags=["sources"])
 app.include_router(dedup.router, tags=["dedup"])
 app.include_router(dedup_attempts.router, tags=["dedup-attempts"])
+# SSE роутер до основного hypotheses — у него специализированный путь
+# /trees/{id}/hypotheses/compute-jobs/{id}/events. Порядок включения
+# важен симметрично imports_sse vs imports (см. main.py выше).
+app.include_router(hypotheses_sse.router, tags=["hypotheses", "sse"])
 app.include_router(hypotheses.router, tags=["hypotheses"])
 # persons router включается ПОСЛЕ trees (тот владеет `GET /persons/{id}`),
 # но имена путей не пересекаются: тут `/persons/{id}/merge*`.

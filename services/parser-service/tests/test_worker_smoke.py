@@ -29,15 +29,23 @@ if TYPE_CHECKING:
 
 
 def test_worker_settings_registers_noop_job() -> None:
-    """``WorkerSettings.functions`` должен содержать ``noop_job``.
+    """``WorkerSettings.functions`` должен содержать ``noop_job`` + остальные jobs.
 
     arq при старте воркера читает атрибут класса напрямую — если в реестре
     окажется пусто или там окажется не та функция, пайплайн Phase 3.5
     сломается. Тест — дешёвая страховка против переименования/удаления.
     """
-    from parser_service.worker import WorkerSettings, noop_job
+    from parser_service.worker import (
+        WorkerSettings,
+        noop_job,
+        run_bulk_hypothesis_job,
+        run_import_job,
+    )
 
     assert noop_job in WorkerSettings.functions
+    assert run_import_job in WorkerSettings.functions
+    # Phase 7.5 finalize: bulk hypothesis-compute теперь тоже async-job.
+    assert run_bulk_hypothesis_job in WorkerSettings.functions
     assert WorkerSettings.queue_name == "imports"
     # ``redis_settings`` — экземпляр RedisSettings из arq, не None.
     assert WorkerSettings.redis_settings is not None

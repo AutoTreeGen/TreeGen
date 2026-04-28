@@ -659,6 +659,14 @@ class HypothesisComputeJobResponse(BaseModel):
     started_at: datetime | None = None
     finished_at: datetime | None = None
     created_at: datetime
+    events_url: str | None = Field(
+        default=None,
+        description=(
+            "Относительный URL SSE-эндпоинта (Phase 7.5 finalize). "
+            "Возвращается только в ответах POST/PATCH; для GET клиент "
+            "уже знает url своего стрима."
+        ),
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
