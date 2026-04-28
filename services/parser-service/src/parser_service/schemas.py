@@ -949,3 +949,111 @@ class MergeHistoryResponse(BaseModel):
 
     person_id: uuid.UUID
     items: list[MergeHistoryItem]
+
+
+# =============================================================================
+# Phase 11.0 — Tree sharing & invitations (см. ADR-0036).
+# =============================================================================
+
+
+class InvitationCreateRequest(BaseModel):
+    """Тело ``POST /trees/{tree_id}/invitations``.
+
+    ``role`` принимает ``editor`` или ``viewer``; OWNER нельзя пригласить —
+    только transfer'нуть существующему membership'у через ``PATCH /memberships/{id}``.
+    """
+
+    email: str = Field(min_length=3, max_length=254)
+    role: Literal["editor", "viewer"] = "viewer"
+
+
+class InvitationResponse(BaseModel):
+    """Read-модель приглашения. Возвращается owner'у дерева."""
+
+    id: uuid.UUID
+    tree_id: uuid.UUID
+    invitee_email: str
+    role: str
+    token: uuid.UUID = Field(
+        description=(
+            "Секрет accept-link'а. Возвращается owner'у на create'е, "
+            "и в `GET /trees/{id}/invitations` (owner-only). Не доступен "
+            "publicly. invitee получает только URL — не саму строку токена "
+            "в API-ответе."
+        ),
+    )
+    invite_url: str = Field(
+        description=(
+            "Готовый shareable-link `${PUBLIC_BASE_URL}/invitations/{token}`. "
+            "Owner может скопировать и передать вне email-канала."
+        ),
+    )
+    expires_at: datetime
+    accepted_at: datetime | None = None
+    revoked_at: datetime | None = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class InvitationListResponse(BaseModel):
+    """``GET /trees/{tree_id}/invitations`` — pending + recent invitations."""
+
+    tree_id: uuid.UUID
+    items: list[InvitationResponse]
+
+
+class InvitationAcceptRequest(BaseModel):
+    """Тело ``POST /invitations/{token}/accept``.
+
+    Phase 11.0 не использует body — accept происходит через path token + текущего
+    user'а из auth-stub'а. Резервируем класс для будущих полей (например,
+    «принять и сразу включить notification preferences»).
+    """
+
+
+class InvitationAcceptResponse(BaseModel):
+    """Ответ на accept: возвращает membership и tree_id для UI redirect'а."""
+
+    tree_id: uuid.UUID
+    membership_id: uuid.UUID
+    role: str
+
+
+class MemberResponse(BaseModel):
+    """Read-модель active membership."""
+
+    id: uuid.UUID
+    user_id: uuid.UUID
+    email: str
+    display_name: str | None
+    role: str
+    invited_by: uuid.UUID | None = None
+    joined_at: datetime = Field(
+        description=(
+            "Когда membership стал активным. Для backfilled OWNER-row "
+            "(миграция Phase 11.0) — ``created_at`` (момент применения миграции)."
+        ),
+    )
+    revoked_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MemberListResponse(BaseModel):
+    """``GET /trees/{tree_id}/members`` — все active memberships дерева."""
+
+    tree_id: uuid.UUID
+    items: list[MemberResponse]
+
+
+class MemberRoleUpdateRequest(BaseModel):
+    """``PATCH /memberships/{id}`` — изменение роли.
+
+    Запрещено демоутить себя из OWNER в EDITOR/VIEWER (нужен сначала transfer).
+    Запрещено вешать второй OWNER через UPDATE — DB-уровневый partial unique
+    отвергнет. Значит, для смены OWNER используется отдельная transfer-семантика
+    (Phase 11.1, не в этом PR).
+    """
+
+    role: Literal["editor", "viewer"]

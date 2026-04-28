@@ -68,7 +68,7 @@ async def _import_and_get_person_pair(app_client) -> tuple[str, str, str]:
 @pytest.mark.asyncio
 async def test_preview_returns_diff_without_mutations(app_client) -> None:
     """``preview`` возвращает diff и не мутирует БД."""
-    _, a_id, b_id = await _import_and_get_person_pair(app_client)
+    tree_id, a_id, b_id = await _import_and_get_person_pair(app_client)
 
     response = await app_client.post(
         f"/persons/{a_id}/merge/preview",
@@ -88,10 +88,11 @@ async def test_preview_returns_diff_without_mutations(app_client) -> None:
     assert isinstance(body["fields"], list)
     assert isinstance(body["events"], list)
 
-    # Никаких person_merge_logs не появилось.
-    listing_after = await app_client.get(f"/trees/{body['survivor_id']}/persons")
-    # Фикстура с двумя персонами, обе ещё видны.
-    assert listing_after.status_code in (200, 422)
+    # Никаких person_merge_logs не появилось — обе персоны всё ещё видны.
+    # Phase 11.0 — gated VIEWER+; auth-stub резолвит settings.owner_email,
+    # того же user'а, что и POST /imports выше, поэтому 200.
+    listing_after = await app_client.get(f"/trees/{tree_id}/persons")
+    assert listing_after.status_code == 200
 
 
 @pytest.mark.asyncio

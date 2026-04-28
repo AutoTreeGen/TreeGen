@@ -22,6 +22,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from shared_models import TreeRole
 from shared_models.orm import PersonMergeLog
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,6 +41,7 @@ from parser_service.schemas import (
     MergePreviewResponse,
     MergeUndoResponse,
 )
+from parser_service.services.permissions import require_person_tree_role
 from parser_service.services.person_merger import (
     MergeBlockedError,
     PersonMergerLookupError,
@@ -103,6 +105,7 @@ def _diff_to_response(diff) -> MergePreviewResponse:  # type: ignore[no-untyped-
     "/persons/{person_id}/merge/preview",
     response_model=MergePreviewResponse,
     summary="Preview a person merge — no DB writes (Phase 4.6, ADR-0022).",
+    dependencies=[Depends(require_person_tree_role(TreeRole.EDITOR))],
 )
 async def preview_merge(
     person_id: uuid.UUID,
@@ -136,6 +139,7 @@ async def preview_merge(
     "/persons/{person_id}/merge",
     response_model=MergeCommitResponse,
     summary="Commit a person merge — requires confirm:true (CLAUDE.md §5).",
+    dependencies=[Depends(require_person_tree_role(TreeRole.EDITOR))],
 )
 async def commit_merge(
     person_id: uuid.UUID,
@@ -144,7 +148,11 @@ async def commit_merge(
 ) -> MergeCommitResponse:
     """Транзакционный merge, идемпотентный по ``confirm_token``."""
     try:
-        async with session.begin():
+        # Phase 11.0: ``begin_nested`` (SAVEPOINT) вместо ``begin()``, потому что
+        # permission-gate ``require_person_tree_role`` уже autobegin'ил
+        # транзакцию SELECT'ом по persons/tree_memberships. SAVEPOINT даёт ту
+        # же атомарность для apply_merge, не конфликтуя с уже-открытой outer-tx.
+        async with session.begin_nested():
             log = await apply_merge(
                 session,
                 a_id=person_id,
@@ -193,7 +201,8 @@ async def undo(
 ) -> MergeUndoResponse:
     """Откатывает merge, если в окне 90 дней и merged person ещё в БД."""
     try:
-        async with session.begin():
+        # Phase 11.0 — см. комментарий в commit_merge о begin_nested.
+        async with session.begin_nested():
             log = await undo_merge(session, merge_id=merge_id)
     except PersonMergerLookupError as exc:
         raise HTTPException(

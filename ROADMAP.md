@@ -518,10 +518,36 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 
 ## 15. Фаза 11 — Сообщество и совместная работа
 
-- Совместное редактирование дерева (несколько user'ов с разными ролями: owner, editor, viewer).
-- Публичные / приватные деревья.
+### Phase 11.0 — DB + permission API ✅ (см. ADR-0036)
+
+- ORM `TreeMembership` + `TreeInvitation` + миграция 0015 (partial unique
+  index гарантирует ровно один OWNER на дерево).
+- 7 sharing endpoints в `services/parser-service/src/parser_service/api/sharing.py`:
+  POST/GET `/trees/{id}/invitations`, DELETE `/invitations/{id}`,
+  POST `/invitations/{token}/accept`, GET `/trees/{id}/members`,
+  PATCH/DELETE `/memberships/{id}`.
+- Permission gate `require_tree_role(TreeRole.X)` применён к
+  `/trees/{id}/persons`, `/trees/{id}/persons/search`, `/trees/{id}/sources`
+  (VIEWER+), `/persons/{id}/merge*` (EDITOR+ через `require_person_tree_role`).
+- Auth-stub `parser_service.auth.get_current_user` (X-User-Id header → fallback
+  на settings.owner_email). Контракт стабилен для замены на Clerk JWT в Phase 4.10.
+
+### Phase 11.1 — UI + email + audit (next PR)
+
+- `apps/web/src/app/trees/[id]/sharing/page.tsx` — owner UI: list members,
+  invite-by-email form, pending invitations, revoke buttons.
+- `apps/web/src/app/invitations/[token]/page.tsx` — accept-flow.
+- Site-header tree-picker dropdown.
+- Email delivery через notification-service (event_type=tree_invitation),
+  SendGrid free-tier для MVP.
+- Audit-log integration: GET /trees/{id}/audit?type=membership.
+- Owner-transfer flow: POST /trees/{id}/transfer-ownership.
+
+### Phase 11.2+ (future)
+
+- Публичные / приватные деревья — TreeVisibility=PUBLIC + read-only без auth.
 - Комментарии, обсуждения на уровне персоны/семьи.
-- Связь с Telegram-каналом, Discord, Facebook (только публикация дайджестов, не двусторонняя интеграция изначально).
+- Связь с Telegram-каналом, Discord, Facebook (только публикация дайджестов).
 - Forum/Q&A — отложено, можно использовать готовое (Discourse, Discord).
 
 ---

@@ -63,7 +63,14 @@ async def _run_import_via_runner(postgres_dsn: str, ged_bytes: bytes, filename: 
     Возвращает (tree_id, stats_dict). Используется тестами вместо
     HTTP POST /imports — после Phase 3.5 endpoint enqueue'ит worker'а,
     а реальный импорт делает ``run_import``.
+
+    Phase 11.0: ``owner_email`` сознательно совпадает с дефолтом
+    ``Settings.owner_email`` (см. ``parser_service.config``). До Phase 4.10
+    auth-stub fall back'ает на settings.owner_email; чтобы permission-gate
+    распознал HTTP-caller'а как owner'а только-что-созданного дерева,
+    оба должны указывать на одного и того же User-row (find-or-create по email).
     """
+    from parser_service.config import get_settings
     from parser_service.services.import_runner import run_import
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
@@ -78,7 +85,7 @@ async def _run_import_via_runner(postgres_dsn: str, ged_bytes: bytes, filename: 
             job = await run_import(
                 session,
                 tmp_path,
-                owner_email="test@autotreegen.local",
+                owner_email=get_settings().owner_email,
                 tree_name=Path(filename).stem,
                 source_filename=filename,
             )

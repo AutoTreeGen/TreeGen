@@ -21,6 +21,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from shared_models import TreeRole
 from shared_models.orm import (
     Citation,
     Event,
@@ -42,6 +43,7 @@ from parser_service.schemas import (
     SourceListResponse,
     SourceSummary,
 )
+from parser_service.services.permissions import require_tree_role
 
 router = APIRouter()
 
@@ -50,6 +52,7 @@ router = APIRouter()
     "/trees/{tree_id}/sources",
     response_model=SourceListResponse,
     summary="Paginated list of sources in a tree",
+    dependencies=[Depends(require_tree_role(TreeRole.VIEWER))],
 )
 async def list_sources(
     tree_id: uuid.UUID,
