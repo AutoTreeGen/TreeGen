@@ -24,7 +24,7 @@ const NODE_HEIGHT = 88;
  * это его родители (отец, мать). Корень слева, родители раскручиваются
  * вправо при ``orientation="horizontal"``.
  */
-function toRawNode(node: AncestorTreeNode): RawNodeDatum {
+export function toRawNode(node: AncestorTreeNode): RawNodeDatum {
   const children: RawNodeDatum[] = [];
   if (node.father) children.push(toRawNode(node.father));
   if (node.mother) children.push(toRawNode(node.mother));
