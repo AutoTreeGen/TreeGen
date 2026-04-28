@@ -136,6 +136,12 @@ flow и импорт UI — там реальный браузер уже оку
    в CI workflow и `scripts/check.{ps1,sh}` отдельным PR (вне scope этого
    ADR — здесь только инфра).
 
+> **TODO (после merge PR #96):** ~5-минутная ручная правка — добавить
+> `pnpm -F @autotreegen/web test` в `scripts/check.ps1` (и `check.sh` для
+> парности, проверяемой `tests/test_ci_parity.py`) и в job `lint-and-test`
+> в `.github/workflows/ci.yml`. После этого frontend-тесты становятся
+> обязательным гейтом перед `git push`, как и backend pytest.
+
 ## Когда пересмотреть
 
 - Если появится auth flow / mutations (Phase 4.x) и unit-тестов на
