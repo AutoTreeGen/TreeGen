@@ -133,6 +133,7 @@ export type AncestorTreeNode = {
   birth_year: number | null;
   death_year: number | null;
   sex: string;
+  dna_tested?: boolean;
   father: AncestorTreeNode | null;
   mother: AncestorTreeNode | null;
 };
