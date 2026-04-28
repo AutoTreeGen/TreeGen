@@ -286,6 +286,38 @@ async def test_ancestors_returns_tree_structure(app_client) -> None:
 
 
 @pytest.mark.asyncio
+async def test_ancestors_dna_tested_stub_defaults_false(app_client) -> None:
+    """Phase 4.3 stub: каждый ``AncestorTreeNode`` имеет ``dna_tested=False``.
+
+    Phase 6 (DNA matching) заменит stub на реальный lookup по подтверждённым
+    DNA-китам. Пока проверяем только что поле присутствует и дефолт = False
+    на root и любых загруженных father/mother узлах.
+    """
+    files = {"file": ("test.ged", _GED_3_GENERATIONS, "application/octet-stream")}
+    created = await app_client.post("/imports", files=files)
+    tree_id = created.json()["tree_id"]
+
+    listing = await app_client.get(f"/trees/{tree_id}/persons")
+    person_id = next(p["id"] for p in listing.json()["items"] if p["gedcom_xref"] == "I7")
+
+    response = await app_client.get(f"/persons/{person_id}/ancestors?generations=3")
+    assert response.status_code == 200
+    body = response.json()
+
+    root = body["root"]
+    assert root["dna_tested"] is False
+
+    # Проверяем, что у обоих родителей (загруженных в фикстуре) тоже False.
+    father = root["father"]
+    assert father is not None
+    assert father["dna_tested"] is False
+
+    mother = root["mother"]
+    assert mother is not None
+    assert mother["dna_tested"] is False
+
+
+@pytest.mark.asyncio
 async def test_ancestors_returns_404_for_unknown(app_client) -> None:
     """Несуществующий person_id → 404."""
     response = await app_client.get("/persons/00000000-0000-0000-0000-000000000000/ancestors")
