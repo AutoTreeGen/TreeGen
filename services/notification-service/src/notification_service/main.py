@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from notification_service.api import health, notifications
+from notification_service.api import health, notifications, preferences
 from notification_service.config import get_settings
 from notification_service.database import dispose_engine, init_engine
 
@@ -34,3 +34,4 @@ app = FastAPI(
 
 app.include_router(health.router)
 app.include_router(notifications.router)
+app.include_router(preferences.router)

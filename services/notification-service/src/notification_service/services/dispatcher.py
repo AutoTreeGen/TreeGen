@@ -34,7 +34,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from shared_models.enums import NotificationEventType
-from shared_models.orm import Notification
+from shared_models.orm import Notification, NotificationPreference
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -71,11 +71,18 @@ class UnknownEventTypeError(ValueError):
 
 @dataclass(frozen=True)
 class DispatchOutcome:
-    """Результат одной диспатч-операции (успех + идемпотентность)."""
+    """Результат одной диспатч-операции (успех + идемпотентность).
+
+    ``notification_id=None`` + ``skipped_by_pref=True`` — user отключил
+    этот ``event_type`` в preferences, dispatcher не создал row
+    (см. ADR-0029). Это отдельный сигнал от ``deduplicated`` —
+    последний означает «ту же нотификацию недавно уже создали».
+    """
 
     notification_id: Any
     delivered_channels: list[str]
     deduplicated: bool
+    skipped_by_pref: bool = False
 
 
 def _canonical_idempotency_key(payload: dict[str, Any]) -> str:
@@ -111,6 +118,26 @@ def _normalize_channels(
             raise UnknownChannelError(msg)
         out.append(channel)
     return out
+
+
+async def _load_preference(
+    session: AsyncSession,
+    *,
+    user_id: int,
+    event_type: str,
+) -> NotificationPreference | None:
+    """Достать строку prefs для ``(user_id, event_type)``, либо None.
+
+    Если строки нет — caller применяет дефолты (enabled=True, все
+    requested channels). См. ADR-0029 «Phase 8.0 wire-up».
+    """
+    res = await session.execute(
+        select(NotificationPreference).where(
+            NotificationPreference.user_id == user_id,
+            NotificationPreference.event_type == event_type,
+        )
+    )
+    return res.scalar_one_or_none()
 
 
 async def _find_existing(
@@ -202,7 +229,41 @@ async def dispatch(
         msg = f"Unknown event_type: {event_type!r}. Known: {sorted(_KNOWN_EVENT_TYPES)}"
         raise UnknownEventTypeError(msg)
 
-    channel_objs = _normalize_channels(channels)
+    requested_channels = list(channels)
+    # Pref-проверка раньше всего: если user отключил event_type — выходим
+    # БЕЗ создания row в notifications (ADR-0029, альтернатива А4
+    # отвергнута: не раздуваем inbox отключёнными событиями).
+    pref = await _load_preference(session, user_id=user_id, event_type=event_type)
+    if pref is not None and not pref.enabled:
+        return DispatchOutcome(
+            notification_id=None,
+            delivered_channels=[],
+            deduplicated=False,
+            skipped_by_pref=True,
+        )
+
+    # Если у user'а есть pref-строка — пересекаем requested channels с
+    # prefs.channels. Каналы вне списка не вызываются, но попадают в
+    # ``channels_attempted`` как ``skipped: user_pref`` для аудита.
+    pref_channels: set[str] | None = set(pref.channels) if pref is not None else None
+
+    skipped_by_pref_attempts: list[dict[str, Any]] = []
+    effective_channel_names: list[str] = []
+    for name in requested_channels:
+        if pref_channels is not None and name not in pref_channels:
+            skipped_by_pref_attempts.append(
+                {
+                    "channel": name,
+                    "success": False,
+                    "skipped": "user_pref",
+                    "error": None,
+                    "attempted_at": dt.datetime.now(dt.UTC).isoformat(),
+                }
+            )
+        else:
+            effective_channel_names.append(name)
+
+    channel_objs = _normalize_channels(effective_channel_names)
     idempotency_key = _canonical_idempotency_key(payload)
 
     existing = await _find_existing(
@@ -235,7 +296,10 @@ async def dispatch(
     await session.flush()  # получить id и created_at
 
     attempts = await _run_channels(notification, channel_objs)
-    notification.channels_attempted = attempts
+    # Конкатенация: сначала попытки реально вызванных каналов, затем
+    # «pref-skip» записи. Порядок не важен для UI, но детерминирован.
+    all_attempts = [*attempts, *skipped_by_pref_attempts]
+    notification.channels_attempted = all_attempts
     if any(a["success"] for a in attempts):
         notification.delivered_at = dt.datetime.now(dt.UTC)
     await session.flush()
