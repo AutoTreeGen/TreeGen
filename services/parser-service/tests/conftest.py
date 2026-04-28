@@ -142,6 +142,108 @@ def _override_arq_pool(app):
     app.dependency_overrides.pop(get_arq_pool, None)
 
 
+@pytest.fixture(autouse=True)
+def _override_auth(app):
+    """Phase 4.10: подменяем Clerk auth dependencies на test-stub'ы.
+
+    Большинство тестов parser-service'а написаны до Clerk-auth и не
+    хотят возиться с генерацией JWT; этот autouse-фикстура говорит
+    FastAPI: «считай, что Bearer JWT есть и user authenticated, JIT
+    создал row если её не было».
+
+    Тесты, которые проверяют именно auth-flow (test_auth_required.py),
+    локально снимают override через ``app.dependency_overrides.pop``
+    или используют альтернативный test-app без override'а.
+    """
+    import uuid
+    from typing import Any
+
+    from fastapi import Depends
+    from parser_service.auth import (
+        get_clerk_settings,
+        get_current_claims,
+        get_current_claims_optional,
+        get_current_user_id,
+    )
+    from parser_service.config import Settings
+    from parser_service.database import get_session
+    from shared_models.auth import ClerkClaims
+    from shared_models.orm import User
+    from sqlalchemy import select
+
+    # Фейковый Clerk sub: фиксированный, чтобы JIT-create нашёл одного
+    # и того же user'а между запросами в одном тесте.
+    fake_sub = "user_test_clerk_sub"
+    fake_email = "test-user@autotreegen.test"
+    fake_claims = ClerkClaims(sub=fake_sub, email=fake_email, raw={"sub": fake_sub})
+    # Стабильный fake user_id для тестов, использующих stub-session
+    # (без реальной DB). Если test поднимает реальную сессию, в ней
+    # JIT-create создаст row с тем же ``clerk_user_id``, и мы вернём
+    # её фактический UUID; иначе возвращаем этот fallback.
+    fallback_user_id = uuid.UUID("00000000-0000-0000-0000-000000000001")
+
+    async def _fake_current_claims() -> ClerkClaims:
+        return fake_claims
+
+    async def _fake_current_claims_optional() -> ClerkClaims:
+        return fake_claims
+
+    async def _fake_current_user_id(
+        session: Any = Depends(get_session),
+    ) -> uuid.UUID:
+        """JIT-create или найти test user'а через текущий session-override.
+
+        Если session — это in-memory stub (test_imports_async.py), его
+        ``execute`` не возвращает реального ``User``-row; ловим и
+        возвращаем fallback UUID. На реальной DB-сессии (большинство
+        тестов) делаем нормальный JIT-flow.
+        """
+        try:
+            existing = (
+                await session.execute(select(User).where(User.clerk_user_id == fake_sub))
+            ).scalar_one_or_none()
+        except Exception:
+            return fallback_user_id
+        if existing is not None:
+            return existing.id
+        # На stub-session `add`/`flush`/`commit` — no-op'ы, ничего страшного.
+        try:
+            user = User(
+                email=fake_email,
+                external_auth_id=f"clerk:{fake_sub}",
+                clerk_user_id=fake_sub,
+                display_name="Test User",
+                locale="en",
+            )
+            session.add(user)
+            await session.flush()
+            await session.commit()
+        except Exception:
+            return fallback_user_id
+        return user.id if user.id is not None else fallback_user_id
+
+    # ClerkJwtSettings stub — иначе get_clerk_settings вернёт 503 при
+    # пустом env. Никто из stub'ов выше его не вызывает, но depends-
+    # граф ещё пытается резолвить (FastAPI сначала строит граф).
+    def _fake_clerk_settings(_settings: Settings = None):  # type: ignore[assignment]
+        from shared_models.auth import ClerkJwtSettings
+
+        return ClerkJwtSettings(issuer="https://test.clerk.local")
+
+    app.dependency_overrides[get_clerk_settings] = _fake_clerk_settings
+    app.dependency_overrides[get_current_claims] = _fake_current_claims
+    app.dependency_overrides[get_current_claims_optional] = _fake_current_claims_optional
+    app.dependency_overrides[get_current_user_id] = _fake_current_user_id
+    yield
+    for dep in (
+        get_clerk_settings,
+        get_current_claims,
+        get_current_claims_optional,
+        get_current_user_id,
+    ):
+        app.dependency_overrides.pop(dep, None)
+
+
 @pytest_asyncio.fixture
 async def app_client(app, postgres_dsn: str) -> AsyncIterator:
     """httpx AsyncClient против поднятого FastAPI app, привязанного к test-DB."""

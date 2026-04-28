@@ -77,6 +77,51 @@ uv run pre-commit install
 
 ---
 
+## Authentication (Phase 4.10, ADR-0033)
+
+Все user-facing endpoints в `parser-service` / `dna-service` /
+`notification-service` требуют Bearer JWT, выпущенный Clerk.
+Frontend (`apps/web`) использует `@clerk/nextjs` middleware для входа
+и `useAuth().getToken()` для прикрепления токена к API-вызовам.
+
+### Clerk dashboard setup
+
+1. Зарегистрируйся на <https://clerk.com>, создай application.
+2. **Settings → API Keys**:
+   - Скопируй **Publishable key** → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+     (для apps/web).
+   - Скопируй **Secret key** → `CLERK_SECRET_KEY`
+     (для apps/web Server Components).
+   - Из «Show JWT public key» возьми **issuer URL** (например,
+     `https://accept-XXXX.clerk.accounts.dev`) и положи в три бекенд-
+     ENV: `PARSER_SERVICE_CLERK_ISSUER`, `DNA_SERVICE_CLERK_ISSUER`,
+     `NOTIFICATION_SERVICE_CLERK_ISSUER`.
+3. **Webhooks → Endpoint**:
+   - Endpoint URL: `https://<your-domain>/webhooks/clerk` (parser-service).
+   - Subscribe to: `user.created`, `user.updated`, `user.deleted`.
+   - Скопируй **Signing Secret** → `PARSER_SERVICE_CLERK_WEBHOOK_SECRET`.
+4. Подними фронт (`pnpm dev` в `apps/web`), зайди на `/sign-up` —
+   зарегистрируй тестового user'а. На первом authed-API-вызове
+   parser-service автоматически создаст `users` row через
+   `get_or_create_user_from_clerk` (JIT).
+
+### Local dev без Clerk
+
+Если бекенд `*_CLERK_ISSUER` пуст, auth-зависимости возвращают **503
+Service Unavailable** на любой защищённый endpoint. Это сделано
+сознательно: misconfigured-окружение не должно «молча» пропускать
+неаутентифицированных юзеров. Для локального dev'а:
+
+- Frontend: установи `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (Clerk
+  выдаёт `pk_test_*`-ключи на dev-app).
+- Backend: установи `*_CLERK_ISSUER` на dev-issuer URL.
+- Tests: используют `dependency_overrides` (см. `conftest.py`),
+  поэтому работают и без реального issuer'а.
+
+См. ADR-0033 для полного флоу + migration path при смене провайдера.
+
+---
+
 ## Конвенции
 
 - **Код и идентификаторы — на английском.**

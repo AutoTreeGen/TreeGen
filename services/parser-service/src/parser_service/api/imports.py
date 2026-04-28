@@ -36,6 +36,7 @@ from shared_models.orm import ImportJob, Tree, User
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from parser_service.auth import RequireUser
 from parser_service.config import Settings, get_settings
 from parser_service.database import get_session
 from parser_service.queue import get_arq_pool
@@ -113,6 +114,7 @@ async def _ensure_owner(session: AsyncSession, email: str) -> User:
 async def create_import(
     file: UploadFile,
     response: Response,
+    user_id: RequireUser,
     settings: Annotated[Settings, Depends(get_settings)],
     session: Annotated[AsyncSession, Depends(get_session)],
     pool: Annotated[ArqRedis, Depends(get_arq_pool)],
@@ -155,14 +157,19 @@ async def create_import(
         tmp_path = Path(tmp.name)
 
     if os.environ.get(_INLINE_ENV_VAR) == "1":
-        # Legacy-синхронный путь: ``run_import`` создаёт User+Tree+ImportJob
-        # самостоятельно (см. import_runner._ensure_owner / _create_tree), так
-        # что upfront-сетап здесь не нужен. Возвращаем 201 + готовый job.
+        # Legacy-синхронный путь: ``run_import`` создаёт Tree+ImportJob
+        # вокруг user'а, который JIT-создан auth-зависимостью. Lookup
+        # email'а — best-effort: на stub-session тестов он отсутствует,
+        # тогда падаем на ``settings.owner_email``.
+        owner_user = (
+            await session.execute(select(User).where(User.id == user_id))
+        ).scalar_one_or_none()
+        owner_email = owner_user.email if owner_user is not None else settings.owner_email
         try:
             job = await run_import(
                 session,
                 tmp_path,
-                owner_email=settings.owner_email,
+                owner_email=owner_email,
                 tree_name=Path(file.filename).stem,
                 source_filename=file.filename,
             )
@@ -178,12 +185,10 @@ async def create_import(
         response.status_code = status.HTTP_201_CREATED
         return _job_to_response(job)
 
-    owner = await _ensure_owner(session, settings.owner_email)
-
     # Tree создаётся сразу: ImportJob.tree_id NOT NULL FK. Worker позже
     # дополняет provenance после успешного парсинга.
     tree = Tree(
-        owner_user_id=owner.id,
+        owner_user_id=user_id,
         name=Path(file.filename).stem,
         visibility=TreeVisibility.PRIVATE.value,
         default_locale="en",
@@ -196,7 +201,7 @@ async def create_import(
 
     job = ImportJob(
         tree_id=tree.id,
-        created_by_user_id=owner.id,
+        created_by_user_id=user_id,
         source_kind=ImportSourceKind.GEDCOM.value,
         source_filename=file.filename,
         source_size_bytes=len(contents),

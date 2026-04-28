@@ -86,14 +86,39 @@ async def app_client(postgres_dsn: str, storage_root: Path) -> AsyncIterator:
     # Plaintext-mode для тестов (encrypted-blob handling — Phase 6.2.x).
     os.environ["DNA_SERVICE_REQUIRE_ENCRYPTION"] = "false"
 
+    from dna_service.auth import (
+        get_clerk_settings,
+        get_current_claims,
+    )
     from dna_service.database import dispose_engine, init_engine
     from dna_service.main import app
     from httpx import ASGITransport, AsyncClient
+
+    # Phase 4.10: подменяем Clerk auth depends на test-stub'ы. Большинство
+    # dna-service тестов написаны до auth-flow и не интересуются JWT.
+    from shared_models.auth import ClerkClaims, ClerkJwtSettings
+
+    fake_claims = ClerkClaims(
+        sub="user_test_dna_clerk_sub",
+        email="dna-test@autotreegen.test",
+        raw={"sub": "user_test_dna_clerk_sub"},
+    )
+
+    async def _fake_current_claims() -> ClerkClaims:
+        return fake_claims
+
+    def _fake_clerk_settings():
+        return ClerkJwtSettings(issuer="https://test.clerk.local")
+
+    app.dependency_overrides[get_clerk_settings] = _fake_clerk_settings
+    app.dependency_overrides[get_current_claims] = _fake_current_claims
 
     init_engine(postgres_dsn)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
+    app.dependency_overrides.pop(get_clerk_settings, None)
+    app.dependency_overrides.pop(get_current_claims, None)
     await dispose_engine()
 
 

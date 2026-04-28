@@ -102,10 +102,13 @@ export function setUnauthorizedHandler(handler: () => void): void {
  */
 async function fetchOnce(path: string, init?: RequestInit): Promise<Response> {
   let response: Response;
+  // Phase 4.10: auth-header через ``authHeaders()``-singleton (см. ниже).
+  // Без зависимости — auth опциональный (anon-fetch'и landing-роутов).
+  const auth = await authHeaders();
   try {
     response = await _fetchImpl(`${API_BASE}${path}`, {
       ...init,
-      headers: { Accept: "application/json", ...init?.headers },
+      headers: { Accept: "application/json", ...auth, ...init?.headers },
     });
   } catch (err) {
     // fetch бросает только при network/abort/CORS-настройках. Любую
@@ -120,10 +123,46 @@ async function fetchOnce(path: string, init?: RequestInit): Promise<Response> {
   return response;
 }
 
+/**
+ * Phase 4.10: getter для Bearer JWT, выпущенного Clerk.
+ *
+ * Все API-вызовы идут через ``getJson`` / ``fetch``-wrapper'ы; они
+ * читают токен через этот глобальный getter и подставляют в
+ * ``Authorization``-header. Setter регистрируется один раз в
+ * ``providers.tsx`` (через ``useAuth().getToken``).
+ *
+ * Дизайн «глобальный setter» вместо «передавать token каждой
+ * ApiCall'у» — компромисс: API-функции уже сейчас вызываются из
+ * множества мест (server-actions, hooks), и protocoling каждой
+ * сигнатуры под token-passing раздул бы PR на ровном месте.
+ *
+ * SSR-режим: на server этот getter возвращает null (Clerk-context
+ * отсутствует), запросы уйдут без Bearer'а — в server-actions
+ * добавляйте `headers: { Authorization: ... }` руками.
+ */
+type AuthTokenProvider = () => Promise<string | null>;
+
+let authTokenProvider: AuthTokenProvider | null = null;
+
+export function setAuthTokenProvider(provider: AuthTokenProvider | null): void {
+  authTokenProvider = provider;
+}
+
+async function authHeaders(): Promise<Record<string, string>> {
+  if (authTokenProvider === null) {
+    return {};
+  }
+  const token = await authTokenProvider();
+  if (!token) {
+    return {};
+  }
+  return { Authorization: `Bearer ${token}` };
+}
+
 async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
-  // Retry применяется ко всем GET'ам и body-less запросам по умолчанию;
-  // если caller передаёт ``init.method`` POST/PATCH/DELETE, он сам решает —
-  // оборачивать ли через ``withRetry``. Здесь идемпотент-safe path.
+  // Phase 4.6: retry применяется ко всем GET'ам и body-less запросам;
+  // POST/PATCH/DELETE caller'ы оборачивают сами (через ``fetchOnceJson``).
+  // Phase 4.10: auth-header добавляется внутри ``fetchOnce``.
   try {
     const response = await withRetry(() => fetchOnce(path, init));
     return (await response.json()) as T;

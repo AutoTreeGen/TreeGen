@@ -14,6 +14,9 @@ from pathlib import Path
 
 import pytest
 import pytest_asyncio
+from fastapi import HTTPException, Request
+from fastapi import status as _http_status
+from shared_models.auth import ClerkClaims, ClerkJwtSettings
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -69,17 +72,66 @@ def postgres_dsn() -> Iterator[str]:
         container.stop()
 
 
+# Phase 4.10: тесты исторически шлют ``X-User-Id`` int header'ом —
+# легче сохранить контракт через override, чем переписать 30+ тестов
+# под Bearer JWT. Override-функции вынесены на module-level, чтобы
+# FastAPI правильно ввёл ``Request`` из global scope (closure-функции
+# давали false-positive «Field required for query.request»).
+
+
+def _fake_clerk_settings_override() -> ClerkJwtSettings:
+    return ClerkJwtSettings(issuer="https://test.clerk.local")
+
+
+async def _claims_from_x_user_override(request: Request) -> ClerkClaims:
+    x_user = request.headers.get("X-User-Id")
+    if not x_user:
+        raise HTTPException(
+            status_code=_http_status.HTTP_401_UNAUTHORIZED,
+            detail="Missing test X-User-Id header",
+        )
+    return ClerkClaims(sub=f"user_test_{x_user}", email=None, raw={})
+
+
+async def _user_id_from_x_user_override(request: Request) -> int:
+    x_user = request.headers.get("X-User-Id")
+    if not x_user:
+        raise HTTPException(
+            status_code=_http_status.HTTP_401_UNAUTHORIZED,
+            detail="Missing test X-User-Id header",
+        )
+    try:
+        return int(x_user)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=_http_status.HTTP_401_UNAUTHORIZED,
+            detail="X-User-Id must be a positive integer",
+        ) from exc
+
+
 @pytest_asyncio.fixture
 async def app_client(postgres_dsn: str) -> AsyncIterator:
     """httpx AsyncClient против поднятого FastAPI app, привязанного к test-DB."""
     os.environ["NOTIFICATION_SERVICE_DATABASE_URL"] = postgres_dsn
 
     from httpx import ASGITransport, AsyncClient
+    from notification_service.auth import (
+        get_clerk_settings,
+        get_current_claims,
+        get_current_user_id,
+    )
     from notification_service.database import dispose_engine, init_engine
     from notification_service.main import app
+
+    app.dependency_overrides[get_clerk_settings] = _fake_clerk_settings_override
+    app.dependency_overrides[get_current_claims] = _claims_from_x_user_override
+    app.dependency_overrides[get_current_user_id] = _user_id_from_x_user_override
 
     init_engine(postgres_dsn)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
+    app.dependency_overrides.pop(get_clerk_settings, None)
+    app.dependency_overrides.pop(get_current_claims, None)
+    app.dependency_overrides.pop(get_current_user_id, None)
     await dispose_engine()

@@ -3,6 +3,8 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import type { ReactNode } from "react";
 
+import { ClerkProvider } from "@clerk/nextjs";
+
 import { GlobalErrorBoundary } from "@/components/error-boundary";
 import { OfflineIndicator } from "@/components/offline-indicator";
 import { SiteHeader } from "@/components/site-header";
@@ -58,26 +60,34 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+/**
+ * Phase 4.10 + 4.12: ClerkProvider оборачивает всё приложение (session
+ * token доступен через ``useAuth().getToken()``), внутри —
+ * NextIntlClientProvider для i18n. ``html lang`` берётся от next-intl
+ * server-helper'а.
+ */
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const locale = await getLocale();
   const messages = await getMessages();
 
   return (
-    <html lang={locale}>
-      <body className="min-h-dvh antialiased">
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <Providers>
-            {/* OfflineIndicator + ServiceWorkerBootstrap — внутри Providers,
-                чтобы ``useQueryClient`` нашёл provider. SiteHeader выше
-                error-boundary, чтобы навигация работала даже при крэше
-                content-area (см. ADR-0041 §«Per-route vs global»). */}
-            <ServiceWorkerBootstrap />
-            <OfflineIndicator />
-            <SiteHeader />
-            <GlobalErrorBoundary>{children}</GlobalErrorBoundary>
-          </Providers>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang={locale}>
+        <body className="min-h-dvh antialiased">
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <Providers>
+              {/* Phase 4.10 + 4.12 + 4.6: ClerkProvider → NextIntl → Providers →
+                  ServiceWorkerBootstrap + OfflineIndicator (нужен QueryClient) +
+                  SiteHeader (выше error-boundary для нав-resilience) +
+                  GlobalErrorBoundary вокруг content-area. */}
+              <ServiceWorkerBootstrap />
+              <OfflineIndicator />
+              <SiteHeader />
+              <GlobalErrorBoundary>{children}</GlobalErrorBoundary>
+            </Providers>
+          </NextIntlClientProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
