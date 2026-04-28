@@ -26,6 +26,7 @@ LLM-rules — Phase 10, отдельным пакетом с явным seed.
 from inference_engine.rules.base import InferenceRule
 from inference_engine.rules.birth_year import BirthYearMatchRule
 from inference_engine.rules.dna import DnaSegmentRelationshipRule
+from inference_engine.rules.llm_place import LlmPlaceMatchRule, PlaceNormalizer
 from inference_engine.rules.place import BirthPlaceMatchRule
 from inference_engine.rules.registry import (
     RuleAlreadyRegisteredError,
@@ -44,6 +45,8 @@ __all__ = [
     "BirthYearMatchRule",
     "DnaSegmentRelationshipRule",
     "InferenceRule",
+    "LlmPlaceMatchRule",
+    "PlaceNormalizer",
     "RuleAlreadyRegisteredError",
     "RuleNotFoundError",
     "SexConsistencyRule",

@@ -15,6 +15,10 @@ authors = [{ name = "AutoTreeGen" }]
 dependencies = [
     "pydantic>=2.10",
     "entity-resolution",
+    # llm-services — optional usage в LlmPlaceMatchRule (Phase 10.0).
+    # Тянем как workspace member, чтобы NormalizedPlace был доступен
+    # для type-checking. Сами LLM-вызовы инжектируются через callable.
+    "llm-services",
 ]
 
 [build-system]

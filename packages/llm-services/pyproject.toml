@@ -1,0 +1,44 @@
+# =====================================================================
+# llm-services — обёртка над Anthropic Claude API (Phase 10.0).
+#
+# Минимальный AI-слой: client wrapper + 1-2 high-value LLM-операции
+# (нормализация мест, дизамбигуация имён). Пакет демонстрирует pattern
+# для будущего расширения (Phase 10.x: free-text source extraction,
+# OCR post-processing, hypothesis explainer).
+#
+# Архитектура — ADR-0030 «AI layer architecture».
+# Принцип: «Deterministic > magic» (CLAUDE.md §6) — LLM применяется
+# только в gray-zone случаях, где rule-based подход неоднозначен.
+# =====================================================================
+
+[project]
+name = "llm-services"
+version = "0.1.0"
+description = "Anthropic Claude API wrapper + LLM-операции для AutoTreeGen (Phase 10.0)."
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "Proprietary" }
+authors = [{ name = "AutoTreeGen" }]
+
+# Зависимости:
+#  - anthropic: официальный SDK Claude API.
+#  - pydantic: модели NormalizedPlace / NameCluster.
+# Намеренно НЕ тянем httpx/tenacity — anthropic SDK сам управляет
+# transport-уровнем, retry-policy и timeout'ами.
+dependencies = [
+    "anthropic>=0.40",
+    "pydantic>=2.10",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/llm_services"]

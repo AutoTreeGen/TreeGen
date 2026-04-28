@@ -474,7 +474,37 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 
 **Цель:** применить LLM там, где он реально полезен, не везде.
 
-### 14.1 Use cases
+### 14.0 Skeleton (Phase 10.0) — DONE (2026-04-28)
+
+Минимальный AI-слой как фундамент для последующих 10.x подзадач.
+Архитектурное решение — **ADR-0030 «AI layer architecture»**.
+
+Что сделано:
+
+1. ✅ `packages/llm-services/` — новый workspace member: тонкий wrapper
+   над Anthropic Claude API (`AsyncAnthropic`), default model
+   `claude-sonnet-4-6`, retry/timeout, ENV-driven API key.
+2. ✅ Public API: `claude_client`, `normalize_place_name(raw, context)`,
+   `disambiguate_name_variants(variants)`. Структурированные ответы через
+   `output_config.format` (json_schema) → `NormalizedPlace` / `NameCluster`.
+3. ✅ Промпт-templates с версионным заголовком (`# version: vN`) в
+   `prompts/*.txt` — версия попадает в audit-log при каждом вызове.
+4. ✅ `LlmPlaceMatchRule` в `inference-engine` — вызывает LLM только в
+   gray-zone (rule-based score 0.40–0.70). Cost-aware gating.
+5. ✅ Тесты: place_normalization, name_disambiguation, llm_place rule —
+   все мокают Anthropic API (CI не делает real calls).
+6. ✅ ADR-0030 фиксирует cost ceiling, caching strategy, privacy
+   boundary (никаких DNA-сегментов в LLM).
+
+Что отложено в **Phase 10.x** (богатые use-cases):
+
+- **10.1** — Redis-cache layer для LLM-вызовов + audit-log таблица в БД.
+- **10.2** — Free-text source extraction (метрические записи XIX в.).
+- **10.3** — OCR post-processing для исторических шрифтов.
+- **10.4** — Hypothesis explainer (rationale на естественном языке).
+- **10.5** — RAG над загруженными документами + tool use.
+
+### 14.1 Use cases (Phase 10.x roadmap)
 
 1. **Document analyzer:** загрузить скан метрической записи / переписи → OCR → распарсить запись → предложить персон/события для добавления.
 2. **Translator:** автоматический перевод записей с польского/идиша/иврита/русского XIX века.
