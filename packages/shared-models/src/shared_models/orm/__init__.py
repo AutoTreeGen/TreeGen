@@ -31,6 +31,7 @@ from shared_models.orm.person_merge_log import PersonMergeLog
 from shared_models.orm.place import Place, PlaceAlias
 from shared_models.orm.shared_match import SharedMatch
 from shared_models.orm.source import Source
+from shared_models.orm.telegram_user_link import TelegramUserLink
 from shared_models.orm.tree import Tree, TreeCollaborator
 from shared_models.orm.user import User
 from shared_models.orm.version import Version
@@ -67,6 +68,7 @@ __all__ = [
     "PlaceAlias",
     "SharedMatch",
     "Source",
+    "TelegramUserLink",
     "Tree",
     "TreeCollaborator",
     "TreeInvitation",

@@ -75,6 +75,10 @@ SERVICE_TABLES = {
     # для idempotent dispatch (idempotency_key UNIQUE) и debug. Без soft-delete —
     # immutable history, retention через batch purge.
     "email_send_log",
+    # Telegram chat linking (Phase 14.0 / ADR-0040): per-user opt-in link к
+    # Telegram chat. Service-level mapping, без tree_id и soft-delete —
+    # revocation = revoked_at timestamp, не tombstone.
+    "telegram_user_links",
 }
 
 TREE_ENTITY_TABLES = {

@@ -1,0 +1,39 @@
+[project]
+name = "telegram-bot"
+version = "0.1.0"
+description = "AutoTreeGen Telegram bot — webhook receiver + opt-in account linking (Phase 14.0)."
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "Proprietary" }
+authors = [{ name = "AutoTreeGen", email = "autotreegen@gmail.com" }]
+
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.10",
+    "pydantic-settings>=2.6",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.30",
+    "python-dotenv>=1.0",
+    "httpx>=0.27",
+    "redis>=5.2",
+    # aiogram 3.x — async-нативный Bot API клиент с Pydantic v2
+    # моделями. Pinned до 4.0 (см. ADR-0040 §«Когда пересмотреть»).
+    "aiogram>=3.13,<4.0",
+    "shared-models",
+]
+
+[project.optional-dependencies]
+test = [
+    "httpx>=0.27",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "fakeredis>=2.26",
+]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/telegram_bot"]

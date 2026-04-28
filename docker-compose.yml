@@ -120,6 +120,35 @@ services:
     command: ["uv", "run", "arq", "parser_service.worker.WorkerSettings"]
 
   # ---------------------------------------------------------------------------
+  # telegram-bot — Telegram webhook receiver + opt-in linking (Phase 14.0).
+  # Webhook URL должен быть HTTPS — поднимай `cloudflared` или `ngrok`
+  # локально и регистрируй через `setWebhook` с тем же
+  # TELEGRAM_BOT_WEBHOOK_SECRET, который сюда передан. См. ADR-0040.
+  # ---------------------------------------------------------------------------
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: services/telegram-bot/Dockerfile
+    container_name: autotreegen-telegram-bot
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      TELEGRAM_BOT_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-autotreegen}:${POSTGRES_PASSWORD:-change-me-in-local-env}@postgres:5432/${POSTGRES_DB:-autotreegen}
+      TELEGRAM_BOT_REDIS_URL: redis://redis:6379/0
+      TELEGRAM_BOT_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_BOT_WEBHOOK_SECRET: ${TELEGRAM_BOT_WEBHOOK_SECRET:-}
+      TELEGRAM_BOT_LINK_TTL_SECONDS: ${TELEGRAM_BOT_LINK_TTL_SECONDS:-900}
+      TELEGRAM_BOT_WEB_BASE_URL: ${TELEGRAM_BOT_WEB_BASE_URL:-http://localhost:3000}
+      TELEGRAM_BOT_DEBUG: "false"
+    ports:
+      - "8006:8006"
+    command: ["uv", "run", "uvicorn", "telegram_bot.main:app", "--host", "0.0.0.0", "--port", "8006"]
+
+  # ---------------------------------------------------------------------------
   # MinIO bucket bootstrapper — однократно создаёт buckets при первом запуске.
   # ---------------------------------------------------------------------------
   minio-init:
