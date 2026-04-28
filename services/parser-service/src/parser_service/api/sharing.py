@@ -34,22 +34,28 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from shared_models import TreeRole, role_satisfies
-from shared_models.orm import TreeInvitation, TreeMembership, User
-from sqlalchemy import select
+from shared_models.orm import AuditLog, Tree, TreeInvitation, TreeMembership, User
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from parser_service.auth import get_current_user
 from parser_service.config import Settings, get_settings
 from parser_service.database import get_session
 from parser_service.schemas import (
+    AuditLogEntry,
+    AuditLogPage,
     InvitationAcceptResponse,
     InvitationCreateRequest,
     InvitationListResponse,
+    InvitationResendResponse,
     InvitationResponse,
     MemberListResponse,
     MemberResponse,
     MemberRoleUpdateRequest,
+    TransferOwnerRequest,
+    TransferOwnerResponse,
 )
+from parser_service.services.email_dispatcher import send_share_invite
 from parser_service.services.permissions import (
     check_tree_permission,
     require_tree_role,
@@ -125,6 +131,16 @@ async def create_invitation(
     await session.flush()
     await session.refresh(invitation)
     # `get_session` auto-commit'ит после yield — здесь явный commit не нужен.
+
+    # Phase 11.1 — fire-and-forget email-dispatch. Stub log-only до Phase 12.2;
+    # см. ADR-0040 §email-integration.
+    await send_share_invite(
+        invitation_token=str(invitation.token),
+        recipient_email=invitation.invitee_email,
+        tree_name=str(tree_id),  # tree_id вместо name — Phase 11.0 не подгружает Tree
+        inviter_name=user.display_name or user.email,
+    )
+
     return _to_invitation_response(invitation, settings=settings)
 
 
@@ -504,3 +520,313 @@ async def revoke_member(
     if membership.revoked_at is None:
         membership.revoked_at = dt.datetime.now(dt.UTC)
         await session.flush()
+
+
+# =============================================================================
+# Phase 11.1 — audit-log читалка, owner transfer, invitation resend.
+# =============================================================================
+
+
+# ---- GET /trees/{tree_id}/audit-log ---------------------------------------
+
+
+# Filter values принимаются по `entity_type` потому что pre-Phase-11
+# audit_log не имеет дискриминатора `action_type` отдельно от `action`;
+# мы использует existing колонку `entity_type` (см. ORM ``AuditLog``).
+# Допустимые значения, которые UI хочет (sharing-history view):
+_AUDIT_FILTER_ALLOWLIST: frozenset[str] = frozenset(
+    {
+        "tree_memberships",
+        "tree_invitations",
+    }
+)
+
+
+@router.get(
+    "/trees/{tree_id}/audit-log",
+    response_model=AuditLogPage,
+    summary="Owner-only — paginated read из ``audit_log`` для sharing-history view",
+    dependencies=[Depends(require_tree_role(TreeRole.OWNER))],
+)
+async def list_audit_log(
+    tree_id: uuid.UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    entity_type: Annotated[
+        str | None,
+        # Phase 11.1: фильтр по entity_type (membership / invitation). None →
+        # все записи дерева. Значения вне ``_AUDIT_FILTER_ALLOWLIST`` → 400 —
+        # чтобы UI не утекал через этот endpoint в чужие entity-types
+        # (persons / events / ...) — для общего audit будет отдельный endpoint
+        # позже, скорее в Phase 4.x.
+        None,
+    ] = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> AuditLogPage:
+    """Возвращает страницу audit-log записей дерева, sorted by created_at DESC.
+
+    ``entity_type`` фильтр опциональный; если задан — должен быть в allowlist
+    Phase 11.1 (membership / invitation), иначе 400.
+    """
+    if limit < 1 or limit > 200:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="limit must be 1..200",
+        )
+    if offset < 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="offset must be >= 0",
+        )
+    if entity_type is not None and entity_type not in _AUDIT_FILTER_ALLOWLIST:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                f"entity_type must be one of {sorted(_AUDIT_FILTER_ALLOWLIST)} "
+                "(Phase 11.1 sharing audit scope)"
+            ),
+        )
+
+    base_filters = [AuditLog.tree_id == tree_id]
+    if entity_type is not None:
+        base_filters.append(AuditLog.entity_type == entity_type)
+
+    total = await session.scalar(select(func.count(AuditLog.id)).where(*base_filters))
+
+    rows = await session.execute(
+        select(AuditLog)
+        .where(*base_filters)
+        .order_by(AuditLog.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    items = [AuditLogEntry.model_validate(row) for row in rows.scalars().all()]
+    return AuditLogPage(
+        tree_id=tree_id,
+        total=int(total or 0),
+        limit=limit,
+        offset=offset,
+        items=items,
+    )
+
+
+# ---- PATCH /trees/{tree_id}/transfer-owner --------------------------------
+
+
+@router.patch(
+    "/trees/{tree_id}/transfer-owner",
+    response_model=TransferOwnerResponse,
+    summary="Owner-only — 2-of-2 transfer ownership к другому active member'у",
+    dependencies=[Depends(require_tree_role(TreeRole.OWNER))],
+)
+async def transfer_owner(
+    tree_id: uuid.UUID,
+    body: TransferOwnerRequest,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    user: Annotated[User, Depends(get_current_user)],
+) -> TransferOwnerResponse:
+    """Передать ownership.
+
+    Проверки:
+
+    * ``current_owner_email_confirmation`` совпадает с email caller'а
+      (caller — current OWNER, прошёл require_tree_role).
+    * ``new_owner_email`` найден среди active members этого дерева
+      (membership.revoked_at IS NULL).
+    * Новый owner ≠ caller.
+    * Tree.owner_user_id уже совпадает с caller.id (sanity, иначе сразу 403).
+
+    Атомарно:
+
+    1. Меняет роль current owner-row → editor.
+    2. Меняет роль target editor/viewer-row → owner.
+    3. Обновляет ``trees.owner_user_id`` на нового owner'а.
+
+    Partial-unique-OWNER (Phase 11.0 миграция 0015) гарантирует, что между
+    шагами 1 и 2 ровно ноль OWNER'ов, что соответствует CHECK'у. Внутри
+    одной транзакции index'ы консистентны на commit'е, не пошагово, поэтому
+    конфликта не возникает.
+    """
+    # Sanity-проверки — gate уже подтвердил OWNER-permission, но email-confirm
+    # — отдельный «человек напечатал свой email чтобы случайно не нажать».
+    confirmation = body.current_owner_email_confirmation.strip().lower()
+    if confirmation != user.email.strip().lower():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="current_owner_email_confirmation does not match caller email",
+        )
+    new_email = body.new_owner_email.strip().lower()
+    if new_email == user.email.strip().lower():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="new_owner_email matches current owner — choose a different member",
+        )
+
+    # Найти target user'а через membership-row.
+    target_row = await session.execute(
+        select(TreeMembership, User)
+        .join(User, User.id == TreeMembership.user_id)
+        .where(
+            TreeMembership.tree_id == tree_id,
+            TreeMembership.revoked_at.is_(None),
+            func.lower(User.email) == new_email,
+        )
+    )
+    pair = target_row.one_or_none()
+    if pair is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=(f"No active membership for {new_email} on this tree — invite them first"),
+        )
+    target_membership, target_user = pair
+
+    # Найти OWNER-row caller'а.
+    owner_row = await session.scalar(
+        select(TreeMembership).where(
+            TreeMembership.tree_id == tree_id,
+            TreeMembership.user_id == user.id,
+            TreeMembership.role == TreeRole.OWNER.value,
+            TreeMembership.revoked_at.is_(None),
+        )
+    )
+    if owner_row is None:
+        # gate проходит fallback на trees.owner_user_id — но transfer-flow
+        # требует явного membership-row (иначе нечего демоутить в editor).
+        # Создать row на лету: мы знаем что user.id == tree.owner_user_id.
+        owner_row = TreeMembership(
+            tree_id=tree_id,
+            user_id=user.id,
+            role=TreeRole.OWNER.value,
+            accepted_at=dt.datetime.now(dt.UTC),
+        )
+        session.add(owner_row)
+        await session.flush()
+
+    # Tree-row для обновления owner_user_id.
+    tree = await session.get(Tree, tree_id)
+    if tree is None:  # pragma: no cover — gate уже проверил
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Tree {tree_id} not found",
+        )
+
+    # Атомарный swap: editor сначала, потом owner. Partial-unique позволяет
+    # ровно одному OWNER active одновременно, но в transaction-окне может
+    # быть ноль (после step 1 и до step 2) — что валидно.
+    owner_row.role = TreeRole.EDITOR.value
+    target_membership.role = TreeRole.OWNER.value
+    tree.owner_user_id = target_user.id
+
+    await session.flush()
+
+    return TransferOwnerResponse(
+        tree_id=tree_id,
+        previous_owner_user_id=user.id,
+        new_owner_user_id=target_user.id,
+        transferred_at=dt.datetime.now(dt.UTC),
+    )
+
+
+# ---- POST /trees/invitations/{token}/resend -------------------------------
+
+
+# Phase 11.1: rate-limit 1/hour per token. Простая in-memory map
+# {token_str: last_resent_at}; в проде с >1 instance Cloud Run заменим
+# на Redis (Memorystore уже есть). Для MVP достаточно — два worker'а
+# на staging минимально, race'и редки, и худший случай — два email'а
+# вместо одного.
+_RESEND_COOLDOWN_SECONDS: int = 60 * 60  # 1 hour
+_RESEND_LAST_AT: dict[str, dt.datetime] = {}
+
+
+@router.post(
+    "/trees/invitations/{token}/resend",
+    response_model=InvitationResendResponse,
+    summary="Owner-only — re-trigger email send для существующего pending invitation",
+)
+async def resend_invitation(
+    token: uuid.UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    settings: Annotated[Settings, Depends(get_settings)],
+    user: Annotated[User, Depends(get_current_user)],
+) -> InvitationResendResponse:
+    """Резенд invitation на тот же email. Owner-only, rate-limited 1/hour per token.
+
+    Проверки:
+
+    * Invitation существует — иначе 404.
+    * Caller — OWNER дерева invitation'а — иначе 403.
+    * Invitation ещё pending (не revoked, не accepted, не expired) — иначе 409.
+    * С момента последнего resend'а прошло > cooldown — иначе 429.
+
+    Сам resend = ещё один call в email-dispatcher с тем же
+    ``idempotency_key=invitation_token``. В stub-режиме (Phase 11.1) это
+    просто log-line; Phase 12.2 email-service дедупит по ключу и не пошлёт
+    второй email если первый ушёл < TTL назад.
+    """
+    invitation = await session.scalar(select(TreeInvitation).where(TreeInvitation.token == token))
+    if invitation is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invitation not found",
+        )
+
+    # OWNER permission на дерево invitation'а — manual check (token, не tree_id, в path).
+    is_owner = await check_tree_permission(
+        session,
+        user_id=user.id,
+        tree_id=invitation.tree_id,
+        required=TreeRole.OWNER,
+    )
+    if not is_owner:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only tree OWNER can resend invitations",
+        )
+
+    if invitation.revoked_at is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Invitation has been revoked",
+        )
+    if invitation.accepted_at is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Invitation already accepted — no need to resend",
+        )
+    now = dt.datetime.now(dt.UTC)
+    if invitation.expires_at <= now:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Invitation has expired — create a new one",
+        )
+
+    token_str = str(token)
+    last = _RESEND_LAST_AT.get(token_str)
+    if last is not None:
+        elapsed = (now - last).total_seconds()
+        if elapsed < _RESEND_COOLDOWN_SECONDS:
+            next_allowed = last + dt.timedelta(seconds=_RESEND_COOLDOWN_SECONDS)
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=(f"Resend rate-limited; next allowed at {next_allowed.isoformat()}"),
+            )
+
+    await send_share_invite(
+        invitation_token=token_str,
+        recipient_email=invitation.invitee_email,
+        tree_name=str(invitation.tree_id),
+        inviter_name=user.display_name or user.email,
+    )
+    _RESEND_LAST_AT[token_str] = now
+
+    # settings unused в этом handler'е, но оставляем в зависимостях для
+    # симметрии с invite_url (если UI добавит resend-копию URL'а в response).
+    _ = settings
+
+    return InvitationResendResponse(
+        invitation_id=invitation.id,
+        invitee_email=invitation.invitee_email,
+        resent_at=now,
+        next_resend_allowed_at=now + dt.timedelta(seconds=_RESEND_COOLDOWN_SECONDS),
+    )

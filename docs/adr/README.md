@@ -36,3 +36,4 @@
 | 0010 | Аутентификация (Clerk vs Auth0 vs self-hosted) | TBD |
 | 0036 | [Sharing & permissions model](./0036-sharing-permissions-model.md) | Accepted |
 | 0031 | [GCP deployment architecture (staging)](./0031-gcp-deployment-architecture.md) | Accepted |
+| 0040 | [Sharing UI architecture (Phase 11.1)](./0040-sharing-ui-architecture.md) | Accepted |
