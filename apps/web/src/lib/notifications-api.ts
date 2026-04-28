@@ -179,28 +179,3 @@ export function notificationDeepLink(notification: NotificationSummary): string 
       return null;
   }
 }
-
-/**
- * Человекочитаемый title для одной нотификации в dropdown'е.
- *
- * Простая mapping-table — вместо i18n. Phase 4.1 i18n заменит на
- * `t(notification.event_type, payload)`.
- */
-export function notificationTitle(notification: NotificationSummary): string {
-  switch (notification.event_type) {
-    case "hypothesis_pending_review":
-      return "New hypothesis to review";
-    case "dna_match_found":
-      return "New DNA match";
-    case "import_completed":
-      return "Import completed";
-    case "import_failed":
-      return "Import failed";
-    case "merge_undone":
-      return "A merge was undone";
-    case "dedup_suggestion_new":
-      return "New duplicate suggestion";
-    default:
-      return notification.event_type;
-  }
-}

@@ -1,24 +1,25 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
+import { ErrorMessage } from "@/components/error-message";
 import { Checkbox } from "@/components/ui/checkbox";
 import { type PreferenceItem, fetchPreferences, updatePreference } from "@/lib/notifications-api";
 
 /**
  * Settings → Notifications (Phase 8.0).
- *
- * Per-event toggle. Channel-level toggles (in_app vs log) пока MVP не
- * нужны — только два внутренних канала, юзер не различает их UX-wise.
- * Phase 8.1 добавит email — там уже будет смысл «получать в email,
- * но не в in_app».
+ * Phase 4.13: все строки в `notifications.*` namespace, ошибки — через
+ * `<ErrorMessage code=...>` (`errors.preferencesLoadFailed`).
  *
  * Auth: пока mock через DEFAULT_USER_ID.
  */
 export default function NotificationSettingsPage() {
+  const t = useTranslations("notifications");
+  const tCommon = useTranslations("common");
   const queryClient = useQueryClient();
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["notification-preferences"],
     queryFn: () => fetchPreferences(),
   });
@@ -33,17 +34,14 @@ export default function NotificationSettingsPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
-      <h1 className="text-2xl font-semibold tracking-tight">Notification settings</h1>
-      <p className="mt-2 text-sm text-[color:var(--color-ink-500)]">
-        Choose which events you want to be notified about. Disabled events won&rsquo;t appear in the
-        bell or generate any record.
-      </p>
+      <h1 className="text-2xl font-semibold tracking-tight">{t("settingsTitle")}</h1>
+      <p className="mt-2 text-sm text-[color:var(--color-ink-500)]">{t("settingsDescription")}</p>
 
       <div className="mt-8">
         {isLoading ? (
-          <p className="text-sm text-[color:var(--color-ink-500)]">Loading…</p>
+          <p className="text-sm text-[color:var(--color-ink-500)]">{tCommon("loading")}</p>
         ) : isError || !data ? (
-          <p className="text-sm text-red-600">Failed to load preferences.</p>
+          <ErrorMessage code="preferencesLoadFailed" onRetry={() => void refetch()} />
         ) : (
           <ul className="divide-y divide-[color:var(--color-border)]">
             {data.items.map((item) => (
@@ -70,26 +68,27 @@ function PreferenceRow({
   onToggle: (enabled: boolean) => void;
   pending: boolean;
 }) {
+  const t = useTranslations("notifications");
+  const tCommon = useTranslations("common");
   // Уникальный id для htmlFor — biome требует ассоциации label↔input.
   const inputId = `pref-${item.event_type}`;
+  const eventTitle = humanizeEventType(t, item.event_type);
   return (
     <li className="flex items-center justify-between py-3">
       <div>
-        <div className="text-sm font-medium text-[color:var(--color-ink-900)]">
-          {humanizeEventType(item.event_type)}
-        </div>
+        <div className="text-sm font-medium text-[color:var(--color-ink-900)]">{eventTitle}</div>
         <div className="text-xs text-[color:var(--color-ink-500)]">
           {item.event_type}
-          {item.is_default ? " · using default" : ""}
+          {item.is_default ? ` · ${t("usingDefault")}` : ""}
         </div>
       </div>
       <label htmlFor={inputId} className="flex items-center gap-2">
         <span className="text-xs text-[color:var(--color-ink-500)]">
-          {item.enabled ? "Enabled" : "Disabled"}
+          {item.enabled ? tCommon("enabled") : tCommon("disabled")}
         </span>
         <Checkbox
           id={inputId}
-          aria-label={`Toggle ${item.event_type}`}
+          aria-label={t("toggleAria", { event: eventTitle })}
           checked={item.enabled}
           disabled={pending}
           onChange={(e) => onToggle(e.target.checked)}
@@ -99,22 +98,17 @@ function PreferenceRow({
   );
 }
 
-function humanizeEventType(eventType: string): string {
-  // Простая mapping-table — без i18n. Phase 4.1 i18n заменит.
-  switch (eventType) {
-    case "hypothesis_pending_review":
-      return "New hypothesis to review";
-    case "dna_match_found":
-      return "New DNA match";
-    case "import_completed":
-      return "Import completed";
-    case "import_failed":
-      return "Import failed";
-    case "merge_undone":
-      return "Merge undone";
-    case "dedup_suggestion_new":
-      return "New duplicate suggestion";
-    default:
-      return eventType;
+/**
+ * Резолвит человекочитаемое имя event-типа из `notifications.events.*`.
+ * Незнакомый код → возвращаем сам код (defensive: backend может прислать
+ * новый event_type до того, как messages обновятся).
+ */
+function humanizeEventType(t: ReturnType<typeof useTranslations>, eventType: string): string {
+  // next-intl бросит, если ключа нет — глушим try/catch и фоллбечимся
+  // на сам event_type, чтобы UI не падал на новых типах.
+  try {
+    return t(`events.${eventType}` as never);
+  } catch {
+    return eventType;
   }
 }

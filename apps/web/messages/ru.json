@@ -12,7 +12,62 @@
     "footerTerms": "Условия",
     "language": "Язык",
     "english": "English",
-    "russian": "Русский"
+    "russian": "Русский",
+    "loading": "Загрузка…",
+    "tryAgain": "Попробовать снова",
+    "back": "Назад",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "open": "Открыть",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "enabled": "Включено",
+    "disabled": "Выключено",
+    "yes": "Да",
+    "no": "Нет",
+    "unknown": "Неизвестно"
+  },
+  "header": {
+    "home": "Главная",
+    "openMenu": "Открыть меню",
+    "appName": "AutoTreeGen"
+  },
+  "errors": {
+    "generic": "Что-то пошло не так. Попробуйте ещё раз.",
+    "network": "Не удалось связаться с сервером. Проверьте соединение и повторите.",
+    "unauthorized": "Чтобы открыть эту страницу, нужно войти.",
+    "forbidden": "Недостаточно прав для этого действия.",
+    "notFound": "Мы не нашли то, что вы искали.",
+    "validation": "Некоторые значения некорректны. Проверьте и отправьте снова.",
+    "rateLimit": "Слишком много запросов. Подождите немного и повторите.",
+    "preferencesLoadFailed": "Не удалось загрузить настройки.",
+    "notificationsLoadFailed": "Не удалось загрузить уведомления.",
+    "treesLoadFailed": "Не удалось загрузить ваши деревья."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitleStub": "Phase 4.12 placeholder. Реальный список деревьев — в Phase 4.13.",
+    "treeCount": "У вас {count, plural, one {# дерево} few {# дерева} many {# деревьев} other {# дерева}}",
+    "treeCountDescription": "Phase 4.13 наполнит этот список вашими деревьями и теми, в которых вы соавтор.",
+    "ctaNewTree": "+ Создать дерево"
+  },
+  "notifications": {
+    "settingsTitle": "Настройки уведомлений",
+    "settingsDescription": "Выберите, о каких событиях вас уведомлять. Выключенные события не появятся в колокольчике и не оставят записи.",
+    "usingDefault": "по умолчанию",
+    "toggleAria": "Переключить {event}",
+    "bellTitle": "Уведомления",
+    "bellAria": "Уведомления",
+    "bellEmpty": "Всё прочитано.",
+    "bellSettingsLink": "Настройки уведомлений",
+    "events": {
+      "hypothesis_pending_review": "Новая гипотеза на проверке",
+      "dna_match_found": "Новый ДНК-матч",
+      "import_completed": "Импорт завершён",
+      "import_failed": "Ошибка импорта",
+      "merge_undone": "Слияние отменено",
+      "dedup_suggestion_new": "Новый кандидат на дубликат"
+    }
   },
   "landing": {
     "valueProps": {

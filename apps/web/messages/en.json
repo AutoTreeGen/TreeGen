@@ -12,7 +12,62 @@
     "footerTerms": "Terms",
     "language": "Language",
     "english": "English",
-    "russian": "Русский"
+    "russian": "Русский",
+    "loading": "Loading…",
+    "tryAgain": "Try again",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "open": "Open",
+    "edit": "Edit",
+    "delete": "Delete",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "yes": "Yes",
+    "no": "No",
+    "unknown": "Unknown"
+  },
+  "header": {
+    "home": "Home",
+    "openMenu": "Open menu",
+    "appName": "AutoTreeGen"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "We couldn't reach the server. Check your connection and retry.",
+    "unauthorized": "You need to sign in to view this page.",
+    "forbidden": "You don't have permission to do that.",
+    "notFound": "We couldn't find what you were looking for.",
+    "validation": "Some of the values look off. Please review and resubmit.",
+    "rateLimit": "Too many requests. Slow down and retry in a moment.",
+    "preferencesLoadFailed": "Failed to load preferences.",
+    "notificationsLoadFailed": "Couldn't load notifications.",
+    "treesLoadFailed": "Couldn't load your trees."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitleStub": "Phase 4.12 placeholder. Real tree list lands in Phase 4.13.",
+    "treeCount": "You have {count} {count, plural, one {tree} other {trees}}",
+    "treeCountDescription": "Phase 4.13 will populate this with the real list of trees you own or collaborate on.",
+    "ctaNewTree": "+ Start a new tree"
+  },
+  "notifications": {
+    "settingsTitle": "Notification settings",
+    "settingsDescription": "Choose which events you want to be notified about. Disabled events won't appear in the bell or generate any record.",
+    "usingDefault": "using default",
+    "toggleAria": "Toggle {event}",
+    "bellTitle": "Notifications",
+    "bellAria": "Notifications",
+    "bellEmpty": "You're all caught up.",
+    "bellSettingsLink": "Notification settings",
+    "events": {
+      "hypothesis_pending_review": "New hypothesis to review",
+      "dna_match_found": "New DNA match",
+      "import_completed": "Import completed",
+      "import_failed": "Import failed",
+      "merge_undone": "A merge was undone",
+      "dedup_suggestion_new": "New duplicate suggestion"
+    }
   },
   "landing": {
     "valueProps": {
