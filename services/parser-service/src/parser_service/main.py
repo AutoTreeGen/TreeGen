@@ -60,7 +60,13 @@ app.add_middleware(
 # legacy `GET /imports/{job_id:UUID}` маршрут перехватит `/imports/familysearch`
 # до того, как FastAPI попадёт в наш роутер (UUID-валидация даст 422
 # вместо нашего 201/404).
-app.include_router(familysearch.router, prefix="/imports", tags=["imports", "familysearch"])
+# Префикс — `/imports/familysearch` (Phase 5.1): все FS-эндпоинты
+# объявлены относительно него (``""``, ``/oauth/start``, ``/me``, ...).
+app.include_router(
+    familysearch.router,
+    prefix="/imports/familysearch",
+    tags=["imports", "familysearch"],
+)
 # SSE-роутер до основного imports — у него специализированный
 # /imports/{id}/events путь; основной /imports/{id} с плейсхолдером
 # UUID матчит /events как сегмент пути если SSE подключён позже.

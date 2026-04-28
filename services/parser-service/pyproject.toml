@@ -26,6 +26,10 @@ dependencies = [
     "arq>=0.26",
     "redis[hiredis]>=5.0",
     "sse-starlette>=2.0",
+    # Phase 5.1 — Fernet at-rest encryption для FamilySearch OAuth-токенов
+    # (см. ADR-0027). cryptography уже в lockfile через dna-analysis, фиксируем
+    # explicit dep чтобы parser-service не зависел от транзитивности.
+    "cryptography>=42",
 ]
 
 [project.optional-dependencies]

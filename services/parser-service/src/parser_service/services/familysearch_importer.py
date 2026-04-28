@@ -264,6 +264,7 @@ async def import_fs_pedigree(
     generations: int = 4,
     fs_client: FamilySearchClient | None = None,
     fs_config: FamilySearchConfig | None = None,
+    existing_job_id: uuid.UUID | None = None,
 ) -> ImportJob:
     """Импорт FS pedigree (focus + N поколений предков) в дерево.
 
@@ -280,25 +281,50 @@ async def import_fs_pedigree(
             если ``None``, создаём собственный с ``access_token``.
         fs_config: используется только при создании собственного клиента;
             по умолчанию sandbox.
+        existing_job_id: если задан, importer обновляет существующую
+            ``ImportJob`` row вместо создания новой. Используется
+            async-flow worker'ом (``run_fs_import_job``), который
+            пред-создаёт job в HTTP-эндпоинте, чтобы вернуть user'у
+            id+events_url ещё до старта worker'а.
 
     Returns:
         ``ImportJob`` со статусом ``succeeded`` и заполненными ``stats``.
     """
     now = dt.datetime.now(dt.UTC)
 
-    # ---- 1. Создаём ImportJob, status=running ----
-    job_id = new_uuid()
-    job = ImportJob(
-        id=job_id,
-        tree_id=tree_id,
-        created_by_user_id=owner_user_id,
-        source_kind=ImportSourceKind.FAMILYSEARCH.value,
-        source_filename=None,
-        source_sha256=None,
-        status=ImportJobStatus.RUNNING.value,
-        started_at=now,
-    )
-    session.add(job)
+    # ---- 1. Получить или создать ImportJob, status=running ----
+    if existing_job_id is not None:
+        job = (
+            await session.execute(select(ImportJob).where(ImportJob.id == existing_job_id))
+        ).scalar_one_or_none()
+        if job is None:
+            msg = f"ImportJob {existing_job_id} not found (existing_job_id мode)"
+            raise LookupError(msg)
+        # Sanity: tree_id и source_kind должны совпадать с тем, что HTTP-уровень
+        # уже зафиксировал — иначе это симптом race / неправильного вызова.
+        if job.tree_id != tree_id:
+            msg = (
+                f"ImportJob {existing_job_id}.tree_id={job.tree_id} "
+                f"does not match argument tree_id={tree_id}"
+            )
+            raise ValueError(msg)
+        job_id = job.id
+        job.status = ImportJobStatus.RUNNING.value
+        if job.started_at is None:
+            job.started_at = now
+    else:
+        job_id = new_uuid()
+        job = ImportJob(
+            id=job_id,
+            tree_id=tree_id,
+            created_by_user_id=owner_user_id,
+            source_kind=ImportSourceKind.FAMILYSEARCH.value,
+            source_filename=None,
+            source_sha256=None,
+            status=ImportJobStatus.RUNNING.value,
+            started_at=now,
+        )
+        session.add(job)
     await session.flush()
 
     # ---- 2. Тянем pedigree из FS ----

@@ -422,6 +422,108 @@ class FamilySearchImportResponse(ImportJobResponse):
 
 
 # -----------------------------------------------------------------------------
+# Phase 5.1 — server-side OAuth flow + preview + async import (ADR-0027).
+# -----------------------------------------------------------------------------
+
+
+class FamilySearchOAuthStartResponse(BaseModel):
+    """Ответ ``GET /imports/familysearch/oauth/start``.
+
+    UI получает ``authorize_url`` и редиректит браузер. ``state`` тоже
+    приходит — он же положен в HttpOnly cookie callback'ом, но видеть
+    его на стороне фронта (например, для логов) нормально, секрет в
+    нём только в сочетании с ``code_verifier``.
+    """
+
+    authorize_url: str = Field(description="OAuth authorize URL FamilySearch с PKCE параметрами.")
+    state: str = Field(description="CSRF-state. Возвращается callback'ом для матчинга.")
+    expires_in: int = Field(
+        description="Сколько секунд state валиден (TTL Redis-ключа).",
+    )
+
+
+class FamilySearchAccountInfo(BaseModel):
+    """Ответ ``GET /imports/familysearch/me`` — текущий FS-аккаунт.
+
+    Если user не подключал FS — поле ``connected=False`` и остальное None.
+    Не пробрасываем ``access_token`` или ``refresh_token`` сюда никогда.
+    """
+
+    connected: bool = Field(description="True если у user'а есть валидный токен в БД.")
+    fs_user_id: str | None = Field(default=None, description="FamilySearch person id.")
+    scope: str | None = None
+    expires_at: datetime | None = Field(
+        default=None,
+        description="Когда access_token протухнет (UTC). UI может показать «осталось N часов».",
+    )
+    needs_refresh: bool = Field(
+        default=False,
+        description="True если до expires_at < 60s — фронт пусть ретраит.",
+    )
+
+
+class FamilySearchPedigreePreviewPerson(BaseModel):
+    """Sample-запись для preview: ровно столько, чтобы user узнал «своих»."""
+
+    fs_person_id: str
+    primary_name: str | None = None
+    lifespan: str | None = Field(
+        default=None,
+        description="«b. 1850 – d. 1920», если есть Birth/Death даты.",
+    )
+
+
+class FamilySearchPedigreePreviewResponse(BaseModel):
+    """Ответ ``GET /imports/familysearch/pedigree/preview``.
+
+    Не создаёт ImportJob, не пишет ничего в БД. Просто читает FS API
+    и отдаёт frontend'у summary, чтобы пользователь подтвердил.
+    """
+
+    fs_focus_person_id: str
+    generations: int
+    person_count: int = Field(
+        ge=0,
+        description="Сколько уникальных персон в pedigree (включая focus).",
+    )
+    sample_persons: list[FamilySearchPedigreePreviewPerson] = Field(
+        default_factory=list,
+        description="Первые N (по умолчанию 10) персон — для visual confirmation.",
+    )
+    fs_user_id: str | None = Field(
+        default=None,
+        description="С какого FS-аккаунта подтянули (для UI «logged in as ...»).",
+    )
+
+
+class FamilySearchAsyncImportRequest(BaseModel):
+    """Тело ``POST /imports/familysearch/import``.
+
+    Использует токен, сохранённый сервером (server-side OAuth). Если
+    токена нет — endpoint вернёт 409 «not connected». Сам импорт
+    выполняется в arq worker'е (см. ``worker.run_fs_import_job``).
+
+    ``access_token`` сюда **не передаётся** — это отличает async-flow
+    от legacy-stateless ``POST /imports/familysearch``.
+    """
+
+    fs_person_id: str = Field(
+        pattern=r"^[A-Z0-9-]+$",
+        max_length=64,
+        description="FamilySearch person id (focus persona).",
+    )
+    tree_id: uuid.UUID = Field(description="ID существующего дерева в AutoTreeGen.")
+    generations: int = Field(
+        default=4,
+        ge=1,
+        le=8,
+        description="Глубина pedigree (FamilySearch personal apps cap = 8).",
+    )
+
+    model_config = ConfigDict(extra="forbid")
+
+
+# -----------------------------------------------------------------------------
 # Phase 5.2.1 — FS dedup attempts (review queue, see ADR Option C).
 # -----------------------------------------------------------------------------
 

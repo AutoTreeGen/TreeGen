@@ -513,6 +513,111 @@ export async function cancelImport(jobId: string): Promise<ImportJobResponse> {
   return (await response.json()) as ImportJobResponse;
 }
 
+// ---- FamilySearch (Phase 5.1) ----------------------------------------------
+
+export type FamilySearchOAuthStartResponse = {
+  authorize_url: string;
+  state: string;
+  expires_in: number;
+};
+
+export type FamilySearchAccountInfo = {
+  connected: boolean;
+  fs_user_id: string | null;
+  scope: string | null;
+  expires_at: string | null;
+  needs_refresh: boolean;
+};
+
+export type FamilySearchPedigreePreviewPerson = {
+  fs_person_id: string;
+  primary_name: string | null;
+  lifespan: string | null;
+};
+
+export type FamilySearchPedigreePreviewResponse = {
+  fs_focus_person_id: string;
+  generations: number;
+  person_count: number;
+  sample_persons: FamilySearchPedigreePreviewPerson[];
+  fs_user_id: string | null;
+};
+
+/**
+ * Стартовать OAuth flow. Возвращает authorize_url, по которому надо
+ * редиректить браузер. Cookie с CSRF state сервер выставляет сам;
+ * fetch с ``credentials=include`` нужен, чтобы браузер сохранил cookie.
+ */
+export async function startFamilySearchOAuth(): Promise<FamilySearchOAuthStartResponse> {
+  const response = await fetch(`${API_BASE}/imports/familysearch/oauth/start`, {
+    method: "GET",
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) {
+    const detail = await safeReadDetail(response);
+    throw new ApiError(response.status, detail ?? `OAuth start failed with ${response.status}`);
+  }
+  return (await response.json()) as FamilySearchOAuthStartResponse;
+}
+
+/**
+ * Получить статус подключения. Не возвращает access_token (security).
+ */
+export async function fetchFamilySearchAccount(): Promise<FamilySearchAccountInfo> {
+  return getJson<FamilySearchAccountInfo>("/imports/familysearch/me");
+}
+
+/**
+ * Удалить токен (disconnect). 204 No Content при успехе.
+ */
+export async function disconnectFamilySearch(): Promise<void> {
+  const response = await fetch(`${API_BASE}/imports/familysearch/disconnect`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!response.ok && response.status !== 204) {
+    const detail = await safeReadDetail(response);
+    throw new ApiError(response.status, detail ?? `Disconnect failed with ${response.status}`);
+  }
+}
+
+/**
+ * Read-only preview pedigree (count + sample persons). Не запускает импорт.
+ */
+export function fetchFamilySearchPreview(
+  fsPersonId: string,
+  generations = 4,
+): Promise<FamilySearchPedigreePreviewResponse> {
+  const params = new URLSearchParams({
+    fs_person_id: fsPersonId,
+    generations: String(generations),
+  });
+  return getJson<FamilySearchPedigreePreviewResponse>(
+    `/imports/familysearch/pedigree/preview?${params.toString()}`,
+  );
+}
+
+/**
+ * Запустить async-импорт. Использует server-side OAuth-токен.
+ */
+export async function startFamilySearchImport(payload: {
+  fs_person_id: string;
+  tree_id: string;
+  generations: number;
+}): Promise<ImportJobResponse> {
+  const response = await fetch(`${API_BASE}/imports/familysearch/import`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const detail = await safeReadDetail(response);
+    throw new ApiError(response.status, detail ?? `FS import failed with ${response.status}`);
+  }
+  return (await response.json()) as ImportJobResponse;
+}
+
 async function safeReadDetail(response: Response): Promise<string | null> {
   // FastAPI кладёт человекочитаемое сообщение в `detail`; если его нет
   // или body пустой — отдадим null, чтобы caller сделал fallback на статус.

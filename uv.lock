@@ -1263,6 +1263,7 @@ source = { editable = "services/parser-service" }
 dependencies = [
     { name = "arq" },
     { name = "asyncpg" },
+    { name = "cryptography" },
     { name = "entity-resolution" },
     { name = "familysearch-client" },
     { name = "fastapi" },
@@ -1294,6 +1295,7 @@ test = [
 requires-dist = [
     { name = "arq", specifier = ">=0.26" },
     { name = "asyncpg", specifier = ">=0.30" },
+    { name = "cryptography", specifier = ">=42" },
     { name = "entity-resolution", editable = "packages/entity-resolution" },
     { name = "fakeredis", marker = "extra == 'test'", specifier = ">=2.20" },
     { name = "familysearch-client", editable = "packages/familysearch-client" },
