@@ -131,5 +131,18 @@
     "faq2A": "Yes — billed month-to-month, cancel from settings, your data stays accessible read-only.",
     "faq3Q": "Do you support GEDCOM 5.5.5?",
     "faq3A": "Yes — 5.5.5 is the canonical format. Older 5.5.1 and proprietary tags from Ancestry / MyHeritage / Geni are imported with round-trip preservation."
+  },
+  "errors": {
+    "globalTitle": "Something went wrong",
+    "globalBody": "An unexpected error occurred. We've logged it and will investigate.",
+    "sectionTitle": "This section couldn't load",
+    "sectionBody": "The rest of the app is still working — try refreshing this section, or come back later.",
+    "tryAgain": "Try again",
+    "reportIssue": "Report issue",
+    "goHome": "Back to home"
+  },
+  "offline": {
+    "banner": "You're offline. Changes will sync when you reconnect.",
+    "reconnected": "Back online."
   }
 }
