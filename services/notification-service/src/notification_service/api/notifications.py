@@ -88,6 +88,7 @@ async def notify(
         notification_id=outcome.notification_id,
         delivered=outcome.delivered_channels,
         deduplicated=outcome.deduplicated,
+        skipped_by_pref=outcome.skipped_by_pref,
     )
 
 

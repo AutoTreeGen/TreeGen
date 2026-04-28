@@ -23,6 +23,7 @@ from shared_models.orm.multimedia import EntityMultimedia, MultimediaObject
 from shared_models.orm.name import Name
 from shared_models.orm.note import EntityNote, Note
 from shared_models.orm.notification import Notification
+from shared_models.orm.notification_preference import NotificationPreference
 from shared_models.orm.person import Person
 from shared_models.orm.person_merge_log import PersonMergeLog
 from shared_models.orm.place import Place, PlaceAlias
@@ -55,6 +56,7 @@ __all__ = [
     "Name",
     "Note",
     "Notification",
+    "NotificationPreference",
     "Person",
     "PersonMergeLog",
     "Place",

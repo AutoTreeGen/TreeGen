@@ -38,6 +38,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from parser_service.database import get_engine
 from parser_service.services.import_runner import run_import
+from parser_service.services.notifications import post_notify_request
 from parser_service.services.progress import ProgressPublisher, Stage
 
 logger = logging.getLogger(__name__)
@@ -178,6 +179,41 @@ async def run_import_job(
         }
 
 
+async def dispatch_notification_job(
+    _ctx: dict[str, Any],
+    payload: dict[str, Any],
+) -> dict[str, Any]:
+    """arq job: доставить notification-payload в notification-service.
+
+    Phase 8.0 wire-up (ADR-0029). hypothesis_runner ставит этот job
+    через :func:`parser_service.services.notifications.notify_hypothesis_pending_review`
+    вместо синхронного httpx-POST'а из транзакции. Все ретраи и
+    backoff — на стороне arq (см. ``WorkerSettings.functions``,
+    арг ``max_tries`` пока дефолтный — 5).
+
+    Args:
+        _ctx: arq-контекст (``redis``, ``job_id``, ``job_try``...).
+            Не нужен для HTTP-вызова, но обязан быть первым по
+            конвенции arq.
+        payload: Готовый body для ``POST /notify`` notification-service.
+            Сформирован caller'ом — этот job ничего к нему не добавляет.
+
+    Returns:
+        Сводный dict с результатом доставки. ``delivered=True`` —
+        notification-service вернул 2xx (создал или дедуплицировал).
+        ``delivered=False`` — 4xx (плохой payload, retry бесполезен).
+
+    Raises:
+        httpx.HTTPError: 5xx или сеть. arq возьмёт на ретрай.
+    """
+    delivered = await post_notify_request(payload)
+    return {
+        "event_type": payload.get("event_type"),
+        "user_id": payload.get("user_id"),
+        "delivered": delivered,
+    }
+
+
 async def startup(ctx: dict[str, Any]) -> None:
     """Хук старта воркера — лог + место для будущей инициализации (DB pool и т.п.)."""
     logger.info("parser-service arq worker starting (queue=%s)", QUEUE_NAME)
@@ -200,6 +236,10 @@ class WorkerSettings:
     queue_name: ClassVar[str] = QUEUE_NAME
     # arq принимает либо callable, либо результат ``arq.func(...)``. Голый
     # async-callable работает: arq оборачивает его сам с дефолтными настройками.
-    functions: ClassVar[list[Any]] = [noop_job, run_import_job]
+    functions: ClassVar[list[Any]] = [
+        noop_job,
+        run_import_job,
+        dispatch_notification_job,
+    ]
     on_startup = startup
     on_shutdown = shutdown

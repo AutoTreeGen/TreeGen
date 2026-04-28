@@ -17,7 +17,7 @@ from notification_service.services.dispatcher import (
     UnknownEventTypeError,
     dispatch,
 )
-from shared_models.orm import Notification
+from shared_models.orm import Notification, NotificationPreference
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
@@ -120,6 +120,86 @@ async def test_dispatch_unknown_channel_raises(session) -> None:
             payload={"ref_id": "x"},
             channels=["pigeon_post"],
         )
+
+
+async def test_dispatch_skipped_when_preference_disabled(session) -> None:
+    """User отключил event_type → DispatchOutcome без notifications-row.
+
+    ADR-0029: «не создаём row для отключённых типов» — иначе раздуваем
+    inbox и unread-counter показывает события, которые user явно
+    подавил.
+    """
+    session.add(
+        NotificationPreference(
+            user_id=701,
+            event_type="hypothesis_pending_review",
+            enabled=False,
+            channels=["in_app", "log"],
+        )
+    )
+    await session.flush()
+
+    outcome = await dispatch(
+        session,
+        user_id=701,
+        event_type="hypothesis_pending_review",
+        payload={"ref_id": "h-skipped"},
+        channels=["in_app", "log"],
+    )
+
+    assert outcome.skipped_by_pref is True
+    assert outcome.notification_id is None
+    assert outcome.delivered_channels == []
+    assert outcome.deduplicated is False
+
+    # Главное: row в БД не появилось.
+    rows = (
+        (await session.execute(select(Notification).where(Notification.user_id == 701)))
+        .scalars()
+        .all()
+    )
+    assert rows == []
+
+
+async def test_dispatch_drops_channels_outside_preference(session) -> None:
+    """``prefs.channels`` пересекается с requested — лишнее идёт в attempts.
+
+    Если pref-запись разрешает только ``in_app``, а caller запросил
+    ``["in_app", "log"]`` — log пропускается с ``skipped: user_pref``,
+    in_app доставляется. delivered_at проставляется (есть успешный канал).
+    """
+    session.add(
+        NotificationPreference(
+            user_id=702,
+            event_type="dna_match_found",
+            enabled=True,
+            channels=["in_app"],
+        )
+    )
+    await session.flush()
+
+    outcome = await dispatch(
+        session,
+        user_id=702,
+        event_type="dna_match_found",
+        payload={"ref_id": "match-channel-test"},
+        channels=["in_app", "log"],
+    )
+
+    assert outcome.skipped_by_pref is False
+    assert outcome.delivered_channels == ["in_app"]
+
+    row = (
+        await session.execute(
+            select(Notification).where(Notification.id == outcome.notification_id)
+        )
+    ).scalar_one()
+    by_channel = {a["channel"]: a for a in row.channels_attempted}
+    assert by_channel["in_app"]["success"] is True
+    assert by_channel["log"]["success"] is False
+    assert by_channel["log"].get("skipped") == "user_pref"
+    # Несмотря на «pref-skip log» — delivered_at установлен (in_app ok).
+    assert row.delivered_at is not None
 
 
 async def test_channel_failure_isolation(session, monkeypatch) -> None:

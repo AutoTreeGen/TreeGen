@@ -44,6 +44,11 @@ SERVICE_TABLES = {
     # неактуальным для re-send), нет provenance (источник — internal
     # callers через POST /notify, не GEDCOM/DNA-import).
     "notifications",
+    # Per-user notification preferences (Phase 8.0 wire-up / ADR-0029):
+    # composite-PK (user_id, event_type), нет soft-delete (отключение
+    # модельируется флагом ``enabled``, не deletion), нет provenance —
+    # это user setting, не доменный факт.
+    "notification_preferences",
     # FS-flagged dedup attempts (Phase 5.2.1): timestamp-state log
     # ``(rejected_at, merged_at)`` без soft-delete; уникальность
     # активного состояния — partial unique индекс. См. ORM-модуль.
