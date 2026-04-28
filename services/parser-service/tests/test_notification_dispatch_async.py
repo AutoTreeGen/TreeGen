@@ -137,8 +137,9 @@ async def test_notify_hypothesis_swallows_enqueue_failure(monkeypatch, caplog) -
         composite_score=0.5,
         hypothesis_type="same_person",
     )
-    # Лог-warning есть.
-    assert any("failed to enqueue notification" in record.message for record in caplog.records)
+    # Лог-warning есть. ``record.getMessage()`` — formatted версия, ``record.message``
+    # пустой пока не пройдёт через Formatter, поэтому каплог-проверки используют get.
+    assert any("failed to enqueue notification" in record.getMessage() for record in caplog.records)
 
 
 async def test_dispatch_notification_job_returns_delivered_on_2xx(monkeypatch) -> None:
