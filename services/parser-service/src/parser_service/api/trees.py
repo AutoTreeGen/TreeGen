@@ -531,6 +531,9 @@ async def get_ancestors(
             birth_year=birth_year.get(node_id),
             death_year=death_year.get(node_id),
             sex=person.sex,
+            # Phase 4.3 stub: всегда False. Phase 6 заменит на реальный lookup
+            # по подтверждённым DNA-китам, привязанным к персоне.
+            dna_tested=False,
             father=_build(father_id),
             mother=_build(mother_id),
         )

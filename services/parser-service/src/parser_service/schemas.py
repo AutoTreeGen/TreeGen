@@ -165,6 +165,11 @@ class AncestorTreeNode(BaseModel):
     birth_year: int | None = None
     death_year: int | None = None
     sex: str
+    # Stub-поле для бейджа «DNA tested» в pedigree UI. На Phase 4.3 всегда False;
+    # реальное значение придёт когда Phase 6 (DNA matching) свяжет персону с
+    # подтверждённым DNA-китом. Поле уже здесь, чтобы фронтенд мог рендерить
+    # бейдж без ожидания backend-изменений.
+    dna_tested: bool = False
     father: AncestorTreeNode | None = None
     mother: AncestorTreeNode | None = None
 
