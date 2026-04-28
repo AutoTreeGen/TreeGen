@@ -54,6 +54,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from parser_service.services.dm_buckets import merge_dm_buckets
 from parser_service.services.metrics import import_completed_total
+from parser_service.services.progress import ProgressPublisher, Stage
 
 _BATCH_SIZE = 5000
 
@@ -198,6 +199,7 @@ async def run_import(
     owner_email: str,
     tree_name: str | None = None,
     source_filename: str | None = None,
+    progress: ProgressPublisher | None = None,
 ) -> ImportJob:
     """Распарсить GEDCOM-файл и записать в БД.
 
@@ -209,6 +211,10 @@ async def run_import(
         source_filename: Оригинальное имя файла (для upload-сценария, когда
             ``ged_path`` указывает на временный файл). По умолчанию —
             ``ged_path.name``.
+        progress: Опциональный publisher для стриминга стадий в Redis pub/sub
+            (Phase 3.5). По умолчанию ``None`` — синхронному caller'у не нужно
+            ничего знать о Redis. События эмитятся раз на стадию (один вызов
+            на bulk-insert группу): per-row подписчику не нужен.
 
     Returns:
         Созданный ``ImportJob`` со статусом ``succeeded`` и заполненными stats.
@@ -218,6 +224,9 @@ async def run_import(
         Exception: Любая ошибка парсера или БД — пробрасывается выше; вызывающий
             код должен пометить job.status = "failed" и сохранить ошибку в reason.
     """
+    # No-op publisher если caller не передал свой — упрощает дальнейшие вызовы.
+    publisher: ProgressPublisher = progress if progress is not None else ProgressPublisher(None, "")
+
     if not ged_path.exists():
         msg = f"GEDCOM file not found: {ged_path}"
         raise FileNotFoundError(msg)
@@ -258,12 +267,14 @@ async def run_import(
     # `event.citations` / `person.citations` / `family.citations`, так что
     # raw `records` нужны теперь только для resolution event_id_by_line_no
     # и для Phase 3.5 inline-OBJE round-trip.
+    await publisher.publish(Stage.PARSING, current=0, total=1, message="parsing GEDCOM")
     from gedcom_parser import GedcomDocument, parse_file
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         records, encoding = parse_file(ged_path)
         document = GedcomDocument.from_records(records, encoding=encoding)
+    await publisher.publish(Stage.PARSING, current=1, total=1, message="parsed")
 
     set_audit_skip(session.sync_session, True)
     try:
@@ -317,6 +328,12 @@ async def run_import(
             )
         await _bulk_insert(session, Person, person_rows)
         await _bulk_insert(session, Name, name_rows)
+        await publisher.publish(
+            Stage.ENTITIES,
+            current=len(person_rows),
+            total=len(person_rows),
+            message="persons + names inserted",
+        )
 
         # ---- Families + family_children ----
         family_rows: list[dict[str, Any]] = []
@@ -358,6 +375,12 @@ async def run_import(
                     }
                 )
         await _bulk_insert(session, FamilyChild, fc_rows)
+        await publisher.publish(
+            Stage.ENTITIES,
+            current=len(person_rows) + len(family_rows),
+            total=len(person_rows) + len(family_rows),
+            message="families + family_children inserted",
+        )
 
         # ---- Places (dedup по raw text в пределах дерева) ----
         # Собираем уникальные PLAC-строки из всех событий и инсёртим один раз.
@@ -397,6 +420,12 @@ async def run_import(
                 _register_place(ev.place_raw)
 
         await _bulk_insert(session, Place, place_rows)
+        await publisher.publish(
+            Stage.PLACES,
+            current=len(place_rows),
+            total=len(place_rows),
+            message="places inserted",
+        )
 
         # ---- Sources ----
         # SOUR-записи документа → bulk insert в `sources`. Поля:
@@ -443,6 +472,12 @@ async def run_import(
                 }
             )
         await _bulk_insert(session, Source, source_rows)
+        await publisher.publish(
+            Stage.SOURCES,
+            current=len(source_rows),
+            total=len(source_rows),
+            message="sources inserted",
+        )
 
         # ---- Events + EventParticipants ----
         # Persona events → один participant с role="principal".
@@ -663,6 +698,12 @@ async def run_import(
                         citation_rows.append(row)
 
         await _bulk_insert(session, Citation, citation_rows)
+        await publisher.publish(
+            Stage.EVENTS,
+            current=len(event_rows),
+            total=len(event_rows),
+            message="events + participants + citations inserted",
+        )
 
         # ---- Multimedia (OBJE) ----
         # Top-level OBJE-records → `multimedia_objects` + ссылки из INDI/FAM
@@ -860,6 +901,12 @@ async def run_import(
 
         await _bulk_insert(session, MultimediaObject, multimedia_rows)
         await _bulk_insert(session, EntityMultimedia, entity_multimedia_rows)
+        await publisher.publish(
+            Stage.MULTIMEDIA,
+            current=len(multimedia_rows),
+            total=len(multimedia_rows),
+            message="multimedia + entity_multimedia inserted",
+        )
 
         stats = {
             "persons": len(person_rows),
@@ -899,4 +946,10 @@ async def run_import(
     # чище, чем глобальный try внутри функции — caller знает контекст
     # ошибки (parse vs DB), мы здесь только успех.
     import_completed_total.labels(source="gedcom", outcome="success").inc()
+    await publisher.publish(
+        Stage.FINALIZING,
+        current=1,
+        total=1,
+        message="import job marked succeeded",
+    )
     return job
