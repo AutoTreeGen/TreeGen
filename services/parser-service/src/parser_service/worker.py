@@ -31,12 +31,16 @@ from typing import Any, ClassVar
 from uuid import UUID
 
 from arq.connections import RedisSettings
-from shared_models.enums import ImportJobStatus
-from shared_models.orm import ImportJob
+from shared_models.enums import HypothesisComputeJobStatus, ImportJobStatus
+from shared_models.orm import HypothesisComputeJob, ImportJob
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from parser_service.database import get_engine
+from parser_service.services.bulk_hypothesis_runner import (
+    STAGE_FAILED,
+    execute_compute_job,
+)
 from parser_service.services.import_runner import run_import
 from parser_service.services.progress import ProgressPublisher, Stage
 
@@ -178,6 +182,76 @@ async def run_import_job(
         }
 
 
+async def run_bulk_hypothesis_job(
+    ctx: dict[str, Any],
+    compute_job_id: str,
+) -> dict[str, Any]:
+    """arq job: drain'ит ``HypothesisComputeJob`` через bulk_hypothesis_runner.
+
+    Контракт зеркалит ``run_import_job``: один UUID-arg, тот же канал
+    ``job-events:{compute_job_id}``, та же терминальная стадия в Stage-формате
+    (см. ``bulk_hypothesis_runner.STAGE_*``). Это позволяет SSE-эндпоинту
+    использовать единый pub/sub формат и единый close-on-terminal детектор.
+
+    Сам ``execute_compute_job`` идемпотентен по статусу: если job уже не
+    QUEUED — early-return без работы. Поэтому повторный enqueue (например,
+    если воркер успел крашнуться после flush'а) не повторит loop.
+
+    Args:
+        ctx: arq-контекст. Ключ ``redis`` — ``ArqRedis``-клиент для
+            публикации прогресса. Без него publisher деградирует в no-op.
+        compute_job_id: UUID существующего HypothesisComputeJob row'а.
+
+    Returns:
+        Сводный dict с финальным статусом и progress — то, что arq
+        сохранит в ``arq:result:<job_id>``.
+    """
+    redis_client = ctx.get("redis")
+    channel = f"job-events:{compute_job_id}"
+    publisher = ProgressPublisher(redis_client, channel)
+
+    engine = get_engine()
+    session_maker = async_sessionmaker(engine, expire_on_commit=False)
+    job_uuid = UUID(compute_job_id)
+    async with session_maker() as session:
+        result = await session.execute(
+            select(HypothesisComputeJob).where(HypothesisComputeJob.id == job_uuid)
+        )
+        job = result.scalar_one_or_none()
+        if job is None:
+            msg = f"HypothesisComputeJob {compute_job_id} not found"
+            raise LookupError(msg)
+
+        try:
+            final = await execute_compute_job(
+                session,
+                job_uuid,
+                progress=publisher,
+            )
+        except Exception as exc:
+            # ``execute_compute_job`` сам пишет FAILED-статус и публикует
+            # терминальное событие в pub/sub. Здесь ловим только чтобы
+            # arq записал result-row и не уронил воркер целиком —
+            # пользователь увидит failure через SSE без exception leak'а.
+            await publisher.publish(
+                STAGE_FAILED,
+                current=0,
+                total=1,
+                message=f"worker error: {exc}",
+            )
+            return {
+                "compute_job_id": compute_job_id,
+                "status": HypothesisComputeJobStatus.FAILED.value,
+                "error": str(exc),
+            }
+
+        return {
+            "compute_job_id": compute_job_id,
+            "status": final.status,
+            "progress": final.progress,
+        }
+
+
 async def startup(ctx: dict[str, Any]) -> None:
     """Хук старта воркера — лог + место для будущей инициализации (DB pool и т.п.)."""
     logger.info("parser-service arq worker starting (queue=%s)", QUEUE_NAME)
@@ -200,6 +274,6 @@ class WorkerSettings:
     queue_name: ClassVar[str] = QUEUE_NAME
     # arq принимает либо callable, либо результат ``arq.func(...)``. Голый
     # async-callable работает: arq оборачивает его сам с дефолтными настройками.
-    functions: ClassVar[list[Any]] = [noop_job, run_import_job]
+    functions: ClassVar[list[Any]] = [noop_job, run_import_job, run_bulk_hypothesis_job]
     on_startup = startup
     on_shutdown = shutdown
