@@ -137,13 +137,19 @@ class ActorKind(StrEnum):
 
 
 class ImportJobStatus(StrEnum):
-    """Статус импорт-джоба."""
+    """Статус импорт-джоба.
+
+    ``CANCELLED`` (Phase 3.5) — worker увидел ``cancel_requested=True``
+    между стадиями и graceful-завершил импорт. Уже закоммиченные ряды
+    остаются (если транзакция была commit'нута до cancel'а).
+    """
 
     QUEUED = "queued"
     RUNNING = "running"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     PARTIAL = "partial"
+    CANCELLED = "cancelled"
 
 
 class ImportSourceKind(StrEnum):

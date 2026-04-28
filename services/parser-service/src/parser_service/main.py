@@ -18,6 +18,7 @@ from parser_service.api import (
     familysearch,
     hypotheses,
     imports,
+    imports_sse,
     metrics,
     persons,
     sources,
@@ -25,6 +26,7 @@ from parser_service.api import (
 )
 from parser_service.config import get_settings
 from parser_service.database import dispose_engine, init_engine
+from parser_service.queue import close_arq_pool
 
 
 @asynccontextmanager
@@ -33,6 +35,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     init_engine(settings.database_url)
     yield
+    await close_arq_pool()
     await dispose_engine()
 
 
@@ -58,6 +61,10 @@ app.add_middleware(
 # до того, как FastAPI попадёт в наш роутер (UUID-валидация даст 422
 # вместо нашего 201/404).
 app.include_router(familysearch.router, prefix="/imports", tags=["imports", "familysearch"])
+# SSE-роутер до основного imports — у него специализированный
+# /imports/{id}/events путь; основной /imports/{id} с плейсхолдером
+# UUID матчит /events как сегмент пути если SSE подключён позже.
+app.include_router(imports_sse.router, prefix="/imports", tags=["imports", "sse"])
 app.include_router(imports.router, prefix="/imports", tags=["imports"])
 app.include_router(trees.router, tags=["trees"])
 app.include_router(sources.router, tags=["sources"])

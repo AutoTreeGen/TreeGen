@@ -11,18 +11,37 @@ from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
+from shared_models.schemas import ImportJobProgress
 
 
 class ImportJobResponse(BaseModel):
-    """Ответ на ``POST /imports`` и ``GET /imports/{id}``."""
+    """Ответ на ``POST /imports``, ``GET /imports/{id}``, ``PATCH /cancel``.
+
+    ``progress`` (Phase 3.5) — последний снапшот, опубликованный
+    worker'ом в ``ImportJob.progress``. NULL пока worker не сделал
+    первого ``ProgressPublisher.publish()``.
+
+    ``cancel_requested`` — true после ``PATCH /imports/{id}/cancel``;
+    переход status → ``cancelled`` делает worker между стадиями.
+
+    ``events_url`` (Phase 3.5) — относительный путь до SSE-эндпоинта
+    с live-стримом прогресса. UI подключается на 202 Accepted и
+    держит соединение до терминальной стадии.
+    """
 
     id: uuid.UUID
     tree_id: uuid.UUID
-    status: str = Field(description="queued|processing|succeeded|failed")
+    status: str = Field(description="queued|running|succeeded|failed|partial|cancelled")
     source_filename: str | None = None
     source_sha256: str | None = None
     stats: dict[str, int] = Field(default_factory=dict)
     error: str | None = None
+    progress: ImportJobProgress | None = None
+    cancel_requested: bool = False
+    events_url: str | None = Field(
+        default=None,
+        description="Относительный URL SSE-эндпоинта (только в ответе POST/PATCH).",
+    )
     started_at: datetime | None = None
     finished_at: datetime | None = None
 

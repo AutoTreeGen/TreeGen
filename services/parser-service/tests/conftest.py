@@ -75,8 +75,30 @@ def postgres_dsn() -> Iterator[str]:
         container.stop()
 
 
+@pytest.fixture(scope="session")
+def app():
+    """FastAPI-приложение parser_service. Шарится между тестами в сессии."""
+    from parser_service.main import app as fastapi_app
+
+    return fastapi_app
+
+
+@pytest.fixture(autouse=True)
+def _override_arq_pool(app):
+    """Подменяем get_arq_pool на AsyncMock — никаких реальных Redis-коннектов в unit-тестах."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    from parser_service.queue import get_arq_pool
+
+    fake_pool = AsyncMock()
+    fake_pool.enqueue_job = AsyncMock(return_value=MagicMock(job_id="fake"))
+    app.dependency_overrides[get_arq_pool] = lambda: fake_pool
+    yield
+    app.dependency_overrides.pop(get_arq_pool, None)
+
+
 @pytest_asyncio.fixture
-async def app_client(postgres_dsn: str) -> AsyncIterator:
+async def app_client(app, postgres_dsn: str) -> AsyncIterator:
     """httpx AsyncClient против поднятого FastAPI app, привязанного к test-DB."""
     import os
 
@@ -84,7 +106,6 @@ async def app_client(postgres_dsn: str) -> AsyncIterator:
     # Force re-init lifespan
     from httpx import ASGITransport, AsyncClient
     from parser_service.database import dispose_engine, init_engine
-    from parser_service.main import app
 
     init_engine(postgres_dsn)
     transport = ASGITransport(app=app)
