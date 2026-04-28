@@ -147,34 +147,57 @@ function LinkedSection({
         <ul className="mt-3 space-y-2">
           {items.map((linked) => (
             <li key={`${linked.table}-${linked.id}-${linked.page ?? "no-page"}`}>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex flex-wrap items-center gap-2 text-sm">
-                    {href ? (
-                      <Link
-                        href={href(linked.id)}
-                        className="font-mono text-xs underline-offset-4 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2"
-                      >
-                        {linked.id}
-                      </Link>
-                    ) : (
-                      <span className="font-mono text-xs">{linked.id}</span>
-                    )}
-                    <QuayBadge raw={linked.quay_raw} />
-                    <Badge variant="neutral">quality: {linked.quality.toFixed(2)}</Badge>
-                  </CardTitle>
-                  {linked.page ? (
-                    <CardDescription>
-                      page: <span className="font-mono text-xs">{linked.page}</span>
-                    </CardDescription>
-                  ) : null}
-                </CardHeader>
-              </Card>
+              <LinkedEntityCard linked={linked} href={href} />
             </li>
           ))}
         </ul>
       )}
     </section>
+  );
+}
+
+function LinkedEntityCard({
+  linked,
+  href,
+}: {
+  linked: SourceLinkedEntity;
+  href: ((id: string) => string) | null;
+}) {
+  // display_label — приоритетный человекочитаемый label из бэка
+  // (Phase 4.7-finalize). Если null (orphan FK / soft-delete) —
+  // fallback на UUID, чтобы хоть какой-то идентификатор был виден.
+  const primary = linked.display_label ?? linked.id;
+  const showUuidSecondary = linked.display_label !== null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex flex-wrap items-center gap-2 text-sm">
+          {href ? (
+            <Link
+              href={href(linked.id)}
+              className="underline-offset-4 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2"
+            >
+              {primary}
+            </Link>
+          ) : (
+            <span>{primary}</span>
+          )}
+          <QuayBadge raw={linked.quay_raw} />
+          <Badge variant="neutral">quality: {linked.quality.toFixed(2)}</Badge>
+        </CardTitle>
+        {showUuidSecondary ? (
+          <CardDescription className="font-mono text-[11px] text-[color:var(--color-ink-500)]">
+            {linked.id}
+          </CardDescription>
+        ) : null}
+        {linked.page ? (
+          <CardDescription>
+            page: <span className="font-mono text-xs">{linked.page}</span>
+          </CardDescription>
+        ) : null}
+      </CardHeader>
+    </Card>
   );
 }
 

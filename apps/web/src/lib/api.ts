@@ -408,6 +408,12 @@ export type SourceLinkedEntity = {
   page: string | null;
   quay_raw: number | null;
   quality: number;
+  /**
+   * Денормализованный label (Phase 4.7-finalize): имя person'а,
+   * "EVENT_TYPE YEAR" для event'а, "Husband × Wife" для family.
+   * `null` если backend не смог разрешить (orphan FK / soft-delete).
+   */
+  display_label: string | null;
 };
 
 export type SourceDetail = {
@@ -446,9 +452,21 @@ export type PersonCitationsResponse = {
   items: PersonCitationDetail[];
 };
 
-export function fetchSources(treeId: string, limit = 50, offset = 0): Promise<SourceListResponse> {
-  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
-  return getJson<SourceListResponse>(`/trees/${treeId}/sources?${params.toString()}`);
+export type SourcesListParams = {
+  /** Substring search по title/abbreviation/author (Phase 4.7-finalize). */
+  q?: string;
+  limit?: number;
+  offset?: number;
+};
+
+export function fetchSources(
+  treeId: string,
+  params: SourcesListParams = {},
+): Promise<SourceListResponse> {
+  const { q, limit = 50, offset = 0 } = params;
+  const search = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+  if (q) search.set("q", q);
+  return getJson<SourceListResponse>(`/trees/${treeId}/sources?${search.toString()}`);
 }
 
 export function fetchSource(sourceId: string): Promise<SourceDetail> {

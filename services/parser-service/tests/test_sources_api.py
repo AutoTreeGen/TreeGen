@@ -128,6 +128,11 @@ async def test_get_source_returns_linked_entities(app_client) -> None:
     assert person_link["page"] == "general bio"
     assert person_link["quay_raw"] == 1
     assert person_link["quality"] == pytest.approx(0.4)
+    # Phase 4.7-finalize: display_label резолвит имя person'а.
+    assert person_link["display_label"] == "John Smith"
+    # Event-link — display_label из EVENT_TYPE + year (BIRT 1850).
+    event_link = next(item for item in s1_body["linked"] if item["table"] == "event")
+    assert event_link["display_label"] == "BIRT 1850"
 
     # @S2@ — один linked event.
     s2_resp = await app_client.get(f"/sources/{s2_id}")
@@ -140,6 +145,7 @@ async def test_get_source_returns_linked_entities(app_client) -> None:
     assert only["page"] == "p. 42"
     assert only["quay_raw"] == 3
     assert only["quality"] == pytest.approx(0.95)
+    assert only["display_label"] == "BIRT 1850"
 
 
 @pytest.mark.asyncio
@@ -198,3 +204,101 @@ async def test_list_person_citations_returns_404_for_unknown(app_client) -> None
 
     response = await app_client.get(f"/persons/{uuid.uuid4()}/citations")
     assert response.status_code == 404
+
+
+# Phase 4.7-finalize: GEDCOM с family-level citation для проверки
+# display_label "husband × wife".
+_GED_WITH_FAMILY_CITATION = b"""\
+0 HEAD
+1 SOUR test
+1 GEDC
+2 VERS 5.5.5
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME John /Smith/
+1 SEX M
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Mary /Cohen/
+1 SEX F
+1 FAMS @F1@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 SOUR @S1@
+2 PAGE marriage cert. 1872
+2 QUAY 3
+0 @S1@ SOUR
+1 TITL Marriage register Lublin 1872
+0 TRLR
+"""
+
+
+@pytest.mark.asyncio
+async def test_get_source_resolves_family_display_label(app_client) -> None:
+    """display_label для family-level citation = "Husband × Wife"."""
+    files = {"file": ("test.ged", _GED_WITH_FAMILY_CITATION, "application/octet-stream")}
+    created = await app_client.post("/imports", files=files)
+    assert created.status_code == 201, created.text
+    tree_id = created.json()["tree_id"]
+
+    listing = await app_client.get(f"/trees/{tree_id}/sources")
+    s1_id = next(s for s in listing.json()["items"] if s["gedcom_xref"] == "S1")["id"]
+
+    resp = await app_client.get(f"/sources/{s1_id}")
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    family_links = [item for item in body["linked"] if item["table"] == "family"]
+    assert len(family_links) == 1
+    # Husband берётся первым в "given surname × given surname".
+    assert family_links[0]["display_label"] == "John Smith × Mary Cohen"
+
+
+@pytest.mark.asyncio
+async def test_list_sources_filters_by_q(app_client) -> None:
+    """`?q=` — ILIKE по title/abbreviation/author. Substring, case-insensitive."""
+    files = {"file": ("test.ged", _GED_WITH_CITATIONS, "application/octet-stream")}
+    created = await app_client.post("/imports", files=files)
+    assert created.status_code == 201, created.text
+    tree_id = created.json()["tree_id"]
+
+    # title-match: "bible" находит S1 ("Family bible kept by Anna").
+    by_title = await app_client.get(f"/trees/{tree_id}/sources?q=bible")
+    assert by_title.status_code == 200
+    body = by_title.json()
+    assert body["total"] == 1
+    assert body["items"][0]["gedcom_xref"] == "S1"
+
+    # author-match: "Lubelskie" — case-insensitive, попадает в S2 author.
+    by_author = await app_client.get(f"/trees/{tree_id}/sources?q=lubelskie")
+    body = by_author.json()
+    assert body["total"] == 1
+    assert by_author.json()["items"][0]["gedcom_xref"] == "S2"
+
+    # abbreviation-match: "Bible" abbreviation у S1.
+    by_abbr = await app_client.get(f"/trees/{tree_id}/sources?q=Bible")
+    assert by_abbr.json()["total"] == 1
+
+    # no-match: пусто, total=0.
+    by_none = await app_client.get(f"/trees/{tree_id}/sources?q=nonexistent")
+    assert by_none.json()["total"] == 0
+    assert by_none.json()["items"] == []
+
+    # пустой q игнорируется (FastAPI отдаёт `q=None` если не передан).
+    no_q = await app_client.get(f"/trees/{tree_id}/sources")
+    assert no_q.json()["total"] == 2
+
+
+@pytest.mark.asyncio
+async def test_list_sources_q_escapes_ilike_wildcards(app_client) -> None:
+    """`%` / `_` в запросе экранируются — не работают как wildcard."""
+    files = {"file": ("test.ged", _GED_WITH_CITATIONS, "application/octet-stream")}
+    created = await app_client.post("/imports", files=files)
+    assert created.status_code == 201
+    tree_id = created.json()["tree_id"]
+
+    # Без escape'а `%` матчил бы любую строку → total=2. С escape'ом —
+    # ищется буквальный знак процента, которого нет ни в одном source.
+    resp = await app_client.get(f"/trees/{tree_id}/sources?q=%25")
+    assert resp.json()["total"] == 0
