@@ -1,10 +1,11 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
+import { BulkComputePanel } from "@/components/bulk-compute-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,6 +69,7 @@ export default function HypothesesListPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const treeId = params.id;
 
   const [status, setStatus] = useState<HypothesisReviewStatus | "all">(
@@ -149,9 +151,17 @@ export default function HypothesesListPage() {
             </p>
           ) : null}
         </div>
-        <Button variant="ghost" size="md" asChild>
-          <Link href={`/trees/${treeId}/persons`}>← Back to persons</Link>
-        </Button>
+        <div className="flex flex-col items-end gap-2">
+          <Button variant="ghost" size="md" asChild>
+            <Link href={`/trees/${treeId}/persons`}>← Back to persons</Link>
+          </Button>
+          <BulkComputePanel
+            treeId={treeId}
+            onCompleted={() => {
+              queryClient.invalidateQueries({ queryKey: ["hypotheses", treeId] });
+            }}
+          />
+        </div>
       </header>
 
       <section

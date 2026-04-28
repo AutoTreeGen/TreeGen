@@ -380,6 +380,75 @@ export function reviewHypothesis(
   });
 }
 
+// ---- Bulk hypothesis compute (Phase 7.5) ----------------------------------
+
+export type HypothesisComputeJobStatus =
+  | "queued"
+  | "running"
+  | "succeeded"
+  | "failed"
+  | "cancelled";
+
+export type HypothesisComputeJobProgress = {
+  processed: number;
+  total: number;
+  hypotheses_created: number;
+};
+
+export type HypothesisComputeJobResponse = {
+  id: string;
+  tree_id: string;
+  status: HypothesisComputeJobStatus;
+  rule_ids: string[] | null;
+  progress: HypothesisComputeJobProgress;
+  cancel_requested: boolean;
+  error: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  created_at: string;
+  events_url: string | null;
+};
+
+/** Полный URL SSE-стрима bulk-compute job'а (для useEventSource). */
+export function bulkComputeEventsUrl(treeId: string, jobId: string): string {
+  return `${API_BASE}/trees/${treeId}/hypotheses/compute-jobs/${jobId}/events`;
+}
+
+export async function startBulkCompute(
+  treeId: string,
+  ruleIds?: string[] | null,
+): Promise<HypothesisComputeJobResponse> {
+  const response = await fetch(`${API_BASE}/trees/${treeId}/hypotheses/compute-all`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ rule_ids: ruleIds ?? null }),
+  });
+  if (!response.ok) {
+    const detail = await safeReadDetail(response);
+    throw new ApiError(response.status, detail ?? `Compute-all failed with ${response.status}`);
+  }
+  return (await response.json()) as HypothesisComputeJobResponse;
+}
+
+export function fetchBulkComputeJob(
+  treeId: string,
+  jobId: string,
+): Promise<HypothesisComputeJobResponse> {
+  return getJson<HypothesisComputeJobResponse>(`/trees/${treeId}/hypotheses/compute-jobs/${jobId}`);
+}
+
+export async function cancelBulkComputeJob(jobId: string): Promise<HypothesisComputeJobResponse> {
+  const response = await fetch(`${API_BASE}/hypotheses/compute-jobs/${jobId}/cancel`, {
+    method: "PATCH",
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) {
+    const detail = await safeReadDetail(response);
+    throw new ApiError(response.status, detail ?? `Cancel failed with ${response.status}`);
+  }
+  return (await response.json()) as HypothesisComputeJobResponse;
+}
+
 // ---- Sources & citations (Phase 4.7) --------------------------------------
 
 export type SourceSummary = {
@@ -408,6 +477,12 @@ export type SourceLinkedEntity = {
   page: string | null;
   quay_raw: number | null;
   quality: number;
+  /**
+   * Денормализованный label (Phase 4.7-finalize): имя person'а,
+   * "EVENT_TYPE YEAR" для event'а, "Husband × Wife" для family.
+   * `null` если backend не смог разрешить (orphan FK / soft-delete).
+   */
+  display_label: string | null;
 };
 
 export type SourceDetail = {
@@ -446,9 +521,21 @@ export type PersonCitationsResponse = {
   items: PersonCitationDetail[];
 };
 
-export function fetchSources(treeId: string, limit = 50, offset = 0): Promise<SourceListResponse> {
-  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
-  return getJson<SourceListResponse>(`/trees/${treeId}/sources?${params.toString()}`);
+export type SourcesListParams = {
+  /** Substring search по title/abbreviation/author (Phase 4.7-finalize). */
+  q?: string;
+  limit?: number;
+  offset?: number;
+};
+
+export function fetchSources(
+  treeId: string,
+  params: SourcesListParams = {},
+): Promise<SourceListResponse> {
+  const { q, limit = 50, offset = 0 } = params;
+  const search = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+  if (q) search.set("q", q);
+  return getJson<SourceListResponse>(`/trees/${treeId}/sources?${search.toString()}`);
 }
 
 export function fetchSource(sourceId: string): Promise<SourceDetail> {
