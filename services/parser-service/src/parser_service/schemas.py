@@ -1057,3 +1057,77 @@ class MemberRoleUpdateRequest(BaseModel):
     """
 
     role: Literal["editor", "viewer"]
+
+
+# =============================================================================
+# Phase 11.1 — audit log + owner transfer + invitation resend.
+# =============================================================================
+
+
+class AuditLogEntry(BaseModel):
+    """Один read-only ряд из ``audit_log`` для UI sharing-history."""
+
+    id: uuid.UUID
+    entity_type: str = Field(
+        description="ORM-class имя — `tree_memberships`, `tree_invitations`, ..."
+    )
+    entity_id: uuid.UUID
+    action: str = Field(description="`insert` | `update` | `delete` | `restore` | `merge`")
+    actor_user_id: uuid.UUID | None = None
+    actor_kind: str
+    reason: str | None = None
+    diff: dict[str, Any]
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AuditLogPage(BaseModel):
+    """``GET /trees/{id}/audit-log`` — paginated."""
+
+    tree_id: uuid.UUID
+    total: int
+    limit: int
+    offset: int
+    items: list[AuditLogEntry]
+
+
+class TransferOwnerRequest(BaseModel):
+    """``PATCH /trees/{id}/transfer-owner`` — 2-of-2 confirmation pattern.
+
+    Чтобы случайный клик не унёс ownership навсегда, мы требуем явное
+    подтверждение **обоих** email-адресов: текущего owner'а (caller) и
+    нового. ``new_owner_email`` должен совпадать с email одного из
+    активных members; ``current_owner_email_confirmation`` — с email
+    caller'а (чтобы UI form'а пропустила «введите свой email чтобы
+    подтвердить»).
+
+    Не делает ничего без явного membership-row нового owner'а — нельзя
+    transfer'нуть на email, который ещё не accept'нул invitation.
+    """
+
+    new_owner_email: str = Field(min_length=3, max_length=254)
+    current_owner_email_confirmation: str = Field(min_length=3, max_length=254)
+
+
+class TransferOwnerResponse(BaseModel):
+    """Result of ownership transfer."""
+
+    tree_id: uuid.UUID
+    previous_owner_user_id: uuid.UUID
+    new_owner_user_id: uuid.UUID
+    transferred_at: datetime
+
+
+class InvitationResendResponse(BaseModel):
+    """``POST /trees/invitations/{token}/resend`` — rate-limited 1/hour per token."""
+
+    invitation_id: uuid.UUID
+    invitee_email: str
+    resent_at: datetime
+    next_resend_allowed_at: datetime = Field(
+        description=(
+            "Earliest UTC moment when another resend on this token будет принят. "
+            "До этого момента resend возвращает 429."
+        ),
+    )

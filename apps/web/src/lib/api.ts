@@ -716,3 +716,151 @@ async function safeReadDetail(response: Response): Promise<string | null> {
     return null;
   }
 }
+
+// =============================================================================
+// Phase 11.1 — sharing API client (зеркалит parser_service.api.sharing).
+// =============================================================================
+
+export type ShareRole = "owner" | "editor" | "viewer";
+
+export type Member = {
+  id: string;
+  user_id: string;
+  email: string;
+  display_name: string | null;
+  role: ShareRole;
+  invited_by: string | null;
+  joined_at: string;
+  revoked_at: string | null;
+};
+
+export type MemberListResponse = {
+  tree_id: string;
+  items: Member[];
+};
+
+export type Invitation = {
+  id: string;
+  tree_id: string;
+  invitee_email: string;
+  role: ShareRole;
+  token: string;
+  invite_url: string;
+  expires_at: string;
+  accepted_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+};
+
+export type InvitationListResponse = {
+  tree_id: string;
+  items: Invitation[];
+};
+
+export type InvitationAcceptResponse = {
+  tree_id: string;
+  membership_id: string;
+  role: ShareRole;
+};
+
+export function fetchMembers(treeId: string): Promise<MemberListResponse> {
+  return getJson<MemberListResponse>(`/trees/${treeId}/members`);
+}
+
+export function fetchInvitations(treeId: string): Promise<InvitationListResponse> {
+  return getJson<InvitationListResponse>(`/trees/${treeId}/invitations`);
+}
+
+async function postJson<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const detail = await safeReadDetail(response);
+    throw new ApiError(response.status, detail ?? `${path} failed with ${response.status}`);
+  }
+  return (await response.json()) as T;
+}
+
+async function patchJson<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const detail = await safeReadDetail(response);
+    throw new ApiError(response.status, detail ?? `${path} failed with ${response.status}`);
+  }
+  return (await response.json()) as T;
+}
+
+async function deleteEmpty(path: string): Promise<void> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: "DELETE",
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) {
+    const detail = await safeReadDetail(response);
+    throw new ApiError(response.status, detail ?? `${path} failed with ${response.status}`);
+  }
+}
+
+export function createInvitation(
+  treeId: string,
+  email: string,
+  role: "editor" | "viewer",
+): Promise<Invitation> {
+  return postJson<Invitation>(`/trees/${treeId}/invitations`, { email, role });
+}
+
+export function revokeInvitation(invitationId: string): Promise<void> {
+  return deleteEmpty(`/invitations/${invitationId}`);
+}
+
+export function acceptInvitation(token: string): Promise<InvitationAcceptResponse> {
+  return postJson<InvitationAcceptResponse>(`/invitations/${token}/accept`, {});
+}
+
+export function updateMemberRole(membershipId: string, role: "editor" | "viewer"): Promise<Member> {
+  return patchJson<Member>(`/memberships/${membershipId}`, { role });
+}
+
+export function revokeMember(membershipId: string): Promise<void> {
+  return deleteEmpty(`/memberships/${membershipId}`);
+}
+
+export function resendInvitation(token: string): Promise<{
+  invitation_id: string;
+  invitee_email: string;
+  resent_at: string;
+  next_resend_allowed_at: string;
+}> {
+  return postJson(`/trees/invitations/${token}/resend`, {});
+}
+
+export function transferOwnership(
+  treeId: string,
+  newOwnerEmail: string,
+  currentOwnerEmail: string,
+): Promise<{
+  tree_id: string;
+  previous_owner_user_id: string;
+  new_owner_user_id: string;
+  transferred_at: string;
+}> {
+  return patchJson(`/trees/${treeId}/transfer-owner`, {
+    new_owner_email: newOwnerEmail,
+    current_owner_email_confirmation: currentOwnerEmail,
+  });
+}
+
+/** Mask middle of an email so members list doesn't leak full address visually. */
+export function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!local || !domain) return email;
+  if (local.length <= 2) return `${local[0]}*@${domain}`;
+  return `${local[0]}${"*".repeat(Math.min(local.length - 2, 4))}${local[local.length - 1]}@${domain}`;
+}
