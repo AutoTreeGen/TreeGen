@@ -48,6 +48,7 @@ from parser_service.services.bulk_hypothesis_runner import (
     execute_compute_job,
 )
 from parser_service.services.familysearch_importer import import_fs_pedigree
+from parser_service.services.fs_pedigree_merger import resolve_fs_person
 from parser_service.services.import_runner import run_import
 from parser_service.services.notifications import post_notify_request
 from parser_service.services.progress import ProgressPublisher, Stage
@@ -268,6 +269,9 @@ async def run_fs_import_job(
         )
 
         try:
+            # Async-flow всегда привязан к существующему дереву (tree_id
+            # выставляется на HTTP-уровне до enqueue), поэтому merge-mode
+            # включён по умолчанию (см. ADR-0017 §«Phase 5.2 extension»).
             await import_fs_pedigree(
                 session,
                 access_token=stored.access_token,
@@ -276,6 +280,7 @@ async def run_fs_import_job(
                 owner_user_id=user.id,
                 generations=generations,
                 existing_job_id=job.id,
+                merge_strategy_resolver=resolve_fs_person,
             )
             await session.commit()
         except Exception as exc:

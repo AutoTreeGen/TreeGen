@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import datetime as dt
 import uuid
+from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any
 
 from familysearch_client import (
@@ -40,6 +41,7 @@ from shared_models.enums import (
     EventType,
     ImportJobStatus,
     ImportSourceKind,
+    MergeStrategy,
     NameType,
     Sex,
 )
@@ -47,6 +49,7 @@ from shared_models.orm import (
     Event,
     EventParticipant,
     FsDedupAttempt,
+    FsImportMergeAttempt,
     ImportJob,
     Name,
     Person,
@@ -56,10 +59,25 @@ from shared_models.types import new_uuid
 from sqlalchemy import and_, delete, insert, or_, select
 
 from parser_service.services.fs_dedup import find_fs_dedup_candidates
+from parser_service.services.fs_pedigree_merger import ResolutionResult
 from parser_service.services.metrics import import_completed_total
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
+
+
+# Type alias: callable, который importer вызывает на каждой FS-персоне
+# до решения «вставлять или нет». Возвращает :class:`ResolutionResult`.
+# Pass через kwarg ``merge_strategy_resolver`` в :func:`import_fs_pedigree`;
+# если None — merge-mode выключен (Phase 5.1 поведение, всегда CREATE_AS_NEW).
+MergeStrategyResolver = Callable[
+    [
+        "AsyncSession",
+        FsPerson,
+        uuid.UUID,
+    ],
+    Awaitable[ResolutionResult],
+]
 
 
 _BATCH_SIZE = 5000
@@ -265,6 +283,7 @@ async def import_fs_pedigree(
     fs_client: FamilySearchClient | None = None,
     fs_config: FamilySearchConfig | None = None,
     existing_job_id: uuid.UUID | None = None,
+    merge_strategy_resolver: MergeStrategyResolver | None = None,
 ) -> ImportJob:
     """Импорт FS pedigree (focus + N поколений предков) в дерево.
 
@@ -286,6 +305,13 @@ async def import_fs_pedigree(
             async-flow worker'ом (``run_fs_import_job``), который
             пред-создаёт job в HTTP-эндпоинте, чтобы вернуть user'у
             id+events_url ещё до старта worker'а.
+        merge_strategy_resolver: опциональный callable Phase 5.2. Если
+            задан, для каждой FS-персоны (которая ещё не известна по
+            fs_pid) вызывается до INSERT'а; результат — ``MergeStrategy``,
+            определяющий, создавать ли новую row, прицепить к
+            существующему Person'у (MERGE) или skip'нуть. По умолчанию
+            None — Phase 5.1 поведение (всегда CREATE_AS_NEW). См.
+            :mod:`parser_service.services.fs_pedigree_merger`.
 
     Returns:
         ``ImportJob`` со статусом ``succeeded`` и заполненными ``stats``.
@@ -374,9 +400,50 @@ async def import_fs_pedigree(
             )
         await _bulk_insert(session, Place, new_place_rows)
 
-        # ---- 5. Persons: insert new + ID-map для existing ----
+        # ---- 5. Merge-mode resolver (Phase 5.2) ----
+        # Для каждой FS-персоны, неизвестной по fs_pid (т.е. не в
+        # existing_ids), спрашиваем merger: SKIP / MERGE / CREATE_AS_NEW.
+        # Если resolver не передан — сохраняем Phase 5.1 behaviour
+        # (всегда CREATE_AS_NEW, без attempt-логирования).
+        skip_fs_ids: set[str] = set()
+        merge_target_by_fs_id: dict[str, uuid.UUID] = {}
+        merge_attempts_to_log: list[FsImportMergeAttempt] = []
+        if merge_strategy_resolver is not None:
+            for fs_person in persons:
+                if fs_person.id in existing_ids:
+                    # fs_pid уже сматчен — это refresh-сценарий, merger
+                    # не вызываем: importer ниже сам отработает refresh-path.
+                    continue
+                result = await merge_strategy_resolver(session, fs_person, tree_id)
+                merge_attempts_to_log.append(
+                    FsImportMergeAttempt(
+                        id=new_uuid(),
+                        tree_id=tree_id,
+                        import_job_id=job_id,
+                        fs_pid=fs_person.id,
+                        strategy=result.strategy.value,
+                        matched_person_id=result.matched_person_id,
+                        score=result.score,
+                        score_components=dict(result.components),
+                        needs_review=result.needs_review,
+                        reason=result.reason or None,
+                        provenance={"import_job_id": str(job_id)},
+                    )
+                )
+                if result.strategy == MergeStrategy.SKIP and result.matched_person_id is not None:
+                    skip_fs_ids.add(fs_person.id)
+                    merge_target_by_fs_id[fs_person.id] = result.matched_person_id
+                elif (
+                    result.strategy == MergeStrategy.MERGE and result.matched_person_id is not None
+                ):
+                    merge_target_by_fs_id[fs_person.id] = result.matched_person_id
+
+        # ---- 6. Persons: insert new + ID-map для existing/merged ----
         person_rows_to_insert: list[dict[str, Any]] = []
         person_id_by_fs_id: dict[str, uuid.UUID] = dict(existing_ids)
+        # MERGE/SKIP fs_id → существующий Person.id (без INSERT'а Person row).
+        for fs_id, target_id in merge_target_by_fs_id.items():
+            person_id_by_fs_id[fs_id] = target_id
         for fs_person in persons:
             if fs_person.id in person_id_by_fs_id:
                 continue
@@ -398,17 +465,36 @@ async def import_fs_pedigree(
             )
         await _bulk_insert(session, Person, person_rows_to_insert)
 
-        # ---- 6. Names: только для новых FS-persons ----
-        # Для refreshed persons (existing_ids) — НЕ вставляем имена заново
-        # (Name не имеет provenance-колонки, поэтому различить FS-добавленное
-        # от manual-добавленного нельзя; сохраняем и то, и другое).
-        # Trade-off: новые FS-варианты имён для существующих persons не
-        # подхватываются на refresh — Phase 5.2 если потребуется.
+        # MERGE: добавим FS-attachment на provenance существующего Person'а
+        # (audit + idempotency через fs_pid lookup на следующих импортах).
+        merge_only_fs_ids = [fs_id for fs_id in merge_target_by_fs_id if fs_id not in skip_fs_ids]
+        if merge_only_fs_ids:
+            await _attach_fs_provenance_to_merged(
+                session,
+                fs_pid_to_person_id={
+                    fs_id: merge_target_by_fs_id[fs_id] for fs_id in merge_only_fs_ids
+                },
+                job_id=job_id,
+                now=now,
+            )
+
+        # ---- 7. Names: для новых FS-persons + для merged target'ов ----
+        # SKIP — НЕ вставляем имена (FS-person уже представлен в дереве,
+        # дубль-имена не нужны).
+        # CREATE_AS_NEW (новый Person) — вставляем как раньше.
+        # MERGE — вставляем имена под существующим Person'ом (FS contributes
+        # AKA-варианты к local'у); preferred переходит в AKA, чтобы не
+        # перетирать local primary name.
         name_rows: list[dict[str, Any]] = []
         new_person_ids = {p["id"] for p in person_rows_to_insert}
         for fs_person in persons:
+            if fs_person.id in skip_fs_ids:
+                continue
             person_pk = person_id_by_fs_id[fs_person.id]
-            if person_pk not in new_person_ids:
+            is_merge_target = fs_person.id in merge_target_by_fs_id
+            if person_pk not in new_person_ids and not is_merge_target:
+                # Refresh-path: existing FS-person, имена не трогаем (см.
+                # _drop_fs_owned_events docstring выше).
                 continue
             for sort_order, fs_name in enumerate(fs_person.names):
                 # Если parts пустые, но full_text есть — кладём full_text
@@ -418,7 +504,12 @@ async def import_fs_pedigree(
                 surname = fs_name.surname
                 if given is None and surname is None and fs_name.full_text:
                     given = fs_name.full_text
-                if fs_name.preferred:
+                if is_merge_target:
+                    # FS-имя в merged target — всегда AKA, никогда не перетирает
+                    # local preferred (sort_order=0).
+                    name_type = NameType.AKA.value
+                    sort_value = sort_order + 1000
+                elif fs_name.preferred:
                     name_type = NameType.BIRTH.value
                     sort_value = 0
                 else:
@@ -438,11 +529,16 @@ async def import_fs_pedigree(
                 )
         await _bulk_insert(session, Name, name_rows)
 
-        # ---- 7. Events + EventParticipants (Birth/Death only) ----
+        # ---- 8. Events + EventParticipants (Birth/Death only) ----
+        # SKIP — события не добавляем (FS-person полностью игнорируется).
+        # MERGE — события прилетают под существующего Person'а с FS provenance.
+        # CREATE_AS_NEW (новые) — как раньше.
         event_rows: list[dict[str, Any]] = []
         participant_rows: list[dict[str, Any]] = []
         skipped_facts = 0
         for fs_person in persons:
+            if fs_person.id in skip_fs_ids:
+                continue
             person_pk = person_id_by_fs_id[fs_person.id]
             for fact in fs_person.facts:
                 event_type = _FACT_TYPE_MAP.get(fact.type)
@@ -490,10 +586,18 @@ async def import_fs_pedigree(
         await _bulk_insert(session, Event, event_rows)
         await _bulk_insert(session, EventParticipant, participant_rows)
 
+        # ---- 8a. Persist merge-attempt audit-rows ----
+        # Делаем это внутри audit-skip-блока, чтобы attempt-rows не
+        # породили audit-log записи (они уже сами по себе audit).
+        for attempt in merge_attempts_to_log:
+            session.add(attempt)
+        if merge_attempts_to_log:
+            await session.flush()
+
     finally:
         set_audit_skip(session.sync_session, False)
 
-    # ---- 8. FS-flagged dedup attempts (Phase 5.2.1) ----
+    # ---- 9. FS-flagged dedup attempts (Phase 5.2.1) ----
     # Только для **новых** FS-persons (refreshed уже скорились на
     # предыдущем импорте). Не блокирует success — на ошибке скорер
     # пропускаем секцию и логируем (фактически — re-raise, но importer
@@ -508,7 +612,16 @@ async def import_fs_pedigree(
         now=now,
     )
 
-    # ---- 9. Mark job succeeded ----
+    # ---- 10. Phase 5.2 stats ----
+    # Подсчёт стратегий для UI (показать «3 SKIP, 2 MERGE, 5 CREATE_AS_NEW»)
+    # без запроса к БД — работаем с in-memory списком attempt'ов.
+    skip_count = sum(1 for a in merge_attempts_to_log if a.strategy == MergeStrategy.SKIP.value)
+    merge_count = sum(1 for a in merge_attempts_to_log if a.strategy == MergeStrategy.MERGE.value)
+    create_as_new_count = sum(
+        1 for a in merge_attempts_to_log if a.strategy == MergeStrategy.CREATE_AS_NEW.value
+    )
+
+    # ---- 11. Mark job succeeded ----
     job.status = ImportJobStatus.SUCCEEDED.value
     job.finished_at = dt.datetime.now(dt.UTC)
     # ImportJobResponse.stats типизирован как dict[str, int] — поэтому
@@ -524,11 +637,73 @@ async def import_fs_pedigree(
         "events_dropped_for_refresh": events_deleted,
         "generations": generations,
         "fs_dedup_attempts_created": fs_dedup_attempts_created,
+        "fs_merge_attempts_total": len(merge_attempts_to_log),
+        "fs_merge_skip": skip_count,
+        "fs_merge_merge": merge_count,
+        "fs_merge_create_as_new": create_as_new_count,
     }
     await session.flush()
     # Phase 9.0: success-инкремент; error path — в api/familysearch.py.
     import_completed_total.labels(source="fs", outcome="success").inc()
     return job
+
+
+async def _attach_fs_provenance_to_merged(
+    session: AsyncSession,
+    *,
+    fs_pid_to_person_id: dict[str, uuid.UUID],
+    job_id: uuid.UUID,
+    now: dt.datetime,
+) -> None:
+    """Для MERGE-стратегии: добавить FS source attachment к provenance существующего Person'а.
+
+    Идея: после MERGE-decision'а Person существует уже, но без следа,
+    что под него «прилетели» FS-данные. Записываем в
+    ``provenance.fs_attachments`` массив объектов
+    ``{fs_pid, imported_at, import_job_id}``. Это даёт:
+
+    1. **Audit**: «куда мы прицепили FS_pid X в дереве?» — query по
+       ``provenance->'fs_attachments' @> ...``.
+    2. **Idempotency**: следующий import может проверить, был ли уже
+       MERGE этого fs_pid'а в этого Person'а — но базовая идемпотентность
+       работает через ``provenance->>'fs_person_id'`` lookup в
+       :func:`fs_pedigree_merger.resolve_fs_person`, поэтому attachment
+       тут — secondary signal.
+
+    Не трогаем ``provenance.source`` — local Person остаётся local;
+    добавление FS-evidence не превращает его в FS-record.
+    """
+    if not fs_pid_to_person_id:
+        return
+    person_ids = list(fs_pid_to_person_id.values())
+    rows = (await session.execute(select(Person).where(Person.id.in_(person_ids)))).scalars().all()
+    person_by_id = {p.id: p for p in rows}
+    timestamp = now.isoformat()
+    job_id_str = str(job_id)
+    for fs_pid, person_id in fs_pid_to_person_id.items():
+        person = person_by_id.get(person_id)
+        if person is None:
+            # Defensive: target Person удалён между resolve и attach
+            # (теоретически невозможно в одной транзакции, но cheap guard).
+            continue
+        # provenance JSONB mutate — нужно явно re-assign, чтобы SQLAlchemy
+        # засёк изменение jsonb-поля (иначе считает same dict ref).
+        prov = dict(person.provenance) if person.provenance else {}
+        attachments_raw = prov.get("fs_attachments")
+        attachments: list[dict[str, Any]] = (
+            list(attachments_raw) if isinstance(attachments_raw, list) else []
+        )
+        attachments.append(
+            {
+                "fs_pid": fs_pid,
+                "fs_url": _fs_url(fs_pid),
+                "imported_at": timestamp,
+                "import_job_id": job_id_str,
+            }
+        )
+        prov["fs_attachments"] = attachments
+        person.provenance = prov
+    await session.flush()
 
 
 async def _persist_fs_dedup_attempts(

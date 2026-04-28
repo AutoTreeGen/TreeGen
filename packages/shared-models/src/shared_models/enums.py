@@ -314,6 +314,36 @@ class NotificationEventType(StrEnum):
     DEDUP_SUGGESTION_NEW = "dedup_suggestion_new"
 
 
+class MergeStrategy(StrEnum):
+    """Стратегия слияния FS-импорта против существующего дерева (Phase 5.2).
+
+    Решение принимает ``parser_service.services.fs_pedigree_merger.resolve_fs_person``
+    до момента INSERT'а Person'а. Каждое решение записывается в
+    ``fs_import_merge_attempts`` для последующего ручного аудита (CLAUDE.md §5).
+
+    * ``SKIP`` — FS-person уже представлен в дереве (по ``fs_pid`` либо
+      по high-confidence ID-match'у), Person'а **не** создаём, новые
+      Names/Events не вставляем. Идемпотентный no-op.
+    * ``MERGE`` — FS-person с ≥0.9 score'ом по entity-resolution
+      совпадает с существующим локальным Person'ом. Не создаём новый
+      Person, имена/события из FS вставляются под существующим
+      ``matched_person_id`` (provenance этого Person'а получает FS-source
+      attachment). Auto-merge запрещён CLAUDE.md §5 для Person'а как
+      сущности — здесь мы не сливаем две Person-row, а **добавляем
+      FS-evidence к уже существующей**, что классифицируется как
+      «append source citations», а не cross-person merge.
+    * ``CREATE_AS_NEW`` — score ниже high-threshold или вообще нет
+      кандидатов. Создаём новый Person row с FS-provenance, как делал
+      Phase 5.1 importer без merge-mode'а. Если score попал в
+      mid-confidence коридор, attempt-row помечается ``needs_review=true``,
+      чтобы UI Phase 4.5/4.6 предложил пару юзеру.
+    """
+
+    SKIP = "skip"
+    MERGE = "merge"
+    CREATE_AS_NEW = "create_as_new"
+
+
 class HypothesisComputeJobStatus(StrEnum):
     """Статус bulk hypothesis-compute job (Phase 7.5).
 

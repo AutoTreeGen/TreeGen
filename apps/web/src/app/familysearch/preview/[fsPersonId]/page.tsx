@@ -1,16 +1,19 @@
 "use client";
 
 /**
- * /familysearch/preview/[fsPersonId] — preview pedigree до импорта (Phase 5.1).
+ * /familysearch/preview/[fsPersonId] — preview pedigree до импорта (Phase 5.1 → 5.2).
  *
- * Динамический сегмент — FamilySearch person id (focus persona). Tree id
- * выбирается через query-param ``?tree=...`` или select-input на странице.
+ * Динамический сегмент — FamilySearch person id (focus persona). Target
+ * tree выбирается на странице:
+ *
+ * * ``Create new tree`` (default Phase 5.2) — backend создаёт свежее
+ *   дерево, импорт без merge-mode (всё CREATE_AS_NEW).
+ * * ``Import into existing tree`` — пользователь вставляет UUID дерева;
+ *   backend включает merge-mode (entity-resolution per-person, см.
+ *   ADR-0017 §«Phase 5.2 extension»).
+ *
  * После Confirm → POST /imports/familysearch/import → редирект на
  * /familysearch/import/[importJobId].
- *
- * Brief упоминал ``[importJobId]`` для preview-роута — это семантически
- * не подходит (preview не создаёт job). Используем ``[fsPersonId]``;
- * /familysearch/import/[importJobId] следует тому же паттерну.
  */
 
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -25,6 +28,8 @@ import { ApiError, fetchFamilySearchPreview, startFamilySearchImport } from "@/l
 
 const DEFAULT_GENERATIONS = 4;
 
+type TargetMode = "new" | "existing";
+
 export default function FamilySearchPreviewPage() {
   const params = useParams<{ fsPersonId: string }>();
   const search = useSearchParams();
@@ -32,6 +37,9 @@ export default function FamilySearchPreviewPage() {
   const fsPersonId = decodeURIComponent(params.fsPersonId ?? "");
 
   const initialTreeId = search.get("tree") ?? "";
+  // Если в query пришёл ``?tree=<uuid>`` — стартуем в existing-режиме,
+  // иначе default «Create new tree» (Phase 5.2).
+  const [targetMode, setTargetMode] = useState<TargetMode>(initialTreeId ? "existing" : "new");
   const [treeId, setTreeId] = useState(initialTreeId);
   const [generations, setGenerations] = useState(DEFAULT_GENERATIONS);
 
@@ -46,7 +54,7 @@ export default function FamilySearchPreviewPage() {
     mutationFn: () =>
       startFamilySearchImport({
         fs_person_id: fsPersonId,
-        tree_id: treeId,
+        target_tree_id: targetMode === "existing" ? treeId : null,
         generations,
       }),
     onSuccess: (job) => {
@@ -54,7 +62,8 @@ export default function FamilySearchPreviewPage() {
     },
   });
 
-  const canConfirm = Boolean(treeId) && preview.isSuccess && !importMutation.isPending;
+  const canConfirm =
+    (targetMode === "new" || Boolean(treeId)) && preview.isSuccess && !importMutation.isPending;
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
@@ -77,12 +86,37 @@ export default function FamilySearchPreviewPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Tree ID">
-            <Input
-              value={treeId}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setTreeId(e.target.value)}
-              placeholder="00000000-0000-0000-0000-000000000000"
-            />
+          <Field label="Target tree">
+            <fieldset className="flex flex-col gap-1.5 border-0 p-0">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="target-mode"
+                  value="new"
+                  checked={targetMode === "new"}
+                  onChange={() => setTargetMode("new")}
+                />
+                <span>Create new tree</span>
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="target-mode"
+                  value="existing"
+                  checked={targetMode === "existing"}
+                  onChange={() => setTargetMode("existing")}
+                />
+                <span>Import into existing tree</span>
+              </label>
+              {targetMode === "existing" ? (
+                <Input
+                  value={treeId}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setTreeId(e.target.value)}
+                  placeholder="00000000-0000-0000-0000-000000000000"
+                  className="mt-1"
+                />
+              ) : null}
+            </fieldset>
           </Field>
           <Field label="Generations (1–8)">
             <Input
@@ -96,6 +130,16 @@ export default function FamilySearchPreviewPage() {
               }}
             />
           </Field>
+          {targetMode === "existing" ? (
+            <p className="col-span-full text-xs text-[color:var(--color-ink-500)]">
+              Merge-mode is on: each FamilySearch person will be checked against your existing tree
+              before insertion (SKIP / MERGE / CREATE_AS_NEW).
+            </p>
+          ) : (
+            <p className="col-span-full text-xs text-[color:var(--color-ink-500)]">
+              A fresh tree will be created and populated with the imported pedigree.
+            </p>
+          )}
         </CardContent>
       </Card>
 

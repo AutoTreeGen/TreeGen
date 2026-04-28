@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 from shared_models.schemas import ImportJobProgress
 
 
@@ -385,6 +385,13 @@ class FamilySearchImportRequest(BaseModel):
     ``access_token`` обрабатывается **stateless**: используется только для
     одного запроса в FamilySearch API и не сохраняется ни в БД, ни в
     логах. Для traceability логируется ``sha256(access_token)[:8]``.
+
+    Phase 5.2: ``target_tree_id`` опциональный. Если задан — importer
+    переходит в merge-mode (entity-resolution → SKIP/MERGE/CREATE_AS_NEW
+    решения, см. :mod:`parser_service.services.fs_pedigree_merger`).
+    Если None — создаём новое дерево на лету (как Phase 5.1 baseline).
+    Для backwards-compat принимаем оба имени поля: ``target_tree_id`` и
+    ``tree_id`` (legacy alias из Phase 5.1).
     """
 
     access_token: str = Field(
@@ -396,7 +403,16 @@ class FamilySearchImportRequest(BaseModel):
         max_length=64,
         description="FamilySearch person id (например, KW7S-VQJ).",
     )
-    tree_id: uuid.UUID = Field(description="ID существующего дерева в AutoTreeGen.")
+    target_tree_id: uuid.UUID | None = Field(
+        default=None,
+        validation_alias=AliasChoices("target_tree_id", "tree_id"),
+        description=(
+            "ID целевого дерева. Если задан — merge-mode: entity-resolution "
+            "решает SKIP/MERGE/CREATE_AS_NEW per FS-person. Если None — "
+            "importer создаёт новое дерево (Phase 5.1 baseline). "
+            "Принимает legacy-alias ``tree_id``."
+        ),
+    )
     generations: int = Field(
         default=4,
         ge=1,
@@ -407,7 +423,7 @@ class FamilySearchImportRequest(BaseModel):
         ),
     )
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
 
 class FamilySearchImportResponse(ImportJobResponse):
@@ -512,6 +528,11 @@ class FamilySearchAsyncImportRequest(BaseModel):
 
     ``access_token`` сюда **не передаётся** — это отличает async-flow
     от legacy-stateless ``POST /imports/familysearch``.
+
+    Phase 5.2: ``target_tree_id`` опциональный. Если задан — async
+    worker запускает merge-mode (entity-resolution per-person). Если
+    None — endpoint создаёт новое дерево с auto-name'ом, как в
+    sync-эндпоинте. Принимает legacy-alias ``tree_id``.
     """
 
     fs_person_id: str = Field(
@@ -519,7 +540,14 @@ class FamilySearchAsyncImportRequest(BaseModel):
         max_length=64,
         description="FamilySearch person id (focus persona).",
     )
-    tree_id: uuid.UUID = Field(description="ID существующего дерева в AutoTreeGen.")
+    target_tree_id: uuid.UUID | None = Field(
+        default=None,
+        validation_alias=AliasChoices("target_tree_id", "tree_id"),
+        description=(
+            "ID существующего дерева. Если задан — merge-mode. "
+            "Если None — создаём новое дерево. Принимает legacy-alias ``tree_id``."
+        ),
+    )
     generations: int = Field(
         default=4,
         ge=1,
@@ -527,7 +555,7 @@ class FamilySearchAsyncImportRequest(BaseModel):
         description="Глубина pedigree (FamilySearch personal apps cap = 8).",
     )
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
 
 # -----------------------------------------------------------------------------

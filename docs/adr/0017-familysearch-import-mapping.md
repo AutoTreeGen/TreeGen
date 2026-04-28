@@ -296,6 +296,58 @@ Name.provenance->>'fs_person_id' = ?`. То же для Event.
   `access_token` — секрет, в provenance **не** попадает (Phase 5.1
   endpoint логирует только `sha256(access_token)[:8]`).
 
+## Phase 5.2 extension — merge-mode decision tree
+
+Phase 5.1 importer всегда вставлял FS-persons как новые row'ы;
+Phase 5.2.1 после INSERT'а писал `fs_dedup_attempts` для review-UI
+(suggestion-flow). Phase 5.2 добавляет **третий слой**: до INSERT'а
+importer вызывает `fs_pedigree_merger.resolve_fs_person(...)`, который
+смотрит на entity-resolution score против локальных не-FS Person'ов и
+выбирает одну из трёх стратегий (`shared_models.enums.MergeStrategy`):
+
+| Условие                                                        | Strategy        | Эффект                                                                 |
+| -------------------------------------------------------------- | --------------- | ---------------------------------------------------------------------- |
+| `fs_pid` уже сматчен в дереве                                  | `SKIP`          | Person/Names/Events НЕ вставляются. Идемпотентный no-op.               |
+| `score ≥ 0.9` против local                                     | `MERGE`         | Используем existing Person как target; Names/Events с FS-provenance прилетают под него; `provenance.fs_attachments[]` обновляется. |
+| `0.5 ≤ score < 0.9`                                            | `CREATE_AS_NEW` + `needs_review=True` | Создаётся новый Person с FS-provenance. Attempt-row помечается для UI Phase 4.5/4.6 review. |
+| `score < 0.5` или нет кандидатов                               | `CREATE_AS_NEW` | Создаётся новый Person с FS-provenance. Без флага.                     |
+
+Каждое решение записывается в `fs_import_merge_attempts` (миграция 0014):
+
+- `tree_id`, `import_job_id` — scope.
+- `fs_pid` — внешний ID FS-персоны.
+- `strategy` — финальная стратегия (`skip` / `merge` / `create_as_new`).
+- `matched_person_id` — local Person, на который приземлилось решение
+  (NULL для CREATE_AS_NEW без близкого кандидата).
+- `score`, `score_components` — composite score scorer'а + breakdown
+  (для UI explainability).
+- `needs_review` — bool-флаг для mid-confidence коридора.
+- `reason` — короткий label (`fs_pid_idempotent`, `high_confidence_match`,
+  `mid_confidence_review`, `low_confidence`, `no_candidates`).
+
+Это **immutable audit-log**, не review-queue. State-машины
+(rejected/merged) нет: следующее принятое решение по тому же `fs_pid`
+породит новую row, что и есть нужная семантика для cross-import audit'а.
+
+**Почему MERGE не нарушает CLAUDE.md §5 (запрет auto-merge persons).**
+В Phase 4.6 Person-merge — это операция «склеить две существующих
+local-Person row в одну», которая мутирует дерево необратимо без
+явного user-confirm'а. Phase 5.2 MERGE — это «прицепить FS-evidence
+к local-Person'у»: исходный local Person сохраняет identity и primary
+name, FS-данные идут как AKA-имена и BIRT/DEAT-events с явным
+`provenance.source: 'familysearch'`. Никакая local row не
+уничтожается, никакой cross-person граф не сливается. Ровно эту
+семантику CLAUDE.md §5 разрешает (см. Phase 5.0/5.1 — провенанс — это
+свободно).
+
+**Endpoint-семантика.** `POST /imports/familysearch` принимает
+`target_tree_id: UUID | None`. Если задан — merge-mode (resolver
+вызывается per-person). Если None — importer создаёт новое дерево
+с именем `FamilySearch import {fs_person_id}` и работает в no-merge
+режиме (CREATE_AS_NEW для всех). Async-flow
+`POST /imports/familysearch/import` всегда merge-mode (там tree_id —
+обязательный, и tree должен существовать).
+
 ## Когда пересмотреть
 
 - **Подключение второй платформы** (Geni / MyHeritage / WikiTree) — мигрируем

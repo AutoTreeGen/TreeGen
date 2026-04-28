@@ -69,6 +69,7 @@ from fastapi.responses import RedirectResponse
 from shared_models.enums import (
     ImportJobStatus,
     ImportSourceKind,
+    TreeVisibility,
 )
 from shared_models.orm import ImportJob, Tree, User
 from sqlalchemy import select
@@ -98,6 +99,7 @@ from parser_service.schemas import (
     ImportJobResponse,
 )
 from parser_service.services.familysearch_importer import import_fs_pedigree
+from parser_service.services.fs_pedigree_merger import resolve_fs_person
 from parser_service.services.metrics import import_completed_total
 
 logger = logging.getLogger(__name__)
@@ -238,27 +240,61 @@ def _stored_token_from_oauth(token: Token, *, fs_user_id: str | None) -> FsStore
 )
 async def create_familysearch_import(
     request: FamilySearchImportRequest,
+    settings: Annotated[Settings, Depends(get_settings)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> FamilySearchImportResponse:
-    """Импорт FS pedigree в существующее дерево (синхронный, stateless).
+    """Импорт FS pedigree в дерево (синхронный, stateless).
 
     Маппинг FS GEDCOM-X → ORM — см. ADR-0017. Идемпотентность:
     повторный запрос с тем же ``fs_person_id`` обновит существующих
     persons, не создаст дубликаты.
+
+    Phase 5.2 — поведение зависит от ``target_tree_id``:
+
+    * Если задан — merge-mode: importer вызывает entity-resolution
+      на каждой FS-персоне до INSERT'а и принимает SKIP / MERGE /
+      CREATE_AS_NEW решения, которые логируются в
+      ``fs_import_merge_attempts``.
+    * Если None — auto-creates новое дерево. Это удобный shortcut для
+      «import to a fresh tree» сценария без требования pre-create
+      Tree row'ы.
     """
-    tree = (
-        await session.execute(select(Tree).where(Tree.id == request.tree_id))
-    ).scalar_one_or_none()
-    if tree is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Tree {request.tree_id} not found",
+    target_tree_id = request.target_tree_id
+    merge_mode: bool
+    if target_tree_id is None:
+        owner = await _ensure_owner(session, settings.owner_email)
+        new_tree = Tree(
+            owner_user_id=owner.id,
+            name=f"FamilySearch import {request.fs_person_id}",
+            visibility=TreeVisibility.PRIVATE.value,
+            default_locale="en",
+            settings={},
+            provenance={"source": "familysearch", "fs_focus_person_id": request.fs_person_id},
+            version_id=1,
         )
+        session.add(new_tree)
+        await session.flush()
+        target_tree_id = new_tree.id
+        owner_user_id = owner.id
+        merge_mode = False
+    else:
+        tree = (
+            await session.execute(select(Tree).where(Tree.id == target_tree_id))
+        ).scalar_one_or_none()
+        if tree is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Tree {target_tree_id} not found",
+            )
+        owner_user_id = tree.owner_user_id
+        merge_mode = True
 
     logger.info(
-        "FS import (sync) requested: fs_person_id=%s tree_id=%s generations=%d token_fp=%s",
+        "FS import (sync) requested: fs_person_id=%s tree_id=%s merge_mode=%s "
+        "generations=%d token_fp=%s",
         request.fs_person_id,
-        request.tree_id,
+        target_tree_id,
+        merge_mode,
         request.generations,
         _token_fingerprint(request.access_token),
     )
@@ -268,9 +304,10 @@ async def create_familysearch_import(
             session,
             access_token=request.access_token,
             fs_person_id=request.fs_person_id,
-            tree_id=request.tree_id,
-            owner_user_id=tree.owner_user_id,
+            tree_id=target_tree_id,
+            owner_user_id=owner_user_id,
             generations=request.generations,
+            merge_strategy_resolver=resolve_fs_person if merge_mode else None,
         )
     except FsNotFoundError as e:
         import_completed_total.labels(source="fs", outcome="error").inc()
@@ -310,7 +347,7 @@ async def create_familysearch_import(
 
     base = ImportJobResponse.model_validate(job)
     fs_attempts = base.stats.get("fs_dedup_attempts_created", 0) if base.stats else 0
-    review_url = f"/trees/{request.tree_id}/dedup-attempts" if fs_attempts else None
+    review_url = f"/trees/{target_tree_id}/dedup-attempts" if fs_attempts else None
     return FamilySearchImportResponse(
         **base.model_dump(),
         review_url=review_url,
@@ -715,23 +752,39 @@ async def create_async_import(
     """
     user, _token = await _load_token_or_409(session, settings, owner_email=settings.owner_email)
 
-    tree = (
-        await session.execute(select(Tree).where(Tree.id == request.tree_id))
-    ).scalar_one_or_none()
-    if tree is None:
-        # Фолбэк: автоматически создаём дерево с именем по fs_person_id —
-        # удобно, когда фронт сразу делает «Connect → Import» без шага
-        # выбора tree. Для тестов проще: они создают tree вручную и
-        # передают tree_id, который существует.
-        # Решение быть permissive здесь — компромисс UX vs. строгости;
-        # если treeId не существует, считаем это ошибкой клиента (404).
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Tree {request.tree_id} not found",
+    if request.target_tree_id is None:
+        # Phase 5.2: target_tree_id=None → auto-create новое дерево.
+        # Worker запустится в merge-mode, но кандидатов в пустом дереве
+        # не найдёт, поэтому каждое решение будет CREATE_AS_NEW.
+        new_tree = Tree(
+            owner_user_id=user.id,
+            name=f"FamilySearch import {request.fs_person_id}",
+            visibility=TreeVisibility.PRIVATE.value,
+            default_locale="en",
+            settings={},
+            provenance={
+                "source": "familysearch",
+                "fs_focus_person_id": request.fs_person_id,
+            },
+            version_id=1,
         )
+        session.add(new_tree)
+        await session.flush()
+        target_tree_id = new_tree.id
+    else:
+        tree = (
+            await session.execute(select(Tree).where(Tree.id == request.target_tree_id))
+        ).scalar_one_or_none()
+        if tree is None:
+            # tree_id передан, но в БД его нет — клиентская ошибка.
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Tree {request.target_tree_id} not found",
+            )
+        target_tree_id = tree.id
 
     job = ImportJob(
-        tree_id=tree.id,
+        tree_id=target_tree_id,
         created_by_user_id=user.id,
         source_kind=ImportSourceKind.FAMILYSEARCH.value,
         source_filename=None,

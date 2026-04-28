@@ -687,16 +687,28 @@ export function fetchFamilySearchPreview(
 
 /**
  * Запустить async-импорт. Использует server-side OAuth-токен.
+ *
+ * Phase 5.2: ``target_tree_id`` опциональный. Если задан — backend
+ * включает merge-mode (entity-resolution per-person с записью
+ * SKIP/MERGE/CREATE_AS_NEW в ``fs_import_merge_attempts``). Если
+ * ``null`` — backend создаёт новое дерево автоматически.
  */
 export async function startFamilySearchImport(payload: {
   fs_person_id: string;
-  tree_id: string;
+  target_tree_id: string | null;
   generations: number;
 }): Promise<ImportJobResponse> {
+  const body: Record<string, unknown> = {
+    fs_person_id: payload.fs_person_id,
+    generations: payload.generations,
+  };
+  if (payload.target_tree_id) {
+    body.target_tree_id = payload.target_tree_id;
+  }
   const response = await fetch(`${API_BASE}/imports/familysearch/import`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
   });
   if (!response.ok) {
     const detail = await safeReadDetail(response);
