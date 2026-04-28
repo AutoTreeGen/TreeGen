@@ -106,7 +106,7 @@ async def test_user_notifications_filter_and_unread_count(app_client) -> None:
 
 async def test_user_notifications_requires_x_user_id(app_client) -> None:
     response = await app_client.get("/users/me/notifications")
-    assert response.status_code == 401
+    assert response.status_code == 401, f"unexpected: {response.status_code} {response.text}"
 
 
 async def test_mark_read_404_on_cross_user(app_client) -> None:

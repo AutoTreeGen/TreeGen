@@ -30,6 +30,9 @@ dependencies = [
     # (см. ADR-0027). cryptography уже в lockfile через dna-analysis, фиксируем
     # explicit dep чтобы parser-service не зависел от транзитивности.
     "cryptography>=42",
+    # Phase 4.10 — Clerk webhook signature verification (Svix HMAC).
+    # PyJWT и httpx уже идут через shared-models.auth.
+    "svix>=1.40",
 ]
 
 [project.optional-dependencies]

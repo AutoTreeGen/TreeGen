@@ -1,10 +1,10 @@
-"""Notification API endpoints (Phase 8.0).
+"""Notification API endpoints (Phase 8.0 → 4.10 auth).
 
 Internal:
 * ``POST /notify`` — создать и доставить нотификацию (вызывают другие
   сервисы).
 
-End-user (auth = mock через ``X-User-Id`` header — Phase 4 заменит на JWT):
+End-user (Bearer JWT issued by Clerk — Phase 4.10, ADR-0033):
 * ``GET /users/me/notifications`` — список с фильтром unread + пагинация.
 * ``PATCH /notifications/{id}/read`` — отметить прочитанной.
 """
@@ -15,11 +15,12 @@ import datetime as dt
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from shared_models.orm import Notification
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from notification_service.auth import RequireUserId
 from notification_service.config import get_settings
 from notification_service.database import get_session
 from notification_service.schemas import (
@@ -92,27 +93,6 @@ async def notify(
     )
 
 
-def _resolve_user_id(x_user_id: str | None) -> int:
-    """Mock auth: вытащить user_id из ``X-User-Id`` header.
-
-    Когда auth появится (Phase 4.x) — заменим на JWT extraction
-    с тем же возвращаемым типом. 401 если header отсутствует или
-    нечислового формата.
-    """
-    if x_user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing X-User-Id header (mock auth — Phase 8.0).",
-        )
-    try:
-        return int(x_user_id)
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="X-User-Id must be a positive integer.",
-        ) from exc
-
-
 @router.get(
     "/users/me/notifications",
     response_model=NotificationListResponse,
@@ -120,7 +100,7 @@ def _resolve_user_id(x_user_id: str | None) -> int:
 )
 async def list_user_notifications(
     session: Annotated[AsyncSession, Depends(get_session)],
-    x_user_id: Annotated[str | None, Header(alias="X-User-Id")] = None,
+    user_id: RequireUserId,
     unread: bool = Query(
         default=False,
         description=(
@@ -132,8 +112,6 @@ async def list_user_notifications(
     offset: int = Query(0, ge=0),
 ) -> NotificationListResponse:
     """Список нотификаций текущего пользователя (sorted by created_at desc)."""
-    user_id = _resolve_user_id(x_user_id)
-
     base = select(Notification).where(Notification.user_id == user_id)
     if unread:
         base = base.where(Notification.read_at.is_(None))
@@ -173,7 +151,7 @@ async def list_user_notifications(
 async def mark_read(
     notification_id: uuid.UUID,
     session: Annotated[AsyncSession, Depends(get_session)],
-    x_user_id: Annotated[str | None, Header(alias="X-User-Id")] = None,
+    user_id: RequireUserId,
 ) -> MarkReadResponse:
     """Идемпотентно проставить ``read_at = NOW()`` для нотификации.
 
@@ -181,7 +159,6 @@ async def mark_read(
     (тот же ответ — чтобы не утекало "user X has notification Y").
     Повторный вызов — без изменений (сохраняется первоначальный ``read_at``).
     """
-    user_id = _resolve_user_id(x_user_id)
     res = await session.execute(
         select(Notification).where(
             Notification.id == notification_id,

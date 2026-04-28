@@ -74,6 +74,7 @@ from shared_models.orm import ImportJob, Tree, User
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from parser_service.auth import RequireUser
 from parser_service.config import Settings, get_settings
 from parser_service.database import get_session
 from parser_service.fs_oauth import (
@@ -186,25 +187,20 @@ def _require_client_id(settings: Settings) -> str:
     return settings.fs_client_id
 
 
-async def _ensure_owner(session: AsyncSession, email: str) -> User:
-    """Найти/создать User по email (см. api.imports._ensure_owner — тот же контракт).
+async def _load_user(session: AsyncSession, user_id: uuid.UUID) -> User:
+    """Загрузить ``User``-row по ``users.id`` (Phase 4.10 auth-flow).
 
-    Phase 5.1 живёт без полноценного auth-middleware; владелец берётся
-    из ``settings.owner_email``. После Phase 4.x этот хелпер уйдёт, и user
-    будет приходить из request.state.
+    Auth-зависимость :data:`RequireUser` уже сделала JIT-create user'а
+    из Clerk JWT, поэтому здесь — простой lookup. 500 при отсутствии
+    (теоретически невозможно в той же транзакции).
     """
-    res = await session.execute(select(User).where(User.email == email))
+    res = await session.execute(select(User).where(User.id == user_id))
     user = res.scalar_one_or_none()
-    if user is not None:
-        return user
-    user = User(
-        email=email,
-        external_auth_id=f"local:{email}",
-        display_name=email.split("@", maxsplit=1)[0],
-        locale="en",
-    )
-    session.add(user)
-    await session.flush()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Authenticated user row not found",
+        )
     return user
 
 
@@ -238,6 +234,7 @@ def _stored_token_from_oauth(token: Token, *, fs_user_id: str | None) -> FsStore
 )
 async def create_familysearch_import(
     request: FamilySearchImportRequest,
+    user_id: RequireUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> FamilySearchImportResponse:
     """Импорт FS pedigree в существующее дерево (синхронный, stateless).
@@ -245,7 +242,13 @@ async def create_familysearch_import(
     Маппинг FS GEDCOM-X → ORM — см. ADR-0017. Идемпотентность:
     повторный запрос с тем же ``fs_person_id`` обновит существующих
     persons, не создаст дубликаты.
+
+    Phase 4.10: ``user_id`` приходит из Clerk Bearer JWT. Cross-ownership
+    проверка (тот ли user владеет ``tree_id``'ом) — следующий layer
+    authorization, отложен в Phase 4.11+ (см. ROADMAP §16). Здесь мы
+    ограничиваемся аутентификацией (any signed-in user).
     """
+    _ = user_id  # auth checked, ownership-cross-check — follow-up
     tree = (
         await session.execute(select(Tree).where(Tree.id == request.tree_id))
     ).scalar_one_or_none()
@@ -329,19 +332,20 @@ async def create_familysearch_import(
 )
 async def oauth_start(
     response: Response,
+    user_id: RequireUser,
     settings: Annotated[Settings, Depends(get_settings)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> FamilySearchOAuthStartResponse:
     """Сгенерировать OAuth Authorize URL и положить state в Redis.
 
-    Нет ``user_id`` в API: Phase 5.1 живёт без auth-middleware, владелец
-    резолвится из ``settings.owner_email``. После Phase 4.x этот хелпер
-    уйдёт.
+    Phase 4.10: ``user_id`` приходит из Clerk JWT (см.
+    :data:`parser_service.auth.RequireUser`). State-record привязывается
+    к этому ``user_id``, callback верифицирует совпадение.
     """
     _require_token_storage(settings)
     client_id = _require_client_id(settings)
 
-    user = await _ensure_owner(session, settings.owner_email)
+    user = await _load_user(session, user_id)
 
     auth = FamilySearchAuth(client_id=client_id, config=_fs_config_for(settings))
     auth_request: AuthorizationRequest = auth.start_flow(
@@ -452,8 +456,9 @@ async def oauth_callback(
         await session.execute(select(User).where(User.id == record.user_id))
     ).scalar_one_or_none()
     if user is None:
-        # Юзер мог быть удалён между start и callback'ом — фолбэк на email.
-        user = await _ensure_owner(session, settings.owner_email)
+        # Юзер мог быть удалён между start и callback'ом — это симптом
+        # serious state issue, отправляем на failure-redirect.
+        return _failure_redirect(settings, reason="user_missing")
     user.fs_token_encrypted = ciphertext
     await session.flush()
 
@@ -521,12 +526,14 @@ async def _fetch_fs_user_id(access_token: str, settings: Settings) -> str | None
     summary="Удалить сохранённый FamilySearch-токен",
 )
 async def disconnect(
+    user_id: RequireUser,
     settings: Annotated[Settings, Depends(get_settings)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> Response:
     """Затереть ``users.fs_token_encrypted``. Идемпотентно: 204 даже если
     токена не было."""
-    user = await _ensure_owner(session, settings.owner_email)
+    _ = settings  # маркер: settings нужны для typing FSAPI выше
+    user = await _load_user(session, user_id)
     if user.fs_token_encrypted is not None:
         user.fs_token_encrypted = None
         await session.flush()
@@ -540,11 +547,12 @@ async def disconnect(
     summary="Подключён ли FamilySearch и до каких пор валиден токен",
 )
 async def familysearch_me(
+    user_id: RequireUser,
     settings: Annotated[Settings, Depends(get_settings)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> FamilySearchAccountInfo:
     """Статус подключения. Не возвращает access_token — это секрет."""
-    user = await _ensure_owner(session, settings.owner_email)
+    user = await _load_user(session, user_id)
     if not user.fs_token_encrypted:
         return FamilySearchAccountInfo(connected=False)
     storage = _require_token_storage(settings)
@@ -570,10 +578,10 @@ async def familysearch_me(
 
 
 async def _load_token_or_409(
-    session: AsyncSession, settings: Settings, *, owner_email: str
+    session: AsyncSession, settings: Settings, *, user_id: uuid.UUID
 ) -> tuple[User, FsStoredToken]:
     """Расшифровать сохранённый токен. 409 если user не подключал FS."""
-    user = await _ensure_owner(session, owner_email)
+    user = await _load_user(session, user_id)
     if not user.fs_token_encrypted:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -596,13 +604,14 @@ async def _load_token_or_409(
     summary="Показать summary pedigree до запуска импорта",
 )
 async def pedigree_preview(
+    user_id: RequireUser,
     settings: Annotated[Settings, Depends(get_settings)],
     session: Annotated[AsyncSession, Depends(get_session)],
     fs_person_id: Annotated[str, Query(pattern=r"^[A-Z0-9-]+$", max_length=64)],
     generations: Annotated[int, Query(ge=1, le=8)] = 4,
 ) -> FamilySearchPedigreePreviewResponse:
     """Read-only проба pedigree: count + sample names. ImportJob не создаётся."""
-    _user, token = await _load_token_or_409(session, settings, owner_email=settings.owner_email)
+    _user, token = await _load_token_or_409(session, settings, user_id=user_id)
 
     config = _fs_config_for(settings)
     try:
@@ -699,6 +708,7 @@ def _preview_person(person: FsPerson) -> FamilySearchPedigreePreviewPerson:
 )
 async def create_async_import(
     request: FamilySearchAsyncImportRequest,
+    user_id: RequireUser,
     settings: Annotated[Settings, Depends(get_settings)],
     session: Annotated[AsyncSession, Depends(get_session)],
     pool: Annotated[ArqRedis, Depends(get_arq_pool)],
@@ -713,7 +723,7 @@ async def create_async_import(
     Если токен протух и refresh-токен отсутствует — тоже 409 с тем же
     кодом, чтобы фронт видел один путь восстановления.
     """
-    user, _token = await _load_token_or_409(session, settings, owner_email=settings.owner_email)
+    user, _token = await _load_token_or_409(session, settings, user_id=user_id)
 
     tree = (
         await session.execute(select(Tree).where(Tree.id == request.tree_id))

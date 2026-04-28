@@ -11,9 +11,10 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Final
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 
 from dna_service.api import consents, kits, matches, uploads
+from dna_service.auth import get_current_claims
 from dna_service.config import get_settings
 from dna_service.database import dispose_engine, init_engine
 
@@ -41,10 +42,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.include_router(consents.router)
-app.include_router(uploads.router)
-app.include_router(matches.router)
-app.include_router(kits.router)
+# Phase 4.10 (ADR-0033): все DNA endpoint'ы требуют Bearer JWT.
+# Router-level dependency срабатывает до ручки и возвращает 401 при
+# отсутствии/инвалидном токене. Endpoint'ы используют свои Depends на
+# ``RequireUser`` для получения users.id UUID.
+_AUTH_DEPS = [Depends(get_current_claims)]
+
+app.include_router(consents.router, dependencies=_AUTH_DEPS)
+app.include_router(uploads.router, dependencies=_AUTH_DEPS)
+app.include_router(matches.router, dependencies=_AUTH_DEPS)
+app.include_router(kits.router, dependencies=_AUTH_DEPS)
 
 
 @app.get("/healthz", tags=["meta"])

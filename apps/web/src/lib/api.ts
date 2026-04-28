@@ -68,10 +68,47 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Phase 4.10: getter для Bearer JWT, выпущенного Clerk.
+ *
+ * Все API-вызовы идут через ``getJson`` / ``fetch``-wrapper'ы; они
+ * читают токен через этот глобальный getter и подставляют в
+ * ``Authorization``-header. Setter регистрируется один раз в
+ * ``providers.tsx`` (через ``useAuth().getToken``).
+ *
+ * Дизайн «глобальный setter» вместо «передавать token каждой
+ * ApiCall'у» — компромисс: API-функции уже сейчас вызываются из
+ * множества мест (server-actions, hooks), и protocoling каждой
+ * сигнатуры под token-passing раздул бы PR на ровном месте.
+ *
+ * SSR-режим: на server этот getter возвращает null (Clerk-context
+ * отсутствует), запросы уйдут без Bearer'а — в server-actions
+ * добавляйте `headers: { Authorization: ... }` руками.
+ */
+type AuthTokenProvider = () => Promise<string | null>;
+
+let authTokenProvider: AuthTokenProvider | null = null;
+
+export function setAuthTokenProvider(provider: AuthTokenProvider | null): void {
+  authTokenProvider = provider;
+}
+
+async function authHeaders(): Promise<Record<string, string>> {
+  if (authTokenProvider === null) {
+    return {};
+  }
+  const token = await authTokenProvider();
+  if (!token) {
+    return {};
+  }
+  return { Authorization: `Bearer ${token}` };
+}
+
 async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const auth = await authHeaders();
   const response = await fetch(`${API_BASE}${path}`, {
     ...init,
-    headers: { Accept: "application/json", ...init?.headers },
+    headers: { Accept: "application/json", ...auth, ...init?.headers },
   });
   if (!response.ok) {
     throw new ApiError(

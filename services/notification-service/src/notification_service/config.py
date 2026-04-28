@@ -29,6 +29,22 @@ class Settings(BaseSettings):
     )
     debug: bool = Field(default=False)
 
+    # ---- Clerk authentication (Phase 4.10, ADR-0033) ------------------------
+    clerk_issuer: str = Field(
+        default="",
+        description=(
+            "Clerk issuer URL. Пусто — auth-зависимости вернут 503. Тесты подменяют через фикстуры."
+        ),
+    )
+    clerk_jwks_url: str = Field(
+        default="",
+        description="Override JWKS URL; пусто — выводится из issuer'а.",
+    )
+    clerk_audience: str = Field(
+        default="",
+        description="Optional ``aud``; пусто — пропускаем aud-проверку.",
+    )
+
     model_config = SettingsConfigDict(
         env_prefix="NOTIFICATION_SERVICE_",
         env_file=".env",
