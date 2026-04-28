@@ -372,6 +372,18 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 
 > **Юридический момент:** хранение ДНК-данных требует явного согласия (informed consent), чёткой политики удаления, шифрования at-rest. Заложите это в схему БД с самого начала (`dna_kits.consent_status`, `dna_kits.consent_signed_at`, `dna_kits.delete_after`).
 
+### 10.4 Статус подфаз
+
+| Подфаза | Описание | Статус |
+|---|---|---|
+| 6.0 | Парсеры платформ + privacy ADR-0012 | ✅ Done |
+| 6.1 | Pairwise matching (half-IBD, Shared cM Project) — ADR-0014 | ✅ Done |
+| 6.2 | dna-service: consents + storage + matching API — ADR-0020 | ✅ Done |
+| 6.2.x | Consent audit-log + per-user list endpoint | ✅ Done |
+| **6.3** | **Match list/detail UI + chromosome painting + link-to-person — ADR-0033** | ✅ **Done (2026-04-28)** |
+| 6.4 | Triangulation + Bayes-prior из дерева | 🔜 Planned |
+| 6.5 | Imputation + IBD2 + dedicated `dna_match_segments` table | 🔜 Planned |
+
 ---
 
 ## 11. Фаза 7 — Entity Resolution / Дедупликация
