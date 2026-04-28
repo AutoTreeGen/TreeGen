@@ -165,6 +165,8 @@ crash.log
 # ---- Локальные файлы Claude ----
 .claude/settings.local.json
 .claude/cache/
+.claude/*.lock
+.claude/scheduled_tasks.lock
 
 # ---- pre-commit ----
 .pre-commit-cache/

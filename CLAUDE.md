@@ -163,7 +163,8 @@ docker compose down                  # остановить
 docker compose down -v               # полный сброс с volumes
 
 # Python (uv workspace)
-uv sync                                    # установить все зависимости
+uv sync --all-extras --all-packages        # init/CI parity: все workspace members + extras (см. .github/workflows/ci.yml)
+uv sync                                    # инкрементально: только root deps; для пере-сборки одного workspace member
 uv run pytest                              # все тесты
 uv run pytest -m "not slow and not integration"   # быстрый цикл
 uv run pytest -m gedcom_real               # тесты на личном GED (skipped в CI)

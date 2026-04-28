@@ -43,7 +43,7 @@ docker compose ps
 
 # 5. Установка Python зависимостей и pre-commit
 Write-Host "`n[5/5] Установка Python зависимостей..." -ForegroundColor Yellow
-uv sync --all-extras
+uv sync --all-extras --all-packages
 Write-Host "Установка pre-commit хуков..." -ForegroundColor Yellow
 uv run pre-commit install
 

@@ -61,8 +61,10 @@ cp .env.example .env
 docker compose up -d
 # Postgres: localhost:5432  /  Redis: localhost:6379  /  MinIO: localhost:9001
 
-# 3. Установить Python-зависимости (workspace через uv)
-uv sync
+# 3. Установить Python-зависимости (workspace через uv).
+#    `--all-packages` — все workspace members (без флага ставятся только root deps).
+#    `--all-extras` — optional dependency groups. Так делает CI (см. .github/workflows/ci.yml).
+uv sync --all-extras --all-packages
 
 # 4. Установить frontend-зависимости
 pnpm install
