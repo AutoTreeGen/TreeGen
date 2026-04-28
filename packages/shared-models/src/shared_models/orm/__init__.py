@@ -32,6 +32,7 @@ from shared_models.orm.source import Source
 from shared_models.orm.tree import Tree, TreeCollaborator
 from shared_models.orm.user import User
 from shared_models.orm.version import Version
+from shared_models.orm.waitlist_entry import WaitlistEntry
 
 __all__ = [
     "AuditLog",
@@ -67,4 +68,5 @@ __all__ = [
     "TreeCollaborator",
     "User",
     "Version",
+    "WaitlistEntry",
 ]

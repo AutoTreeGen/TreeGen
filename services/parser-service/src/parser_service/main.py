@@ -24,6 +24,7 @@ from parser_service.api import (
     persons,
     sources,
     trees,
+    waitlist,
 )
 from parser_service.config import get_settings
 from parser_service.database import dispose_engine, init_engine
@@ -88,6 +89,8 @@ app.include_router(persons.router, tags=["persons", "merge"])
 # /metrics — Prometheus exposition (Phase 9.0). Без префикса, чтобы scrape
 # конфиг был стандартным.
 app.include_router(metrics.router, tags=["meta"])
+# Phase 4.12: публичный POST /waitlist для лендинга (lead capture, без auth).
+app.include_router(waitlist.router, tags=["waitlist"])
 
 
 @app.get("/healthz", tags=["meta"])
