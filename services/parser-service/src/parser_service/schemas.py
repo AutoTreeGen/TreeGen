@@ -300,6 +300,12 @@ class SourceLinkedEntity(BaseModel):
     `table` ∈ ``{"person", "family", "event"}`` (полиморфная связь
     `citations.entity_type` / `entity_id`). UI разрешает её в
     конкретный card view на стороне клиента.
+
+    `display_label` (Phase 4.7-finalize) — denormalized human-readable
+    label, чтобы UI не делал отдельный round-trip за именем каждого
+    person'а: "John Smith" для person, "BIRT 1850" для event,
+    "Smith × Cohen" для family. ``None`` если резолвер не нашёл
+    подходящее имя (orphan FK, soft-deleted person и пр.).
     """
 
     table: Literal["person", "family", "event"]
@@ -307,6 +313,7 @@ class SourceLinkedEntity(BaseModel):
     page: str | None = None
     quay_raw: int | None = None
     quality: float
+    display_label: str | None = None
 
 
 class SourceDetail(BaseModel):
