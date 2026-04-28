@@ -113,6 +113,13 @@ async def test_notify_hypothesis_swallows_enqueue_failure(monkeypatch, caplog) -
     hypothesis_runner НЕ должна откатываться из-за нотификаций
     (см. ADR-0029 §«Последствия / Отрицательные»).
     """
+    import logging
+
+    # caplog по умолчанию ловит только root-логгер на WARNING+; модульный
+    # логгер ``parser_service.services.notifications`` нужно подключить явно,
+    # иначе ``record.getMessage()``-проверка ниже не находит warning.
+    caplog.set_level(logging.WARNING, logger="parser_service.services.notifications")
+
     monkeypatch.setattr(
         "parser_service.services.notifications._DEFAULT_URL",
         "http://notify.test",
