@@ -1,0 +1,11 @@
+{% extends "_base.html" %}
+{% block content %}
+<h1 style="font-size:22px;margin:0 0 16px 0;font-weight:normal;">Welcome, {{ user_display_name }}.</h1>
+<p>You're in. {{ brand_name }} is a research-grade genealogy platform — your trees, DNA matches and archive sources stay versioned and provenance-tagged.</p>
+<p>Two things to do next:</p>
+<ol style="padding-left:20px;">
+  <li>Import your first GEDCOM at <a href="{{ web_base_url }}/imports" style="color:#A14E2A;">{{ web_base_url }}/imports</a>.</li>
+  <li>If you've taken a DNA test, upload your kit on the Pro plan to surface matches against your tree.</li>
+</ol>
+<p style="margin-top:24px;">Reply to this email with any feedback &mdash; we read every message.</p>
+{% endblock %}

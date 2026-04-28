@@ -1,0 +1,12 @@
+{% extends "_base.html" %}
+{% block content %}
+<h1 style="font-size:22px;margin:0 0 16px 0;font-weight:normal;">Your payment didn't go through.</h1>
+<p>We couldn't charge your card for the {{ plan_name }} subscription. Your account stays on Pro for a 7-day grace period; after that, premium features will pause until the next successful payment.</p>
+{% if next_attempt_at %}
+<p>We'll automatically retry on <strong>{{ next_attempt_at }}</strong>.</p>
+{% endif %}
+<p style="margin-top:24px;">
+  <a href="{{ web_base_url }}/settings/billing" style="display:inline-block;padding:10px 18px;background:#A14E2A;color:#FFF;border-radius:4px;text-decoration:none;">Update payment method</a>
+</p>
+<p style="margin-top:24px;color:#5C5448;font-size:14px;">Need help? Reply to this email and we'll sort it out.</p>
+{% endblock %}

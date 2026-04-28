@@ -71,6 +71,10 @@ SERVICE_TABLES = {
     # с TTL; expired/revoked indicators отдельные timestamp-state, не
     # soft-delete.
     "tree_invitations",
+    # Email send audit log (Phase 12.2): provider-side immutable record
+    # для idempotent dispatch (idempotency_key UNIQUE) и debug. Без soft-delete —
+    # immutable history, retention через batch purge.
+    "email_send_log",
 }
 
 TREE_ENTITY_TABLES = {

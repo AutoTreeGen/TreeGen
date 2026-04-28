@@ -1,0 +1,14 @@
+{% extends "_base.txt" %}
+{% block content %}
+Your payment didn't go through.
+
+We couldn't charge your card for the {{ plan_name }} subscription. Your
+account stays on Pro for a 7-day grace period; after that, premium
+features will pause until the next successful payment.
+{% if next_attempt_at %}
+Automatic retry: {{ next_attempt_at }}
+{% endif %}
+Update payment method: {{ web_base_url }}/settings/billing
+
+Need help? Reply to this email and we'll sort it out.
+{% endblock %}

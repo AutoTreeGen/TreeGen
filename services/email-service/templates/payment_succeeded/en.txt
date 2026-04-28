@@ -1,0 +1,14 @@
+{% extends "_base.txt" %}
+{% block content %}
+Payment received.
+
+Your {{ plan_name }} subscription is active.
+
+  Amount:         {{ '%.2f' | format(amount_cents / 100) }} {{ currency | upper }}
+  Billing period: {{ billing_period_start }} — {{ billing_period_end }}
+{% if invoice_url %}
+Invoice: {{ invoice_url }}
+{% endif %}
+
+Manage your subscription: {{ web_base_url }}/settings/billing
+{% endblock %}

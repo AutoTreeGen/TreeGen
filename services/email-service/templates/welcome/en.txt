@@ -1,0 +1,14 @@
+{% extends "_base.txt" %}
+{% block content %}
+Welcome, {{ user_display_name }}.
+
+You're in. {{ brand_name }} is a research-grade genealogy platform — your
+trees, DNA matches and archive sources stay versioned and provenance-tagged.
+
+Two things to do next:
+  1. Import your first GEDCOM at {{ web_base_url }}/imports
+  2. If you've taken a DNA test, upload your kit on the Pro plan to surface
+     matches against your tree.
+
+Reply to this email with any feedback — we read every message.
+{% endblock %}
