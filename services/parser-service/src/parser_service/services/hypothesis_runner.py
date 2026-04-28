@@ -297,15 +297,6 @@ async def compute_hypothesis(
         dna_evidence = await _load_dna_aggregate(session, a_id, b_id)
 
     # 4. Compose с временной регистрацией дефолтных правил.
-    engine_type = _ENGINE_TYPE_FOR_PERSISTENT[hypothesis_type]
-    in_memory = _compose_with_default_rules(
-        engine_type=engine_type,
-        subject_a=subject_a,
-        subject_b=subject_b,
-        hypothesis_type_value=hypothesis_type.value,
-        dna_evidence=dna_evidence,
-    )
-    # 3+4. Compose с временной регистрацией дефолтных правил.
     # Phase 9.0: timing вокруг compose даёт P95 latency композиции;
     # rule_id="compose_default" — синтетический label (per-rule timing
     # потребовал бы wrap каждого InferenceRule, сейчас не оправдано).
@@ -316,6 +307,7 @@ async def compute_hypothesis(
             subject_a=subject_a,
             subject_b=subject_b,
             hypothesis_type_value=hypothesis_type.value,
+            dna_evidence=dna_evidence,
         )
 
     rules_version = _compute_rules_version()
