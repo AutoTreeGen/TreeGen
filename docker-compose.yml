@@ -97,6 +97,29 @@ services:
       retries: 5
 
   # ---------------------------------------------------------------------------
+  # parser-worker — arq-воркер, слушает очередь ``imports`` в Redis.
+  # Phase 3.5 (см. ROADMAP §7, ADR-0026). Образ собирается из того же
+  # services/parser-service/Dockerfile, что и HTTP-сервис; точка входа
+  # переопределяется на ``arq``.
+  # ---------------------------------------------------------------------------
+  parser-worker:
+    build:
+      context: .
+      dockerfile: services/parser-service/Dockerfile
+    container_name: autotreegen-parser-worker
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-autotreegen}:${POSTGRES_PASSWORD:-change-me-in-local-env}@postgres:5432/${POSTGRES_DB:-autotreegen}
+      PARSER_SERVICE_DEBUG: "false"
+    command: ["uv", "run", "arq", "parser_service.worker.WorkerSettings"]
+
+  # ---------------------------------------------------------------------------
   # MinIO bucket bootstrapper — однократно создаёт buckets при первом запуске.
   # ---------------------------------------------------------------------------
   minio-init:
