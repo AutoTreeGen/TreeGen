@@ -46,19 +46,33 @@ from shared_models.enums import (
 from shared_models.orm import (
     Event,
     EventParticipant,
+    FsDedupAttempt,
     ImportJob,
     Name,
     Person,
     Place,
 )
 from shared_models.types import new_uuid
-from sqlalchemy import delete, insert, select
+from sqlalchemy import and_, delete, insert, or_, select
+
+from parser_service.services.fs_dedup import find_fs_dedup_candidates
+from parser_service.services.metrics import import_completed_total
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
 
 _BATCH_SIZE = 5000
+
+# FS-flagged dedup threshold (см. fs_dedup._DEFAULT_THRESHOLD). 0.6 ниже,
+# чем глобальный 0.80 на ``GET /trees/{id}/duplicate-suggestions``: при
+# import'е мы знаем, что новая запись — кандидат, и хотим показать
+# user'у даже «возможные» (0.60–0.80) совпадения для ручного review.
+_FS_DEDUP_THRESHOLD = 0.6
+
+# Cooldown окно после reject'а пары: 90 дней. Importer не предлагает
+# пару повторно, пока окно не истекло.
+_FS_DEDUP_COOLDOWN_DAYS = 90
 
 # GEDCOM-X fact short names (без http://gedcomx.org/-префикса) → наш
 # EventType. Phase 5.1: только Birth/Death. Marriage — Phase 5.2 (требует
@@ -453,7 +467,22 @@ async def import_fs_pedigree(
     finally:
         set_audit_skip(session.sync_session, False)
 
-    # ---- 8. Mark job succeeded ----
+    # ---- 8. FS-flagged dedup attempts (Phase 5.2.1) ----
+    # Только для **новых** FS-persons (refreshed уже скорились на
+    # предыдущем импорте). Не блокирует success — на ошибке скорер
+    # пропускаем секцию и логируем (фактически — re-raise, но importer
+    # не должен зависнуть от dedup'а; сейчас оставляем raise — будет
+    # видно в тестах на регрессии scorer'а).
+    new_fs_person_ids = [row["id"] for row in person_rows_to_insert]
+    fs_dedup_attempts_created = await _persist_fs_dedup_attempts(
+        session,
+        tree_id=tree_id,
+        new_fs_person_ids=new_fs_person_ids,
+        job_id=job_id,
+        now=now,
+    )
+
+    # ---- 9. Mark job succeeded ----
     job.status = ImportJobStatus.SUCCEEDED.value
     job.finished_at = dt.datetime.now(dt.UTC)
     # ImportJobResponse.stats типизирован как dict[str, int] — поэтому
@@ -468,6 +497,124 @@ async def import_fs_pedigree(
         "skipped_facts": skipped_facts,
         "events_dropped_for_refresh": events_deleted,
         "generations": generations,
+        "fs_dedup_attempts_created": fs_dedup_attempts_created,
     }
     await session.flush()
+    # Phase 9.0: success-инкремент; error path — в api/familysearch.py.
+    import_completed_total.labels(source="fs", outcome="success").inc()
     return job
+
+
+async def _persist_fs_dedup_attempts(
+    session: AsyncSession,
+    *,
+    tree_id: uuid.UUID,
+    new_fs_person_ids: list[uuid.UUID],
+    job_id: uuid.UUID,
+    now: dt.datetime,
+) -> int:
+    """Найти и записать ``FsDedupAttempt``-rows для свежеимпортированных FS-persons.
+
+    Применяет три фильтра до insert'а:
+
+    1. **fs_pid idempotency**: если для этого fs_pid уже есть row с
+       ``merged_at IS NOT NULL`` — кандидат уже был ассимилирован, не
+       предлагаем повторно (что бы скорер ни сказал).
+    2. **Active-pair**: если есть active attempt на ту же направленную
+       пару — пропускаем (партиал-уникальный индекс это enforce'ил бы
+       и сам, но проверяем заранее, чтобы не ловить IntegrityError).
+    3. **Cooldown**: если есть rejected attempt на ту же пару не старше
+       90 дней — пропускаем (user уже отказался; не докучаем).
+
+    Возвращает число фактически вставленных attempt-row.
+    """
+    if not new_fs_person_ids:
+        return 0
+
+    candidates = await find_fs_dedup_candidates(
+        session,
+        tree_id=tree_id,
+        fs_person_ids=new_fs_person_ids,
+        threshold=_FS_DEDUP_THRESHOLD,
+    )
+    if not candidates:
+        return 0
+
+    # 1. Idempotency: какие fs_pid уже имеют merged-attempt в этом дереве?
+    fs_pids = sorted({c.fs_pid for c in candidates if c.fs_pid is not None})
+    merged_fs_pids: set[str] = set()
+    if fs_pids:
+        merged_rows = await session.execute(
+            select(FsDedupAttempt.fs_pid).where(
+                FsDedupAttempt.tree_id == tree_id,
+                FsDedupAttempt.fs_pid.in_(fs_pids),
+                FsDedupAttempt.merged_at.isnot(None),
+            )
+        )
+        merged_fs_pids = {row[0] for row in merged_rows.all() if row[0] is not None}
+
+    # 2 + 3. Active-pair и cooldown: одной выборкой по всем направленным
+    # парам (fs_person_id, candidate_id) этого батча.
+    pair_filters = [
+        and_(
+            FsDedupAttempt.fs_person_id == c.fs_person_id,
+            FsDedupAttempt.candidate_person_id == c.candidate_person_id,
+        )
+        for c in candidates
+    ]
+    cooldown_cutoff = now - dt.timedelta(days=_FS_DEDUP_COOLDOWN_DAYS)
+    active_pairs: set[tuple[uuid.UUID, uuid.UUID]] = set()
+    cooldown_pairs: set[tuple[uuid.UUID, uuid.UUID]] = set()
+    if pair_filters:
+        existing = await session.execute(
+            select(
+                FsDedupAttempt.fs_person_id,
+                FsDedupAttempt.candidate_person_id,
+                FsDedupAttempt.rejected_at,
+                FsDedupAttempt.merged_at,
+            ).where(
+                FsDedupAttempt.tree_id == tree_id,
+                or_(*pair_filters),
+            )
+        )
+        for fs_pid_uuid, cand_id, rej_at, merg_at in existing.all():
+            pair = (fs_pid_uuid, cand_id)
+            if rej_at is None and merg_at is None:
+                active_pairs.add(pair)
+            elif rej_at is not None and rej_at > cooldown_cutoff:
+                cooldown_pairs.add(pair)
+
+    inserted = 0
+    for cand in candidates:
+        if cand.fs_pid is not None and cand.fs_pid in merged_fs_pids:
+            continue
+        pair = (cand.fs_person_id, cand.candidate_person_id)
+        if pair in active_pairs:
+            continue
+        if pair in cooldown_pairs:
+            continue
+        session.add(
+            FsDedupAttempt(
+                id=new_uuid(),
+                tree_id=tree_id,
+                fs_person_id=cand.fs_person_id,
+                candidate_person_id=cand.candidate_person_id,
+                score=cand.score,
+                reason="fs_import_match",
+                fs_pid=cand.fs_pid,
+                provenance={
+                    "import_job_id": str(job_id),
+                    "components": cand.components,
+                },
+                created_at=now,
+                updated_at=now,
+            )
+        )
+        # Track in active_pairs так чтобы дубликат-кандидат внутри одного
+        # batch'а (теоретически невозможен, но defensive) не вставился
+        # дважды.
+        active_pairs.add(pair)
+        inserted += 1
+    if inserted:
+        await session.flush()
+    return inserted

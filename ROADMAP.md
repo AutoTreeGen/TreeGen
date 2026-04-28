@@ -242,7 +242,7 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 | **3.2** | Импорт `places` (без alias-канонизации), multi-principal participants (husband/wife на MARR), `place` в `GET /persons/{id}` | done (PR-19, PR-20, PR-21) |
 | **3.3** | Импорт `sources` + `citations` с PAGE/QUAY, OBJE → `multimedia_objects` + полиморфный `entity_multimedia`; `events[].citations` и `media[]` в `GET /persons/{id}` | done (PR-30, PR-32, PR-33, PR-35) |
 | **3.4** | Entity resolution: `packages/entity-resolution/` (Soundex + Daitch-Mokotoff + Levenshtein + token-set + DM-blocking), `dedup_finder` (READ-ONLY), `GET /trees/{id}/duplicate-suggestions`. См. ADR-0015. Идемпотентность импорта по `(tree_id, source_sha256)` перенесена в Phase 3.5. | done (PR-39, PR-44, PR-48, PR-50) |
-| **3.5** | Background-режим через `arq` + SSE для прогресса | not started |
+| **3.5** | Background-режим через `arq` + SSE для прогресса (async imports queue + Server-Sent Events live progress) | done (PR #102 ADR + #105 runner + #101 worker + #103 ui + #104 api) |
 
 ### 7.1 Эндпоинты
 
@@ -264,6 +264,13 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 5. Идемпотентность: загрузка одного и того же GED дважды не дублирует данные (детект по хешу + entity resolution).
 6. WebSocket / SSE для прогресса импорта.
 7. Health checks, structured logging (JSON), Prometheus-метрики.
+   - Phase 9.0 (done 2026-04-27): `prometheus-client` + `GET /metrics` exposition,
+     5 collectors (`treegen_hypothesis_created_total`, `_review_action_total`,
+     `_compute_duration_seconds`, `_import_completed_total`,
+     `_dedup_finder_duration_seconds`) wired в `hypothesis_runner` /
+     `import_runner` / `familysearch_importer` / `dedup_finder` /
+     `api/hypotheses` review. Grafana / Alertmanager / OpenTelemetry tracing —
+     follow-up Phase 9.x.
 
 ---
 
@@ -271,14 +278,26 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 
 **Цель:** пользователь может зарегистрироваться, загрузить GED, увидеть дерево.
 
+### 8.0 Status
+
+| Подфаза | Содержание | Статус |
+|---|---|---|
+| **4.3** | Pedigree-дерево предков в браузере: ADR-0013 (react-d3-tree выбран в качестве view layer), backend `GET /persons/{person_id}/ancestors?generations=N` (BFS по семейным связям, до 10 поколений = 1024 узлов), `AncestorTreeNode` Pydantic schema, 4 интеграционных теста на `test_ancestors_*`, фронтенд-страница `/persons/[id]/tree` с компонентом `<PedigreeTree>` (154 строк, SVG foreignObject + Tailwind style), `react-d3-tree@^3.6.6` в `apps/web/package.json`, ссылка "View family tree" из карточки персоны. See ADR-0013, PR-Phase-4.3. | done (2026-04-27) |
+| **4.4** | `/trees/[id]/persons`: поиск по имени (ILIKE) + фильтр по году рождения (BIRT.date_start range), debounce 300 мс, URL-state, 18 интеграционных тестов на бэкенде. См. PR-Phase-4.4. | done (2026-04-27) |
+| **4.4.1** | Daitch-Mokotoff phonetic search: `persons.surname_dm` / `persons.given_name_dm` TEXT[] columns + GIN-индексы (миграция 0007), import_runner и backfill-скрипт заполняют DM с auto-транслитерацией кириллицы, `?phonetic=true` на search-эндпоинте использует Postgres ARRAY overlap (`&&`), UI checkbox + «via phonetic match» badge. Zhitnitzky / Жытницкий / Zhytnicki / Schitnitzky → один bucket-set. См. PR-Phase-4.4.1. | done (2026-04-27) |
+| **4.6** | Manual person merge UI: ADR-0022, `PersonMergeLog` ORM + миграция 0006, `services/person_merger.py` (compute_diff/apply_merge/undo_merge/check_hypothesis_conflicts), 4 эндпоинта в `api/persons.py` (preview/commit/undo/merge-history) с обязательным `confirm:true` (Pydantic `Literal[True]` → 422 без него), `/persons/[id]/merge/[targetId]` page (side-by-side, choose survivor, confirm dialog, success/undo state), Phase 4.5 «Mark as same» включён. CLAUDE.md §5 enforce'ится в коде. См. ADR-0022, PR-78/81/Phase-4.6-merge-ui. | done (2026-04-27) |
+| **4.9** | Hypothesis review UI закрывает критическую дыру workflow (Phase 7.x ORM + API уже есть, но юзер их не видел): `/trees/[id]/hypotheses` (filter status / type / min_confidence + URL state + pagination) → `/hypotheses/[id]` (subjects, score meter, evidence breakdown по rule_id с DNA segments / source citations агрегатами, sticky action row Approve/Reject/Defer). Approve same_person → редирект в Phase 4.6 merge UI с `?from_hypothesis=N` баннером. Добавлен `DEFERRED` в `HypothesisReviewStatus` enum (4-й валидный статус, не блокирует merge как REJECTED). Light notification: `parser_service.services.notifications` POST'ит в notification-service на каждую новую `pending_review` гипотезу, fire-and-forget с graceful skip если сервис недоступен или env-var не задан. Pending-count badge на persons page header. См. PR-Phase-4.9. | done (2026-04-27) |
+
 ### 8.1 Страницы
 
 - Лендинг (объяснение продукта, тарифы — пока заглушки).
 - `/login`, `/signup` (Clerk).
 - `/dashboard` — список деревьев, импортов.
 - `/trees/[id]` — обзор дерева: stats, recent imports.
-- `/trees/[id]/persons` — поиск по персонам.
+- `/trees/[id]/persons` — поиск по персонам (Phase 4.4: ILIKE + год; Phase 4.4.1: phonetic Daitch-Mokotoff toggle; Phase 4.9: pending-hypotheses badge в шапке).
 - `/trees/[id]/persons/[personId]` — карточка персоны.
+- `/trees/[id]/hypotheses` — Phase 4.9 review queue (filter status/type/confidence).
+- `/hypotheses/[id]` — Phase 4.9 detail + approve/reject/defer (approve same_person → Phase 4.6 merge UI).
 - `/trees/[id]/import` — загрузка GED с drag & drop.
 
 ### 8.2 Подзадачи

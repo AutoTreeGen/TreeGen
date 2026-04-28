@@ -81,3 +81,45 @@ curl http://localhost:8000/healthz
 В этой итерации импорт **синхронный** (HTTP request ждёт до завершения),
 audit отключён в bulk-режиме (как в `scripts/import_personal_ged.py`).
 Background-режим через `arq` — Phase 3.5 (см. ROADMAP §7).
+
+## Background worker (Phase 3.5)
+
+Отдельный процесс — `arq`-воркер — слушает очередь `imports` в Redis и
+исполняет зарегистрированные jobs. Сейчас в реестре только заглушка
+`noop_job`; реальные jobs (`run_import_job` и др.) добавляются следующими
+PR-ами Phase 3.5 поверх этого скаффолда. Архитектура — ADR-0026.
+
+### Запуск локально
+
+```bash
+docker compose up -d redis                          # Redis должен быть поднят
+uv run arq parser_service.worker.WorkerSettings     # запустить воркер
+```
+
+В docker-compose поднимается отдельный сервис `parser-worker`, который
+делает то же самое внутри контейнера:
+
+```bash
+docker compose up -d parser-worker
+docker compose logs -f parser-worker
+```
+
+### Постановка jobs из API-кода
+
+```python
+from parser_service.queue import get_arq_pool
+
+pool = await get_arq_pool()
+job = await pool.enqueue_job("noop_job", {"hello": "world"})
+result = await job.result(timeout=10)
+```
+
+`get_arq_pool()` возвращает singleton `ArqRedis` для текущего event-loop'а;
+конфигурация Redis читается из ENV `REDIS_URL`
+(дефолт `redis://localhost:6379/0`).
+
+### Конфигурация воркера
+
+| Var | Default | Описание |
+|---|---|---|
+| `REDIS_URL` | `redis://localhost:6379/0` | DSN Redis (общий для воркера и API) |

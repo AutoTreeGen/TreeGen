@@ -13,7 +13,7 @@ from typing import Final
 
 from fastapi import FastAPI
 
-from dna_service.api import consents, matches, uploads
+from dna_service.api import consents, kits, matches, uploads
 from dna_service.config import get_settings
 from dna_service.database import dispose_engine, init_engine
 
@@ -44,6 +44,7 @@ app = FastAPI(
 app.include_router(consents.router)
 app.include_router(uploads.router)
 app.include_router(matches.router)
+app.include_router(kits.router)
 
 
 @app.get("/healthz", tags=["meta"])

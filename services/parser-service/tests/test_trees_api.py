@@ -201,7 +201,8 @@ async def test_get_person_returns_citations_and_media(app_client) -> None:
     cit = birt["citations"][0]
     assert cit["source_title"] == "Lubelskie parish records 1838"
     assert cit["page"] == "p. 42"
-    assert cit["quality"] == pytest.approx(1.0)
+    # Phase 3.6 QUAY → confidence mapping: 3 → 0.95.
+    assert cit["quality"] == pytest.approx(0.95)
 
     assert len(body["media"]) == 1
     media = body["media"][0]
@@ -282,6 +283,38 @@ async def test_ancestors_returns_tree_structure(app_client) -> None:
     maternal_grandfather = mother["father"]
     assert maternal_grandfather is not None
     assert maternal_grandfather["primary_name"] == "Charlie Second"
+
+
+@pytest.mark.asyncio
+async def test_ancestors_dna_tested_stub_defaults_false(app_client) -> None:
+    """Phase 4.3 stub: каждый ``AncestorTreeNode`` имеет ``dna_tested=False``.
+
+    Phase 6 (DNA matching) заменит stub на реальный lookup по подтверждённым
+    DNA-китам. Пока проверяем только что поле присутствует и дефолт = False
+    на root и любых загруженных father/mother узлах.
+    """
+    files = {"file": ("test.ged", _GED_3_GENERATIONS, "application/octet-stream")}
+    created = await app_client.post("/imports", files=files)
+    tree_id = created.json()["tree_id"]
+
+    listing = await app_client.get(f"/trees/{tree_id}/persons")
+    person_id = next(p["id"] for p in listing.json()["items"] if p["gedcom_xref"] == "I7")
+
+    response = await app_client.get(f"/persons/{person_id}/ancestors?generations=3")
+    assert response.status_code == 200
+    body = response.json()
+
+    root = body["root"]
+    assert root["dna_tested"] is False
+
+    # Проверяем, что у обоих родителей (загруженных в фикстуре) тоже False.
+    father = root["father"]
+    assert father is not None
+    assert father["dna_tested"] is False
+
+    mother = root["mother"]
+    assert mother is not None
+    assert mother["dna_tested"] is False
 
 
 @pytest.mark.asyncio

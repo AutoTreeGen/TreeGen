@@ -105,3 +105,31 @@ class MatchResponse(BaseModel):
     longest_segment_cm: float
     relationship_predictions: list[MatchRelationship]
     warnings: list[str]
+
+
+class KitLinkPersonRequest(BaseModel):
+    """PATCH body для линковки kit'а к персоне в дереве (Phase 7.3).
+
+    ``person_id=None`` явно очищает связь (unlink). Пустого payload не
+    допускаем, чтобы не путать «не передал» и «обнулить» — caller
+    должен явно прислать ``null``.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    person_id: uuid.UUID | None
+
+
+class KitResponse(BaseModel):
+    """Aggregate metadata кита (без raw DNA-данных)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: uuid.UUID
+    tree_id: uuid.UUID
+    owner_user_id: uuid.UUID
+    person_id: uuid.UUID | None
+    source_platform: str
+    external_kit_id: str | None
+    display_name: str | None
+    ethnicity_population: str

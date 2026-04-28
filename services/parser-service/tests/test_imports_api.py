@@ -1,9 +1,19 @@
-"""Интеграционные тесты ``POST /imports`` + ``GET /imports/{id}``.
+"""Интеграционные тесты импорта GEDCOM в БД (Phase 3 + Phase 3.5).
 
-Маркеры: ``db`` + ``integration`` — пропускаются если testcontainers нет.
+Phase 3.5: ``POST /imports`` стал async (202 + enqueue), реальный
+парсинг + bulk-insert делает worker через ``run_import_job``. Эти
+тесты раньше ходили через HTTP с синхронным импортом — теперь
+вызывают ``run_import()`` сервис напрямую с testcontainers-Postgres,
+оставляя API-уровень за ``test_imports_async.py``.
+
+Маркеры: ``db`` + ``integration`` — пропускаются если testcontainers
+не установлены.
 """
 
 from __future__ import annotations
+
+import tempfile
+from pathlib import Path
 
 import pytest
 
@@ -47,52 +57,73 @@ _MINIMAL_GED = b"""\
 """
 
 
-@pytest.mark.asyncio
-async def test_post_import_creates_job_and_persons(app_client) -> None:
-    """Загрузка минимального .ged → 201 + status=succeeded + 2 persons."""
-    files = {"file": ("test.ged", _MINIMAL_GED, "application/octet-stream")}
-    response = await app_client.post("/imports", files=files)
+async def _run_import_via_runner(postgres_dsn: str, ged_bytes: bytes, filename: str):
+    """Helper: создать tempfile и вызвать ``run_import`` напрямую.
 
-    assert response.status_code == 201, response.text
-    body = response.json()
-    assert body["status"] == "succeeded"
-    assert body["stats"]["persons"] == 2
-    assert body["stats"]["families"] == 1
+    Возвращает (tree_id, stats_dict). Используется тестами вместо
+    HTTP POST /imports — после Phase 3.5 endpoint enqueue'ит worker'а,
+    а реальный импорт делает ``run_import``.
+    """
+    from parser_service.services.import_runner import run_import
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".ged") as tmp:
+        tmp.write(ged_bytes)
+        tmp_path = Path(tmp.name)
+
+    engine = create_async_engine(postgres_dsn, future=True)
+    try:
+        SessionMaker = async_sessionmaker(engine, expire_on_commit=False)  # noqa: N806
+        async with SessionMaker() as session:
+            job = await run_import(
+                session,
+                tmp_path,
+                owner_email="test@autotreegen.local",
+                tree_name=Path(filename).stem,
+                source_filename=filename,
+            )
+            await session.commit()
+            return job.tree_id, dict(job.stats)
+    finally:
+        tmp_path.unlink(missing_ok=True)
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_run_import_creates_job_and_persons(postgres_dsn) -> None:
+    """``run_import`` парсит минимальный .ged и заливает 2 persons + 1 family."""
+    _tree_id, stats = await _run_import_via_runner(postgres_dsn, _MINIMAL_GED, "test.ged")
+    assert stats["persons"] == 2
+    assert stats["families"] == 1
     # 1 BIRT (I1) + 1 MARR (F1) = 2 events.
     # Participants: BIRT принципал (1) + MARR husband + wife (2) = 3.
-    assert body["stats"]["events"] == 2
-    assert body["stats"]["event_participants"] == 3
+    assert stats["events"] == 2
+    assert stats["event_participants"] == 3
     # BIRT и MARR ссылаются на разные PLAC → 2 уникальных места.
-    assert body["stats"]["places"] == 2
+    assert stats["places"] == 2
     # Один SOUR-record в фикстуре.
-    assert body["stats"]["sources"] == 1
+    assert stats["sources"] == 1
     # Одна SOUR-reference из BIRT(@I1@) → одна citation.
-    assert body["stats"]["citations"] == 1
+    assert stats["citations"] == 1
     # Один OBJE-record (M1) и одна OBJE-reference от @I1@.
-    assert body["stats"]["multimedia"] == 1
-    assert body["stats"]["entity_multimedia"] == 1
-    assert body["source_filename"] == "test.ged"
-    assert body["tree_id"] is not None
-    assert body["id"] is not None
+    assert stats["multimedia"] == 1
+    assert stats["entity_multimedia"] == 1
 
 
 @pytest.mark.asyncio
-async def test_import_persists_birth_event_for_first_person(app_client) -> None:
-    """После импорта _MINIMAL_GED у первой персоны есть BIRT-событие.
+async def test_import_persists_birth_event_for_first_person(app_client, postgres_dsn) -> None:
+    """После ``run_import`` у первой персоны есть BIRT-событие.
 
     Проверка идёт через ``GET /persons/{id}``, который джойнит
-    events / event_participants.
+    events / event_participants. Сам импорт делается прямым
+    вызовом ``run_import``, минуя async-API.
     """
-    files = {"file": ("test.ged", _MINIMAL_GED, "application/octet-stream")}
-    created = await app_client.post("/imports", files=files)
-    tree_id = created.json()["tree_id"]
+    tree_id, _stats = await _run_import_via_runner(postgres_dsn, _MINIMAL_GED, "test.ged")
 
     listing = await app_client.get(f"/trees/{tree_id}/persons")
     assert listing.status_code == 200
     items = listing.json()["items"]
     assert items, "no persons returned"
-    # I1 импортирован первым (вставка в порядке итерации document.persons),
-    # поэтому первый элемент с created_at-сортировкой — это John /Smith/.
     first = next(p for p in items if p["gedcom_xref"] == "I1")
 
     detail = await app_client.get(f"/persons/{first['id']}")
@@ -104,20 +135,16 @@ async def test_import_persists_birth_event_for_first_person(app_client) -> None:
 
 
 @pytest.mark.asyncio
-async def test_import_creates_places_and_links_events(app_client, postgres_dsn) -> None:
+async def test_import_creates_places_and_links_events(postgres_dsn) -> None:
     """После импорта в ``places`` лежат уникальные PLAC, событие имеет place_id.
 
-    Проверяем напрямую через AsyncSession, поскольку API эндпоинта /places ещё
-    нет (Phase 3.4). BIRT у I1 ссылается на "Slonim, Grodno, Russian Empire".
+    BIRT у I1 ссылается на "Slonim, Grodno, Russian Empire".
     """
     from shared_models.orm import Event, Place
     from sqlalchemy import select
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-    files = {"file": ("test.ged", _MINIMAL_GED, "application/octet-stream")}
-    created = await app_client.post("/imports", files=files)
-    assert created.status_code == 201, created.text
-    tree_id = created.json()["tree_id"]
+    tree_id, _stats = await _run_import_via_runner(postgres_dsn, _MINIMAL_GED, "test.ged")
 
     engine = create_async_engine(postgres_dsn, future=True)
     try:
@@ -150,21 +177,13 @@ async def test_import_creates_places_and_links_events(app_client, postgres_dsn) 
 
 
 @pytest.mark.asyncio
-async def test_import_persists_sources(app_client, postgres_dsn) -> None:
-    """SOUR-записи попадают в `sources` с TITL и AUTH.
-
-    После импорта `_MINIMAL_GED` в дереве должна быть ровно одна запись
-    `sources` с title="Lubelskie parish records 1838" и author="Lubelskie
-    Archive". Тип source_type — фолбэк OTHER (классификация в Phase 3.4).
-    """
+async def test_import_persists_sources(postgres_dsn) -> None:
+    """SOUR-записи попадают в `sources` с TITL и AUTH."""
     from shared_models.orm import Source
     from sqlalchemy import select
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-    files = {"file": ("test.ged", _MINIMAL_GED, "application/octet-stream")}
-    created = await app_client.post("/imports", files=files)
-    assert created.status_code == 201, created.text
-    tree_id = created.json()["tree_id"]
+    tree_id, _stats = await _run_import_via_runner(postgres_dsn, _MINIMAL_GED, "test.ged")
 
     engine = create_async_engine(postgres_dsn, future=True)
     try:
@@ -186,22 +205,13 @@ async def test_import_persists_sources(app_client, postgres_dsn) -> None:
 
 
 @pytest.mark.asyncio
-async def test_person_has_multimedia(app_client, postgres_dsn) -> None:
-    """OBJE-запись попадает в `multimedia_objects`, link к @I1@ — в entity_multimedia.
-
-    Проверяем:
-    - 1 multimedia_object с caption и storage_url из FILE;
-    - 1 entity_multimedia с entity_type="person" и правильным person_id;
-    - format сохранён в metadata (jpg).
-    """
+async def test_person_has_multimedia(postgres_dsn) -> None:
+    """OBJE-запись попадает в `multimedia_objects`, link к @I1@ — в entity_multimedia."""
     from shared_models.orm import EntityMultimedia, MultimediaObject, Person
     from sqlalchemy import select
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-    files = {"file": ("test.ged", _MINIMAL_GED, "application/octet-stream")}
-    created = await app_client.post("/imports", files=files)
-    assert created.status_code == 201, created.text
-    tree_id = created.json()["tree_id"]
+    tree_id, _stats = await _run_import_via_runner(postgres_dsn, _MINIMAL_GED, "test.ged")
 
     engine = create_async_engine(postgres_dsn, future=True)
     try:
@@ -248,23 +258,13 @@ async def test_person_has_multimedia(app_client, postgres_dsn) -> None:
 
 
 @pytest.mark.asyncio
-async def test_event_has_citation(app_client, postgres_dsn) -> None:
-    """BIRT-событие @I1@ имеет citation на @S1@ с PAGE и QUAY.
-
-    Проверяет:
-    - ровно 1 citation после импорта (на BIRT-event @I1@);
-    - entity_type == "event", source_id ссылается на наш SOUR;
-    - page_or_section == "p. 42";
-    - quality нормализован: QUAY 3 → 1.0 (3 / 3).
-    """
+async def test_event_has_citation(postgres_dsn) -> None:
+    """BIRT-событие @I1@ имеет citation на @S1@ с PAGE и QUAY."""
     from shared_models.orm import Citation, Event, Source
     from sqlalchemy import select
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-    files = {"file": ("test.ged", _MINIMAL_GED, "application/octet-stream")}
-    created = await app_client.post("/imports", files=files)
-    assert created.status_code == 201, created.text
-    tree_id = created.json()["tree_id"]
+    tree_id, _stats = await _run_import_via_runner(postgres_dsn, _MINIMAL_GED, "test.ged")
 
     engine = create_async_engine(postgres_dsn, future=True)
     try:
@@ -279,8 +279,8 @@ async def test_event_has_citation(app_client, postgres_dsn) -> None:
             cit = citations[0]
             assert cit.entity_type == "event"
             assert cit.page_or_section == "p. 42"
-            # QUAY 3 → 3/3 = 1.0.
-            assert cit.quality == pytest.approx(1.0)
+            assert cit.quay_raw == 3
+            assert cit.quality == pytest.approx(0.95)
 
             birth = (
                 await session.execute(
@@ -301,21 +301,13 @@ async def test_event_has_citation(app_client, postgres_dsn) -> None:
 
 
 @pytest.mark.asyncio
-async def test_marr_has_both_spouses_as_participants(app_client, postgres_dsn) -> None:
-    """MARR-событие в FAM имеет ровно husband + wife как participants.
-
-    После импорта `_MINIMAL_GED` находим единственный MARR-event и проверяем,
-    что у него два participants: один с role=husband (person_id = I1) и
-    второй с role=wife (person_id = I2).
-    """
+async def test_marr_has_both_spouses_as_participants(postgres_dsn) -> None:
+    """MARR-событие в FAM имеет ровно husband + wife как participants."""
     from shared_models.orm import Event, EventParticipant, Person
     from sqlalchemy import select
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-    files = {"file": ("test.ged", _MINIMAL_GED, "application/octet-stream")}
-    created = await app_client.post("/imports", files=files)
-    assert created.status_code == 201, created.text
-    tree_id = created.json()["tree_id"]
+    tree_id, _stats = await _run_import_via_runner(postgres_dsn, _MINIMAL_GED, "test.ged")
 
     engine = create_async_engine(postgres_dsn, future=True)
     try:
@@ -362,24 +354,20 @@ async def test_marr_has_both_spouses_as_participants(app_client, postgres_dsn) -
         await engine.dispose()
 
 
+# ---------------------------------------------------------------------------
+# Phase 3.5 API-surface — оставшиеся HTTP-тесты на новый async-контракт.
+# Сами enqueue/202/SSE покрываются ``test_imports_async.py``;
+# здесь только базовая валидация, что endpoint всё ещё доступен и
+# реджектит мусор.
+# ---------------------------------------------------------------------------
+
+
 @pytest.mark.asyncio
 async def test_post_import_rejects_non_gedcom_file(app_client) -> None:
-    """Файл с расширением не .ged/.gedcom → 400."""
+    """Файл с расширением не .ged/.gedcom → 400 (до enqueue)."""
     files = {"file": ("test.txt", b"not a gedcom", "text/plain")}
     response = await app_client.post("/imports", files=files)
     assert response.status_code == 400
-
-
-@pytest.mark.asyncio
-async def test_get_import_returns_existing_job(app_client) -> None:
-    """Создаём job, потом достаём его по id."""
-    files = {"file": ("test.ged", _MINIMAL_GED, "application/octet-stream")}
-    created = await app_client.post("/imports", files=files)
-    job_id = created.json()["id"]
-
-    response = await app_client.get(f"/imports/{job_id}")
-    assert response.status_code == 200
-    assert response.json()["id"] == job_id
 
 
 @pytest.mark.asyncio
@@ -387,3 +375,164 @@ async def test_get_import_returns_404_for_unknown_job(app_client) -> None:
     """Несуществующий UUID → 404."""
     response = await app_client.get("/imports/00000000-0000-0000-0000-000000000000")
     assert response.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Phase 3.5 follow-up: inline OBJE без xref'а. Доменная логика — тестируется
+# напрямую через runner, без HTTP.
+# ---------------------------------------------------------------------------
+
+_INLINE_OBJE_GED = b"""\
+0 HEAD
+1 SOUR test
+1 GEDC
+2 VERS 5.5.5
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME John /Smith/
+1 SEX M
+1 OBJE
+2 FILE photos/inline_portrait.jpg
+2 FORM jpeg
+2 TITL Inline portrait
+2 TYPE photo
+1 OBJE
+2 FILE docs/birth_cert.pdf
+2 FORM pdf
+0 @I2@ INDI
+1 NAME Mary /Smith/
+1 SEX F
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 OBJE
+2 FILE photos/wedding_inline.jpg
+2 FORM jpeg
+2 TITL Wedding 1923
+0 TRLR
+"""
+
+
+@pytest.mark.asyncio
+async def test_import_persists_inline_obje_objects(postgres_dsn) -> None:
+    """Inline OBJE (без xref) — сохраняются в multimedia_objects + entity_multimedia."""
+    from shared_models.orm import EntityMultimedia, Family, MultimediaObject, Person
+    from sqlalchemy import select
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    tree_id, stats = await _run_import_via_runner(postgres_dsn, _INLINE_OBJE_GED, "inline.ged")
+    assert stats["multimedia"] == 3
+    assert stats["entity_multimedia"] == 3
+
+    engine = create_async_engine(postgres_dsn, future=True)
+    try:
+        SessionMaker = async_sessionmaker(engine, expire_on_commit=False)  # noqa: N806
+        async with SessionMaker() as session:
+            objects = (
+                (
+                    await session.execute(
+                        select(MultimediaObject).where(MultimediaObject.tree_id == tree_id)
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            assert len(objects) == 3
+            assert all(o.object_metadata.get("inline") is True for o in objects)
+            captions = {o.caption for o in objects}
+            assert "Inline portrait" in captions
+            assert "Wedding 1923" in captions
+            assert None in captions
+            i1_objects = [o for o in objects if o.object_metadata.get("inline_owner_xref") == "I1"]
+            f1_objects = [o for o in objects if o.object_metadata.get("inline_owner_xref") == "F1"]
+            assert len(i1_objects) == 2
+            assert len(f1_objects) == 1
+            portrait = next(o for o in i1_objects if o.caption == "Inline portrait")
+            assert portrait.object_metadata.get("type") == "photo"
+
+            i1 = (
+                await session.execute(
+                    select(Person).where(Person.tree_id == tree_id, Person.gedcom_xref == "I1")
+                )
+            ).scalar_one()
+            f1 = (
+                await session.execute(
+                    select(Family).where(Family.tree_id == tree_id, Family.gedcom_xref == "F1")
+                )
+            ).scalar_one()
+            person_links = (
+                (
+                    await session.execute(
+                        select(EntityMultimedia).where(
+                            EntityMultimedia.entity_type == "person",
+                            EntityMultimedia.entity_id == i1.id,
+                        )
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            family_links = (
+                (
+                    await session.execute(
+                        select(EntityMultimedia).where(
+                            EntityMultimedia.entity_type == "family",
+                            EntityMultimedia.entity_id == f1.id,
+                        )
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            assert len(person_links) == 2
+            assert len(family_links) == 1
+    finally:
+        await engine.dispose()
+
+
+_ANCESTRY_OBJE_GED = b"""\
+0 HEAD
+1 SOUR Ancestry.com
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME John /Smith/
+1 SEX M
+1 OBJE @M1@
+0 @M1@ OBJE
+1 FILE https://www.ancestry.com/img/abc.jpg
+2 FORM jpeg
+2 TYPE photo
+1 TITL Ancestry photo
+1 _CREA 2024-01-15 09:12:34
+0 TRLR
+"""
+
+
+@pytest.mark.asyncio
+async def test_import_captures_ancestry_crea_and_type_in_metadata(postgres_dsn) -> None:
+    """Ancestry экспорт: _CREA → provenance.gedcom_crea, TYPE → metadata.type."""
+    from shared_models.orm import MultimediaObject
+    from sqlalchemy import select
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    tree_id, _stats = await _run_import_via_runner(postgres_dsn, _ANCESTRY_OBJE_GED, "ancestry.ged")
+
+    engine = create_async_engine(postgres_dsn, future=True)
+    try:
+        SessionMaker = async_sessionmaker(engine, expire_on_commit=False)  # noqa: N806
+        async with SessionMaker() as session:
+            obj = (
+                await session.execute(
+                    select(MultimediaObject).where(MultimediaObject.tree_id == tree_id)
+                )
+            ).scalar_one()
+            assert obj.object_metadata.get("type") == "photo"
+            assert obj.object_metadata.get("format") == "jpeg"
+            assert obj.object_metadata.get("created_raw") == "2024-01-15 09:12:34"
+            assert obj.provenance.get("gedcom_crea") == "2024-01-15 09:12:34"
+    finally:
+        await engine.dispose()

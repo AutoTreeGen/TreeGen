@@ -52,6 +52,10 @@ from shared_models.types import new_uuid
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from parser_service.services.dm_buckets import merge_dm_buckets
+from parser_service.services.metrics import import_completed_total
+from parser_service.services.progress import ProgressPublisher, Stage
+
 _BATCH_SIZE = 5000
 
 
@@ -133,26 +137,29 @@ def _map_date_calendar(calendar: str) -> str | None:
 
 
 # GEDCOM QUAY (quality of evidence): 0 = unreliable, 3 = primary evidence.
-# В нашем `Citation.quality` (Float, default 0.5) семантика — нормализованный
-# 0..1 score, поэтому делим QUAY на 3. Невалидный/отсутствующий QUAY → None
-# (вызывающий ставит дефолт ORM — 0.5).
-_QUAY_MAX = 3
+# Phase 3.6 (ADR-кандидат): таблица соответствия с асимметричным сдвигом
+# вверх для primary evidence — sensible defaults, можно переопределить.
+# Сырое значение QUAY при этом сохраняется в `Citation.quay_raw` для
+# round-trip и переоценки.
+_QUAY_TO_CONFIDENCE: dict[int, float] = {
+    0: 0.1,  # unreliable / hearsay
+    1: 0.4,  # questionable / secondary
+    2: 0.7,  # secondary с надёжной cross-reference
+    3: 0.95,  # direct primary evidence
+}
+_QUAY_MISSING_CONFIDENCE = 0.5
 
 
-def _quay_to_quality(value: str | None) -> float | None:
-    """GEDCOM QUAY ('0'..'3') → Citation.quality (0.0..1.0). None если не задан."""
-    if value is None:
-        return None
-    stripped = value.strip()
-    if not stripped:
-        return None
-    try:
-        quay = int(stripped)
-    except ValueError:
-        return None
-    if quay < 0 or quay > _QUAY_MAX:
-        return None
-    return quay / _QUAY_MAX
+def _quay_to_confidence(quay_raw: int | None) -> float:
+    """``Citation.quay_raw`` (int 0..3 или None) → ``Citation.quality`` (0..1).
+
+    None — источник не указал QUAY → нейтральный 0.5. Значения вне 0..3
+    парсер не пропускает (см. `gedcom_parser.entities.Citation.quality`),
+    но защищаемся от мусора всё равно.
+    """
+    if quay_raw is None:
+        return _QUAY_MISSING_CONFIDENCE
+    return _QUAY_TO_CONFIDENCE.get(quay_raw, _QUAY_MISSING_CONFIDENCE)
 
 
 def _chunk(seq: list[dict[str, Any]], size: int) -> list[list[dict[str, Any]]]:
@@ -192,6 +199,7 @@ async def run_import(
     owner_email: str,
     tree_name: str | None = None,
     source_filename: str | None = None,
+    progress: ProgressPublisher | None = None,
 ) -> ImportJob:
     """Распарсить GEDCOM-файл и записать в БД.
 
@@ -203,6 +211,10 @@ async def run_import(
         source_filename: Оригинальное имя файла (для upload-сценария, когда
             ``ged_path`` указывает на временный файл). По умолчанию —
             ``ged_path.name``.
+        progress: Опциональный publisher для стриминга стадий в Redis pub/sub
+            (Phase 3.5). По умолчанию ``None`` — синхронному caller'у не нужно
+            ничего знать о Redis. События эмитятся раз на стадию (один вызов
+            на bulk-insert группу): per-row подписчику не нужен.
 
     Returns:
         Созданный ``ImportJob`` со статусом ``succeeded`` и заполненными stats.
@@ -212,6 +224,9 @@ async def run_import(
         Exception: Любая ошибка парсера или БД — пробрасывается выше; вызывающий
             код должен пометить job.status = "failed" и сохранить ошибку в reason.
     """
+    # No-op publisher если caller не передал свой — упрощает дальнейшие вызовы.
+    publisher: ProgressPublisher = progress if progress is not None else ProgressPublisher(None, "")
+
     if not ged_path.exists():
         msg = f"GEDCOM file not found: {ged_path}"
         raise FileNotFoundError(msg)
@@ -247,53 +262,40 @@ async def run_import(
     await session.flush()
 
     # Парсинг GEDCOM. Используем parse_file (а не parse_document_file), чтобы
-    # получить и raw `records`, и encoding. Records нужны для извлечения
-    # SOUR-references с подтегами PAGE/QUAY (см. citations ниже): семантические
-    # entity'ы из `document` хранят только tuple xref'ов, без подробностей.
-    from gedcom_parser import (  # type: ignore[import-not-found]
-        GedcomDocument,
-        parse_file,
-    )
+    # получить и encoding отдельно (для provenance). Семантический слой
+    # `document` (Phase 1.x PR #55) уже несёт structured Citation внутри
+    # `event.citations` / `person.citations` / `family.citations`, так что
+    # raw `records` нужны теперь только для resolution event_id_by_line_no
+    # и для Phase 3.5 inline-OBJE round-trip.
+    await publisher.publish(Stage.PARSING, current=0, total=1, message="parsing GEDCOM")
+    from gedcom_parser import GedcomDocument, parse_file
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         records, encoding = parse_file(ged_path)
         document = GedcomDocument.from_records(records, encoding=encoding)
+    await publisher.publish(Stage.PARSING, current=1, total=1, message="parsed")
 
     set_audit_skip(session.sync_session, True)
     try:
-        # ---- Persons ----
+        # ---- Persons + Names (DM-buckets вычисляются в одном проходе) ----
+        # Phase 4.4.1: для phonetic-search сохраняем union DM-кодов всех
+        # имён (BIRTH + AKA + …) персоны в `surname_dm` / `given_name_dm`.
+        # Один проход вместо двух — собираем name_rows и DM сразу.
         person_rows: list[dict[str, Any]] = []
+        name_rows: list[dict[str, Any]] = []
         person_id_by_xref: dict[str, Any] = {}
         now = dt.datetime.now(dt.UTC)
         for xref, person in document.persons.items():
             pid = new_uuid()
             person_id_by_xref[xref] = pid
-            person_rows.append(
-                {
-                    "id": pid,
-                    "tree_id": tree.id,
-                    "gedcom_xref": xref,
-                    "sex": _map_sex(person.sex),
-                    "status": EntityStatus.PROBABLE.value,
-                    "confidence_score": 0.5,
-                    "version_id": 1,
-                    "provenance": {"import_job_id": str(job.id)},
-                    "created_at": now,
-                    "updated_at": now,
-                }
-            )
-        await _bulk_insert(session, Person, person_rows)
-
-        # ---- Names ----
-        name_rows: list[dict[str, Any]] = []
-        for xref, person in document.persons.items():
-            person_id = person_id_by_xref[xref]
+            surname_strings: list[str] = []
+            given_strings: list[str] = []
             for sort_order, name in enumerate(person.names):
                 name_rows.append(
                     {
                         "id": new_uuid(),
-                        "person_id": person_id,
+                        "person_id": pid,
                         "given_name": name.given,
                         "surname": name.surname,
                         "sort_order": sort_order,
@@ -304,7 +306,34 @@ async def run_import(
                         "updated_at": now,
                     }
                 )
+                if name.surname:
+                    surname_strings.append(name.surname)
+                if name.given:
+                    given_strings.append(name.given)
+            person_rows.append(
+                {
+                    "id": pid,
+                    "tree_id": tree.id,
+                    "gedcom_xref": xref,
+                    "sex": _map_sex(person.sex),
+                    "status": EntityStatus.PROBABLE.value,
+                    "confidence_score": 0.5,
+                    "version_id": 1,
+                    "provenance": {"import_job_id": str(job.id)},
+                    "surname_dm": merge_dm_buckets(surname_strings) or None,
+                    "given_name_dm": merge_dm_buckets(given_strings) or None,
+                    "created_at": now,
+                    "updated_at": now,
+                }
+            )
+        await _bulk_insert(session, Person, person_rows)
         await _bulk_insert(session, Name, name_rows)
+        await publisher.publish(
+            Stage.ENTITIES,
+            current=len(person_rows),
+            total=len(person_rows),
+            message="persons + names inserted",
+        )
 
         # ---- Families + family_children ----
         family_rows: list[dict[str, Any]] = []
@@ -346,6 +375,12 @@ async def run_import(
                     }
                 )
         await _bulk_insert(session, FamilyChild, fc_rows)
+        await publisher.publish(
+            Stage.ENTITIES,
+            current=len(person_rows) + len(family_rows),
+            total=len(person_rows) + len(family_rows),
+            message="families + family_children inserted",
+        )
 
         # ---- Places (dedup по raw text в пределах дерева) ----
         # Собираем уникальные PLAC-строки из всех событий и инсёртим один раз.
@@ -385,29 +420,44 @@ async def run_import(
                 _register_place(ev.place_raw)
 
         await _bulk_insert(session, Place, place_rows)
+        await publisher.publish(
+            Stage.PLACES,
+            current=len(place_rows),
+            total=len(place_rows),
+            message="places inserted",
+        )
 
         # ---- Sources ----
         # SOUR-записи документа → bulk insert в `sources`. Поля:
-        #  - title:       обязательно (NOT NULL); если у GEDCOM-источника TITL
-        #                 пуст — фолбэк на xref, чтобы соблюсти constraint.
-        #  - author/publication: TITL.AUTH/PUBL (опционально).
-        #  - source_type: пока всегда OTHER. Классификация (book/metric_record/...) —
-        #                 Phase 3.4 (entity resolution).
-        #  - repository:  free-form name; xref на `repositories` пока не разворачиваем
-        #                 (REPO импортируем в отдельной фазе).
-        # Дедупликация по title — Phase 3.4 (см. ROADMAP).
+        #  - title:        обязательно (NOT NULL); если у GEDCOM-источника TITL
+        #                  пуст — фолбэк сначала на ABBR, потом на xref.
+        #  - author / publication / abbreviation / text_excerpt: 1:1 с GEDCOM
+        #                  AUTH / PUBL / ABBR / TEXT (см. Phase 1.x PR #56).
+        #  - gedcom_xref:  оригинальный xref ("S1") для дедупликации
+        #                  при повторных импортах одного и того же файла
+        #                  (Phase 3.6.1 даст полноценный (tree_id, gedcom_xref)
+        #                  unique index; тут пока просто сохраняем).
+        #  - source_type:  пока всегда OTHER. Классификация (book/metric_record/...) —
+        #                  Phase 3.4 (entity resolution).
+        #  - repository:   free-form name; xref на `repositories` пока не разворачиваем
+        #                  (REPO импортируем в отдельной фазе).
         source_rows: list[dict[str, Any]] = []
         source_id_by_xref: dict[str, Any] = {}
         for xref, parsed_source in document.sources.items():
             sid = new_uuid()
             source_id_by_xref[xref] = sid
+            # title — NOT NULL: фолбэк цепочкой TITL → ABBR → xref.
+            title = parsed_source.title or parsed_source.abbreviation or xref
             source_rows.append(
                 {
                     "id": sid,
                     "tree_id": tree.id,
-                    "title": parsed_source.title or xref,
+                    "title": title,
                     "author": parsed_source.author,
+                    "abbreviation": parsed_source.abbreviation,
                     "publication": parsed_source.publication,
+                    "text_excerpt": parsed_source.text,
+                    "gedcom_xref": xref,
                     "source_type": SourceType.OTHER.value,
                     "repository": None,
                     "repository_id": None,
@@ -422,6 +472,12 @@ async def run_import(
                 }
             )
         await _bulk_insert(session, Source, source_rows)
+        await publisher.publish(
+            Stage.SOURCES,
+            current=len(source_rows),
+            total=len(source_rows),
+            message="sources inserted",
+        )
 
         # ---- Events + EventParticipants ----
         # Persona events → один participant с role="principal".
@@ -431,9 +487,10 @@ async def run_import(
         # чтобы соблюсти CHECK (person_id OR family_id).
         event_rows: list[dict[str, Any]] = []
         participant_rows: list[dict[str, Any]] = []
-        # Маппинг GEDCOM line_no события → event_id. Нужен Task 2 (citations),
-        # чтобы по raw GedcomRecord события найти соответствующий event_id
-        # без изменения парсера. line_no уникален в пределах файла.
+        # Маппинг GEDCOM line_no события → event_id. Используется в блоке
+        # Citations ниже, чтобы привязать `gedcom_parser.entities.Event.citations`
+        # (которые знают свой `line_no`, но не знают наш UUID) к свежевставленной
+        # строке events. line_no уникален в пределах файла.
         event_id_by_line_no: dict[int, Any] = {}
 
         def _resolve_place_id(raw: str | None) -> Any | None:
@@ -530,105 +587,181 @@ async def run_import(
         await _bulk_insert(session, EventParticipant, participant_rows)
 
         # ---- Citations ----
-        # Собираем SOUR-references из raw GedcomRecord. Семантический слой
-        # gedcom_parser хранит только tuple xref'ов — без подтегов PAGE/QUAY,
-        # поэтому идём по сырым записям.
-        # Citation.entity_type ∈ {"person", "family", "event"}; для каждого
-        # SOUR с xref-значением создаём одну строку.
+        # Phase 3.6 (после PR #55 в gedcom-parser): семантический слой теперь
+        # выставляет `Citation` first-class — с PAGE / QUAY / EVEN / ROLE /
+        # DATA(TEXT) / NOTE — поэтому больше НЕ обходим raw GedcomRecord.
+        #
+        # Маппинг ORM-полям:
+        #   parsed.page                 → page_or_section
+        #   parsed.quality (int 0..3)   → quay_raw + derived quality (через
+        #                                 _quay_to_confidence — таблица
+        #                                 0→0.1, 1→0.4, 2→0.7, 3→0.95)
+        #   parsed.event_type           → event_type
+        #   parsed.event_role           → role
+        #   parsed.data_text            → quoted_text (TEXT может быть
+        #                                 multi-line, склеен через \n
+        #                                 уже на парсе)
+        #   parsed.notes_inline (×N)    → склеены в `note` через \n;
+        #                                 inline-NOTE достаточно для UI.
+        #                                 NOTE @xref'ы пока не разворачиваем —
+        #                                 это будет в Phase 3.6.1 (общая
+        #                                 NOTE-таблица + linked).
+        #
+        # Citation.entity_type ∈ {"person", "family", "event"}.
+        # Inline-источники (`1 SOUR <text>` без xref) пока пропускаем —
+        # в Phase 3.6.1 создадим для них ad-hoc Source.
         citation_rows: list[dict[str, Any]] = []
 
-        def _collect_citations(
+        def _build_citation_row(
+            parsed: Any,
             *,
-            owner_record: Any,
             entity_type: str,
             entity_id: Any,
-        ) -> None:
-            """Найти SOUR-children у `owner_record` и записать citations."""
-            for sour in owner_record.find_all("SOUR"):
-                value = sour.value
-                if not (value.startswith("@") and value.endswith("@")):
-                    # Inline-source (1 SOUR <text>) — без xref, в этой фазе
-                    # игнорируем (Phase 3.4: создавать ad-hoc Source).
-                    continue
-                src_xref = value.strip("@")
-                src_id = source_id_by_xref.get(src_xref)
-                if src_id is None:
-                    # Висячая ссылка — пропускаем тихо (verify_references
-                    # отдельно эмитит warning).
-                    continue
-                quality = _quay_to_quality(sour.get_value("QUAY") or None)
-                citation: dict[str, Any] = {
-                    "id": new_uuid(),
-                    "tree_id": tree.id,
-                    "source_id": src_id,
-                    "entity_type": entity_type,
-                    "entity_id": entity_id,
-                    "page_or_section": sour.get_value("PAGE") or None,
-                    "quoted_text": None,
-                    "note": None,
-                    "provenance": {"import_job_id": str(job.id)},
-                    "created_at": now,
-                    "updated_at": now,
-                }
-                if quality is not None:
-                    citation["quality"] = quality
-                citation_rows.append(citation)
+        ) -> dict[str, Any] | None:
+            """Спроектировать одну строку `citations` из `gedcom_parser.Citation`.
 
-        # Идентифицируем event-children по line_no: если line_no попал
-        # в `event_id_by_line_no`, мы его реально вставили как Event.
-        # Это покрывает и custom-теги (CUSTOM event_type), без отдельного списка.
-        for root in records:
-            if root.xref_id is None:
+            Возвращает ``None`` если ссылка нерезолвима (inline без xref или
+            висячий xref) — caller просто пропустит без падения.
+            """
+            xref = parsed.source_xref
+            if xref is None:
+                # Inline-source: будет покрыт Phase 3.6.1.
+                return None
+            src_id = source_id_by_xref.get(xref)
+            if src_id is None:
+                # Висячая ссылка — verify_references отдельно эмитит warning.
+                return None
+            quality = _quay_to_confidence(parsed.quality)
+            note_text: str | None = None
+            if parsed.notes_inline:
+                note_text = "\n".join(parsed.notes_inline)
+            return {
+                "id": new_uuid(),
+                "tree_id": tree.id,
+                "source_id": src_id,
+                "entity_type": entity_type,
+                "entity_id": entity_id,
+                "page_or_section": parsed.page,
+                "quoted_text": parsed.data_text,
+                "quality": quality,
+                "quay_raw": parsed.quality,
+                "event_type": parsed.event_type,
+                "role": parsed.event_role,
+                "note": note_text,
+                "provenance": {"import_job_id": str(job.id)},
+                "created_at": now,
+                "updated_at": now,
+            }
+
+        # INDI-level + INDI events.
+        for xref, person in document.persons.items():
+            person_pk = person_id_by_xref.get(xref)
+            if person_pk is None:
                 continue
-            if root.tag == "INDI":
-                owner_pk = person_id_by_xref.get(root.xref_id)
-                owner_kind = "person"
-            elif root.tag == "FAM":
-                owner_pk = family_id_by_xref.get(root.xref_id)
-                owner_kind = "family"
-            else:
-                continue
-            if owner_pk is not None:
-                _collect_citations(
-                    owner_record=root,
-                    entity_type=owner_kind,
-                    entity_id=owner_pk,
+            for parsed_citation in person.citations:
+                row = _build_citation_row(
+                    parsed_citation, entity_type="person", entity_id=person_pk
                 )
-            for child in root.children:
-                event_pk = event_id_by_line_no.get(child.line_no)
+                if row is not None:
+                    citation_rows.append(row)
+            for ev in person.events:
+                event_pk = event_id_by_line_no.get(ev.line_no) if ev.line_no is not None else None
                 if event_pk is None:
                     continue
-                _collect_citations(
-                    owner_record=child,
-                    entity_type="event",
-                    entity_id=event_pk,
+                for parsed_citation in ev.citations:
+                    row = _build_citation_row(
+                        parsed_citation, entity_type="event", entity_id=event_pk
+                    )
+                    if row is not None:
+                        citation_rows.append(row)
+
+        # FAM-level + FAM events.
+        for xref, family in document.families.items():
+            family_pk = family_id_by_xref.get(xref)
+            if family_pk is None:
+                continue
+            for parsed_citation in family.citations:
+                row = _build_citation_row(
+                    parsed_citation, entity_type="family", entity_id=family_pk
                 )
+                if row is not None:
+                    citation_rows.append(row)
+            for ev in family.events:
+                event_pk = event_id_by_line_no.get(ev.line_no) if ev.line_no is not None else None
+                if event_pk is None:
+                    continue
+                for parsed_citation in ev.citations:
+                    row = _build_citation_row(
+                        parsed_citation, entity_type="event", entity_id=event_pk
+                    )
+                    if row is not None:
+                        citation_rows.append(row)
 
         await _bulk_insert(session, Citation, citation_rows)
+        await publisher.publish(
+            Stage.EVENTS,
+            current=len(event_rows),
+            total=len(event_rows),
+            message="events + participants + citations inserted",
+        )
 
         # ---- Multimedia (OBJE) ----
-        # Top-level OBJE-records → `multimedia_objects`. Бинарные данные
-        # НЕ скачиваем — только метаданные:
+        # Top-level OBJE-records → `multimedia_objects` + ссылки из INDI/FAM
+        # (`1 OBJE @M1@`) → `entity_multimedia`. Phase 3.5 follow-up: inline
+        # OBJE (`1 OBJE\n2 FILE foo.jpg`) тоже теперь сохраняются — каждый
+        # как отдельный multimedia_objects row + entity_multimedia link.
+        # Бинарные данные НЕ скачиваем — только метаданные:
         #  - storage_url:  значение тега FILE (relative или absolute path/URL).
         #                  Поле NOT NULL: пустые/отсутствующие FILE → фолбэк
-        #                  на `gedcom://OBJE/<xref>` чтобы соблюсти constraint.
+        #                  на `gedcom://OBJE/<xref>` (top-level) или
+        #                  `gedcom://OBJE/inline/<line_no>` (inline).
         #  - object_type:  фолбэк "image" — gedcom_parser не классифицирует
-        #                  тип; FORM-расширение хранится в metadata.
-        #  - mime_type:    None (выводить из FORM — Phase 3.5).
+        #                  тип; FORM/TYPE-расширение хранится в metadata.
+        #  - mime_type:    None (выводить из FORM — Phase 3.5.1).
         #  - sha256:       None (мы не открываем файл).
         #  - caption:      OBJE.TITL.
-        #  - object_metadata: {"format": ..., "gedcom_xref": ...} —
-        #                  всё, что относится к raw GEDCOM, без потерь.
-        # OBJE-references из INDI/FAM (`1 OBJE @M1@`) → entity_multimedia.
-        # Inline-OBJE (без xref) пока пропускаем — Phase 3.4.
+        #  - object_metadata: {format, type, gedcom_xref|inline_owner_xref,
+        #                  created_raw} — всё, что относится к raw GEDCOM, без потерь.
         multimedia_rows: list[dict[str, Any]] = []
         multimedia_id_by_xref: dict[str, Any] = {}
+
+        def _build_object_metadata(
+            *,
+            obje: Any,
+            owner_kind: str,
+            owner_ref: str,
+        ) -> dict[str, Any]:
+            """Собрать ``object_metadata`` для одного OBJE row.
+
+            owner_kind: ``"top"`` (top-level OBJE с xref) или ``"inline"``
+                (inline OBJE на INDI/FAM/SOUR).
+            owner_ref: gedcom_xref top-level OBJE, либо xref INDI/FAM-владельца
+                (для inline формы).
+            """
+            md: dict[str, Any] = {}
+            if owner_kind == "top":
+                md["gedcom_xref"] = owner_ref
+            else:
+                md["inline"] = True
+                md["inline_owner_xref"] = owner_ref
+            if obje.format_:
+                md["format"] = obje.format_
+            type_ = getattr(obje, "type_", None)
+            if type_:
+                md["type"] = type_
+            created_raw = getattr(obje, "created_raw", None)
+            if created_raw:
+                md["created_raw"] = created_raw
+            return md
+
+        # Top-level OBJE (с xref).
         for xref, obj in document.objects.items():
             mid = new_uuid()
             multimedia_id_by_xref[xref] = mid
-            metadata: dict[str, Any] = {"gedcom_xref": xref}
-            if obj.format_:
-                metadata["format"] = obj.format_
+            md = _build_object_metadata(obje=obj, owner_kind="top", owner_ref=xref)
+            prov: dict[str, Any] = {"import_job_id": str(job.id), "gedcom_xref": xref}
+            if obj.created_raw:
+                prov["gedcom_crea"] = obj.created_raw
             multimedia_rows.append(
                 {
                     "id": mid,
@@ -640,18 +773,17 @@ async def run_import(
                     "sha256": None,
                     "caption": obj.title,
                     "taken_date": None,
-                    "object_metadata": metadata,
+                    "object_metadata": md,
                     "status": EntityStatus.PROBABLE.value,
                     "confidence_score": 0.5,
                     "version_id": 1,
-                    "provenance": {"import_job_id": str(job.id), "gedcom_xref": xref},
+                    "provenance": prov,
                     "created_at": now,
                     "updated_at": now,
                 }
             )
-        await _bulk_insert(session, MultimediaObject, multimedia_rows)
 
-        # OBJE-references → entity_multimedia (полиморфная связь как у citations).
+        # OBJE-references + inline OBJE → entity_multimedia (полиморфно).
         entity_multimedia_rows: list[dict[str, Any]] = []
 
         def _add_media_links(
@@ -660,10 +792,70 @@ async def run_import(
             entity_type: str,
             entity_id: Any,
         ) -> None:
+            """Для каждого xref-объекта в owner_xref_iter — добавить
+            entity_multimedia link на уже созданный top-level multimedia row."""
             for obj_xref in owner_xref_iter:
                 mid = multimedia_id_by_xref.get(obj_xref)
                 if mid is None:
                     continue
+                entity_multimedia_rows.append(
+                    {
+                        "id": new_uuid(),
+                        "multimedia_id": mid,
+                        "entity_type": entity_type,
+                        "entity_id": entity_id,
+                        "role": "primary",
+                        "created_at": now,
+                        "updated_at": now,
+                    }
+                )
+
+        def _add_inline_objects(
+            *,
+            owner_xref: str,
+            inline_iter: Any,
+            entity_type: str,
+            entity_id: Any,
+        ) -> None:
+            """Для каждого inline-OBJE — создать multimedia_objects row + link.
+
+            Inline OBJE не имеет gedcom_xref — мы кодируем владельца в
+            ``object_metadata.inline_owner_xref`` для traceability.
+            """
+            for inline in inline_iter:
+                mid = new_uuid()
+                line_no = inline.line_no or 0
+                md = _build_object_metadata(
+                    obje=inline,
+                    owner_kind="inline",
+                    owner_ref=owner_xref,
+                )
+                fallback = f"gedcom://OBJE/inline/{owner_xref}/{line_no}"
+                multimedia_rows.append(
+                    {
+                        "id": mid,
+                        "tree_id": tree.id,
+                        "object_type": "image",
+                        "storage_url": inline.file or fallback,
+                        "mime_type": None,
+                        "size_bytes": None,
+                        "sha256": None,
+                        "caption": inline.title,
+                        "taken_date": None,
+                        "object_metadata": md,
+                        "status": EntityStatus.PROBABLE.value,
+                        "confidence_score": 0.5,
+                        "version_id": 1,
+                        "provenance": {
+                            "import_job_id": str(job.id),
+                            "inline": True,
+                            "inline_owner_xref": owner_xref,
+                            "inline_line_no": line_no,
+                        },
+                        "created_at": now,
+                        "updated_at": now,
+                    }
+                )
                 entity_multimedia_rows.append(
                     {
                         "id": new_uuid(),
@@ -685,6 +877,12 @@ async def run_import(
                 entity_type="person",
                 entity_id=person_pk,
             )
+            _add_inline_objects(
+                owner_xref=xref,
+                inline_iter=person.inline_objects,
+                entity_type="person",
+                entity_id=person_pk,
+            )
         for xref, family in document.families.items():
             family_pk = family_id_by_xref.get(xref)
             if family_pk is None:
@@ -694,8 +892,21 @@ async def run_import(
                 entity_type="family",
                 entity_id=family_pk,
             )
+            _add_inline_objects(
+                owner_xref=xref,
+                inline_iter=family.inline_objects,
+                entity_type="family",
+                entity_id=family_pk,
+            )
 
+        await _bulk_insert(session, MultimediaObject, multimedia_rows)
         await _bulk_insert(session, EntityMultimedia, entity_multimedia_rows)
+        await publisher.publish(
+            Stage.MULTIMEDIA,
+            current=len(multimedia_rows),
+            total=len(multimedia_rows),
+            message="multimedia + entity_multimedia inserted",
+        )
 
         stats = {
             "persons": len(person_rows),
@@ -729,5 +940,16 @@ async def run_import(
             reason=f"API import of {display_filename}",
             diff={"summary": stats, "source_sha256": sha, "fields": list(stats.keys())},
         )
+    )
+    # Phase 9.0: success-инкремент. Error path — у caller'а
+    # (api/imports.py обёртывает в try/except и сообщает 500). Это
+    # чище, чем глобальный try внутри функции — caller знает контекст
+    # ошибки (parse vs DB), мы здесь только успех.
+    import_completed_total.labels(source="gedcom", outcome="success").inc()
+    await publisher.publish(
+        Stage.FINALIZING,
+        current=1,
+        total=1,
+        message="import job marked succeeded",
     )
     return job

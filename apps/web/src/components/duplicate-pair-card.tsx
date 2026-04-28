@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Fragment } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,10 @@ import { cn } from "@/lib/utils";
 
 /**
  * Карточка одной пары дубликатов с side-by-side сравнением полей и
- * disabled-кнопками действий (Phase 4.6 включит реальный merge / reject).
+ * action-кнопками. Phase 4.6: «Mark as same» для person-пар ведёт на
+ * `/persons/[id]/merge/[targetId]` (manual preview → confirm flow,
+ * CLAUDE.md §5). «Not duplicate» / «Skip» по-прежнему disabled —
+ * rejected-pairs store будет в Phase 4.6.x.
  *
  * Evidence уже денормализован на бэкенде (`a_*` / `b_*`), поэтому
  * дополнительных fetch'ей не нужно — отрисовываем напрямую.
@@ -64,23 +68,36 @@ export function DuplicatePairCard({ pair }: { pair: DuplicateSuggestion }) {
 
       <CardContent>
         <p className="mb-2 text-xs italic text-[color:var(--color-ink-500)]">
-          Coming in Phase 4.6 — manual merge stays explicit per CLAUDE.md §5 (no auto-merge for
-          close kin).
+          Manual review only per CLAUDE.md §5 (no auto-merge for close kin). «Mark as same» opens
+          the two-step preview → confirm flow with a 90-day undo window.
         </p>
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="primary"
-            size="sm"
-            disabled
-            aria-label="Mark as same person — coming in Phase 4.6"
-          >
-            Mark as same
-          </Button>
+          {pair.entity_type === "person" ? (
+            <Button
+              variant="primary"
+              size="sm"
+              asChild
+              aria-label="Open merge preview for this pair"
+            >
+              <Link href={`/persons/${pair.entity_a_id}/merge/${pair.entity_b_id}`}>
+                Mark as same
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              size="sm"
+              disabled
+              aria-label="Source/place merge — coming in a later phase"
+            >
+              Mark as same
+            </Button>
+          )}
           <Button
             variant="secondary"
             size="sm"
             disabled
-            aria-label="Mark as not duplicate — coming in Phase 4.6"
+            aria-label="Mark as not duplicate — rejected-pairs store coming in Phase 4.6.x"
           >
             Not duplicate
           </Button>
@@ -88,7 +105,7 @@ export function DuplicatePairCard({ pair }: { pair: DuplicateSuggestion }) {
             variant="ghost"
             size="sm"
             disabled
-            aria-label="Skip for now — coming in Phase 4.6"
+            aria-label="Skip — passive action, no backend support needed"
           >
             Skip
           </Button>

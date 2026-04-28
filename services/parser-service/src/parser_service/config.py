@@ -29,6 +29,17 @@ class Settings(BaseSettings):
         default=200,
         description="Лимит размера GEDCOM-upload в мегабайтах.",
     )
+    redis_url: str = Field(
+        default="redis://localhost:6379/0",
+        description=(
+            "Redis URL для arq-очереди и pubsub-канала ``job-events:{job_id}``. "
+            "Phase 3.5: один Redis обслуживает обе цели."
+        ),
+    )
+    arq_queue_name: str = Field(
+        default="imports",
+        description="Имя arq-очереди для async-импортов (синхронизировано с воркером).",
+    )
 
     model_config = SettingsConfigDict(
         env_prefix="PARSER_SERVICE_",
