@@ -41,6 +41,28 @@ def _import_inline_for_tests() -> Iterator[None]:
             os.environ["PARSER_SERVICE_IMPORT_INLINE"] = saved
 
 
+@pytest.fixture(autouse=True, scope="session")
+def _bulk_compute_inline_for_tests() -> Iterator[None]:
+    """Включить ``PARSER_SERVICE_BULK_COMPUTE_INLINE=1`` для всех тестов сессии.
+
+    Phase 7.5 finalize сделал ``POST /trees/{id}/hypotheses/compute-all``
+    асинхронным (202 + arq enqueue) — параллель Phase 3.5 для импортов.
+    Существующие тесты в ``test_bulk_hypothesis_compute.py`` ожидают
+    sync 201 с уже терминальным job'ом. Включаем legacy-inline по
+    умолчанию; тесты async-флоу (``test_bulk_compute_async.py``) сами
+    снимают флаг.
+    """
+    saved = os.environ.get("PARSER_SERVICE_BULK_COMPUTE_INLINE")
+    os.environ["PARSER_SERVICE_BULK_COMPUTE_INLINE"] = "1"
+    try:
+        yield
+    finally:
+        if saved is None:
+            os.environ.pop("PARSER_SERVICE_BULK_COMPUTE_INLINE", None)
+        else:
+            os.environ["PARSER_SERVICE_BULK_COMPUTE_INLINE"] = saved
+
+
 def _repo_root() -> Path:
     """Корень репо — где живёт alembic.ini."""
     here = Path(__file__).resolve()
