@@ -1,0 +1,16 @@
+// Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored.
+
+project_id    = "your-staging-project-id"
+region        = "europe-west1"
+zone          = "europe-west1-b"
+bucket_prefix = "your-staging-project-id" // GCS names are global — keep specific
+
+// images: leave empty on first apply. CI fills it in via -var on subsequent
+// applies, or just deploy new images with `gcloud run deploy --image=…`.
+//
+// images = {
+//   "parser-service"       = "europe-west1-docker.pkg.dev/PROJECT/autotreegen/parser-service:latest"
+//   "dna-service"          = "europe-west1-docker.pkg.dev/PROJECT/autotreegen/dna-service:latest"
+//   "notification-service" = "europe-west1-docker.pkg.dev/PROJECT/autotreegen/notification-service:latest"
+//   "web"                  = "europe-west1-docker.pkg.dev/PROJECT/autotreegen/web:latest"
+// }

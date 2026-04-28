@@ -42,6 +42,14 @@ test = [
     "fakeredis>=2.20",                  # in-memory Redis для тестов pub/sub (Phase 3.5)
 ]
 
+# Phase 13.0 — опциональный Cloud Tasks бэкенд для очереди в проде (см.
+# ADR-0031). Локально не нужен; CI deploy-staging.yml ставит сервис с
+# `--extra cloud-tasks`. Изоляция через optional-extra держит dev-машины
+# тонкими (google-cloud-tasks + grpc = ~30 МБ wheels).
+cloud-tasks = [
+    "google-cloud-tasks>=2.16",
+]
+
 [build-system]
 requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
