@@ -92,18 +92,20 @@ def _reset_resend_state() -> None:
 
 
 @pytest.mark.asyncio
-async def test_email_dispatcher_stub_logs_only(caplog: pytest.LogCaptureFixture) -> None:
-    """``send_share_invite`` пишет лог, не падает, не делает сети.
+async def test_email_dispatcher_stub_logs_only(monkeypatch: pytest.MonkeyPatch) -> None:
+    """``send_share_invite`` пишет ровно один log.info-вызов с idempotency_key.
 
-    NB: explicit ``caplog.set_level`` с named logger обязателен — context-manager
-    ``caplog.at_level`` не всегда ловит non-root logger'ы (это классическая
-    pytest-ловушка). Также используем ``record.getMessage()`` вместо
-    ``record.message`` — последнее не всегда заполнено если formatter
-    не дёрнут.
+    Используем direct monkey-patch на ``email_dispatcher._LOG.info`` вместо
+    pytest ``caplog`` — caplog имеет известные edge-case'ы с non-root логгерами
+    под разными pytest-asyncio session-scope конфигами (CI Linux ловит ноль
+    records, локально работает). Patch-стиль детерминирован.
     """
-    import logging
+    calls: list[dict[str, Any]] = []
 
-    caplog.set_level(logging.INFO, logger="parser_service.services.email_dispatcher")
+    def capture(msg: str, *args: Any, **kwargs: Any) -> None:
+        calls.append({"msg": msg, "args": args, "extra": kwargs.get("extra", {})})
+
+    monkeypatch.setattr(email_dispatcher._LOG, "info", capture)
 
     await email_dispatcher.send_share_invite(
         invitation_token="abc-123",
@@ -112,11 +114,12 @@ async def test_email_dispatcher_stub_logs_only(caplog: pytest.LogCaptureFixture)
         inviter_name="Owner Name",
     )
 
-    matches = [r for r in caplog.records if "share_invite stub" in r.getMessage()]
-    assert matches, "expected one log line from stub"
-    record = matches[0]
-    assert getattr(record, "idempotency_key", None) == "invite:abc-123"
-    assert getattr(record, "kind", None) == "share_invite"
+    assert len(calls) == 1, f"expected one log.info call, got {len(calls)}"
+    call = calls[0]
+    assert "share_invite stub" in call["msg"]
+    extra = call["extra"]
+    assert extra.get("idempotency_key") == "invite:abc-123"
+    assert extra.get("kind") == "share_invite"
 
 
 # ---------------------------------------------------------------------------
