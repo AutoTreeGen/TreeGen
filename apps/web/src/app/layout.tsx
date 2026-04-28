@@ -3,7 +3,10 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import type { ReactNode } from "react";
 
+import { GlobalErrorBoundary } from "@/components/error-boundary";
+import { OfflineIndicator } from "@/components/offline-indicator";
 import { SiteHeader } from "@/components/site-header";
+import { ServiceWorkerBootstrap } from "@/components/sw-bootstrap";
 
 import { Providers } from "./providers";
 import "./globals.css";
@@ -64,8 +67,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body className="min-h-dvh antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>
+            {/* OfflineIndicator + ServiceWorkerBootstrap — внутри Providers,
+                чтобы ``useQueryClient`` нашёл provider. SiteHeader выше
+                error-boundary, чтобы навигация работала даже при крэше
+                content-area (см. ADR-0041 §«Per-route vs global»). */}
+            <ServiceWorkerBootstrap />
+            <OfflineIndicator />
             <SiteHeader />
-            {children}
+            <GlobalErrorBoundary>{children}</GlobalErrorBoundary>
           </Providers>
         </NextIntlClientProvider>
       </body>

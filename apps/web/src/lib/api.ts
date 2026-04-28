@@ -4,9 +4,24 @@
  * Типы зеркалят ``services/parser-service/src/parser_service/schemas.py``.
  * При изменении Pydantic-схем — обновлять руками. Phase 4.2 заменит ручной
  * клиент на OpenAPI-codegen.
+ *
+ * Phase 4.6 (ADR-0041): typed errors + retry с exponential backoff.
+ * Низкоуровневый ``fetchJson`` оборачивается в ``withRetry`` для
+ * idempotent-методов (GET); 401 триггерит редирект на /sign-in.
  */
 
+import { ApiError, AuthError, NetworkError, classifyHttpError } from "./errors";
+import { withRetry } from "./retry";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
+
+/**
+ * Ре-экспортим типизированную иерархию из ``./errors`` для backward-compat:
+ * существующий код, импортирующий ``ApiError`` из ``@/lib/api``, продолжает
+ * работать без правок. Новый код может импортировать конкретные подклассы
+ * напрямую из ``@/lib/errors``.
+ */
+export { ApiError, AuthError, NetworkError, ServerError, ValidationError } from "./errors";
 
 // ---- Types (зеркало parser_service.schemas) ---------------------------------
 
@@ -56,30 +71,87 @@ export type PersonDetail = {
   events: EventSummary[];
 };
 
-// ---- HTTP error -------------------------------------------------------------
+// ---- Low-level fetch with typed errors + retry ------------------------------
 
-export class ApiError extends Error {
-  status: number;
+/**
+ * Hook для тестов: подменяет глобальный fetch без monkey-patch'а ``window``.
+ */
+let _fetchImpl: typeof fetch = (...args) => fetch(...args);
 
-  constructor(status: number, message: string) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
+export function setFetchImpl(impl: typeof fetch): void {
+  _fetchImpl = impl;
+}
+
+/**
+ * Hook на 401: редирект на /sign-in. По умолчанию — навигация браузера;
+ * тесты подменяют через ``setUnauthorizedHandler``.
+ */
+let _onUnauthorized: () => void = () => {
+  if (typeof window !== "undefined") {
+    window.location.assign("/sign-in");
   }
+};
+
+export function setUnauthorizedHandler(handler: () => void): void {
+  _onUnauthorized = handler;
+}
+
+/**
+ * Однократный fetch + классификация HTTP-ошибок в типизированный ``ApiError``.
+ * Не ретраит — это делает ``withRetry`` снаружи.
+ */
+async function fetchOnce(path: string, init?: RequestInit): Promise<Response> {
+  let response: Response;
+  try {
+    response = await _fetchImpl(`${API_BASE}${path}`, {
+      ...init,
+      headers: { Accept: "application/json", ...init?.headers },
+    });
+  } catch (err) {
+    // fetch бросает только при network/abort/CORS-настройках. Любую
+    // такую ошибку считаем network — retry-safe.
+    throw new NetworkError(err instanceof Error ? err.message : String(err));
+  }
+  if (!response.ok) {
+    const detail = await safeReadDetail(response);
+    const message = detail ?? `Request to ${path} failed with ${response.status}`;
+    throw classifyHttpError(response.status, message);
+  }
+  return response;
 }
 
 async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: { Accept: "application/json", ...init?.headers },
-  });
-  if (!response.ok) {
-    throw new ApiError(
-      response.status,
-      `Request to ${path} failed with ${response.status} ${response.statusText}`,
-    );
+  // Retry применяется ко всем GET'ам и body-less запросам по умолчанию;
+  // если caller передаёт ``init.method`` POST/PATCH/DELETE, он сам решает —
+  // оборачивать ли через ``withRetry``. Здесь идемпотент-safe path.
+  try {
+    const response = await withRetry(() => fetchOnce(path, init));
+    return (await response.json()) as T;
+  } catch (err) {
+    if (err instanceof AuthError && err.status === 401) {
+      _onUnauthorized();
+    }
+    throw err;
   }
-  return (await response.json()) as T;
+}
+
+/**
+ * Public-helper для non-idempotent (POST/PATCH/DELETE) call-site'ов:
+ * прокидывает single-attempt fetch с typed-error mapping. Caller
+ * сам решает, ретраить ли (например, idempotency_key в payload'е).
+ *
+ * Также автоматически реагирует на 401 — вызывает unauthorized-handler.
+ */
+export async function fetchOnceJson<T>(path: string, init?: RequestInit): Promise<T> {
+  try {
+    const response = await fetchOnce(path, init);
+    return (await response.json()) as T;
+  } catch (err) {
+    if (err instanceof AuthError && err.status === 401) {
+      _onUnauthorized();
+    }
+    throw err;
+  }
 }
 
 // ---- Public surface ---------------------------------------------------------
