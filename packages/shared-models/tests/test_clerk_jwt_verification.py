@@ -171,8 +171,16 @@ async def test_verify_clerk_jwt_rejects_tampered_signature(
 ) -> None:
     private, public = rsa_keypair
     token = _sign_jwt(private, _claims())
-    # Tamper: подменяем последний символ — подпись больше не сходится.
-    tampered = token[:-1] + ("A" if token[-1] != "A" else "B")
+    # Tamper: меняем символ ВНУТРИ signature-части (после второй '.'),
+    # причём не на close-by по base64url алфавиту, чтобы guarantee'ить
+    # invalid signature. Изменение только последнего символа было pre-
+    # existing brittleness — в зависимости от alphabet position иногда
+    # base64-padding compensate'ил изменение и подпись все ещё парсилась.
+    last_dot = token.rfind(".")
+    sig_part = token[last_dot + 1 :]
+    mid = len(sig_part) // 2
+    new_char = "Z" if sig_part[mid] != "Z" else "a"
+    tampered = token[: last_dot + 1] + sig_part[:mid] + new_char + sig_part[mid + 1 :]
     cache = _FakeJwksCache(public)
 
     with pytest.raises(AuthError):

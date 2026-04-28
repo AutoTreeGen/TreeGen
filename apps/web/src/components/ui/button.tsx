@@ -22,6 +22,7 @@ const buttonVariants = cva(
           "ring-1 ring-[color:var(--color-border)] hover:bg-[color:var(--color-surface-muted)]",
         ghost: "text-[color:var(--color-ink-700)] hover:bg-[color:var(--color-surface-muted)]",
         link: "text-[color:var(--color-accent)] underline-offset-4 hover:underline",
+        destructive: "bg-red-600 text-white hover:bg-red-700",
       },
       size: {
         sm: "h-8 px-3 text-sm",

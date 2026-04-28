@@ -6,6 +6,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { type ReactNode, useEffect, useState } from "react";
 
 import { setAuthTokenProvider } from "@/lib/api";
+import { setUserSettingsAuthTokenProvider } from "@/lib/user-settings-api";
 
 /**
  * Корневой провайдер для client-side состояния.
@@ -53,12 +54,15 @@ export function Providers({ children }: { children: ReactNode }) {
 function ClerkAuthBridge(): null {
   const { getToken } = useAuth();
   useEffect(() => {
-    setAuthTokenProvider(async () => {
+    const tokenGetter = async () => {
       const token = await getToken();
       return token ?? null;
-    });
+    };
+    setAuthTokenProvider(tokenGetter);
+    setUserSettingsAuthTokenProvider(tokenGetter);
     return () => {
       setAuthTokenProvider(null);
+      setUserSettingsAuthTokenProvider(null);
     };
   }, [getToken]);
   return null;

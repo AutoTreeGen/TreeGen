@@ -26,6 +26,7 @@ from parser_service.api import (
     sharing,
     sources,
     trees,
+    users,
     waitlist,
 )
 from parser_service.auth import get_current_claims
@@ -108,6 +109,8 @@ app.include_router(persons.router, tags=["persons", "merge"], dependencies=_AUTH
 # Включён после persons чтобы /trees/{id}/* пути в trees.router не
 # перехватывали /trees/{id}/invitations / /trees/{id}/members.
 app.include_router(sharing.router, tags=["sharing"], dependencies=_AUTH_DEPS)
+# Phase 4.10b (ADR-0038): /users/me account settings + GDPR action requests.
+app.include_router(users.router, tags=["users", "settings"], dependencies=_AUTH_DEPS)
 # /metrics — Prometheus exposition (Phase 9.0). Без префикса, чтобы scrape
 # конфиг был стандартным. Без auth — scrape под network ACL.
 app.include_router(metrics.router, tags=["meta"])

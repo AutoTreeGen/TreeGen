@@ -67,6 +67,43 @@ async def get_or_create_user_from_clerk(
     email = claims.email or _placeholder_email(claims.sub)
     display_name = _display_name_from_claims(claims)
 
+    # Reconciliation path: user уже мог быть создан non-Clerk-flow'ом
+    # (legacy import_runner._ensure_owner, dev-fixture с тем же email'ом,
+    # Phase 11.0 owner-fallback). Email — UNIQUE, поэтому повторный
+    # insert'нул бы IntegrityError. Если найден row с таким email и
+    # ещё без clerk_user_id — claim'им её как Clerk-user, обновляя
+    # clerk_user_id и external_auth_id. Это критично для Phase 11.0
+    # owner-fallback shim'а (см. ADR-0036): tree, созданный через
+    # run_import с email=settings.owner_email, должен принадлежать
+    # тому же user'у, что и authed JWT-сессия с тем же email'ом.
+    by_email = (await session.execute(select(User).where(User.email == email))).scalar_one_or_none()
+    if by_email is not None:
+        if by_email.clerk_user_id is None:
+            by_email.clerk_user_id = claims.sub
+            by_email.external_auth_id = f"clerk:{claims.sub}"
+            if display_name and by_email.display_name is None:
+                by_email.display_name = display_name
+            await session.flush()
+            logger.info(
+                "Reconciled existing user with Clerk: email=%s clerk_user_id=%s users.id=%s",
+                email,
+                claims.sub,
+                by_email.id,
+            )
+            return by_email
+        # row уже имеет clerk_user_id, но не наш — это коллизия (два
+        # разных Clerk-аккаунта на один email). По-хорошему — 409;
+        # для тестов / dev отдаём существующий row, чтобы не блокировать
+        # flow. Production такой ситуации не должно случаться (Clerk
+        # enforce'ит email-uniqueness среди своих account'ов).
+        logger.warning(
+            "Email %s already linked to clerk_user_id=%s; new claim sub=%s ignored",
+            email,
+            by_email.clerk_user_id,
+            claims.sub,
+        )
+        return by_email
+
     user = User(
         email=email,
         external_auth_id=f"clerk:{claims.sub}",

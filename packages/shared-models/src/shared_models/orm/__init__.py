@@ -34,6 +34,7 @@ from shared_models.orm.source import Source
 from shared_models.orm.telegram_user_link import TelegramUserLink
 from shared_models.orm.tree import Tree, TreeCollaborator
 from shared_models.orm.user import User
+from shared_models.orm.user_action_request import UserActionRequest
 from shared_models.orm.version import Version
 from shared_models.orm.waitlist_entry import WaitlistEntry
 
@@ -74,6 +75,7 @@ __all__ = [
     "TreeInvitation",
     "TreeMembership",
     "User",
+    "UserActionRequest",
     "Version",
     "WaitlistEntry",
 ]

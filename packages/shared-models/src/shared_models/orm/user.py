@@ -51,6 +51,10 @@ class User(IdMixin, TimestampMixin, SoftDeleteMixin, Base):
     )
     display_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     locale: Mapped[str] = mapped_column(String(8), nullable=False, default="en")
+    # Phase 4.10b (ADR-0038): IANA timezone string, например ``"Europe/Moscow"``.
+    # Nullable — большинство юзеров оставит дефолт; backend'у нужен
+    # для рендера дат в email/notification'ах в local time.
+    timezone: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
     fs_token_encrypted: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
