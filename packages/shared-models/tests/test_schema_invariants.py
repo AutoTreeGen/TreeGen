@@ -62,6 +62,15 @@ SERVICE_TABLES = {
     # одноразовая запись, идемпотентная по email; обработка через batch
     # export, не tombstone-recovery.
     "waitlist_entries",
+    # Tree role memberships (Phase 11.0 / ADR-0036): per-user role assignment
+    # для shared trees, не доменная сущность дерева. Без soft-delete —
+    # revocation = hard delete; partial-unique-OWNER гарантирует уникального
+    # владельца.
+    "tree_memberships",
+    # Sharing invitations (Phase 11.0 / ADR-0036): token-based one-time link
+    # с TTL; expired/revoked indicators отдельные timestamp-state, не
+    # soft-delete.
+    "tree_invitations",
 }
 
 TREE_ENTITY_TABLES = {

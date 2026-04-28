@@ -31,11 +31,56 @@ class TreeVisibility(StrEnum):
 
 
 class CollaboratorRole(StrEnum):
-    """Роль соавтора дерева."""
+    """Роль соавтора дерева.
+
+    Историческое имя из Phase 1 schema (legacy ``tree_collaborators``-таблица,
+    осталась пустой). Новый код Phase 11.0+ использует :class:`TreeRole` —
+    значения идентичны (``owner|editor|viewer``).
+    """
 
     OWNER = "owner"
     EDITOR = "editor"
     VIEWER = "viewer"
+
+
+class TreeRole(StrEnum):
+    """Роль пользователя в дереве (Phase 11.0).
+
+    Используется в ``tree_memberships`` и ``tree_invitations``. Значения —
+    те же строки что у legacy :class:`CollaboratorRole`, чтобы DB-уровень
+    был совместим (один enum-набор в схеме «text», без миграции колонки).
+
+    Иерархия (для permission gate'ов): ``OWNER`` ⊃ ``EDITOR`` ⊃ ``VIEWER``.
+    Используй :func:`role_satisfies` для сравнения.
+    """
+
+    OWNER = "owner"
+    EDITOR = "editor"
+    VIEWER = "viewer"
+
+
+# Числовая шкала, которой sort'ится TreeRole для сравнения «role >= required».
+# Изолирована от StrEnum.value чтобы не привязываться к строковому порядку.
+_TREE_ROLE_RANK: dict[str, int] = {
+    TreeRole.VIEWER.value: 1,
+    TreeRole.EDITOR.value: 2,
+    TreeRole.OWNER.value: 3,
+}
+
+
+def role_satisfies(actual: TreeRole | str, required: TreeRole | str) -> bool:
+    """Проверить, удовлетворяет ли ``actual`` минимальной требуемой роли ``required``.
+
+    Принимает и :class:`TreeRole`, и raw-строку из БД (DB хранит как text).
+    Возвращает ``False`` для незнакомых значений — fail-closed.
+    """
+    a = actual.value if isinstance(actual, TreeRole) else str(actual)
+    r = required.value if isinstance(required, TreeRole) else str(required)
+    a_rank = _TREE_ROLE_RANK.get(a)
+    r_rank = _TREE_ROLE_RANK.get(r)
+    if a_rank is None or r_rank is None:
+        return False
+    return a_rank >= r_rank
 
 
 class Sex(StrEnum):

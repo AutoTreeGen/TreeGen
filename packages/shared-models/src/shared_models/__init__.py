@@ -23,7 +23,9 @@ from shared_models.enums import (
     RelationType,
     Sex,
     SourceType,
+    TreeRole,
     TreeVisibility,
+    role_satisfies,
 )
 
 __version__ = "0.1.0"
@@ -39,9 +41,11 @@ __all__ = [
     "RelationType",
     "Sex",
     "SourceType",
+    "TreeRole",
     "TreeVisibility",
     "__version__",
     "is_audit_skipped",
     "register_audit_listeners",
+    "role_satisfies",
     "set_audit_skip",
 ]

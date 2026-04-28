@@ -6,6 +6,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from shared_models import TreeRole
 from shared_models.orm import (
     Citation,
     EntityMultimedia,
@@ -36,6 +37,7 @@ from parser_service.schemas import (
     PersonSummary,
 )
 from parser_service.services.dm_buckets import compute_dm_buckets
+from parser_service.services.permissions import require_tree_role
 
 router = APIRouter()
 
@@ -44,6 +46,7 @@ router = APIRouter()
     "/trees/{tree_id}/persons",
     response_model=PersonListResponse,
     summary="Paginated list of persons in a tree",
+    dependencies=[Depends(require_tree_role(TreeRole.VIEWER))],
 )
 async def list_persons(
     tree_id: uuid.UUID,
@@ -99,6 +102,7 @@ async def list_persons(
     "/trees/{tree_id}/persons/search",
     response_model=PersonListResponse,
     summary="Search persons in a tree by name (substring or phonetic) and birth-year range",
+    dependencies=[Depends(require_tree_role(TreeRole.VIEWER))],
 )
 async def search_persons(
     tree_id: uuid.UUID,

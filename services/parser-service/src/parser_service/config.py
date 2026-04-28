@@ -88,6 +88,22 @@ class Settings(BaseSettings):
         description="Куда редиректить при OAuth ошибке.",
     )
 
+    # ---- Phase 11.0 — sharing ----------------------------------------------
+    public_base_url: str = Field(
+        default="http://localhost:3000",
+        description=(
+            "Публичный URL фронта (без trailing slash). Используется для "
+            "построения invite-link'ов: ``${public_base_url}/invitations/{token}``. "
+            "В проде = `https://app.autotreegen.com`."
+        ),
+    )
+    invitation_ttl_days: int = Field(
+        default=14,
+        ge=1,
+        le=90,
+        description="TTL приглашения в днях. По умолчанию 14 — баланс между удобством и риском.",
+    )
+
     model_config = SettingsConfigDict(
         env_prefix="PARSER_SERVICE_",
         env_file=".env",
