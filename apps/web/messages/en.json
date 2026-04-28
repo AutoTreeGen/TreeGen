@@ -1,0 +1,135 @@
+{
+  "common": {
+    "appName": "AutoTreeGen",
+    "tagline": "Evidence-based genealogy at the speed of thought",
+    "subtagline": "Bring GEDCOM, DNA matches, and archive sources into a single tree where every fact has provenance and every connection has its rationale.",
+    "ctaSignUp": "Start free",
+    "ctaDemo": "See demo",
+    "ctaSignIn": "Sign in",
+    "ctaPricing": "Pricing",
+    "footerRights": "© 2026 AutoTreeGen. All rights reserved.",
+    "footerPrivacy": "Privacy",
+    "footerTerms": "Terms",
+    "language": "Language",
+    "english": "English",
+    "russian": "Русский"
+  },
+  "landing": {
+    "valueProps": {
+      "evidence": {
+        "title": "Evidence-based genealogy",
+        "body": "Every node carries provenance: which file, which import, which manual edit. No \"hints\" without sources, no facts you can't trace back to a record."
+      },
+      "hypotheses": {
+        "title": "Hypothesis-aware",
+        "body": "See arguments for AND against every parent-child link. Composite confidence with rule-by-rule breakdown — your judgment stays in control, automation does not auto-merge."
+      },
+      "unified": {
+        "title": "DNA + GEDCOM + FamilySearch",
+        "body": "One picture for autosomal matches, imported pedigrees, and external archives. Cross-platform DNA matching with chromosome painting; FamilySearch OAuth pedigree pull."
+      },
+      "easternEurope": {
+        "title": "Eastern Europe first-class",
+        "body": "Russian, Ukrainian, Yiddish names handled natively. Daitch-Mokotoff phonetic search. Cyrillic ↔ Latin transliteration on import. Designed for jewish genealogy, not bolted on."
+      }
+    },
+    "screenshots": {
+      "pedigreeAlt": "Screenshot of the pedigree tree visualization",
+      "chromosomeAlt": "Screenshot of the DNA chromosome painting visualization",
+      "pedigreeCaption": "Pedigree view — collapsible 10-generation tree with DNA badges and confidence indicators.",
+      "chromosomeCaption": "Chromosome painting — 22 autosomes + X with shared segments highlighted per match."
+    },
+    "pricing": {
+      "title": "Simple pricing",
+      "subtitle": "Free for hobby trees, Pro for serious research.",
+      "free": {
+        "name": "Free",
+        "price": "€0",
+        "tagline": "For getting started",
+        "feature1": "Up to 1,000 persons",
+        "feature2": "GEDCOM import",
+        "feature3": "DNA match list (1 kit)",
+        "cta": "Start free"
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "€9 / month",
+        "tagline": "For active researchers",
+        "feature1": "Unlimited persons",
+        "feature2": "Multiple DNA kits",
+        "feature3": "FamilySearch sync",
+        "feature4": "Archive search (Phase 9)",
+        "cta": "Go Pro"
+      },
+      "viewFull": "See full pricing →"
+    },
+    "waitlist": {
+      "title": "Stay in the loop",
+      "subtitle": "Pricing and feature updates as they ship — no spam.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "submit": "Join waitlist",
+      "success": "Thanks! We'll be in touch.",
+      "errorGeneric": "Something went wrong. Try again in a moment.",
+      "errorInvalidEmail": "Please enter a valid email address."
+    }
+  },
+  "demo": {
+    "title": "Live demo — sample tree",
+    "subtitle": "A read-only public sample tree with three generations and a synthetic DNA match. No login needed.",
+    "cta": "Sign up to import your own",
+    "treeHeader": "Sample tree: Иванов family",
+    "personPlaceholder": "Sample person",
+    "matchPlaceholder": "Sample DNA match",
+    "noteLabel": "Note",
+    "noteBody": "All names and dates are synthetic. The data is shipped with the app for product demos.",
+    "viewMatch": "View match"
+  },
+  "onboarding": {
+    "title": "Welcome to AutoTreeGen",
+    "subtitle": "Three steps and you'll have a tree to explore.",
+    "stepLabel": "Step {current} of {total}",
+    "step1": {
+      "title": "Choose a source",
+      "subtitle": "Where should we pull your initial pedigree from?",
+      "gedcom": "Upload a GEDCOM file",
+      "gedcomDesc": "I have a .ged file from another app (Ancestry, MyHeritage, RootsMagic, ...)",
+      "familysearch": "Import from FamilySearch",
+      "familysearchDesc": "Pull ancestors directly from my FamilySearch account via OAuth.",
+      "blank": "Start with a blank tree",
+      "blankDesc": "I'll add people manually as I go.",
+      "next": "Continue"
+    },
+    "step2": {
+      "title": "Import",
+      "subtitleGedcom": "Drop your .ged file or pick from disk.",
+      "subtitleFamilysearch": "We'll redirect you to FamilySearch to authorize access.",
+      "subtitleBlank": "Pick a name for your new tree.",
+      "treeNameLabel": "Tree name",
+      "treeNamePlaceholder": "My family tree",
+      "fileLabel": "GEDCOM file",
+      "back": "Back",
+      "continue": "Continue",
+      "openFamilySearch": "Connect FamilySearch →"
+    },
+    "step3": {
+      "title": "You're all set",
+      "subtitle": "Your tree is ready. Open it to start exploring or jump to the dashboard.",
+      "openTree": "Open my tree →",
+      "dashboard": "Go to dashboard"
+    }
+  },
+  "pricing": {
+    "title": "Pricing",
+    "subtitle": "Pay only when you need power-user features. Hobby use stays free.",
+    "billingMonthly": "Monthly",
+    "billingAnnual": "Annual (save 2 months)",
+    "faqTitle": "Frequently asked",
+    "faq1Q": "Is my data private?",
+    "faq1A": "Yes. DNA data is encrypted at rest, never sold, never used to train models. See our privacy policy.",
+    "faq2Q": "Can I cancel any time?",
+    "faq2A": "Yes — billed month-to-month, cancel from settings, your data stays accessible read-only.",
+    "faq3Q": "Do you support GEDCOM 5.5.5?",
+    "faq3A": "Yes — 5.5.5 is the canonical format. Older 5.5.1 and proprietary tags from Ancestry / MyHeritage / Geni are imported with round-trip preservation."
+  }
+}

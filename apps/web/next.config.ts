@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 /**
  * Конфигурация Next.js для read-only tree-view.
@@ -8,11 +9,17 @@ import type { NextConfig } from "next";
  * Phase 13.0: ``output: "standalone"`` собирает minimal Node.js bundle с
  * только нужными node_modules — это образ Cloud Run Dockerfile поверх
  * `node:slim` уменьшает с ~1 ГБ до ~150 МБ.
+ *
+ * Phase 4.12: next-intl plugin подключает `src/i18n/request.ts` как
+ * runtime-loader messages для server components (см. ADR-0035).
  */
+
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   output: "standalone",
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);
