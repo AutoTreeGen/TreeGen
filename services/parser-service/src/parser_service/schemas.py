@@ -379,6 +379,110 @@ class FamilySearchImportRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class FamilySearchImportResponse(ImportJobResponse):
+    """Ответ ``POST /imports/familysearch`` — ImportJobResponse + Phase 5.2.1 fields.
+
+    Расширяет базовый ImportJobResponse параметром ``review_url``, ведущим
+    на UI-страницу review FS-flagged dedup-attempts. Сама ``stats``
+    остаётся ``dict[str, int]``: ``fs_dedup_attempts_created`` лежит
+    внутри неё.
+    """
+
+    review_url: str | None = Field(
+        default=None,
+        description=(
+            "Относительный URL UI-страницы review FS-flagged duplicates. "
+            "None если не было создано ни одного attempt'а в этом импорте."
+        ),
+    )
+
+
+# -----------------------------------------------------------------------------
+# Phase 5.2.1 — FS dedup attempts (review queue, see ADR Option C).
+# -----------------------------------------------------------------------------
+
+
+FsDedupAttemptStatus = Literal["pending", "rejected", "merged", "all"]
+
+
+class FsDedupAttemptOut(BaseModel):
+    """Одна запись из ``fs_dedup_attempts`` для review-UI.
+
+    Status — производное от пары ``(rejected_at, merged_at)``:
+    ``pending`` если оба None, ``rejected`` если задан ``rejected_at``,
+    ``merged`` если задан ``merged_at``.
+    """
+
+    id: uuid.UUID
+    tree_id: uuid.UUID
+    fs_person_id: uuid.UUID
+    candidate_person_id: uuid.UUID
+    score: float
+    reason: str | None = None
+    fs_pid: str | None = None
+    rejected_at: datetime | None = None
+    merged_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+    provenance: dict[str, Any] = Field(default_factory=dict)
+    status: Literal["pending", "rejected", "merged"]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class FsDedupAttemptListResponse(BaseModel):
+    """Пагинированный ответ ``GET /trees/{tree_id}/dedup-attempts``."""
+
+    tree_id: uuid.UUID
+    status: FsDedupAttemptStatus
+    total: int
+    limit: int
+    offset: int
+    items: list[FsDedupAttemptOut]
+
+
+class FsDedupAttemptRejectRequest(BaseModel):
+    """Тело ``POST /dedup-attempts/{id}/reject``."""
+
+    reason: str | None = Field(
+        default=None,
+        max_length=1000,
+        description="Опциональный комментарий пользователя об отказе.",
+    )
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class FsDedupAttemptMergeRequest(BaseModel):
+    """Тело ``POST /dedup-attempts/{id}/merge``.
+
+    ``confirm`` обязателен и должен быть ``True`` (CLAUDE.md §5
+    enforce'нут как код): без явного подтверждения backend отвечает 400.
+    Сам merge — не здесь, а на Phase 4.6 ``POST /persons/{id}/merge``;
+    этот endpoint только проставляет ``merged_at`` на attempt-row и
+    отдаёт URL обработчика.
+    """
+
+    confirm: Literal[True]
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class FsDedupAttemptMergeResponse(BaseModel):
+    """Ответ ``POST /dedup-attempts/{id}/merge`` (без выполнения merge'а)."""
+
+    attempt_id: uuid.UUID
+    fs_person_id: uuid.UUID
+    candidate_person_id: uuid.UUID
+    merged_at: datetime
+    merge_url: str = Field(
+        description=(
+            "Относительный URL Phase 4.6 merge-preview/commit endpoint'а. "
+            "UI делает следующий шаг там; данный attempt уже помечен как merged."
+        )
+    )
+
+
 # -----------------------------------------------------------------------------
 # Phase 7.2 — hypothesis persistence (ADR-0021).
 # Pydantic-обёртки вокруг ORM моделей Hypothesis / HypothesisEvidence

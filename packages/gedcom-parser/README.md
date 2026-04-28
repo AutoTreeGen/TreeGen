@@ -33,6 +33,25 @@ for node in head.walk():
     print("  " * node.level, node.tag, node.value)
 ```
 
+Семантический слой:
+
+```python
+from gedcom_parser import parse_document_file
+
+doc = parse_document_file("tree.ged")
+person = doc.persons["I1"]
+
+# Citation sub-tags (PAGE / QUAY / EVEN / ROLE / DATA / NOTE / OBJE)
+# доступны через event.citations / person.citations / family.citations.
+# См. docs/gedcom-extensions.md §8 для полного маппинга GEDCOM → API.
+for citation in person.events[0].citations:
+    print(citation.source_xref, citation.page, citation.quality)
+
+# Source record sub-tags (TITL / AUTH / ABBR / PUBL / REPO / TEXT) — на Source.
+source = doc.sources["S1"]
+print(source.title, source.abbreviation, source.repository_xref)
+```
+
 Альтернативные точки входа:
 
 ```python

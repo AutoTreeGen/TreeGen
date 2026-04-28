@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from parser_service.api import (
     dedup,
+    dedup_attempts,
     familysearch,
     hypotheses,
     imports,
@@ -61,6 +62,7 @@ app.include_router(imports.router, prefix="/imports", tags=["imports"])
 app.include_router(trees.router, tags=["trees"])
 app.include_router(sources.router, tags=["sources"])
 app.include_router(dedup.router, tags=["dedup"])
+app.include_router(dedup_attempts.router, tags=["dedup-attempts"])
 app.include_router(hypotheses.router, tags=["hypotheses"])
 # persons router включается ПОСЛЕ trees (тот владеет `GET /persons/{id}`),
 # но имена путей не пересекаются: тут `/persons/{id}/merge*`.
