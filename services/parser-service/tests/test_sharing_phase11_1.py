@@ -92,19 +92,27 @@ def _reset_resend_state() -> None:
 
 
 @pytest.mark.asyncio
-async def test_email_dispatcher_stub_logs_only(caplog) -> None:
-    """``send_share_invite`` пишет лог, не падает, не делает сети."""
+async def test_email_dispatcher_stub_logs_only(caplog: pytest.LogCaptureFixture) -> None:
+    """``send_share_invite`` пишет лог, не падает, не делает сети.
+
+    NB: explicit ``caplog.set_level`` с named logger обязателен — context-manager
+    ``caplog.at_level`` не всегда ловит non-root logger'ы (это классическая
+    pytest-ловушка). Также используем ``record.getMessage()`` вместо
+    ``record.message`` — последнее не всегда заполнено если formatter
+    не дёрнут.
+    """
     import logging
 
-    with caplog.at_level(logging.INFO, logger=email_dispatcher.__name__):
-        await email_dispatcher.send_share_invite(
-            invitation_token="abc-123",
-            recipient_email="invitee@example.com",
-            tree_name="Test Tree",
-            inviter_name="Owner Name",
-        )
+    caplog.set_level(logging.INFO, logger="parser_service.services.email_dispatcher")
 
-    matches = [r for r in caplog.records if r.message and "share_invite stub" in r.message]
+    await email_dispatcher.send_share_invite(
+        invitation_token="abc-123",
+        recipient_email="invitee@example.com",
+        tree_name="Test Tree",
+        inviter_name="Owner Name",
+    )
+
+    matches = [r for r in caplog.records if "share_invite stub" in r.getMessage()]
     assert matches, "expected one log line from stub"
     record = matches[0]
     assert getattr(record, "idempotency_key", None) == "invite:abc-123"
