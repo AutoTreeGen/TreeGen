@@ -198,6 +198,13 @@ class AuditAction(StrEnum):
     # вмешательства; не automatic-retry'ится.
     ERASURE_BLOCKED = "erasure_blocked"
 
+    # Phase 4.11c — auto-ownership-transfer for shared trees during erasure
+    # (см. ADR-0050). Tree-scoped (tree_id != NULL): tree остаётся, меняется
+    # только OWNER. AUTO — выбран next-eligible editor; BLOCKED — не нашли
+    # eligible editor, нужно manual intervention.
+    OWNERSHIP_TRANSFER_AUTO = "ownership_transfer_auto"
+    OWNERSHIP_TRANSFER_BLOCKED = "ownership_transfer_blocked"
+
 
 class ActorKind(StrEnum):
     """Кто/что произвёл изменение."""
@@ -384,6 +391,10 @@ class NotificationEventType(StrEnum):
     IMPORT_FAILED = "import_failed"
     MERGE_UNDONE = "merge_undone"
     DEDUP_SUGGESTION_NEW = "dedup_suggestion_new"
+    # Phase 4.11c — auto-transfer не нашёл eligible editor для дерева во время
+    # GDPR-erasure preflight; user должен либо вручную пригласить editor'а,
+    # либо явно отдать дерево viewer'у через PATCH /trees/{id}/transfer-owner.
+    OWNERSHIP_TRANSFER_REQUIRED = "ownership_transfer_required"
 
 
 class HypothesisComputeJobStatus(StrEnum):
@@ -438,6 +449,8 @@ class EmailKind(StrEnum):
     EXPORT_READY = "export_ready"
     # Phase 4.11b — GDPR erasure обработан, отправляем подтверждение.
     ERASURE_CONFIRMATION = "erasure_confirmation"
+    # Phase 4.11c — auto-ownership-transfer завершён, новый OWNER уведомлён.
+    OWNERSHIP_TRANSFERRED = "ownership_transferred"
 
 
 class EmailSendStatus(StrEnum):

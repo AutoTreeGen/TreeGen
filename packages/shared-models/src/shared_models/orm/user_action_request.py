@@ -68,8 +68,11 @@ class UserActionRequest(IdMixin, TimestampMixin, Base):
 
     __tablename__ = "user_action_requests"
     __table_args__ = (
+        # Phase 4.11c (миграция 0022) добавила ``ownership_transfer`` —
+        # один request на одно дерево, которое нужно передать другому
+        # active editor'у (см. ADR-0050).
         CheckConstraint(
-            "kind IN ('export', 'erasure')",
+            "kind IN ('export', 'erasure', 'ownership_transfer')",
             name="ck_user_action_requests_kind",
         ),
         CheckConstraint(

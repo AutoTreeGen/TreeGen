@@ -43,6 +43,7 @@ from parser_service.fs_oauth import (
     get_token_storage,
     is_fs_token_storage_configured,
 )
+from parser_service.services.auto_transfer import run_ownership_transfer
 from parser_service.services.bulk_hypothesis_runner import (
     STAGE_FAILED,
     execute_compute_job,
@@ -530,6 +531,52 @@ async def dispatch_notification_job(
     }
 
 
+async def run_ownership_transfer_job(
+    _ctx: dict[str, Any],
+    request_id: str,
+) -> dict[str, Any]:
+    """arq job: process one ``UserActionRequest(kind='ownership_transfer')`` row.
+
+    Phase 4.11c (см. ADR-0050). Auto-pick next-eligible editor +
+    atomic swap + audit + email + (если blocked) notification к user'у.
+    Без auto-retry — failure → user видит row в ``GET /users/me/requests``
+    как ``status='failed'`` с error и решает manual transfer.
+
+    Args:
+        _ctx: arq-context — unused (storage/email-deps инициализируются
+            sub-helper'ами по env).
+        request_id: UUID UserActionRequest. Должен иметь kind='ownership_transfer'.
+
+    Returns:
+        Sterile dict для arq-result-row (request_id, blocked флаг).
+    """
+    request_uuid = UUID(request_id)
+    engine = get_engine()
+    session_maker = async_sessionmaker(engine, expire_on_commit=False)
+    async with session_maker() as session:
+        try:
+            result = await run_ownership_transfer(session, request_uuid)
+            await session.commit()
+        except Exception:
+            try:
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                logger.exception(
+                    "Failed to persist ownership-transfer state for %s",
+                    request_id,
+                )
+            raise
+        return {
+            "request_id": str(result.request_id),
+            "tree_id": str(result.tree_id),
+            "new_owner_user_id": (
+                str(result.new_owner_user_id) if result.new_owner_user_id is not None else None
+            ),
+            "blocked": result.blocked,
+        }
+
+
 async def startup(ctx: dict[str, Any]) -> None:
     """Хук старта воркера — лог + место для будущей инициализации (DB pool и т.п.)."""
     logger.info("parser-service arq worker starting (queue=%s)", QUEUE_NAME)
@@ -560,6 +607,7 @@ class WorkerSettings:
         run_fs_import_job,
         run_user_export_job,
         run_user_erasure_job,
+        run_ownership_transfer_job,
     ]
     on_startup = startup
     on_shutdown = shutdown

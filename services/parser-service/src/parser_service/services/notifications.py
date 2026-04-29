@@ -160,7 +160,61 @@ async def notify_hypothesis_pending_review(
         )
 
 
+async def notify_ownership_transfer_required(
+    *,
+    user_id: uuid.UUID,
+    tree_id: uuid.UUID,
+    reason: str,
+) -> None:
+    """Notify outgoing owner that auto-transfer is blocked.
+
+    Used by Phase 4.11c (см. ADR-0050) когда auto-transfer worker не
+    нашёл active editor для дерева — owner должен либо пригласить
+    editor'а, либо явно отдать дерево viewer'у через
+    ``PATCH /trees/{id}/transfer-owner`` перед erasure.
+
+    Same async pattern как :func:`notify_hypothesis_pending_review`:
+    enqueue arq job → worker делает HTTP POST в notification-service.
+    Best-effort — enqueue failures логируются, не пробрасываются.
+    """
+    if not _DEFAULT_URL:
+        return
+
+    from shared_models.enums import NotificationEventType  # noqa: PLC0415
+
+    payload: dict[str, Any] = {
+        "user_id": user_id.int,
+        "event_type": NotificationEventType.OWNERSHIP_TRANSFER_REQUIRED.value,
+        "payload": {
+            "tree_id": str(tree_id),
+            "reason": reason,
+            "manual_action": (
+                "Invite an editor to this tree, or use "
+                f"PATCH /trees/{tree_id}/transfer-owner to transfer to a viewer."
+            ),
+            # ref_id per-tree — duplicate notifications для того же tree
+            # внутри 1-часового окна dedupнутся notification-service'ом.
+            "ref_id": str(tree_id),
+        },
+        "channels": ["in_app", "log"],
+    }
+
+    try:
+        from parser_service.queue import get_arq_pool  # noqa: PLC0415 — циклоразрыв
+
+        pool = await get_arq_pool()
+        await pool.enqueue_job("dispatch_notification_job", payload)
+    except Exception as exc:
+        _LOG.warning(
+            "failed to enqueue ownership_transfer_required notification for user=%s tree=%s: %s",
+            user_id,
+            tree_id,
+            exc,
+        )
+
+
 __all__ = [
     "notify_hypothesis_pending_review",
+    "notify_ownership_transfer_required",
     "post_notify_request",
 ]
