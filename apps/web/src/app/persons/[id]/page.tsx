@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -71,6 +72,7 @@ function PersonDetailView({
   citationsLoading: boolean;
   citationsError: boolean;
 }) {
+  const t = useTranslations("persons.detail");
   const primaryName = person.names.find((name) => name.sort_order === 0) ?? person.names[0] ?? null;
   const primaryDisplay = primaryName ? formatName(primaryName) : "Unnamed";
   const otherNames = person.names.filter((name) => name !== primaryName);
@@ -135,7 +137,7 @@ function PersonDetailView({
           Events
         </h2>
         {sortedEvents.length === 0 ? (
-          <p className="mt-2 text-sm text-[color:var(--color-ink-500)]">No events recorded.</p>
+          <p className="mt-2 text-sm text-[color:var(--color-ink-500)]">{t("noEvents")}</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {sortedEvents.map((event) => (
@@ -182,6 +184,7 @@ function PersonSources({
   loading: boolean;
   hasError: boolean;
 }) {
+  const t = useTranslations("persons.detail");
   if (loading) {
     return (
       <ul className="mt-3 space-y-2">
@@ -202,7 +205,7 @@ function PersonSources({
     );
   }
   if (!citations || citations.length === 0) {
-    return <p className="mt-2 text-sm text-[color:var(--color-ink-500)]">No citations recorded.</p>;
+    return <p className="mt-2 text-sm text-[color:var(--color-ink-500)]">{t("noCitations")}</p>;
   }
   return (
     <ul className="mt-3 space-y-2">

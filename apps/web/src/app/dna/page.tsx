@@ -9,6 +9,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
@@ -33,6 +34,7 @@ export default function DnaHomePage() {
 }
 
 function DnaHomeContent() {
+  const t = useTranslations("dna.list");
   const searchParams = useSearchParams();
   const userId = searchParams.get("user") ?? FALLBACK_USER_ID;
 
@@ -45,7 +47,7 @@ function DnaHomeContent() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
       <header className="mb-6">
-        <h1 className="text-3xl font-semibold tracking-tight">DNA kits</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="mt-2 text-sm text-[color:var(--color-ink-500)]">
           Choose a kit to see its DNA matches and link them to people in your tree.
         </p>
@@ -79,11 +81,12 @@ function DnaHomeContent() {
 }
 
 function KitsList({ items }: { items: DnaKitSummary[] }) {
+  const t = useTranslations("dna.list");
   if (items.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>No kits yet</CardTitle>
+          <CardTitle>{t("noKits")}</CardTitle>
           <CardDescription>
             Upload a DNA kit through the import endpoint, then revisit this page.
           </CardDescription>
@@ -144,10 +147,11 @@ function KitCard({ kit }: { kit: DnaKitSummary }) {
 }
 
 function NoUserSelected() {
+  const t = useTranslations("dna.list");
   return (
     <Card>
       <CardHeader>
-        <CardTitle>No user selected</CardTitle>
+        <CardTitle>{t("noUserSelected")}</CardTitle>
         <CardDescription>
           Pass <code>?user=&lt;uuid&gt;</code> in the URL or set{" "}
           <code className="text-xs">NEXT_PUBLIC_DEMO_DNA_USER_ID</code>. Auth wiring lands in Phase

@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -408,6 +409,7 @@ function PersonsEmptyState({
 }
 
 function PersonsListError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  const t = useTranslations("trees.persons");
   const message =
     error instanceof ApiError
       ? `${error.status}: ${error.message}`
@@ -418,7 +420,7 @@ function PersonsListError({ error, onRetry }: { error: unknown; onRetry: () => v
   return (
     <Card className="border-red-200 ring-red-200">
       <CardHeader>
-        <CardTitle>Search failed</CardTitle>
+        <CardTitle>{t("searchFailed")}</CardTitle>
         <CardDescription>{message}</CardDescription>
       </CardHeader>
       <CardContent>

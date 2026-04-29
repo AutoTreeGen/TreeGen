@@ -12,6 +12,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useMemo } from "react";
@@ -50,6 +51,7 @@ export default function FamilySearchConnectPage() {
 }
 
 function FamilySearchConnectContent() {
+  const t = useTranslations("familysearch.connect");
   const search = useSearchParams();
   const status = search.get("status");
   const reason = search.get("reason");
@@ -87,7 +89,7 @@ function FamilySearchConnectContent() {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/">← Back home</Link>
         </Button>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight">Connect FamilySearch</h1>
+        <h1 className="mt-3 text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="mt-1 text-sm text-[color:var(--color-ink-500)]">
           Link your FamilySearch account to import ancestors directly into your local tree — without
           exporting/uploading GEDCOM.
@@ -111,7 +113,7 @@ function FamilySearchConnectContent() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Account status</CardTitle>
+          <CardTitle>{t("accountStatus")}</CardTitle>
           <CardDescription>
             Tokens are encrypted at rest (Fernet) and never leave the server. See ADR-0027 for the
             full storage decision.

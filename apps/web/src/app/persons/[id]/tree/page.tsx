@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 
@@ -15,6 +16,7 @@ const MIN_GENERATIONS = 1;
 const MAX_GENERATIONS = 10;
 
 export default function PersonTreePage() {
+  const t = useTranslations("persons.tree");
   const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const personId = params.id;
@@ -37,7 +39,7 @@ export default function PersonTreePage() {
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/persons/${personId}`}>← Back to person</Link>
           </Button>
-          <h1 className="mt-3 text-2xl font-semibold tracking-tight">Family tree</h1>
+          <h1 className="mt-3 text-2xl font-semibold tracking-tight">{t("title")}</h1>
           {query.data ? (
             <p className="mt-1 text-sm text-[color:var(--color-ink-500)]">
               {query.data.root.primary_name ?? "Unnamed"} · loaded {query.data.generations_loaded}{" "}
@@ -69,10 +71,11 @@ export default function PersonTreePage() {
 
 // Пустое состояние: у корневой персоны нет ни отца, ни матери в данных.
 function TreeEmptyState({ personId }: { personId: string }) {
+  const t = useTranslations("persons.tree");
   return (
     <Card>
       <CardHeader>
-        <CardTitle>No ancestors recorded yet</CardTitle>
+        <CardTitle>{t("noAncestors")}</CardTitle>
         <CardDescription>
           We don&apos;t have any parents linked to this person, so there&apos;s no tree to draw.
           Import a GEDCOM file or add parents manually to see the pedigree here.

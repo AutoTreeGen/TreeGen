@@ -63,7 +63,7 @@ export default function AccessPage() {
 }
 
 function AccessPageContent() {
-  const t = useTranslations("access");
+  const t = useTranslations("trees.access");
   const params = useParams<{ id: string }>();
   const treeId = params.id;
   const queryClient = useQueryClient();
@@ -288,7 +288,7 @@ function InvitationsCard({
   isLoading: boolean;
   onChange: () => void;
 }) {
-  const t = useTranslations("access");
+  const t = useTranslations("trees.access");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"editor" | "viewer">("viewer");
   const [formError, setFormError] = useState<string | null>(null);
@@ -456,7 +456,7 @@ function TransferOwnerCard({
   members: Member[];
   onTransfer: () => void;
 }) {
-  const t = useTranslations("access");
+  const t = useTranslations("trees.access");
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const [newOwnerEmail, setNewOwnerEmail] = useState("");

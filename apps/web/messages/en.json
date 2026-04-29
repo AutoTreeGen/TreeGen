@@ -1,9 +1,4 @@
 {
-  "access": {
-    "title": "Tree access",
-    "noPendingInvitations": "No pending invitations.",
-    "transferOwnership": "Transfer ownership"
-  },
   "common": {
     "appName": "AutoTreeGen",
     "tagline": "Evidence-based genealogy at the speed of thought",
@@ -203,7 +198,61 @@
     "banner": "You're offline. Changes will sync when you reconnect.",
     "reconnected": "Back online."
   },
+  "dna": {
+    "matchDetail": {
+      "chromosomePainting": "Chromosome painting",
+      "linkToPerson": "Link to a person in your tree"
+    },
+    "list": {
+      "title": "DNA kits",
+      "noKits": "No kits yet",
+      "noUserSelected": "No user selected"
+    },
+    "kitMatches": {
+      "title": "DNA matches",
+      "minCm": "Min cM",
+      "totalCm": "Total cM"
+    }
+  },
+  "familysearch": {
+    "connect": {
+      "title": "Connect FamilySearch",
+      "accountStatus": "Account status"
+    },
+    "importStatus": {
+      "title": "FamilySearch import",
+      "importFailed": "Import failed",
+      "tryAgain": "Try again"
+    },
+    "preview": {
+      "title": "Preview pedigree",
+      "importSettings": "Import settings",
+      "pedigreeSummary": "Pedigree summary"
+    }
+  },
+  "hypotheses": {
+    "detail": {
+      "compositeConfidence": "Composite confidence",
+      "noEvidence": "No evidence"
+    }
+  },
+  "sources": {
+    "detail": {
+      "gedcomTextPreserved": "GEDCOM TEXT preserved at import."
+    }
+  },
   "persons": {
+    "mergeRoute": {
+      "title": "Merge two persons"
+    },
+    "detail": {
+      "noEvents": "No events recorded.",
+      "noCitations": "No citations recorded."
+    },
+    "tree": {
+      "title": "Family tree",
+      "noAncestors": "No ancestors recorded yet"
+    },
     "merge": {
       "title": "Merge two persons (manual review)",
       "subtitle": "Resolve conflicting fields side by side. Backend uses a single survivor; your per-field picks determine which side wins overall. Soft-delete is reversible for 90 days.",
@@ -307,6 +356,17 @@
     }
   },
   "trees": {
+    "hypotheses": {
+      "noMatching": "No matching hypotheses"
+    },
+    "import": {
+      "title": "Import GEDCOM",
+      "newImport": "New import",
+      "importFailed": "Import failed"
+    },
+    "persons": {
+      "searchFailed": "Search failed"
+    },
     "stats": {
       "title": "Tree statistics",
       "subtitle": "Aggregated counts and surname breakdown for this tree. Refreshed live — no caching.",
@@ -335,6 +395,14 @@
         "description": "Top 10 surnames by person count.",
         "empty": "No surname data yet."
       }
+    },
+    "access": {
+      "title": "Tree access",
+      "noPendingInvitations": "No pending invitations.",
+      "transferOwnership": "Transfer ownership"
+    },
+    "duplicates": {
+      "title": "Duplicate suggestions"
     }
   }
 }
