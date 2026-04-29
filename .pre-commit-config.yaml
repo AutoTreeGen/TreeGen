@@ -16,7 +16,10 @@ repos:
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
-        exclude: '\.md$'
+        # `.snap`: vitest сохраняет JSX-текст со значимыми trailing-spaces
+        # (видимы в SVG <title>, влияют на a11y screen-reader output).
+        # Strip ломает snapshot-equality на следующем `pnpm vitest`.
+        exclude: '\.(md|snap)$'
       - id: end-of-file-fixer
       - id: check-yaml
         args: [--allow-multiple-documents]
@@ -107,3 +110,19 @@ repos:
         language: system
         files: ^apps/web/src/(app/(dashboard|persons|dna|sources|hypotheses|familysearch|settings|trees)/.+|components/(site-header|notification-bell|error-message))\.tsx$
         types: [file]
+
+  # ---- pnpm lockfile freshness guard ----
+  # Срабатывает только когда staged один из (apps/*/package.json, pnpm-lock.yaml,
+  # pnpm-workspace.yaml). Запускает `pnpm install --frozen-lockfile` — если
+  # specifier'ы в package.json разошлись с lockfile'ом, hook падает с
+  # ERR_PNPM_OUTDATED_LOCKFILE. Это ловит сценарий из #126: добавили
+  # idb-keyval / react-error-boundary в package.json без `pnpm install`,
+  # lockfile остался без них, локальный `pnpm install --frozen-lockfile` падает.
+  - repo: local
+    hooks:
+      - id: pnpm-lockfile-fresh
+        name: pnpm lockfile freshness
+        entry: pnpm install --frozen-lockfile --silent
+        language: system
+        files: ^(apps/[^/]+/package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml)$
+        pass_filenames: false

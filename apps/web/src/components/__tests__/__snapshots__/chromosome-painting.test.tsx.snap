@@ -52,12 +52,12 @@ exports[`ChromosomePainting > matches the rendered SVG snapshot for a known set 
       <title>
         chr
         1
-        :
+        : 
         10,000,000
         –
         100,000,000
          ·
-
+         
         50.0
          cM
          · 5,000 SNPs
@@ -597,12 +597,12 @@ exports[`ChromosomePainting > matches the rendered SVG snapshot for a known set 
       <title>
         chr
         21
-        :
+        : 
         5,000,000
         –
         35,000,000
          ·
-
+         
         25.0
          cM
          · 2,000 SNPs
