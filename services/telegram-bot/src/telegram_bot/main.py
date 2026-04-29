@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from redis.asyncio import Redis
+from shared_models.security import apply_security_middleware
 
 from telegram_bot.api import health, link, notify, webhook
 from telegram_bot.config import get_settings
@@ -55,6 +56,9 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+# Phase 13.2 (ADR-0053) — security middleware.
+apply_security_middleware(app, service_name="telegram-bot")
 
 app.include_router(health.router)
 app.include_router(webhook.router)

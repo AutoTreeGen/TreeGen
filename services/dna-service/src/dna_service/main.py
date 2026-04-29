@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 from typing import Final
 
 from fastapi import Depends, FastAPI
+from shared_models.security import apply_security_middleware
 
 from dna_service.api import consents, dna_matches, kits, matches, uploads
 from dna_service.auth import get_current_claims
@@ -41,6 +42,9 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+# Phase 13.2 (ADR-0053) — security middleware: CORS, rate limit, headers.
+apply_security_middleware(app, service_name="dna-service")
 
 # Phase 4.10 (ADR-0033): все DNA endpoint'ы требуют Bearer JWT.
 # Router-level dependency срабатывает до ручки и возвращает 401 при

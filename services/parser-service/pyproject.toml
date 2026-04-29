@@ -17,7 +17,7 @@ dependencies = [
     "asyncpg>=0.30",
     "python-dotenv>=1.0",
     "prometheus-client>=0.20",
-    "shared-models",
+    "shared-models[security]",
     "gedcom-parser",
     "entity-resolution",
     "familysearch-client",

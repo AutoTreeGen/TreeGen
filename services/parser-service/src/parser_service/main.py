@@ -10,7 +10,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from shared_models.security import apply_security_middleware
 
 from parser_service.api import (
     clerk_webhooks,
@@ -53,15 +53,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS для локального dev-режима веб-приложения (Phase 4.1).
-# Прод-конфиг — на API gateway / Cloud Run, отдельным ADR в Phase 4.x.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=False,
-    allow_methods=["GET", "POST"],
-    allow_headers=["*"],
-)
+# Phase 13.2 (ADR-0053) — CORS, rate limit, security headers, body-size cap.
+# Origins берутся из env CORS_ORIGINS; default — http://localhost:3000.
+apply_security_middleware(app, service_name="parser-service")
 
 # Phase 4.10 (ADR-0033): большинство user-facing routers требуют
 # Bearer JWT через router-level dependency. Endpoint'ы внутри получают
