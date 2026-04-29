@@ -29,6 +29,29 @@ class Settings(BaseSettings):
     )
     debug: bool = Field(default=False)
 
+    # ---- Telegram channel (Phase 14.1, ADR-0056) ----------------------------
+    telegram_bot_url: str = Field(
+        default="",
+        description=(
+            "Base URL telegram-bot service (e.g. ``http://telegram-bot:8006``). "
+            "Пусто → TelegramChannel.send() возвращает False с reason='not_configured', "
+            "что позволяет dispatcher'у graceful-skip без exception'а."
+        ),
+    )
+    telegram_internal_token: str = Field(
+        default="",
+        description=(
+            "Shared secret для X-Internal-Service-Token header'а на /telegram/notify. "
+            "Должен совпадать с TELEGRAM_BOT_INTERNAL_SERVICE_TOKEN. Пусто → skip как "
+            "telegram_bot_url."
+        ),
+    )
+    telegram_request_timeout_seconds: float = Field(
+        default=5.0,
+        ge=1.0,
+        description="HTTP timeout для bot-вызова (sync push в hot path notify-flow'а).",
+    )
+
     # ---- Clerk authentication (Phase 4.10, ADR-0033) ------------------------
     clerk_issuer: str = Field(
         default="",

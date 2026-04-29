@@ -12,9 +12,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from redis.asyncio import Redis
 
-from telegram_bot.api import health, link, webhook
+from telegram_bot.api import health, link, notify, webhook
 from telegram_bot.config import get_settings
-from telegram_bot.database import dispose_engine, init_engine
+from telegram_bot.database import dispose_engine, get_session_factory, init_engine
 from telegram_bot.services.dispatcher import (
     init_bot,
     init_dispatcher,
@@ -39,6 +39,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     init_dispatcher(
         link_tokens=link_tokens,
         web_base_url=settings.web_base_url,
+        session_factory=get_session_factory(),
     )
     try:
         yield
@@ -58,3 +59,4 @@ app = FastAPI(
 app.include_router(health.router)
 app.include_router(webhook.router)
 app.include_router(link.router)
+app.include_router(notify.router)

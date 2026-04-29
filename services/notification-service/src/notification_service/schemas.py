@@ -9,8 +9,9 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 # Каналы доставки, известные текущему скелету. Расширяется по мере
-# появления реализаций (Phase 8.1 EmailChannel, 8.3 PushChannel).
-KNOWN_CHANNELS = frozenset({"in_app", "log"})
+# появления реализаций (Phase 8.1 EmailChannel, 8.3 PushChannel,
+# Phase 14.1 TelegramChannel — ADR-0056).
+KNOWN_CHANNELS = frozenset({"in_app", "log", "telegram"})
 
 
 class NotifyRequest(BaseModel):
