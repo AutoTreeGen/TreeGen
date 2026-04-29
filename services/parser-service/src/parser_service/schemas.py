@@ -952,6 +952,57 @@ class MergeHistoryResponse(BaseModel):
 
 
 # =============================================================================
+# Phase 6.5 — Tree statistics (read-only aggregation, ADR-0051).
+# =============================================================================
+
+
+class TopSurname(BaseModel):
+    """Одна строка из top-N surnames для tree statistics."""
+
+    surname: str
+    person_count: int = Field(
+        ge=1,
+        description="Количество живых (deleted_at IS NULL) персон с этой фамилией.",
+    )
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class TreeStatisticsResponse(BaseModel):
+    """Агрегированная статистика дерева для UI dashboard'а (Phase 6.5).
+
+    Все counts учитывают только не-soft-deleted записи. Относительно дешёво:
+    7 параллельных COUNT-ов, один MIN(date_start) на BIRT-events, один
+    GROUP BY surname на names + один recursive CTE для pedigree depth.
+    Не кэшируется (см. ADR-0051 §«Не кэшируем»).
+    """
+
+    tree_id: uuid.UUID
+    persons_count: int = Field(ge=0)
+    families_count: int = Field(ge=0)
+    events_count: int = Field(ge=0)
+    sources_count: int = Field(ge=0)
+    hypotheses_count: int = Field(ge=0)
+    dna_matches_count: int = Field(ge=0)
+    places_count: int = Field(ge=0)
+    pedigree_max_depth: int = Field(
+        ge=0,
+        description=(
+            "Максимальная глубина pedigree-цепочки родитель→ребёнок "
+            "(recursive CTE с hard cap 50). 0 если детей нет."
+        ),
+    )
+    oldest_birth_year: int | None = Field(
+        default=None,
+        description="MIN(events.date_start.year) среди event_type='BIRT'. None если нет BIRT-событий с датой.",
+    )
+    top_surnames: list[TopSurname] = Field(
+        default_factory=list,
+        description="Top-10 фамилий по количеству персон. Пусто если в дереве нет имён.",
+    )
+
+
+# =============================================================================
 # Phase 11.0 — Tree sharing & invitations (см. ADR-0036).
 # =============================================================================
 

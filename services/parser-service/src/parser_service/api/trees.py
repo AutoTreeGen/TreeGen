@@ -9,18 +9,21 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from shared_models import TreeRole
 from shared_models.orm import (
     Citation,
+    DnaMatch,
     EntityMultimedia,
     Event,
     EventParticipant,
     Family,
     FamilyChild,
+    Hypothesis,
     MultimediaObject,
     Name,
     Person,
+    Place,
     Source,
     Tree,
 )
-from sqlalchemy import ColumnElement, and_, exists, func, or_, select
+from sqlalchemy import ColumnElement, and_, exists, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -35,6 +38,8 @@ from parser_service.schemas import (
     PersonDetail,
     PersonListResponse,
     PersonSummary,
+    TopSurname,
+    TreeStatisticsResponse,
 )
 from parser_service.services.dm_buckets import compute_dm_buckets
 from parser_service.services.permissions import require_tree_role
@@ -551,4 +556,161 @@ async def get_ancestors(
         generations_requested=generations,
         generations_loaded=generations_loaded,
         root=root,
+    )
+
+
+# -----------------------------------------------------------------------------
+# Phase 6.5 — Tree statistics dashboard (read-only aggregation, ADR-0051).
+# -----------------------------------------------------------------------------
+
+
+# Hard cap для recursive CTE: реальные деревья редко глубже 30 поколений (≈900 лет).
+# 50 — sane bound, защищает от циклов в кривых GED-данных.
+_MAX_PEDIGREE_DEPTH = 50
+
+# Recursive CTE: длина самой длинной цепочки родитель→ребёнок.
+# Уровень 1 — «корни» (персоны не являющиеся children ни в одной family того же дерева).
+# Уровень N+1 — дети персон уровня N через families (husband_id ИЛИ wife_id).
+# Игнорирует soft-deleted families и persons. Hard-cap'нут параметром :max_depth.
+_PEDIGREE_DEPTH_SQL = text("""
+WITH RECURSIVE generations AS (
+    SELECT p.id AS person_id, 1 AS depth
+    FROM persons p
+    WHERE p.tree_id = :tree_id
+      AND p.deleted_at IS NULL
+      AND NOT EXISTS (
+          SELECT 1
+          FROM family_children fc
+          JOIN families f ON f.id = fc.family_id
+          WHERE fc.child_person_id = p.id
+            AND f.tree_id = :tree_id
+            AND f.deleted_at IS NULL
+      )
+    UNION ALL
+    SELECT fc.child_person_id AS person_id, g.depth + 1
+    FROM generations g
+    JOIN families f
+      ON (f.husband_id = g.person_id OR f.wife_id = g.person_id)
+     AND f.tree_id = :tree_id
+     AND f.deleted_at IS NULL
+    JOIN family_children fc ON fc.family_id = f.id
+    WHERE g.depth < :max_depth
+)
+SELECT COALESCE(MAX(depth), 0) AS max_depth FROM generations
+""")
+
+
+@router.get(
+    "/trees/{tree_id}/statistics",
+    response_model=TreeStatisticsResponse,
+    summary="Aggregated tree statistics for dashboard (Phase 6.5).",
+    dependencies=[Depends(require_tree_role(TreeRole.VIEWER))],
+)
+async def get_tree_statistics(
+    tree_id: uuid.UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> TreeStatisticsResponse:
+    """Один read-only round-trip с агрегатами по дереву.
+
+    Все counts фильтруют ``deleted_at IS NULL``. Не кэшируется (ADR-0051):
+    объёмы данных staging'а и B2C-юзеров не оправдывают invalidation
+    complexity. Если станет узким местом — кэш с TTL=60s в Redis.
+    """
+    # Tree существует?
+    tree_exists = await session.scalar(
+        select(func.count(Tree.id)).where(Tree.id == tree_id, Tree.deleted_at.is_(None))
+    )
+    if not tree_exists:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Tree {tree_id} not found",
+        )
+
+    # 7 параллельных count'ов через одну транзакцию. Каждый — простой
+    # COUNT с tree_id-фильтром. SQLAlchemy serializes их через одно
+    # соединение, но это всё равно 7 round-trip'ов к БД. Для staging-
+    # объёмов (≤100k персон/дерево) это <50ms суммарно.
+    persons_count = await session.scalar(
+        select(func.count(Person.id)).where(Person.tree_id == tree_id, Person.deleted_at.is_(None))
+    )
+    families_count = await session.scalar(
+        select(func.count(Family.id)).where(Family.tree_id == tree_id, Family.deleted_at.is_(None))
+    )
+    events_count = await session.scalar(
+        select(func.count(Event.id)).where(Event.tree_id == tree_id, Event.deleted_at.is_(None))
+    )
+    sources_count = await session.scalar(
+        select(func.count(Source.id)).where(Source.tree_id == tree_id, Source.deleted_at.is_(None))
+    )
+    hypotheses_count = await session.scalar(
+        select(func.count(Hypothesis.id)).where(
+            Hypothesis.tree_id == tree_id, Hypothesis.deleted_at.is_(None)
+        )
+    )
+    dna_matches_count = await session.scalar(
+        select(func.count(DnaMatch.id)).where(
+            DnaMatch.tree_id == tree_id, DnaMatch.deleted_at.is_(None)
+        )
+    )
+    places_count = await session.scalar(
+        select(func.count(Place.id)).where(Place.tree_id == tree_id, Place.deleted_at.is_(None))
+    )
+
+    # Oldest birth year — MIN(date_start) среди BIRT-events этого дерева.
+    # date_start — Date type, .year даёт integer. None если нет BIRT с датой.
+    oldest_birth = await session.scalar(
+        select(func.min(Event.date_start)).where(
+            Event.tree_id == tree_id,
+            Event.deleted_at.is_(None),
+            Event.event_type == "BIRT",
+            Event.date_start.is_not(None),
+        )
+    )
+    oldest_birth_year = oldest_birth.year if oldest_birth is not None else None
+
+    # Top-10 surnames через GROUP BY на names + JOIN на persons.
+    # Игнорируем NULL и пустые строки. distinct(person_id) защищает от
+    # double-counting если у персоны несколько Name-row с одинаковой surname.
+    top_surnames_res = await session.execute(
+        select(
+            Name.surname,
+            func.count(func.distinct(Name.person_id)).label("person_count"),
+        )
+        .join(Person, Person.id == Name.person_id)
+        .where(
+            Person.tree_id == tree_id,
+            Person.deleted_at.is_(None),
+            Name.deleted_at.is_(None),
+            Name.surname.is_not(None),
+            Name.surname != "",
+        )
+        .group_by(Name.surname)
+        .order_by(func.count(func.distinct(Name.person_id)).desc(), Name.surname)
+        .limit(10)
+    )
+    top_surnames = [
+        TopSurname(surname=row.surname, person_count=int(row.person_count))
+        for row in top_surnames_res.all()
+    ]
+
+    # Pedigree max depth — recursive CTE. Возвращает 0 если в дереве
+    # нет ни одной семьи с детьми (или вообще пусто).
+    depth_res = await session.execute(
+        _PEDIGREE_DEPTH_SQL,
+        {"tree_id": tree_id, "max_depth": _MAX_PEDIGREE_DEPTH},
+    )
+    pedigree_max_depth = int(depth_res.scalar() or 0)
+
+    return TreeStatisticsResponse(
+        tree_id=tree_id,
+        persons_count=int(persons_count or 0),
+        families_count=int(families_count or 0),
+        events_count=int(events_count or 0),
+        sources_count=int(sources_count or 0),
+        hypotheses_count=int(hypotheses_count or 0),
+        dna_matches_count=int(dna_matches_count or 0),
+        places_count=int(places_count or 0),
+        pedigree_max_depth=pedigree_max_depth,
+        oldest_birth_year=oldest_birth_year,
+        top_surnames=top_surnames,
     )

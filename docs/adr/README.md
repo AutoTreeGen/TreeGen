@@ -39,3 +39,4 @@
 | 0036 | [Sharing & permissions model](./0036-sharing-permissions-model.md) | Accepted |
 | 0040 | [Sharing UI architecture (Phase 11.1)](./0040-sharing-ui-architecture.md) | Accepted |
 | 0044 | [Person merge UI architecture (Phase 6.4)](./0044-person-merge-ui.md) | Accepted |
+| 0051 | [Tree statistics philosophy (Phase 6.5)](./0051-tree-statistics.md) | Accepted |

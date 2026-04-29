@@ -261,6 +261,31 @@ export function fetchAncestors(personId: string, generations = 5): Promise<Ances
   return getJson<AncestorsResponse>(`/persons/${personId}/ancestors?${params.toString()}`);
 }
 
+// ---- Tree statistics (Phase 6.5 — ADR-0051) ---------------------------------
+
+export type TopSurname = {
+  surname: string;
+  person_count: number;
+};
+
+export type TreeStatisticsResponse = {
+  tree_id: string;
+  persons_count: number;
+  families_count: number;
+  events_count: number;
+  sources_count: number;
+  hypotheses_count: number;
+  dna_matches_count: number;
+  places_count: number;
+  pedigree_max_depth: number;
+  oldest_birth_year: number | null;
+  top_surnames: TopSurname[];
+};
+
+export function fetchTreeStatistics(treeId: string): Promise<TreeStatisticsResponse> {
+  return getJson<TreeStatisticsResponse>(`/trees/${treeId}/statistics`);
+}
+
 // ---- Duplicate suggestions (Phase 4.5) -------------------------------------
 
 export type DuplicateEntityType = "person" | "source" | "place";
