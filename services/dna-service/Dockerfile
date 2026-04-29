@@ -28,7 +28,16 @@ COPY services/dna-service/src/ services/dna-service/src/
 
 RUN uv sync --frozen --no-dev
 
+# Phase 13.1b — non-root execution per ADR-0032.
+RUN groupadd --system app \
+ && useradd --system --gid app --home-dir /app --no-create-home appuser \
+ && chown -R appuser:app /app
+USER appuser
+
 ENV PORT=8001
 EXPOSE 8001
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import os, urllib.request; urllib.request.urlopen(f'http://localhost:{os.environ.get(\"PORT\", \"8001\")}/healthz').read()" || exit 1
 
 CMD ["sh", "-c", "uv run uvicorn dna_service.main:app --host 0.0.0.0 --port ${PORT}"]

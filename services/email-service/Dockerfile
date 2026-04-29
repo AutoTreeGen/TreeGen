@@ -13,13 +13,15 @@ RUN pip install --no-cache-dir uv
 COPY pyproject.toml uv.lock README.md ./
 COPY packages/shared-models/pyproject.toml      packages/shared-models/README.md      packages/shared-models/
 COPY packages/gedcom-parser/pyproject.toml      packages/gedcom-parser/README.md      packages/gedcom-parser/
-COPY services/telegram-bot/pyproject.toml       services/telegram-bot/README.md       services/telegram-bot/
+COPY services/email-service/pyproject.toml      services/email-service/README.md      services/email-service/
 
 RUN uv sync --frozen --no-install-workspace --no-dev
 
 COPY packages/shared-models/src/      packages/shared-models/src/
 COPY packages/gedcom-parser/src/      packages/gedcom-parser/src/
-COPY services/telegram-bot/src/       services/telegram-bot/src/
+COPY services/email-service/src/      services/email-service/src/
+# Phase 12.2 — Jinja2 templates рядом с пакетом (loader использует path).
+COPY services/email-service/templates/ services/email-service/templates/
 
 RUN uv sync --frozen --no-dev
 
@@ -29,10 +31,10 @@ RUN groupadd --system app \
  && chown -R appuser:app /app
 USER appuser
 
-ENV PORT=8006
-EXPOSE 8006
+ENV PORT=8005
+EXPOSE 8005
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD python -c "import os, urllib.request; urllib.request.urlopen(f'http://localhost:{os.environ.get(\"PORT\", \"8006\")}/healthz').read()" || exit 1
+    CMD python -c "import os, urllib.request; urllib.request.urlopen(f'http://localhost:{os.environ.get(\"PORT\", \"8005\")}/healthz').read()" || exit 1
 
-CMD ["sh", "-c", "uv run uvicorn telegram_bot.main:app --host 0.0.0.0 --port ${PORT}"]  # pragma: allowlist secret
+CMD ["sh", "-c", "uv run uvicorn email_service.main:app --host 0.0.0.0 --port ${PORT}"]
