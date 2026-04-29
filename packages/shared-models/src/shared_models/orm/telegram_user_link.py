@@ -23,7 +23,7 @@ from __future__ import annotations
 import datetime as dt
 import uuid
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, UniqueConstraint, false
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -46,6 +46,10 @@ class TelegramUserLink(IdMixin, TimestampMixin, Base):
         linked_at: Timestamp подтверждения линка (web-у вернул 200).
         revoked_at: Timestamp отзыва (NULL = активная связь).
             Hard delete — через GDPR-erasure pipeline.
+        notifications_enabled: Phase 14.1 (ADR-0056) — opt-in для
+            push-нотификаций (новые matches, completed imports).
+            Default ``False`` (privacy-by-default): linked-chat не
+            получает push'ей пока user явно не вызвал ``/subscribe``.
     """
 
     __tablename__ = "telegram_user_links"
@@ -74,6 +78,12 @@ class TelegramUserLink(IdMixin, TimestampMixin, Base):
         DateTime(timezone=True),
         nullable=True,
         default=None,
+    )
+    notifications_enabled: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default=false(),
+        default=False,
     )
 
     __table_args__ = (

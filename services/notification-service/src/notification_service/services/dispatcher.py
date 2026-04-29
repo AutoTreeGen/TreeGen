@@ -41,6 +41,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from notification_service.channels.base import Channel
 from notification_service.channels.in_app import InAppChannel
 from notification_service.channels.log import LogChannel
+from notification_service.channels.telegram import TelegramChannel
 
 _LOG = logging.getLogger(__name__)
 
@@ -52,7 +53,8 @@ _LOG = logging.getLogger(__name__)
 def _build_channel_registry() -> dict[str, Channel]:
     in_app: Channel = InAppChannel()
     log: Channel = LogChannel()
-    return {in_app.name: in_app, log.name: log}
+    telegram: Channel = TelegramChannel()
+    return {in_app.name: in_app, log.name: log, telegram.name: telegram}
 
 
 _CHANNEL_REGISTRY: dict[str, Channel] = _build_channel_registry()

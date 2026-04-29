@@ -13,6 +13,7 @@ from typing import Final
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.client.session.aiohttp import AiohttpSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from telegram_bot.services.handlers import router as commands_router
 from telegram_bot.services.link_tokens import LinkTokenStore
@@ -39,14 +40,22 @@ def init_dispatcher(
     *,
     link_tokens: LinkTokenStore,
     web_base_url: str,
+    session_factory: async_sessionmaker[AsyncSession],
 ) -> Dispatcher:
-    """Создать Dispatcher с зарегистрированным command-router'ом."""
+    """Создать Dispatcher с зарегистрированным command-router'ом.
+
+    ``session_factory`` (Phase 14.1) — async session factory для read-only
+    DB-запросов из handler'ов (``/imports``, ``/persons``, ``/tree``).
+    Каждый handler открывает свою короткую транзакцию через
+    ``async with session_factory() as session:``.
+    """
     global _dispatcher  # noqa: PLW0603
     dispatcher = Dispatcher()
     dispatcher.include_router(commands_router)
     # Эти ключи становятся kwargs handlers'ов через aiogram kwargs-DI.
     dispatcher["link_tokens"] = link_tokens
     dispatcher["web_base_url"] = web_base_url
+    dispatcher["session_factory"] = session_factory
     _dispatcher = dispatcher
     return dispatcher
 
