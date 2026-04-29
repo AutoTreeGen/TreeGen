@@ -42,7 +42,14 @@
     "rateLimit": "Слишком много запросов. Подождите немного и повторите.",
     "preferencesLoadFailed": "Не удалось загрузить настройки.",
     "notificationsLoadFailed": "Не удалось загрузить уведомления.",
-    "treesLoadFailed": "Не удалось загрузить ваши деревья."
+    "treesLoadFailed": "Не удалось загрузить ваши деревья.",
+    "globalTitle": "Что-то пошло не так",
+    "globalBody": "Произошла непредвиденная ошибка. Мы её залогировали и разберёмся.",
+    "sectionTitle": "Раздел не загрузился",
+    "sectionBody": "Остальная часть приложения работает — попробуйте обновить этот раздел или вернитесь позже.",
+    "tryAgain": "Попробовать снова",
+    "reportIssue": "Сообщить о проблеме",
+    "goHome": "На главную"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -187,17 +194,111 @@
     "faq3Q": "Поддерживаете ли GEDCOM 5.5.5?",
     "faq3A": "Да — 5.5.5 канонический формат. Старый 5.5.1 и проприетарные теги Ancestry / MyHeritage / Geni импортируются с round-trip сохранением."
   },
-  "errors": {
-    "globalTitle": "Что-то пошло не так",
-    "globalBody": "Произошла непредвиденная ошибка. Мы её залогировали и разберёмся.",
-    "sectionTitle": "Раздел не загрузился",
-    "sectionBody": "Остальная часть приложения работает — попробуйте обновить этот раздел или вернитесь позже.",
-    "tryAgain": "Попробовать снова",
-    "reportIssue": "Сообщить о проблеме",
-    "goHome": "На главную"
-  },
   "offline": {
     "banner": "Вы офлайн. Изменения отправятся, когда соединение восстановится.",
     "reconnected": "Соединение восстановлено."
+  },
+  "persons": {
+    "merge": {
+      "title": "Объединение двух персон (ручная проверка)",
+      "subtitle": "Сравните конфликтующие поля стороны к стороне. Бэкенд использует одного survivor'а; ваш выбор по полям определяет, какая сторона побеждает в целом. Soft-delete можно откатить в течение 90 дней.",
+      "backToPerson": "К персоне",
+      "sides": {
+        "title": "Стороны",
+        "body": "Слева — основная персона, справа — кандидат. Survivor сохраняет каноническую запись; вторая помечается удалённой и редиректит на survivor'а.",
+        "primary": "Основная",
+        "candidate": "Кандидат",
+        "survivorBadge": "survivor",
+        "defaultBadge": "по умолчанию"
+      },
+      "fields": {
+        "title": "Разрешите конфликтующие поля",
+        "noConflicts": "Конфликтующих полей между персонами нет.",
+        "namesTitle": "Альтернативные имена",
+        "namesBody": "Имена merged-персоны переезжают к survivor'у со смещённым порядком сортировки.",
+        "labels": {
+          "gedcom_xref": "GEDCOM xref",
+          "sex": "Пол",
+          "confidence_score": "Оценка уверенности",
+          "birth_date": "Дата рождения",
+          "death_date": "Дата смерти",
+          "given_name": "Имя",
+          "surname": "Фамилия",
+          "primary_name": "Основное имя",
+          "place": "Место",
+          "sources": "Источники"
+        }
+      },
+      "resolver": {
+        "keepLeft": "Оставить основную",
+        "keepRight": "Оставить кандидата",
+        "identical": "Значения совпадают — разрешать нечего.",
+        "noteLabel": "Причина (необязательно)",
+        "notePlaceholder": "Почему эта сторона побеждает…"
+      },
+      "previewPane": {
+        "title": "Предпросмотр объединённой персоны",
+        "survivor": "Survivor",
+        "noFieldDiff": "После merge изменения полей не будет.",
+        "note": "Заметка"
+      },
+      "conflicts": {
+        "none": "Блокирующих конфликтов с гипотезами нет. Merge можно подтвердить после ручной проверки.",
+        "blockedTitle": "Merge заблокирован {count, plural, one {1 конфликтом} few {# конфликтами} other {# конфликтами}}:"
+      },
+      "confirm": {
+        "title": "Подтверждение merge",
+        "body": "Будет объединено {candidate}… в {primary}… (survivor: {survivor}). Soft-delete; в течение 90 дней можно откатить из истории merge'ей.",
+        "reviewedCheckbox": "Я просмотрел каждое конфликтующее поле и подтверждаю корректность.",
+        "submit": "Подтвердить merge",
+        "submitting": "Объединяю…",
+        "survivorPrimary": "основная",
+        "survivorCandidate": "кандидат",
+        "survivorDefault": "по умолчанию",
+        "error409": "Merge заблокирован конфликтами гипотез (HTTP 409). См. блок конфликтов выше.",
+        "error422": "Сервер отклонил запрос (HTTP 422). Обновите страницу и попробуйте снова.",
+        "errorUnknown": "Неизвестная ошибка"
+      },
+      "success": {
+        "title": "Merge выполнен",
+        "body": "Survivor {survivor}… поглотил merged-персону {merged}…. Откат доступен 90 дней из истории merge'ей.",
+        "openSurvivor": "Открыть survivor'а",
+        "viewLog": "К истории merge'ей"
+      },
+      "errorState": {
+        "title": "Не удалось загрузить превью merge",
+        "retry": "Попробовать снова",
+        "unknown": "Неизвестная ошибка"
+      },
+      "missingCandidate": {
+        "title": "Кандидат не выбран",
+        "body": "Откройте этот URL с параметром ?candidate={id}, чтобы сравнить двух персон. Обычно сюда попадают из подсказки дубликатов или из ревью гипотез.",
+        "backToPerson": "К персоне"
+      },
+      "log": {
+        "title": "История merge'ей",
+        "subtitle": "Все merge'и, в которых участвовала эта персона. Откат доступен в течение {days} дней после merge.",
+        "backToPerson": "К персоне",
+        "loadError": "Не удалось загрузить историю merge'ей",
+        "retry": "Попробовать снова",
+        "empty": "Эта персона ещё не участвовала ни в одном merge.",
+        "roleSurvivor": "survivor",
+        "roleMerged": "merged",
+        "mergedAt": "Merge: {time}",
+        "undoneAt": "Откачено: {time}.",
+        "purgedAt": "Hard-delete: {time} — откатить уже невозможно.",
+        "survivorLabel": "Survivor",
+        "mergedLabel": "Merged",
+        "undoButton": "Откатить merge",
+        "undoing": "Откатываю…",
+        "undoAria": "Откатить этот merge",
+        "undoUnavailableExpired": "Окно отката истекло ({days} дней).",
+        "undoUnavailableUndone": "Уже откачено.",
+        "undoUnavailablePurged": "Merged-запись была hard-delete'нута.",
+        "undoErrorExpired": "Окно отката истекло (сервер вернул 410).",
+        "undoErrorAlreadyUndone": "Этот merge уже откачен (сервер вернул 409).",
+        "undoErrorUnknown": "Не удалось откатить merge — попробуйте снова."
+      }
+    }
   }
 }
