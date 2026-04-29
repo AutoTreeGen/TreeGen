@@ -1,0 +1,48 @@
+# =============================================================================
+# ai-layer — пакет AI-инфраструктуры AutoTreeGen (Phase 10.0).
+#
+# Тонкие обёртки вокруг внешних LLM/embedding API + реестр prompt-шаблонов +
+# use-case стабы. Pure-addition skeleton, нацеленный на Phase 10.1+ richer
+# use-cases (RAG, document extraction, OCR post-processing, hypothesis
+# explainer). См. docs/adr/0043-ai-layer-architecture.md.
+#
+# Зависимости:
+#   - anthropic: официальный SDK Claude API (см. ADR-0043 §«Anthropic vs ...»).
+#   - voyageai: embedding-провайдер выбран Voyage AI (1024-dim, multilingual).
+#   - jinja2: рендеринг prompt-шаблонов (см. registry.py).
+#   - pydantic: structured-output модели + конфиг.
+# Никаких sqlalchemy / fastapi / httpx прямой — обёртки оставляют HTTP клиенту
+# SDK.
+# =============================================================================
+
+[project]
+name = "ai-layer"
+version = "0.1.0"
+description = "AutoTreeGen AI layer — Anthropic Claude wrapper, Voyage embeddings, prompt registry (Phase 10.0)."
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "Proprietary" }
+authors = [{ name = "AutoTreeGen" }]
+dependencies = [
+    "anthropic>=0.40",
+    "voyageai>=0.3",
+    "jinja2>=3.1",
+    "pydantic>=2.10",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ai_layer"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
