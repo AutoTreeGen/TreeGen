@@ -14,6 +14,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
@@ -25,9 +26,13 @@ import {
   ApiError,
   type Invitation,
   type Member,
+  type PublicShare,
   createInvitation,
+  createPublicShare,
+  deletePublicShare,
   fetchInvitations,
   fetchMembers,
+  fetchPublicShare,
   maskEmail,
   resendInvitation,
   revokeInvitation,
@@ -42,6 +47,13 @@ const ROLE_LABEL: Record<string, string> = {
   viewer: "Viewer",
 };
 
+type TabId = "members" | "public";
+
+const TABS: { id: TabId; label: string }[] = [
+  { id: "members", label: "Members" },
+  { id: "public", label: "Public link" },
+];
+
 export default function AccessPage() {
   return (
     <Suspense fallback={null}>
@@ -51,9 +63,11 @@ export default function AccessPage() {
 }
 
 function AccessPageContent() {
+  const t = useTranslations("access");
   const params = useParams<{ id: string }>();
   const treeId = params.id;
   const queryClient = useQueryClient();
+  const [tab, setTab] = useState<TabId>("members");
 
   const members = useQuery({
     queryKey: ["members", treeId],
@@ -74,36 +88,70 @@ function AccessPageContent() {
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
-      <header className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight">Tree access</h1>
+      <header className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="mt-1 text-sm text-[color:var(--color-ink-500)]">
-          Invite family members as Editor or Viewer. Pending invitations are listed below.
+          Manage who can view this tree — invite members or share a public read-only link.
         </p>
       </header>
 
-      <section className="grid gap-6 md:grid-cols-2">
-        <MembersCard
-          members={members.data?.items ?? []}
-          isLoading={members.isLoading}
-          isError={members.isError}
-          error={members.error}
-          onChange={invalidateAll}
-        />
-        <InvitationsCard
-          treeId={treeId}
-          invitations={invitations.data?.items ?? []}
-          isLoading={invitations.isLoading}
-          onChange={invalidateAll}
-        />
-      </section>
+      <nav
+        className="mb-6 flex gap-1 border-b border-[color:var(--color-border)]"
+        role="tablist"
+        aria-label="Access tabs"
+      >
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.id}
+            data-testid={`tab-${t.id}`}
+            onClick={() => setTab(t.id)}
+            className={`px-4 py-2 text-sm font-medium transition ${
+              tab === t.id
+                ? "border-b-2 border-[color:var(--color-ink-900)] text-[color:var(--color-ink-900)]"
+                : "text-[color:var(--color-ink-500)] hover:text-[color:var(--color-ink-900)]"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </nav>
 
-      <section className="mt-10">
-        <TransferOwnerCard
-          treeId={treeId}
-          members={members.data?.items ?? []}
-          onTransfer={invalidateAll}
-        />
-      </section>
+      {tab === "members" ? (
+        <section role="tabpanel" aria-label="Members and invitations">
+          <div className="grid gap-6 md:grid-cols-2">
+            <MembersCard
+              members={members.data?.items ?? []}
+              isLoading={members.isLoading}
+              isError={members.isError}
+              error={members.error}
+              onChange={invalidateAll}
+            />
+            <InvitationsCard
+              treeId={treeId}
+              invitations={invitations.data?.items ?? []}
+              isLoading={invitations.isLoading}
+              onChange={invalidateAll}
+            />
+          </div>
+
+          <div className="mt-10">
+            <TransferOwnerCard
+              treeId={treeId}
+              members={members.data?.items ?? []}
+              onTransfer={invalidateAll}
+            />
+          </div>
+        </section>
+      ) : null}
+
+      {tab === "public" ? (
+        <section role="tabpanel" aria-label="Public link">
+          <PublicShareCard treeId={treeId} />
+        </section>
+      ) : null}
     </main>
   );
 }
@@ -240,6 +288,7 @@ function InvitationsCard({
   isLoading: boolean;
   onChange: () => void;
 }) {
+  const t = useTranslations("access");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"editor" | "viewer">("viewer");
   const [formError, setFormError] = useState<string | null>(null);
@@ -322,7 +371,7 @@ function InvitationsCard({
           {isLoading ? (
             <p className="text-sm text-[color:var(--color-ink-500)]">Loading…</p>
           ) : pending.length === 0 ? (
-            <p className="text-sm text-[color:var(--color-ink-500)]">No pending invitations.</p>
+            <p className="text-sm text-[color:var(--color-ink-500)]">{t("noPendingInvitations")}</p>
           ) : (
             <ul className="mt-2 space-y-2">
               {pending.map((inv) => (
@@ -407,6 +456,7 @@ function TransferOwnerCard({
   members: Member[];
   onTransfer: () => void;
 }) {
+  const t = useTranslations("access");
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const [newOwnerEmail, setNewOwnerEmail] = useState("");
@@ -435,7 +485,7 @@ function TransferOwnerCard({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Transfer ownership</CardTitle>
+          <CardTitle>{t("transferOwnership")}</CardTitle>
           <CardDescription>
             Make another active member the owner. Two-step confirmation prevents accidents.
           </CardDescription>
@@ -551,4 +601,139 @@ function TransferOwnerCard({
 function isValidEmail(value: string): boolean {
   // Минимальная RFC 5321 проверка для UI; сервер делает свою валидацию.
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+// ---------------------------------------------------------------------------
+// Public link tab (Phase 11.2)
+// ---------------------------------------------------------------------------
+
+const EXPIRES_OPTIONS: { value: number | null; label: string }[] = [
+  { value: 7, label: "7 days" },
+  { value: 30, label: "30 days" },
+  { value: 365, label: "1 year" },
+  { value: null, label: "Never (manual revoke)" },
+];
+
+function PublicShareCard({ treeId }: { treeId: string }) {
+  const queryClient = useQueryClient();
+  const [expiresIn, setExpiresIn] = useState<number | null>(30);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const shareQuery = useQuery({
+    queryKey: ["public-share", treeId],
+    queryFn: () => fetchPublicShare(treeId),
+    refetchOnWindowFocus: false,
+  });
+
+  const create = useMutation({
+    mutationFn: () => createPublicShare(treeId, expiresIn),
+    onSuccess: (share: PublicShare) => {
+      setError(null);
+      queryClient.setQueryData(["public-share", treeId], share);
+    },
+    onError: (err) => {
+      setError(err instanceof ApiError ? err.message : "Failed to create public link");
+    },
+  });
+
+  const revoke = useMutation({
+    mutationFn: () => deletePublicShare(treeId),
+    onSuccess: () => {
+      queryClient.setQueryData(["public-share", treeId], null);
+      setError(null);
+    },
+    onError: (err) => {
+      setError(err instanceof ApiError ? err.message : "Failed to revoke public link");
+    },
+  });
+
+  const share = shareQuery.data;
+
+  const copyLink = () => {
+    if (!share) return;
+    void navigator.clipboard?.writeText(share.public_url).then(() => {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Public link</CardTitle>
+        <CardDescription>
+          Share a read-only view of this tree. DNA data is excluded; living relatives are
+          anonymized. Anyone with the link can view — there is no per-recipient tracking.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {shareQuery.isLoading ? (
+          <p className="text-sm text-[color:var(--color-ink-500)]">Loading…</p>
+        ) : share ? (
+          <div className="space-y-3">
+            <div>
+              <p className="mb-1 text-xs font-medium text-[color:var(--color-ink-500)]">
+                Public URL
+              </p>
+              <div className="flex items-center gap-2">
+                <code
+                  data-testid="public-url"
+                  className="flex-1 truncate rounded border border-[color:var(--color-border)] px-2 py-1 text-xs"
+                >
+                  {share.public_url}
+                </code>
+                <Button type="button" variant="ghost" size="sm" onClick={copyLink}>
+                  {copied ? "Copied" : "Copy"}
+                </Button>
+              </div>
+            </div>
+            <p className="text-xs text-[color:var(--color-ink-500)]">
+              {share.expires_at
+                ? `Expires ${new Date(share.expires_at).toLocaleDateString()}`
+                : "No expiration set."}{" "}
+              Created {new Date(share.created_at).toLocaleDateString()}.
+            </p>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                if (window.confirm("Revoke the public link? Existing visitors will see 404.")) {
+                  revoke.mutate();
+                }
+              }}
+              disabled={revoke.isPending}
+            >
+              {revoke.isPending ? "Revoking…" : "Revoke link"}
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <fieldset className="space-y-1">
+              <legend className="text-sm font-medium">Expiration</legend>
+              {EXPIRES_OPTIONS.map((opt) => (
+                <label key={opt.label} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="expires"
+                    checked={expiresIn === opt.value}
+                    onChange={() => setExpiresIn(opt.value)}
+                  />
+                  {opt.label}
+                </label>
+              ))}
+            </fieldset>
+            <Button type="button" onClick={() => create.mutate()} disabled={create.isPending}>
+              {create.isPending ? "Creating…" : "Create public link"}
+            </Button>
+          </div>
+        )}
+        {error ? (
+          <p className="text-sm text-red-800" role="alert">
+            {error}
+          </p>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
 }

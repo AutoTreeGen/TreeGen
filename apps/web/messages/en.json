@@ -1,4 +1,9 @@
 {
+  "access": {
+    "title": "Tree access",
+    "noPendingInvitations": "No pending invitations.",
+    "transferOwnership": "Transfer ownership"
+  },
   "common": {
     "appName": "AutoTreeGen",
     "tagline": "Evidence-based genealogy at the speed of thought",

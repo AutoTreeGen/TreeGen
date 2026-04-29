@@ -83,6 +83,10 @@ SERVICE_TABLES = {
     # erasure/export request log с status state machine. Service-level log,
     # не доменная сущность дерева.
     "user_action_requests",
+    # Public tree shares (Phase 11.2 / ADR-0047): token-based public read-only
+    # links к дереву. Sharing-artifact как tree_memberships/tree_invitations,
+    # не доменная сущность — не требует provenance/version_id/soft-delete.
+    "public_tree_shares",
 }
 
 TREE_ENTITY_TABLES = {
