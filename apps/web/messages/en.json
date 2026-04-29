@@ -42,7 +42,14 @@
     "rateLimit": "Too many requests. Slow down and retry in a moment.",
     "preferencesLoadFailed": "Failed to load preferences.",
     "notificationsLoadFailed": "Couldn't load notifications.",
-    "treesLoadFailed": "Couldn't load your trees."
+    "treesLoadFailed": "Couldn't load your trees.",
+    "globalTitle": "Something went wrong",
+    "globalBody": "An unexpected error occurred. We've logged it and will investigate.",
+    "sectionTitle": "This section couldn't load",
+    "sectionBody": "The rest of the app is still working — try refreshing this section, or come back later.",
+    "tryAgain": "Try again",
+    "reportIssue": "Report issue",
+    "goHome": "Back to home"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -187,17 +194,111 @@
     "faq3Q": "Do you support GEDCOM 5.5.5?",
     "faq3A": "Yes — 5.5.5 is the canonical format. Older 5.5.1 and proprietary tags from Ancestry / MyHeritage / Geni are imported with round-trip preservation."
   },
-  "errors": {
-    "globalTitle": "Something went wrong",
-    "globalBody": "An unexpected error occurred. We've logged it and will investigate.",
-    "sectionTitle": "This section couldn't load",
-    "sectionBody": "The rest of the app is still working — try refreshing this section, or come back later.",
-    "tryAgain": "Try again",
-    "reportIssue": "Report issue",
-    "goHome": "Back to home"
-  },
   "offline": {
     "banner": "You're offline. Changes will sync when you reconnect.",
     "reconnected": "Back online."
+  },
+  "persons": {
+    "merge": {
+      "title": "Merge two persons (manual review)",
+      "subtitle": "Resolve conflicting fields side by side. Backend uses a single survivor; your per-field picks determine which side wins overall. Soft-delete is reversible for 90 days.",
+      "backToPerson": "Back to person",
+      "sides": {
+        "title": "Sides",
+        "body": "Primary on the left, candidate on the right. The survivor keeps the canonical record; the other becomes soft-deleted with a redirect.",
+        "primary": "Primary",
+        "candidate": "Candidate",
+        "survivorBadge": "survivor",
+        "defaultBadge": "default"
+      },
+      "fields": {
+        "title": "Resolve conflicting fields",
+        "noConflicts": "No conflicting fields between the two persons.",
+        "namesTitle": "Alternative names",
+        "namesBody": "Names from the merged person move to the survivor with offset sort orders.",
+        "labels": {
+          "gedcom_xref": "GEDCOM xref",
+          "sex": "Sex",
+          "confidence_score": "Confidence score",
+          "birth_date": "Date of birth",
+          "death_date": "Date of death",
+          "given_name": "Given name",
+          "surname": "Surname",
+          "primary_name": "Primary name",
+          "place": "Place",
+          "sources": "Sources"
+        }
+      },
+      "resolver": {
+        "keepLeft": "Keep primary",
+        "keepRight": "Keep candidate",
+        "identical": "Values match — nothing to resolve.",
+        "noteLabel": "Reason (optional)",
+        "notePlaceholder": "Why this side wins…"
+      },
+      "previewPane": {
+        "title": "Preview — merged person",
+        "survivor": "Survivor",
+        "noFieldDiff": "No field changes after merge.",
+        "note": "Note"
+      },
+      "conflicts": {
+        "none": "No blocking hypothesis conflicts. Merge can proceed after manual review.",
+        "blockedTitle": "Merge blocked by {count, plural, one {1 conflict} other {# conflicts}}:"
+      },
+      "confirm": {
+        "title": "Confirm merge",
+        "body": "This will merge {candidate}… into {primary}… (survivor: {survivor}). Soft-delete; you have 90 days to undo from the merge log.",
+        "reviewedCheckbox": "I reviewed every conflicting field above and confirm this is correct.",
+        "submit": "Confirm merge",
+        "submitting": "Merging…",
+        "survivorPrimary": "primary",
+        "survivorCandidate": "candidate",
+        "survivorDefault": "default",
+        "error409": "Merge blocked by hypothesis conflicts (HTTP 409). Review the conflict block above.",
+        "error422": "Server rejected the request (HTTP 422). Refresh and try again.",
+        "errorUnknown": "Unknown error"
+      },
+      "success": {
+        "title": "Merge committed",
+        "body": "Survivor {survivor}… absorbed merged person {merged}…. Undo within 90 days from the merge log.",
+        "openSurvivor": "Open survivor",
+        "viewLog": "View merge log"
+      },
+      "errorState": {
+        "title": "Couldn't load merge preview",
+        "retry": "Try again",
+        "unknown": "Unknown error"
+      },
+      "missingCandidate": {
+        "title": "No candidate selected",
+        "body": "Open this URL with ?candidate={id} to compare two persons. Usually you arrive here from a duplicate suggestion or a hypothesis review.",
+        "backToPerson": "Back to person"
+      },
+      "log": {
+        "title": "Merge history",
+        "subtitle": "All merges where this person took part. Undo is available for {days} days after the merge.",
+        "backToPerson": "Back to person",
+        "loadError": "Couldn't load merge history",
+        "retry": "Try again",
+        "empty": "This person hasn't taken part in any merges yet.",
+        "roleSurvivor": "survivor",
+        "roleMerged": "merged",
+        "mergedAt": "Merged at {time}",
+        "undoneAt": "Undone at {time}.",
+        "purgedAt": "Hard-deleted at {time} — undo no longer possible.",
+        "survivorLabel": "Survivor",
+        "mergedLabel": "Merged",
+        "undoButton": "Undo merge",
+        "undoing": "Undoing…",
+        "undoAria": "Undo this merge",
+        "undoUnavailableExpired": "Undo window expired ({days} days).",
+        "undoUnavailableUndone": "Already undone.",
+        "undoUnavailablePurged": "Merged record was hard-deleted.",
+        "undoErrorExpired": "Undo window has expired (server returned 410).",
+        "undoErrorAlreadyUndone": "This merge was already undone (server returned 409).",
+        "undoErrorUnknown": "Couldn't undo merge — try again."
+      }
+    }
   }
 }

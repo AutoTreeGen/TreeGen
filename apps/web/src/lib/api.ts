@@ -391,6 +391,62 @@ export async function commitMerge(
   });
 }
 
+// Phase 6.4 — manual merge UI: undo + history.
+// 90-day window enforced server-side (ADR-0022); UI mirrors the same threshold
+// so the undo button can be hidden once expired without a round-trip.
+export const MERGE_UNDO_WINDOW_DAYS = 90;
+
+export type MergeUndoResponse = {
+  merge_id: string;
+  survivor_id: string;
+  merged_id: string;
+  undone_at: string;
+};
+
+export type MergeHistoryItem = {
+  merge_id: string;
+  survivor_id: string;
+  merged_id: string;
+  merged_at: string;
+  undone_at: string | null;
+  purged_at: string | null;
+};
+
+export type MergeHistoryResponse = {
+  person_id: string;
+  items: MergeHistoryItem[];
+};
+
+export async function undoMerge(mergeId: string): Promise<MergeUndoResponse> {
+  return fetchOnceJson<MergeUndoResponse>(`/persons/merge/${mergeId}/undo`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+export function fetchMergeHistory(personId: string): Promise<MergeHistoryResponse> {
+  return getJson<MergeHistoryResponse>(`/persons/${personId}/merge-history`);
+}
+
+/**
+ * UI-side mirror of ADR-0022 §90-day window: возвращает true, если undo
+ * ещё доступен. Server остаётся source of truth (вернёт 410 если протухло
+ * между запросами), но эта функция нужна, чтобы НЕ показывать undo-кнопку
+ * для очевидно протухших merge'ей. Также скрывает undo для уже-undone
+ * (``undone_at != null``) или physically-purged (``purged_at != null``).
+ *
+ * Использует ``Date.now()`` (а не ``new Date()``) чтобы тесты могли
+ * мокать «текущее время» через ``vi.spyOn(Date, "now")`` без useFakeTimers.
+ */
+export function isMergeUndoable(item: MergeHistoryItem, nowMs: number = Date.now()): boolean {
+  if (item.undone_at !== null || item.purged_at !== null) return false;
+  const mergedAt = new Date(item.merged_at);
+  if (Number.isNaN(mergedAt.getTime())) return false;
+  const ageMs = nowMs - mergedAt.getTime();
+  const windowMs = MERGE_UNDO_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  return ageMs < windowMs;
+}
+
 // ---- Hypotheses (Phase 4.9: review UI; Phase 7.2: persistence) -------------
 
 export type HypothesisReviewStatus = "pending" | "confirmed" | "rejected" | "deferred";
