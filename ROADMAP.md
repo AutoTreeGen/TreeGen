@@ -666,10 +666,40 @@ licensing, EE-Jewish coverage, partnership effort). Краткая сводка:
 
 ## 18. Фаза 14 — Telegram-бот и автоматизация
 
-- Telegram Bot для уведомлений: «Найдено 3 новых матча в вашем дереве».
-- Команды: `/search Иванов 1850 Минск`, `/match @kit_id`, `/digest`.
-- Webhook вместо polling.
-- Bot — отдельный сервис, общается с api-gateway.
+### Phase 14.0 — Bot scaffold + opt-in account linking ✅ (см. ADR-0040)
+
+- `services/telegram-bot/` — FastAPI webhook receiver, aiogram 3.x
+  Dispatcher, handlers `/start /imports /persons /tree`. `/start` —
+  end-to-end (mint one-time link-token + reply with web URL); остальные
+  команды — Phase 14.1 stub'ы.
+- `telegram_user_links` ORM + alembic 0018: per-user opt-in mapping
+  `(user_id, tg_chat_id)` без soft-delete (revocation = `revoked_at`).
+- `POST /telegram/link/confirm` — consume link-token, INSERT row.
+  Race-safe (UNIQUE constraint + IntegrityError → 409). Идемпотентно
+  для повторного confirm'а того же user'а.
+- Webhook security: `X-Telegram-Bot-Api-Secret-Token` validated
+  constant-time через `hmac.compare_digest`. Без секрета (`webhook_secret=""`)
+  → 503.
+- Tests: signature 401/200, replay-attack 410, conflict 409,
+  idempotent 200, malformed 422 — без реальных вызовов
+  `api.telegram.org`.
+
+### Phase 14.1 — Notification fan-out + real command bodies (next PR)
+
+- notification-service → telegram-bot выпускает фан-аут на per-user
+  per-event-type opt-in (расширение ADR-0024 / 0029).
+- `/imports`, `/persons <name>`, `/tree` — реальный fetch из
+  parser-service. Требуется решение по cross-service-auth (отдельный
+  ADR — кандидаты: machine token + impersonation header / per-user JWT
+  через api-gateway).
+- Inline-keyboards для подтверждения dedup-suggestion'ов и hypothesis-review'а.
+
+### Phase 14.2+ (future)
+
+- Multi-language (`users.locale`) — ru/en/he.
+- Команды `/digest` (еженедельный summary), `/search Иванов 1850 Минск`.
+- Bot announcements в Telegram-канал (только owned by owner — не
+  user fan-out).
 
 ---
 

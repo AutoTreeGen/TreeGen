@@ -40,6 +40,7 @@ members = [
     "services/dna-service",
     "services/notification-service",
     "services/email-service",
+    "services/telegram-bot",
 ]
 
 # Резолвим workspace-имена из локальных путей, а не из PyPI.
@@ -54,6 +55,7 @@ parser-service = { workspace = true }
 dna-service = { workspace = true }
 notification-service = { workspace = true }
 email-service = { workspace = true }
+telegram-bot = { workspace = true }
 
 [tool.uv]
 package = false
@@ -209,6 +211,7 @@ mypy_path = [
     "services/email-service/src",
     "services/notification-service/src",
     "services/parser-service/src",
+    "services/telegram-bot/src",
 ]
 exclude = [
     "samples/",
