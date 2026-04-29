@@ -51,6 +51,7 @@ from parser_service.services.familysearch_importer import import_fs_pedigree
 from parser_service.services.import_runner import run_import
 from parser_service.services.notifications import post_notify_request
 from parser_service.services.progress import ProgressPublisher, Stage
+from parser_service.services.user_export_runner import run_user_export
 
 logger = logging.getLogger(__name__)
 
@@ -387,6 +388,65 @@ async def run_bulk_hypothesis_job(
         }
 
 
+async def run_user_export_job(
+    _ctx: dict[str, Any],
+    request_id: str,
+) -> dict[str, Any]:
+    """arq job: GDPR data-export для одного ``user_action_requests``-row.
+
+    Phase 4.11a (ADR-0046). Job-функция тонкая: открывает session,
+    конструирует storage backend по env-конвенциям, делегирует
+    :func:`run_user_export`. На любом исключении — runner сам помечает
+    row failed + audit перед re-raise; здесь мы только commit'им (для
+    success) или rollback'им (для failure) внешнюю транзакцию.
+
+    Auto-retry **отключён** на arq-уровне (max_tries=1 в WorkerSettings.
+    functions). GDPR-export — heavy/expensive, повторы неэффективны;
+    failure → user видит ``status='failed'`` + ``error`` в
+    ``GET /users/me/requests`` и решает retry вручную через новый POST.
+
+    Args:
+        _ctx: arq-контекст; unused (storage берём из env).
+        request_id: UUID UserActionRequest. Должен иметь kind='export'.
+
+    Returns:
+        Sterile dict для arq-result-row (логи / inspection).
+    """
+    from shared_models.storage import build_storage_from_env  # noqa: PLC0415  — defer heavy import
+
+    storage = build_storage_from_env()
+    settings = get_settings()
+
+    engine = get_engine()
+    session_maker = async_sessionmaker(engine, expire_on_commit=False)
+    request_uuid = UUID(request_id)
+    async with session_maker() as session:
+        try:
+            result = await run_user_export(
+                session,
+                request_uuid,
+                storage=storage,
+                settings=settings,
+            )
+            await session.commit()
+        except Exception:
+            # run_user_export сам пишет failed-status + audit в session
+            # перед re-raise — нам нужно это persist'ить отдельным commit'ом,
+            # чтобы потеря не case'ила «зависание» в processing'е.
+            try:
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                logger.exception("Failed to persist export-failure state for %s", request_id)
+            raise
+        return {
+            "request_id": str(result.request_id),
+            "bucket_key": result.bucket_key,
+            "size_bytes": result.size_bytes,
+            "email_idempotency_key": result.email_idempotency_key,
+        }
+
+
 async def dispatch_notification_job(
     _ctx: dict[str, Any],
     payload: dict[str, Any],
@@ -450,6 +510,7 @@ class WorkerSettings:
         run_bulk_hypothesis_job,
         dispatch_notification_job,
         run_fs_import_job,
+        run_user_export_job,
     ]
     on_startup = startup
     on_shutdown = shutdown

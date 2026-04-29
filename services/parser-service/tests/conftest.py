@@ -187,6 +187,27 @@ def _import_inline_for_tests() -> Iterator[None]:
 
 
 @pytest.fixture(autouse=True, scope="session")
+def _storage_backend_memory_for_tests() -> Iterator[None]:
+    """Phase 4.11a: use InMemoryStorage by default in tests.
+
+    Production default is ``minio`` (см. shared_models.storage), но это
+    требует ``STORAGE_BUCKET`` + endpoint env. Тесты должны работать без
+    docker, поэтому глобально ставим ``STORAGE_BACKEND=memory``. Тесты,
+    которые проверяют конкретный backend, могут override через
+    ``app.dependency_overrides[get_export_storage]``.
+    """
+    saved = os.environ.get("STORAGE_BACKEND")
+    os.environ["STORAGE_BACKEND"] = "memory"
+    try:
+        yield
+    finally:
+        if saved is None:
+            os.environ.pop("STORAGE_BACKEND", None)
+        else:
+            os.environ["STORAGE_BACKEND"] = saved
+
+
+@pytest.fixture(autouse=True, scope="session")
 def _bulk_compute_inline_for_tests() -> Iterator[None]:
     """Включить ``PARSER_SERVICE_BULK_COMPUTE_INLINE=1`` для всех тестов сессии.
 

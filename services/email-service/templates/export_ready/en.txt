@@ -1,0 +1,21 @@
+{% extends "_base.txt" %}
+{% block content %}
+Hello {{ user_display_name }},
+
+Your data export from {{ brand_name }} is ready to download.
+
+  Download: {{ export_url }}
+  Size:     {{ export_size_bytes }} bytes
+  Format:   {{ export_format }}
+
+The download link expires in 15 minutes for your security. If it expires
+before you click it, sign in at {{ web_base_url }}/settings and request
+a fresh link from "Your requests" — the file itself is kept for 30 days.
+
+The export is a single ZIP containing your profile, the trees you own,
+your DNA test metadata, your action history, and a manifest describing
+everything inside. Encrypted DNA segment data is intentionally not
+included — you can re-export it from the original provider if needed.
+
+If you didn't request this, contact {{ support_email }} immediately.
+{% endblock %}
