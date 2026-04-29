@@ -1,16 +1,20 @@
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
+import { LocaleSwitcher } from "@/components/locale-switcher";
 import { NotificationBell } from "@/components/notification-bell";
 import { cn } from "@/lib/utils";
 
 /**
- * Минимальная верхняя плашка приложения (Phase 8.0).
+ * Phase 4.13 — расширили шапку: добавили LocaleSwitcher (раньше жил
+ * только на лендинге, теперь доступен везде, чтобы юзер мог переключить
+ * язык не выходя на /).
  *
- * Сейчас держит только notification bell + ссылку на главную. Phase 4.2
- * добавит навигацию по деревьям, профиль user'а и т.д. — расширим, не
- * переписывая.
+ * Phase 4.2 добавит реальную навигацию по деревьям + профиль user'а —
+ * расширим, не переписывая.
  */
 export function SiteHeader() {
+  const t = useTranslations("header");
   return (
     <header
       className={cn(
@@ -18,10 +22,17 @@ export function SiteHeader() {
         "border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4",
       )}
     >
-      <Link href="/" className="text-sm font-semibold text-[color:var(--color-ink-900)]">
-        AutoTreeGen
+      <Link
+        href="/"
+        aria-label={t("home")}
+        className="text-sm font-semibold text-[color:var(--color-ink-900)]"
+      >
+        {t("appName")}
       </Link>
-      <NotificationBell />
+      <div className="flex items-center gap-3">
+        <LocaleSwitcher />
+        <NotificationBell />
+      </div>
     </header>
   );
 }

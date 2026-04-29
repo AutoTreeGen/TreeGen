@@ -94,3 +94,16 @@ repos:
       - id: conventional-pre-commit
         stages: [commit-msg]
         args: [feat, fix, docs, style, refactor, perf, test, chore, build, ci]
+
+  # ---- i18n: raw English JSX guard (Phase 4.13 / ADR-0037) ----
+  # Custom regex hook flagging raw English text nodes in authenticated-route
+  # .tsx files. Lightweight (no plugin install) — see scripts/check_i18n_strings.py
+  # for scope, allowlists and known limitations.
+  - repo: local
+    hooks:
+      - id: check-i18n-strings
+        name: check-i18n-strings (Phase 4.13)
+        entry: python scripts/check_i18n_strings.py
+        language: system
+        files: ^apps/web/src/(app/(dashboard|persons|dna|sources|hypotheses|familysearch|settings|trees)/.+|components/(site-header|notification-bell|error-message))\.tsx$
+        types: [file]

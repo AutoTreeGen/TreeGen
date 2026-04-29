@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,6 @@ import {
   fetchNotifications,
   markNotificationRead,
   notificationDeepLink,
-  notificationTitle,
 } from "@/lib/notifications-api";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +30,8 @@ import { cn } from "@/lib/utils";
  * Phase 4.x пробросит реальный user_id из session/JWT.
  */
 export function NotificationBell() {
+  const t = useTranslations("notifications");
+  const tCommon = useTranslations("common");
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -83,7 +85,7 @@ export function NotificationBell() {
       <Button
         variant="ghost"
         size="sm"
-        aria-label="Notifications"
+        aria-label={t("bellAria")}
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={() => setOpen((v) => !v)}
@@ -121,14 +123,16 @@ export function NotificationBell() {
               "font-medium text-[color:var(--color-ink-900)]",
             )}
           >
-            Notifications
+            {t("bellTitle")}
           </div>
 
           {isLoading ? (
-            <div className="px-3 py-4 text-sm text-[color:var(--color-ink-500)]">Loading…</div>
+            <div className="px-3 py-4 text-sm text-[color:var(--color-ink-500)]">
+              {tCommon("loading")}
+            </div>
           ) : items.length === 0 ? (
             <div className="px-3 py-4 text-sm text-[color:var(--color-ink-500)]">
-              You&rsquo;re all caught up.
+              {t("bellEmpty")}
             </div>
           ) : (
             <ul className="max-h-96 overflow-y-auto">
@@ -147,7 +151,7 @@ export function NotificationBell() {
                       )}
                     >
                       <span className="font-medium text-[color:var(--color-ink-900)]">
-                        {notificationTitle(notification)}
+                        {translateNotificationTitle(t, notification)}
                       </span>
                       <span className="text-xs text-[color:var(--color-ink-500)]">
                         {new Date(notification.created_at).toLocaleString()}
@@ -166,13 +170,30 @@ export function NotificationBell() {
                 "text-xs text-[color:var(--color-accent)] underline-offset-4 hover:underline",
               )}
             >
-              Notification settings
+              {t("bellSettingsLink")}
             </a>
           </div>
         </div>
       ) : null}
     </div>
   );
+}
+
+/**
+ * Phase 4.13: подменили `notificationTitle()` на i18n-aware вариант,
+ * читающий из `notifications.events.{event_type}`. Незнакомый event_type
+ * → возвращаем сам код (defensive: backend может отгрузить новый тип
+ * до обновления messages).
+ */
+function translateNotificationTitle(
+  t: ReturnType<typeof useTranslations>,
+  notification: NotificationSummary,
+): string {
+  try {
+    return t(`events.${notification.event_type}` as never);
+  } catch {
+    return notification.event_type;
+  }
 }
 
 function BellIcon() {

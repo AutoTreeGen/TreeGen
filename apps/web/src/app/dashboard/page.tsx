@@ -1,51 +1,45 @@
+import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getCurrentUserTreesCount } from "@/lib/dashboard-data";
 
 /**
  * Phase 4.12 — dashboard skeleton with empty-state redirect.
+ * Phase 4.13 — все строки переехали в `dashboard.*` namespace.
  *
- * Авторизованный лендинг для залогиненного пользователя. Если у user'а
- * 0 деревьев — редиректим на `/onboarding` (Phase 4.12 contract:
- * \"new user → wizard, never empty dashboard\").
+ * Если у user'а 0 деревьев — редиректим на `/onboarding` (ADR-0035 §«Empty state»).
  *
- * Phase 4.12 foundation: `getCurrentUserTreesCount()` — placeholder,
- * всегда возвращает 0 (нет ни auth'а, ни endpoint'а GET /users/me/trees).
- * Phase 4.10 / 4.13 заменят на реальный fetch — контракт страницы (если
- * 0 → редирект) при этом не меняется.
+ * `getCurrentUserTreesCount()` пока всегда возвращает 0 (нет auth'а
+ * и endpoint'а GET /users/me/trees) — Phase 4.10/4.13b заменят на
+ * реальный fetch без переписывания страницы.
  */
-
-import { getCurrentUserTreesCount } from "@/lib/dashboard-data";
-
 export default async function DashboardPage() {
   const treesCount = await getCurrentUserTreesCount();
   if (treesCount === 0) {
     redirect("/onboarding");
   }
+  return <DashboardView treesCount={treesCount} />;
+}
 
-  // Phase 4.12 foundation: ниже — заглушка, потому что без auth'а сюда
-  // мы вообще никогда не попадём с >0 деревьев. Контракт фиксирует
-  // структуру страницы, чтобы Phase 4.13 заменил placeholder без
-  // переписывания layout'а.
+function DashboardView({ treesCount }: { treesCount: number }) {
+  const t = useTranslations("dashboard");
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="mt-1 text-sm text-[color:var(--color-ink-500)]">
-          Phase 4.12 placeholder. Real tree list lands in Phase 4.13.
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+        <p className="mt-1 text-sm text-[color:var(--color-ink-500)]">{t("subtitleStub")}</p>
       </header>
       <Card>
         <CardHeader>
-          <CardTitle>You have {treesCount} tree(s)</CardTitle>
-          <CardDescription>
-            Phase 4.13 will populate this with the real list of trees you own or collaborate on.
-          </CardDescription>
+          <CardTitle>{t("treeCount", { count: treesCount })}</CardTitle>
+          <CardDescription>{t("treeCountDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           <Button variant="primary" size="md" asChild>
-            <a href="/onboarding">+ Start a new tree</a>
+            <Link href="/onboarding">{t("ctaNewTree")}</Link>
           </Button>
         </CardContent>
       </Card>

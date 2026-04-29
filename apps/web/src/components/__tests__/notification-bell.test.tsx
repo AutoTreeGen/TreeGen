@@ -1,13 +1,17 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { NotificationBell } from "@/components/notification-bell";
 import * as api from "@/lib/notifications-api";
+import enMessages from "../../../messages/en.json";
 
 /**
  * Vitest для bell + dropdown (Phase 8.0 wire-up).
+ * Phase 4.13: wrapped in NextIntlClientProvider — bell теперь читает
+ * `notifications.*` namespace через `useTranslations`.
  *
  * Mock'аем ``notifications-api`` целиком — компонент тестируется в
  * изоляции от сети. ``window.location.href`` подменяем, чтобы click
@@ -22,7 +26,11 @@ function wrapper({ children }: { children: ReactNode }) {
       mutations: { retry: false },
     },
   });
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  return (
+    <NextIntlClientProvider locale="en" messages={enMessages}>
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    </NextIntlClientProvider>
+  );
 }
 
 const sampleNotification: api.NotificationSummary = {
@@ -181,6 +189,6 @@ describe("NotificationBell", () => {
     });
     fireEvent.click(screen.getByTestId("notification-bell-button"));
 
-    expect(screen.getByText(/all caught up/i)).toBeInTheDocument();
+    expect(screen.getByText(/caught up/i)).toBeInTheDocument();
   });
 });
