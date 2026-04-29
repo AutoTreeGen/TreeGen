@@ -27,6 +27,11 @@ from shared_models.enums import (
     TreeVisibility,
     role_satisfies,
 )
+from shared_models.observability import (
+    CloudLoggingJSONFormatter,
+    configure_json_logging,
+    init_sentry,
+)
 
 __version__ = "0.1.0"
 
@@ -34,6 +39,7 @@ __all__ = [
     "ActorKind",
     "AuditAction",
     "Base",
+    "CloudLoggingJSONFormatter",
     "CollaboratorRole",
     "EntityStatus",
     "EventType",
@@ -44,6 +50,8 @@ __all__ = [
     "TreeRole",
     "TreeVisibility",
     "__version__",
+    "configure_json_logging",
+    "init_sentry",
     "is_audit_skipped",
     "register_audit_listeners",
     "role_satisfies",
