@@ -300,5 +300,36 @@
         "undoErrorUnknown": "Couldn't undo merge — try again."
       }
     }
+  },
+  "trees": {
+    "stats": {
+      "title": "Tree statistics",
+      "subtitle": "Aggregated counts and surname breakdown for this tree. Refreshed live — no caching.",
+      "backToTree": "Back to tree",
+      "loadError": "Couldn't load statistics",
+      "retry": "Try again",
+      "counts": {
+        "heading": "Counts",
+        "persons": "Persons",
+        "families": "Families",
+        "events": "Events",
+        "sources": "Sources",
+        "hypotheses": "Hypotheses",
+        "dnaMatches": "DNA matches",
+        "places": "Places",
+        "pedigreeDepth": "Pedigree depth",
+        "pedigreeDepthHint": "Longest parent → child chain (max 50)"
+      },
+      "oldest": {
+        "title": "Oldest known birth",
+        "description": "Earliest birth-year recorded across all persons in this tree.",
+        "empty": "No birth-year data yet."
+      },
+      "surnames": {
+        "title": "Top surnames",
+        "description": "Top 10 surnames by person count.",
+        "empty": "No surname data yet."
+      }
+    }
   }
 }
