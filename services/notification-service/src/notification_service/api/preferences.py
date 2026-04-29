@@ -1,6 +1,6 @@
-"""Notification preferences API (Phase 8.0 wire-up, ADR-0029).
+"""Notification preferences API (Phase 8.0 wire-up, ADR-0029 → 4.10 auth).
 
-End-user (auth = mock через ``X-User-Id`` header — Phase 4 заменит на JWT):
+End-user (Bearer JWT issued by Clerk — Phase 4.10, ADR-0033):
 
 * ``GET /users/me/notification-preferences`` — карта (event_type →
   enabled + channels) для всех известных типов; дефолты материализуются
@@ -13,12 +13,13 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from shared_models.enums import NotificationEventType
 from shared_models.orm import NotificationPreference
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from notification_service.auth import RequireUserId
 from notification_service.database import get_session
 from notification_service.schemas import (
     KNOWN_CHANNELS,
@@ -38,27 +39,6 @@ DEFAULT_ENABLED = True
 DEFAULT_CHANNELS: tuple[str, ...] = ("in_app", "log")
 
 
-def _resolve_user_id(x_user_id: str | None) -> int:
-    """Mock auth: вытащить user_id из ``X-User-Id`` header.
-
-    Дублирует логику из ``api/notifications.py``: реальный auth заменит
-    оба места одновременно. Не вытаскиваем в shared util — Phase 4
-    сделает один JWT-dependency.
-    """
-    if x_user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing X-User-Id header (mock auth — Phase 8.0).",
-        )
-    try:
-        return int(x_user_id)
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="X-User-Id must be a positive integer.",
-        ) from exc
-
-
 @router.get(
     "/users/me/notification-preferences",
     response_model=PreferenceListResponse,
@@ -66,7 +46,7 @@ def _resolve_user_id(x_user_id: str | None) -> int:
 )
 async def list_preferences(
     session: Annotated[AsyncSession, Depends(get_session)],
-    x_user_id: Annotated[str | None, Header(alias="X-User-Id")] = None,
+    user_id: RequireUserId,
 ) -> PreferenceListResponse:
     """Вернуть карту prefs для всех известных event_type'ов.
 
@@ -76,8 +56,6 @@ async def list_preferences(
     «наклацал» в settings — frontend не должен отслеживать
     «сохранил/не сохранил».
     """
-    user_id = _resolve_user_id(x_user_id)
-
     rows = (
         (
             await session.execute(
@@ -123,7 +101,7 @@ async def update_preference(
     event_type: str,
     body: PreferenceUpdateRequest,
     session: Annotated[AsyncSession, Depends(get_session)],
-    x_user_id: Annotated[str | None, Header(alias="X-User-Id")] = None,
+    user_id: RequireUserId,
 ) -> PreferenceUpdateResponse:
     """Upsert ``(user_id, event_type)`` row.
 
@@ -136,8 +114,6 @@ async def update_preference(
     * Каналы в ``channels`` — из ``KNOWN_CHANNELS`` (in_app, log).
       Неизвестный → 400.
     """
-    user_id = _resolve_user_id(x_user_id)
-
     if event_type not in {e.value for e in NotificationEventType}:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

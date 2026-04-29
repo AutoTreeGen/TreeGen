@@ -79,6 +79,10 @@ SERVICE_TABLES = {
     # Telegram chat. Service-level mapping, без tree_id и soft-delete —
     # revocation = revoked_at timestamp, не tombstone.
     "telegram_user_links",
+    # User-initiated GDPR/account requests (Phase 4.10b → processed in 4.11):
+    # erasure/export request log с status state machine. Service-level log,
+    # не доменная сущность дерева.
+    "user_action_requests",
 }
 
 TREE_ENTITY_TABLES = {

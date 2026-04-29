@@ -104,6 +104,37 @@ class Settings(BaseSettings):
         description="TTL приглашения в днях. По умолчанию 14 — баланс между удобством и риском.",
     )
 
+    # ---- Clerk authentication (Phase 4.10, ADR-0033) ------------------------
+    clerk_issuer: str = Field(
+        default="",
+        description=(
+            "Clerk issuer URL (например, "
+            "``https://accept-XXXX.clerk.accounts.dev``). Если пусто — "
+            "auth-зависимости вернут 503 и endpoint'ы недоступны. Для "
+            "тестов фикстуры монтируют свой issuer / JWKS."
+        ),
+    )
+    clerk_jwks_url: str = Field(
+        default="",
+        description=(
+            "Override JWKS URL. Пустая строка — берётся ``{issuer}/.well-known/jwks.json``."
+        ),
+    )
+    clerk_audience: str = Field(
+        default="",
+        description=(
+            "Optional ``aud``-claim. Пустая — пропускаем aud-проверку. "
+            "Frontend tokens Clerk без custom audience не несут aud."
+        ),
+    )
+    clerk_webhook_secret: str = Field(
+        default="",
+        description=(
+            "Svix-секрет (Clerk webhook signing). Если пусто — "
+            "``POST /webhooks/clerk`` отвергает все вызовы 503'ой."
+        ),
+    )
+
     model_config = SettingsConfigDict(
         env_prefix="PARSER_SERVICE_",
         env_file=".env",

@@ -138,10 +138,10 @@ async def test_list_invitations_owner_only(app_client, session_factory: Any) -> 
     tree = await _make_tree_with_owner_membership(session_factory, owner=owner)
 
     r = await app_client.get(f"/trees/{tree.id}/invitations", headers=_hdr(intruder))
-    assert r.status_code == 403
+    assert r.status_code == 403, f"intruder unexpected {r.status_code}: {r.text}"
 
     r = await app_client.get(f"/trees/{tree.id}/invitations", headers=_hdr(owner))
-    assert r.status_code == 200
+    assert r.status_code == 200, f"owner unexpected {r.status_code}: {r.text}"
     assert r.json()["items"] == []
 
 

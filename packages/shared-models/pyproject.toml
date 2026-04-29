@@ -21,6 +21,10 @@ dependencies = [
     "asyncpg>=0.30.0",
     "pgvector>=0.3.6",        # для будущих embeddings (Phase 10), импортируем тип сразу — миграция добавит позже
     # UUIDv7 реализован inline в shared_models.types (RFC 9562) — без внешней зависимости.
+    # Phase 4.10 (ADR-0033): JWT verification против Clerk JWKS.
+    # PyJWT — стандарт-де-факто, плюс crypto[backend] нужно для RS256.
+    "pyjwt[crypto]>=2.10.0",
+    "httpx>=0.27.0",          # JWKS fetch (тонкий wrapper, async).
 ]
 
 [project.optional-dependencies]

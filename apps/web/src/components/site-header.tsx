@@ -1,3 +1,4 @@
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
@@ -6,12 +7,12 @@ import { NotificationBell } from "@/components/notification-bell";
 import { cn } from "@/lib/utils";
 
 /**
- * Phase 4.13 — расширили шапку: добавили LocaleSwitcher (раньше жил
- * только на лендинге, теперь доступен везде, чтобы юзер мог переключить
- * язык не выходя на /).
+ * Минимальная верхняя плашка приложения.
  *
- * Phase 4.2 добавит реальную навигацию по деревьям + профиль user'а —
- * расширим, не переписывая.
+ * Phase 4.10 — Clerk auth: ``<UserButton>`` для signed-in, ``<SignInButton>``
+ * для signed-out. NotificationBell виден только signed-in.
+ * Phase 4.13 — добавлен LocaleSwitcher (виден всегда, чтобы можно было
+ * переключить язык до логина).
  */
 export function SiteHeader() {
   const t = useTranslations("header");
@@ -31,7 +32,20 @@ export function SiteHeader() {
       </Link>
       <div className="flex items-center gap-3">
         <LocaleSwitcher />
-        <NotificationBell />
+        <SignedIn>
+          <NotificationBell />
+          <UserButton afterSignOutUrl="/" />
+        </SignedIn>
+        <SignedOut>
+          <SignInButton mode="modal">
+            <button
+              type="button"
+              className="text-sm font-medium text-[color:var(--color-ink-900)] hover:underline"
+            >
+              Sign in
+            </button>
+          </SignInButton>
+        </SignedOut>
       </div>
     </header>
   );

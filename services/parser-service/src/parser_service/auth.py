@@ -1,30 +1,20 @@
-"""``current_user`` FastAPI-зависимость — temporary Phase 11.0 stub.
+"""Parser-service auth — Clerk JWT-based current-user resolution.
 
-Единая точка резолва текущего пользователя для permission-gate'ов
-(см. :mod:`parser_service.services.permissions`). До Phase 4.10
-полноценного Clerk JWT verify нет; стаб работает по двум путям:
+Объединяет Phase 4.10 Clerk-flow (RequireUser, RequireClaims) и Phase 11.0
+permission-gate API (CurrentUser → возврат полной :class:`User`-row).
 
-1. **Заголовок ``X-User-Id``** — UUID существующего ``users.id``. Используется
-   тестами и тулзингом, чтобы быстро притвориться разными пользователями
-   без поднятия SSO. Если UUID не находится в БД — 401.
-2. **Fallback ``settings.owner_email``** — ищет/создаёт one-and-only owner-user.
-   Исторический single-tenant режим из Phase 5.1 (ADR-0027). Используется
-   локальным dev-сервером, где dev один-в-один с владельцем.
+Контракт:
 
-Контракт стабильный: ``Annotated[User, Depends(get_current_user)]`` — Phase 4.10
-заменит реализацию (Clerk verify → DB-lookup по ``external_auth_id``), но
-сигнатура и тип возврата неизменны. Все call-site'ы Phase 11.0 уже используют
-эту зависимость, так что переход — только тело функции.
+* :data:`RequireClaims` (``Annotated[ClerkClaims, Depends(...)]``) —
+  validated JWT-claims.
+* :data:`RequireUser` (``Annotated[uuid.UUID, Depends(...)]``) — only
+  ``users.id``; для большинства endpoint'ов достаточно.
+* :data:`CurrentUser` (``Annotated[User, Depends(...)]``) — полная row;
+  используется permission-gate'ами Phase 11.0 (нужны ``email``,
+  ``locale``, ``deleted_at``, ...).
 
-Пример::
-
-    from typing import Annotated
-    from fastapi import Depends
-    from parser_service.auth import get_current_user
-
-    @router.post("/whoami")
-    async def whoami(user: Annotated[User, Depends(get_current_user)]) -> dict[str, str]:
-        return {"email": user.email}
+503 если ``clerk_issuer`` не задан в env — fail-safe от
+misconfigured-окружения молча выпускающего unauthenticated user'ов.
 """
 
 from __future__ import annotations
@@ -32,79 +22,108 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
+from shared_models.auth import (
+    ClerkClaims,
+    ClerkJwtSettings,
+)
+from shared_models.auth import (
+    get_current_claims as _get_current_claims_unbound,
+)
+from shared_models.auth import (
+    get_current_claims_optional as _get_current_claims_optional_unbound,
+)
 from shared_models.orm import User
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from parser_service.config import Settings, get_settings
 from parser_service.database import get_session
+from parser_service.services.user_sync import (
+    get_or_create_user_from_clerk,
+    get_user_id_from_clerk,
+)
 
 
-async def _ensure_owner_user(session: AsyncSession, email: str) -> User:
-    """Найти/создать owner-user по email — fallback-путь.
+def get_clerk_settings(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> ClerkJwtSettings:
+    """Собрать :class:`ClerkJwtSettings` из ``parser_service.config.Settings``.
 
-    Делает то же что и legacy ``_ensure_owner`` из ``api.imports`` /
-    ``api.familysearch``; в Phase 11.0 эти хелперы должны быть удалены и
-    заменены на :func:`get_current_user`. До этой замены оба пути работают
-    параллельно и идемпотентны (берут одного и того же пользователя по
-    уникальному email).
+    503 если ``clerk_issuer`` не задан в env.
     """
-    res = await session.execute(select(User).where(User.email == email))
-    user = res.scalar_one_or_none()
-    if user is not None:
-        return user
-    user = User(
-        email=email,
-        external_auth_id=f"local:{email}",
-        display_name=email.split("@", maxsplit=1)[0],
-        locale="en",
+    if not settings.clerk_issuer:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Clerk authentication not configured: PARSER_SERVICE_CLERK_ISSUER is empty.",
+        )
+    return ClerkJwtSettings(
+        issuer=settings.clerk_issuer,
+        jwks_url=settings.clerk_jwks_url or None,
+        audience=settings.clerk_audience or None,
     )
-    session.add(user)
-    await session.flush()
-    return user
+
+
+async def get_current_claims(
+    request: Request,
+    clerk_settings: Annotated[ClerkJwtSettings, Depends(get_clerk_settings)],
+) -> ClerkClaims:
+    """401 если Bearer JWT отсутствует или не валиден."""
+    return await _get_current_claims_unbound(request, clerk_settings)
+
+
+async def get_current_claims_optional(
+    request: Request,
+    clerk_settings: Annotated[ClerkJwtSettings, Depends(get_clerk_settings)],
+) -> ClerkClaims | None:
+    """None если Bearer header не пришёл; 401 при невалидном."""
+    return await _get_current_claims_optional_unbound(request, clerk_settings)
+
+
+async def get_current_user_id(
+    claims: Annotated[ClerkClaims, Depends(get_current_claims)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> uuid.UUID:
+    """Вернуть ``users.id`` UUID, JIT-создавая row если её ещё нет."""
+    return await get_user_id_from_clerk(session, claims)
 
 
 async def get_current_user(
+    claims: Annotated[ClerkClaims, Depends(get_current_claims)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    settings: Annotated[Settings, Depends(get_settings)],
-    x_user_id: Annotated[str | None, Header(alias="X-User-Id")] = None,
 ) -> User:
-    """Резолвит текущего пользователя.
+    """Вернуть полную :class:`User` row (JIT-создаётся при необходимости).
 
-    TODO Phase 4.10 — заменить на Clerk JWT verify (signature stable):
-    извлекать ``Authorization: Bearer <jwt>``, верифицировать через Clerk
-    JWKS, искать ``users.external_auth_id == jwt.sub`` (или создавать
-    при первом login'е). Тело функции меняется, return type и название
-    параметра ``user`` в роутах остаются.
+    Используется permission-gate'ами Phase 11.0 (см.
+    ``parser_service.services.permissions``), которым нужны не только
+    UUID, но и email/locale/deleted_at для policy-decisions.
 
-    Сейчас:
-
-    * ``X-User-Id`` указан → ищем по UUID, 401 если не найден.
-    * Иначе → ``settings.owner_email``, find-or-create.
-
-    Raises:
-        HTTPException 401: ``X-User-Id`` указан, но не валидный UUID или не существует.
+    На production hot-path предпочитайте :func:`get_current_user_id` —
+    он возвращает только UUID и не материализует row, если row уже
+    существует. Этот хелпер всегда делает round-trip в DB.
     """
-    if x_user_id:
-        try:
-            user_uuid = uuid.UUID(x_user_id)
-        except ValueError as exc:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="X-User-Id is not a valid UUID",
-            ) from exc
-        res = await session.execute(select(User).where(User.id == user_uuid))
-        user = res.scalar_one_or_none()
-        if user is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"User {user_uuid} not found",
-            )
-        return user
-
-    return await _ensure_owner_user(session, settings.owner_email)
+    return await get_or_create_user_from_clerk(session, claims)
 
 
+# Type aliases — один импорт вместо длинной Annotated-цепочки.
+RequireUser = Annotated[uuid.UUID, Depends(get_current_user_id)]
+RequireClaims = Annotated[ClerkClaims, Depends(get_current_claims)]
+OptionalClaims = Annotated[ClerkClaims | None, Depends(get_current_claims_optional)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
-"""Type alias для роутов: ``user: CurrentUser`` короче, чем длинный Annotated."""
+
+
+__all__ = [
+    "CurrentUser",
+    "OptionalClaims",
+    "RequireClaims",
+    "RequireUser",
+    "get_clerk_settings",
+    "get_current_claims",
+    "get_current_claims_optional",
+    "get_current_user",
+    "get_current_user_id",
+]
+
+
+# Suppress F401 for select used only in legacy paths historically.
+_ = select
