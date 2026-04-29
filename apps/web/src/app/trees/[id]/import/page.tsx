@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
@@ -42,6 +43,7 @@ const STAGE_LABELS: Record<ImportStage, string> = {
 };
 
 export default function ImportPage() {
+  const t = useTranslations("trees.import");
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const treeId = params.id;
@@ -112,7 +114,7 @@ export default function ImportPage() {
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/trees/${treeId}/persons`}>← Back to persons</Link>
         </Button>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight">Import GEDCOM</h1>
+        <h1 className="mt-3 text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="mt-1 text-sm text-[color:var(--color-ink-500)]">
           Upload a .ged or .gedcom file. The parser runs in the background; this page subscribes to
           live progress updates.
@@ -164,10 +166,11 @@ function UploadForm({
   onFileChange: (file: File | null) => void;
   onSubmit: (e: FormEvent) => void;
 }) {
+  const t = useTranslations("trees.import");
   return (
     <Card>
       <CardHeader>
-        <CardTitle>New import</CardTitle>
+        <CardTitle>{t("newImport")}</CardTitle>
         <CardDescription>
           Files are limited to the parser-service&apos;s configured upload size (default
           ~150&nbsp;MB).
@@ -257,11 +260,12 @@ function ProgressCard({
   sseError: Error | null;
   retries: number;
 }) {
+  const t = useTranslations("trees.import");
   if (stage === "FAILED") {
     return (
       <Card className="border-red-200 ring-red-200">
         <CardHeader>
-          <CardTitle>Import failed</CardTitle>
+          <CardTitle>{t("importFailed")}</CardTitle>
           <CardDescription>
             {job.error ?? "The import worker reported a failure. See server logs for details."}
           </CardDescription>

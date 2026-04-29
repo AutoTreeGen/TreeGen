@@ -14,6 +14,7 @@
  */
 
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { type ChangeEvent, useState } from "react";
@@ -26,6 +27,7 @@ import { ApiError, fetchFamilySearchPreview, startFamilySearchImport } from "@/l
 const DEFAULT_GENERATIONS = 4;
 
 export default function FamilySearchPreviewPage() {
+  const t = useTranslations("familysearch.preview");
   const params = useParams<{ fsPersonId: string }>();
   const search = useSearchParams();
   const router = useRouter();
@@ -62,7 +64,7 @@ export default function FamilySearchPreviewPage() {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/familysearch/connect">← Back to FamilySearch</Link>
         </Button>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight">Preview pedigree</h1>
+        <h1 className="mt-3 text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="mt-1 text-sm text-[color:var(--color-ink-500)]">
           We&apos;ll fetch your ancestors from FamilySearch read-only first. Nothing is written to
           your local tree until you click Confirm.
@@ -71,7 +73,7 @@ export default function FamilySearchPreviewPage() {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Import settings</CardTitle>
+          <CardTitle>{t("importSettings")}</CardTitle>
           <CardDescription>
             Focus persona <span className="font-mono">{fsPersonId || "—"}</span>
           </CardDescription>
@@ -101,7 +103,7 @@ export default function FamilySearchPreviewPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Pedigree summary</CardTitle>
+          <CardTitle>{t("pedigreeSummary")}</CardTitle>
           <CardDescription>
             {preview.isLoading
               ? "Fetching from FamilySearch…"

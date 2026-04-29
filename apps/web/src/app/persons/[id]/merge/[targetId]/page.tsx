@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -30,6 +31,7 @@ function makeConfirmToken(): string {
 }
 
 export default function MergePage() {
+  const t = useTranslations("persons.mergeRoute");
   const router = useRouter();
   const params = useParams<{ id: string; targetId: string }>();
   const searchParams = useSearchParams();
@@ -82,7 +84,7 @@ export default function MergePage() {
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/persons/${personId}`}>← Back to person</Link>
         </Button>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight">Merge two persons</h1>
+        <h1 className="mt-3 text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="mt-1 max-w-2xl text-sm text-[color:var(--color-ink-500)]">
           Manual review only — CLAUDE.md §5 forbids auto-merge for close kin. The system will{" "}
           <strong>soft-delete</strong> the merged person and give you 90 days to undo from{" "}

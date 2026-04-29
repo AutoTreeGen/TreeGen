@@ -5,6 +5,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -87,6 +88,7 @@ function DetailView({
   match: DnaMatchDetail;
   onUpdate: (next: DnaMatchDetail) => void;
 }) {
+  const t = useTranslations("dna.matchDetail");
   const display = match.display_name ?? match.external_match_id ?? `match ${match.id.slice(0, 8)}`;
 
   return (
@@ -126,7 +128,7 @@ function DetailView({
       </Card>
 
       <section aria-label="Chromosome painting">
-        <h2 className="mb-2 text-lg font-semibold">Chromosome painting</h2>
+        <h2 className="mb-2 text-lg font-semibold">{t("chromosomePainting")}</h2>
         {match.segments.length === 0 ? (
           <p className="text-sm text-[color:var(--color-ink-500)]">
             No shared-segment data was imported for this match. Run a segments import (CSV) to see
@@ -169,6 +171,7 @@ function LinkPersonSection({
   match: DnaMatchDetail;
   onUpdate: (next: DnaMatchDetail) => void;
 }) {
+  const t = useTranslations("dna.matchDetail");
   const [personIdInput, setPersonIdInput] = useState("");
 
   const linkMutation = useMutation({
@@ -195,7 +198,7 @@ function LinkPersonSection({
       aria-label="Link to person"
       className="rounded-md border border-[color:var(--color-border)] p-4"
     >
-      <h2 className="text-lg font-semibold">Link to a person in your tree</h2>
+      <h2 className="text-lg font-semibold">{t("linkToPerson")}</h2>
       <p className="mt-1 text-xs text-[color:var(--color-ink-500)]">
         Linking attaches this match to an existing person record. The server refuses cross-tree
         links (privacy: ADR-0012).

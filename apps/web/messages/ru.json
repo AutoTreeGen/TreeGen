@@ -1,9 +1,4 @@
 {
-  "access": {
-    "title": "Доступ к дереву",
-    "noPendingInvitations": "Нет ожидающих приглашений.",
-    "transferOwnership": "Передать владельца"
-  },
   "common": {
     "appName": "AutoTreeGen",
     "tagline": "Доказательная генеалогия со скоростью мысли",
@@ -203,7 +198,61 @@
     "banner": "Вы офлайн. Изменения отправятся, когда соединение восстановится.",
     "reconnected": "Соединение восстановлено."
   },
+  "dna": {
+    "matchDetail": {
+      "chromosomePainting": "Раскраска хромосом",
+      "linkToPerson": "Связать с персоной в дереве"
+    },
+    "list": {
+      "title": "ДНК-наборы",
+      "noKits": "Наборов пока нет",
+      "noUserSelected": "Пользователь не выбран"
+    },
+    "kitMatches": {
+      "title": "ДНК-совпадения",
+      "minCm": "Мин. cM",
+      "totalCm": "Всего cM"
+    }
+  },
+  "familysearch": {
+    "connect": {
+      "title": "Подключить FamilySearch",
+      "accountStatus": "Статус аккаунта"
+    },
+    "importStatus": {
+      "title": "Импорт FamilySearch",
+      "importFailed": "Импорт не удался",
+      "tryAgain": "Попробовать снова"
+    },
+    "preview": {
+      "title": "Просмотр родословной",
+      "importSettings": "Параметры импорта",
+      "pedigreeSummary": "Сводка родословной"
+    }
+  },
+  "hypotheses": {
+    "detail": {
+      "compositeConfidence": "Сводная уверенность",
+      "noEvidence": "Доказательств нет"
+    }
+  },
+  "sources": {
+    "detail": {
+      "gedcomTextPreserved": "GEDCOM TEXT сохранён при импорте."
+    }
+  },
   "persons": {
+    "mergeRoute": {
+      "title": "Объединить две персоны"
+    },
+    "detail": {
+      "noEvents": "События не записаны.",
+      "noCitations": "Цитирования не записаны."
+    },
+    "tree": {
+      "title": "Семейное дерево",
+      "noAncestors": "Предки ещё не записаны"
+    },
     "merge": {
       "title": "Объединение двух персон (ручная проверка)",
       "subtitle": "Сравните конфликтующие поля стороны к стороне. Бэкенд использует одного survivor'а; ваш выбор по полям определяет, какая сторона побеждает в целом. Soft-delete можно откатить в течение 90 дней.",
@@ -307,6 +356,17 @@
     }
   },
   "trees": {
+    "hypotheses": {
+      "noMatching": "Гипотезы не найдены"
+    },
+    "import": {
+      "title": "Импорт GEDCOM",
+      "newImport": "Новый импорт",
+      "importFailed": "Импорт не удался"
+    },
+    "persons": {
+      "searchFailed": "Поиск не удался"
+    },
     "stats": {
       "title": "Статистика дерева",
       "subtitle": "Агрегированные счётчики и распределение фамилий для этого дерева. Обновляется на лету — без кеша.",
@@ -335,6 +395,14 @@
         "description": "Топ-10 фамилий по количеству персон.",
         "empty": "Данных о фамилиях пока нет."
       }
+    },
+    "access": {
+      "title": "Доступ к дереву",
+      "noPendingInvitations": "Нет ожидающих приглашений.",
+      "transferOwnership": "Передать владельца"
+    },
+    "duplicates": {
+      "title": "Возможные дубликаты"
     }
   }
 }

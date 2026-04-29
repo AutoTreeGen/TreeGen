@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -66,6 +67,7 @@ function parseConfidence(raw: string | null): number {
 }
 
 export default function HypothesesListPage() {
+  const t = useTranslations("trees.hypotheses");
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -236,7 +238,7 @@ export default function HypothesesListPage() {
       {data && data.items.length === 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle>No matching hypotheses</CardTitle>
+            <CardTitle>{t("noMatching")}</CardTitle>
             <CardDescription>
               {status === "pending"
                 ? "Nothing pending right now. Inference rules generate hypotheses on import; check back after the next compute run."

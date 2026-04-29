@@ -9,6 +9,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -24,6 +25,7 @@ import { type DnaMatchListItem, fetchDnaMatches } from "@/lib/dna-api";
 const PAGE_SIZE = 50;
 
 export default function DnaKitMatchesPage() {
+  const t = useTranslations("dna.kitMatches");
   const params = useParams<{ kitId: string }>();
   const kitId = params.kitId;
   const [minCmInput, setMinCmInput] = useState<string>("20");
@@ -66,7 +68,7 @@ export default function DnaKitMatchesPage() {
     <main className="mx-auto max-w-5xl px-6 py-10">
       <header className="mb-6 flex flex-wrap items-baseline justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">DNA matches</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
           <p className="mt-1 text-sm text-[color:var(--color-ink-500)]">
             kit <span className="font-mono text-xs">{kitId.slice(0, 8)}</span>
           </p>
@@ -135,6 +137,7 @@ function FiltersRow({
   onApply: () => void;
   disabled: boolean;
 }) {
+  const t = useTranslations("dna.kitMatches");
   return (
     <form
       onSubmit={(e) => {
@@ -144,7 +147,9 @@ function FiltersRow({
       className="flex flex-wrap items-end gap-3 rounded-md border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4"
     >
       <label htmlFor="dna-min-cm" className="flex flex-col gap-1 text-xs">
-        <span className="uppercase tracking-wide text-[color:var(--color-ink-500)]">Min cM</span>
+        <span className="uppercase tracking-wide text-[color:var(--color-ink-500)]">
+          {t("minCm")}
+        </span>
         <Input
           id="dna-min-cm"
           type="number"
@@ -176,6 +181,7 @@ function FiltersRow({
 }
 
 function MatchesTable({ items }: { items: DnaMatchListItem[] }) {
+  const t = useTranslations("dna.kitMatches");
   if (items.length === 0) {
     return (
       <p className="mt-6 text-sm text-[color:var(--color-ink-500)]">
@@ -189,7 +195,7 @@ function MatchesTable({ items }: { items: DnaMatchListItem[] }) {
         <thead className="bg-[color:var(--color-surface-muted)] text-left text-xs uppercase tracking-wide text-[color:var(--color-ink-500)]">
           <tr>
             <th className="px-3 py-2">Name</th>
-            <th className="px-3 py-2">Total cM</th>
+            <th className="px-3 py-2">{t("totalCm")}</th>
             <th className="px-3 py-2">Longest</th>
             <th className="px-3 py-2">Segments</th>
             <th className="px-3 py-2">Predicted</th>

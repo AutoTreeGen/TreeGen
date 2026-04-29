@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -179,6 +180,7 @@ function SubjectCard({ label, type, id }: { label: string; type: string; id: str
 }
 
 function ScoreSection({ hypothesis }: { hypothesis: HypothesisResponse }) {
+  const t = useTranslations("hypotheses.detail");
   const pct = Math.round(hypothesis.composite_score * 100);
   const color =
     hypothesis.composite_score >= 0.7
@@ -190,7 +192,7 @@ function ScoreSection({ hypothesis }: { hypothesis: HypothesisResponse }) {
     <section aria-label="Score" className="mb-6">
       <Card>
         <CardHeader>
-          <CardDescription>Composite confidence</CardDescription>
+          <CardDescription>{t("compositeConfidence")}</CardDescription>
           <CardTitle className="text-3xl font-bold">
             {hypothesis.composite_score.toFixed(2)}
           </CardTitle>
@@ -220,6 +222,7 @@ function ScoreSection({ hypothesis }: { hypothesis: HypothesisResponse }) {
 }
 
 function EvidenceSection({ evidences }: { evidences: HypothesisEvidence[] }) {
+  const t = useTranslations("hypotheses.detail");
   // Группируем по rule_id — внутри одной "карты evidence" могут быть SUPPORTS
   // и CONTRADICTS от одного rule (например, surname rule выдаёт оба для разных
   // имён персоны). Группировка делает breakdown компактнее.
@@ -238,7 +241,7 @@ function EvidenceSection({ evidences }: { evidences: HypothesisEvidence[] }) {
       <section aria-label="Evidence" className="mb-6">
         <Card>
           <CardHeader>
-            <CardTitle>No evidence</CardTitle>
+            <CardTitle>{t("noEvidence")}</CardTitle>
             <CardDescription>
               This hypothesis was persisted without supporting evidences. Likely the rule version
               changed since it was generated; consider re-running compute.

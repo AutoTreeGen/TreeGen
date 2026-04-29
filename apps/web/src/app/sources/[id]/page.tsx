@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -34,6 +35,7 @@ export default function SourceDetailPage() {
 }
 
 function SourceDetailView({ source }: { source: SourceDetail }) {
+  const t = useTranslations("sources.detail");
   const persons = source.linked.filter((l) => l.table === "person");
   const families = source.linked.filter((l) => l.table === "family");
   const events = source.linked.filter((l) => l.table === "event");
@@ -91,7 +93,7 @@ function SourceDetailView({ source }: { source: SourceDetail }) {
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">Excerpt</CardTitle>
-            <CardDescription>GEDCOM TEXT preserved at import.</CardDescription>
+            <CardDescription>{t("gedcomTextPreserved")}</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-[color:var(--color-ink-700)]">

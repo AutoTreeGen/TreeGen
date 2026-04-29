@@ -11,6 +11,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef } from "react";
@@ -40,6 +41,7 @@ const STAGE_LABELS: Record<ImportStage, string> = {
 };
 
 export default function FamilySearchImportPage() {
+  const t = useTranslations("familysearch.importStatus");
   const params = useParams<{ importJobId: string }>();
   const router = useRouter();
   const importJobId = params.importJobId;
@@ -91,7 +93,7 @@ export default function FamilySearchImportPage() {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/familysearch/connect">← FamilySearch</Link>
         </Button>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight">FamilySearch import</h1>
+        <h1 className="mt-3 text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="mt-1 text-sm text-[color:var(--color-ink-500)]">
           Job <span className="font-mono">{importJobId}</span>
         </p>
@@ -100,14 +102,14 @@ export default function FamilySearchImportPage() {
       {stage === "FAILED" ? (
         <Card className="border-red-200 ring-red-200">
           <CardHeader>
-            <CardTitle>Import failed</CardTitle>
+            <CardTitle>{t("importFailed")}</CardTitle>
             <CardDescription>
               {job.data?.error ?? "The worker reported a failure. Check server logs for details."}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-end">
             <Button variant="primary" size="sm" asChild>
-              <Link href="/familysearch/connect">Try again</Link>
+              <Link href="/familysearch/connect">{t("tryAgain")}</Link>
             </Button>
           </CardContent>
         </Card>

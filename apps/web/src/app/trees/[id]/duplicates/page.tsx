@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
@@ -28,6 +29,7 @@ function clampConfidence(raw: string | null): number {
 }
 
 export default function DuplicatesPage() {
+  const t = useTranslations("trees.duplicates");
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,7 +59,7 @@ export default function DuplicatesPage() {
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/trees/${treeId}/persons`}>← Back to persons</Link>
         </Button>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight">Duplicate suggestions</h1>
+        <h1 className="mt-3 text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="mt-1 max-w-2xl text-sm text-[color:var(--color-ink-500)]">
           Read-only review of likely duplicates. No automatic merge — manual approval lands in Phase
           4.6 (CLAUDE.md §5: close-kin auto-merge is forbidden by design).
