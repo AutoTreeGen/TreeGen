@@ -53,6 +53,16 @@ cloud-tasks = [
     "google-cloud-tasks>=2.16",
 ]
 
+# Phase 4.11a — GDPR export storage backends (см. ADR-0046).
+# Dev/local: `--extra storage-minio` (docker-compose уже поднимает MinIO).
+# Prod: `--extra storage-gcs`. Тесты используют InMemoryStorage без extras.
+storage-minio = [
+    "shared-models[storage-minio]",
+]
+storage-gcs = [
+    "shared-models[storage-gcs]",
+]
+
 [build-system]
 requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"

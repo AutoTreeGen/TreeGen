@@ -34,6 +34,17 @@ test = [
     "testcontainers[postgres]>=4.8",
     "psycopg[binary]>=3.2",
 ]
+# Phase 4.11a — GDPR export storage backends. Lazy-imported в
+# shared_models.storage; устанавливаются по необходимости (CI / dev /
+# prod выбирает один). Тесты используют InMemoryStorage без extras.
+storage-minio = [
+    "boto3>=1.35",     # MinIO + AWS S3 (signature_version="s3v4").
+    "anyio>=4.6",      # to_thread.run_sync для sync boto3-клиента.
+]
+storage-gcs = [
+    "google-cloud-storage>=2.18",
+    "anyio>=4.6",
+]
 
 [build-system]
 requires = ["hatchling"]

@@ -163,13 +163,33 @@ class SourceType(StrEnum):
 
 
 class AuditAction(StrEnum):
-    """Действие, зафиксированное в audit_log."""
+    """Действие, зафиксированное в audit_log.
+
+    Базовые domain-значения (``INSERT/UPDATE/DELETE/RESTORE/MERGE``) пишет
+    автоматический listener в :mod:`shared_models.audit` для записей дерева.
+
+    Phase 4.11a добавил user-level GDPR-action'ы (``EXPORT_*``,
+    ``ERASURE_REQUESTED``). Они записываются вручную из worker'а /
+    endpoint'а с ``tree_id=NULL`` (см. ADR-0046, миграция 0021): GDPR-
+    запросы пользователя не привязаны к конкретному дереву, поэтому
+    auto-listener (который требует ``tree_id``) их не видит.
+    """
 
     INSERT = "insert"
     UPDATE = "update"
     DELETE = "delete"
     RESTORE = "restore"
     MERGE = "merge"
+
+    # Phase 4.11a — GDPR right-of-access / right-of-portability (Art. 15/20).
+    EXPORT_REQUESTED = "export_requested"
+    EXPORT_PROCESSING = "export_processing"
+    EXPORT_COMPLETED = "export_completed"
+    EXPORT_FAILED = "export_failed"
+
+    # Phase 4.11b/c — GDPR right-of-erasure (Art. 17). Stub только request-side
+    # (Phase 4.10b создаёт user_action_request); processing — отдельная фаза.
+    ERASURE_REQUESTED = "erasure_requested"
 
 
 class ActorKind(StrEnum):
@@ -407,6 +427,8 @@ class EmailKind(StrEnum):
     WELCOME = "welcome"
     PAYMENT_SUCCEEDED = "payment_succeeded"
     PAYMENT_FAILED = "payment_failed"
+    # Phase 4.11a — async GDPR data export готов к скачиванию.
+    EXPORT_READY = "export_ready"
 
 
 class EmailSendStatus(StrEnum):

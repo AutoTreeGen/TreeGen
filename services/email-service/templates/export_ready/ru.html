@@ -1,0 +1,28 @@
+{% extends "_base.html" %}
+{% block content %}
+<h1 style="font-size:22px;margin:0 0 16px 0;font-weight:normal;">Ваш экспорт данных готов, {{ user_display_name }}.</h1>
+<p>Ваш экспорт данных из {{ brand_name }} готов к скачиванию.</p>
+<p style="margin-top:24px;">
+  <a href="{{ export_url }}" style="background:#A14E2A;color:#fff;padding:12px 20px;text-decoration:none;border-radius:6px;display:inline-block;">Скачать архив</a>
+</p>
+<p style="font-size:13px;color:#666;margin-top:16px;">
+  Размер: {{ export_size_bytes }} байт &middot; Формат: {{ export_format }}
+</p>
+<p style="margin-top:24px;">
+  Ссылка действительна 15 минут — это сделано в целях безопасности.
+  Если она истекла, зайдите на <a href="{{ web_base_url }}/settings" style="color:#A14E2A;">{{ web_base_url }}/settings</a>
+  и в разделе <em>Ваши запросы</em> получите свежую ссылку. Сам файл
+  хранится 30 дней.
+</p>
+<p>
+  Экспорт — один ZIP-архив с вашим профилем, деревьями, которыми вы
+  владеете, метаданными ДНК-тестов, историей действий и manifest-файлом,
+  описывающим содержимое. Зашифрованные DNA-сегменты намеренно не
+  включены &mdash; при необходимости их можно повторно выгрузить с
+  оригинальной платформы.
+</p>
+<p style="font-size:13px;color:#888;margin-top:24px;">
+  Если вы не запрашивали экспорт, срочно напишите на
+  <a href="mailto:{{ support_email }}" style="color:#A14E2A;">{{ support_email }}</a>.
+</p>
+{% endblock %}

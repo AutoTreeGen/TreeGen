@@ -135,6 +135,51 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ---- Phase 4.11a — GDPR export (ADR-0046) ------------------------------
+    export_signing_key: str = Field(
+        default="",
+        description=(
+            "HMAC-секрет для подписи /users/me/requests/{id}/download "
+            "токенов. Пустая строка — токен-валидация откатывается на raw "
+            "user_id eq check (downgraded auth — нельзя в проде, тесты OK). "
+            "Сгенерировать: `python -c 'import secrets;"
+            " print(secrets.token_urlsafe(32))'`."
+        ),
+    )
+    export_url_ttl_seconds: int = Field(
+        default=900,
+        ge=60,
+        le=3600,
+        description=(
+            "TTL signed-URL'а для скачивания экспорта (15 мин по дефолту). "
+            "Короткий — чтобы compromised email-пересылка не давала "
+            "длинного окна доступа. Bucket-policy TTL длиннее (см. "
+            "``export_object_ttl_days``), потому что user может запросить "
+            "новый signed-URL пока сам zip ещё лежит."
+        ),
+    )
+    export_object_ttl_days: int = Field(
+        default=30,
+        ge=1,
+        le=365,
+        description=(
+            "TTL самого ZIP-файла в bucket'е (дни). Применяется через "
+            "object lifecycle policy на bucket-уровне (не из application). "
+            "30 дней — стандарт GDPR retention для пользовательских "
+            "exports (Art. 17 vs Art. 20 баланс)."
+        ),
+    )
+    export_max_zip_size_mb: int = Field(
+        default=500,
+        ge=1,
+        description=(
+            "Soft-cap для размера сгенерированного ZIP. Если превышен, "
+            "worker помечает request failed с пояснением — пользователь "
+            "может попробовать subset через filter (Phase 4.11b) или "
+            "связаться с support'ом."
+        ),
+    )
+
     model_config = SettingsConfigDict(
         env_prefix="PARSER_SERVICE_",
         env_file=".env",

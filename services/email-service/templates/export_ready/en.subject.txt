@@ -1,0 +1,1 @@
+Your {{ brand_name }} data export is ready

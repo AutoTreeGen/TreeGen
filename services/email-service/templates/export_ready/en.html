@@ -1,0 +1,25 @@
+{% extends "_base.html" %}
+{% block content %}
+<h1 style="font-size:22px;margin:0 0 16px 0;font-weight:normal;">Your data export is ready, {{ user_display_name }}.</h1>
+<p>Your data export from {{ brand_name }} is ready to download.</p>
+<p style="margin-top:24px;">
+  <a href="{{ export_url }}" style="background:#A14E2A;color:#fff;padding:12px 20px;text-decoration:none;border-radius:6px;display:inline-block;">Download your export</a>
+</p>
+<p style="font-size:13px;color:#666;margin-top:16px;">
+  Size: {{ export_size_bytes }} bytes &middot; Format: {{ export_format }}
+</p>
+<p style="margin-top:24px;">
+  The download link expires in 15 minutes for your security. If it expires
+  before you click it, sign in at <a href="{{ web_base_url }}/settings" style="color:#A14E2A;">{{ web_base_url }}/settings</a>
+  and request a fresh link from <em>Your requests</em> &mdash; the file itself is kept for 30 days.
+</p>
+<p>
+  The export is a single ZIP containing your profile, the trees you own,
+  your DNA test metadata, your action history, and a manifest describing
+  everything inside. Encrypted DNA segment data is intentionally not
+  included &mdash; you can re-export it from the original provider if needed.
+</p>
+<p style="font-size:13px;color:#888;margin-top:24px;">
+  If you didn't request this, contact <a href="mailto:{{ support_email }}" style="color:#A14E2A;">{{ support_email }}</a> immediately.
+</p>
+{% endblock %}
