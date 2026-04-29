@@ -87,6 +87,17 @@ SERVICE_TABLES = {
     # links к дереву. Sharing-artifact как tree_memberships/tree_invitations,
     # не доменная сущность — не требует provenance/version_id/soft-delete.
     "public_tree_shares",
+    # Stripe customer mapping (Phase 12.0 / ADR-0042): user → stripe_customer_id
+    # one-to-one. Service-level mapping, без soft-delete — revocation = hard delete
+    # после account deletion.
+    "stripe_customers",
+    # Subscription state (Phase 12.0 / ADR-0042): canonical billing state per user.
+    # Мутируется ТОЛЬКО webhook'ами (никогда не application-side). Без soft-delete —
+    # canceled — это status, не tombstone.
+    "subscriptions",
+    # Stripe webhook idempotency log (Phase 12.0 / ADR-0042): stripe_event_id UNIQUE
+    # для idempotent dispatch. Audit trail, без soft-delete.
+    "stripe_event_log",
 }
 
 TREE_ENTITY_TABLES = {

@@ -32,6 +32,9 @@ from shared_models.orm.place import Place, PlaceAlias
 from shared_models.orm.public_tree_share import PublicTreeShare
 from shared_models.orm.shared_match import SharedMatch
 from shared_models.orm.source import Source
+from shared_models.orm.stripe_customer import StripeCustomer
+from shared_models.orm.stripe_event_log import StripeEventLog
+from shared_models.orm.subscription import Subscription
 from shared_models.orm.telegram_user_link import TelegramUserLink
 from shared_models.orm.tree import Tree, TreeCollaborator
 from shared_models.orm.user import User
@@ -71,6 +74,9 @@ __all__ = [
     "PublicTreeShare",
     "SharedMatch",
     "Source",
+    "StripeCustomer",
+    "StripeEventLog",
+    "Subscription",
     "TelegramUserLink",
     "Tree",
     "TreeCollaborator",

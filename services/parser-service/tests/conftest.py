@@ -165,6 +165,30 @@ async def _fake_current_user_override(request: Request) -> User:
 
 
 @pytest.fixture(autouse=True, scope="session")
+def _billing_disabled_for_tests() -> Iterator[None]:
+    """Phase 12.0: отключить billing-gating во всех parser-service тестах.
+
+    Imports / FS-import endpoint'ы защищены ``require_feature(...)``.
+    С ``BILLING_ENABLED=false`` dependency пропускает запросы. Тесты
+    самого гейтинга (``test_billing_gates.py``) переопределяют флаг
+    локально per-test.
+    """
+    saved = os.environ.get("BILLING_SERVICE_BILLING_ENABLED")
+    os.environ["BILLING_SERVICE_BILLING_ENABLED"] = "false"
+    try:
+        from billing_service.config import get_settings
+
+        get_settings.cache_clear()
+        yield
+        get_settings.cache_clear()
+    finally:
+        if saved is None:
+            os.environ.pop("BILLING_SERVICE_BILLING_ENABLED", None)
+        else:
+            os.environ["BILLING_SERVICE_BILLING_ENABLED"] = saved
+
+
+@pytest.fixture(autouse=True, scope="session")
 def _import_inline_for_tests() -> Iterator[None]:
     """Включить ``PARSER_SERVICE_IMPORT_INLINE=1`` для всех тестов сессии.
 

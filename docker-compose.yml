@@ -149,6 +149,33 @@ services:
     command: ["uv", "run", "uvicorn", "telegram_bot.main:app", "--host", "0.0.0.0", "--port", "8006"]
 
   # ---------------------------------------------------------------------------
+  # billing-service — Stripe webhook receiver + checkout session create
+  # + subscription state (Phase 12.0, ADR-0042). Подключай Stripe webhook
+  # в dev-режиме через `stripe listen --forward-to localhost:8005/billing/webhooks/stripe`.
+  # ---------------------------------------------------------------------------
+  billing-service:
+    build:
+      context: .
+      dockerfile: services/billing-service/Dockerfile
+    container_name: autotreegen-billing-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      BILLING_SERVICE_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-autotreegen}:${POSTGRES_PASSWORD:-change-me-in-local-env}@postgres:5432/${POSTGRES_DB:-autotreegen}
+      BILLING_SERVICE_STRIPE_API_KEY: ${STRIPE_API_KEY:-}
+      BILLING_SERVICE_STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      BILLING_SERVICE_STRIPE_PRICE_PRO: ${STRIPE_PRICE_PRO:-}
+      BILLING_SERVICE_STRIPE_PRICE_PREMIUM: ${STRIPE_PRICE_PREMIUM:-}
+      BILLING_SERVICE_EMAIL_SERVICE_URL: ${EMAIL_SERVICE_URL:-http://email-service:8000}
+      BILLING_SERVICE_BILLING_ENABLED: ${BILLING_ENABLED:-false}
+      BILLING_SERVICE_DEBUG: "false"
+    ports:
+      - "8005:8005"
+    command: ["uv", "run", "uvicorn", "billing_service.main:app", "--host", "0.0.0.0", "--port", "8005"]
+
+  # ---------------------------------------------------------------------------
   # MinIO bucket bootstrapper — однократно создаёт buckets при первом запуске.
   # ---------------------------------------------------------------------------
   minio-init:
