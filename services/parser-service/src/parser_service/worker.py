@@ -51,6 +51,7 @@ from parser_service.services.familysearch_importer import import_fs_pedigree
 from parser_service.services.import_runner import run_import
 from parser_service.services.notifications import post_notify_request
 from parser_service.services.progress import ProgressPublisher, Stage
+from parser_service.services.user_erasure_runner import run_user_erasure
 from parser_service.services.user_export_runner import run_user_export
 
 logger = logging.getLogger(__name__)
@@ -447,6 +448,53 @@ async def run_user_export_job(
         }
 
 
+async def run_user_erasure_job(
+    _ctx: dict[str, Any],
+    request_id: str,
+) -> dict[str, Any]:
+    """arq job: GDPR right-of-erasure для одного ``user_action_requests``-row.
+
+    Phase 4.11b (ADR-0049). Тонкая job-обёртка: открывает session,
+    делегирует :func:`run_user_erasure`, commit'ит / rollback'ит.
+
+    Auto-retry **отключён** на arq-уровне (max_tries=1 в WorkerSettings.functions).
+    Erasure pipeline идемпотентен по terminal-статусам (early-return),
+    но повторное выполнение processing-шагов может породить дубль-audit
+    rows / лишние Clerk-вызовы. Failure → user видит ``status='failed'``
+    в ``GET /users/me/requests`` + admin runs manual fix-up.
+
+    Args:
+        _ctx: arq-контекст; unused.
+        request_id: UUID UserActionRequest. Должен иметь kind='erasure'.
+
+    Returns:
+        Sterile dict для arq-result-row (sumary, никакого PII).
+    """
+    engine = get_engine()
+    session_maker = async_sessionmaker(engine, expire_on_commit=False)
+    request_uuid = UUID(request_id)
+    async with session_maker() as session:
+        try:
+            result = await run_user_erasure(session, request_uuid)
+            await session.commit()
+        except Exception:
+            # run_user_erasure сам пишет failed-status + audit перед re-raise;
+            # отдельный commit для persist'а этого failure-state'а.
+            try:
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                logger.exception("Failed to persist erasure-failure state for %s", request_id)
+            raise
+        return {
+            "request_id": str(result.request_id),
+            "status": result.status,
+            "trees_processed": result.trees_processed,
+            "dna_total": result.dna_total,
+            "clerk_deleted": result.clerk_deleted,
+        }
+
+
 async def dispatch_notification_job(
     _ctx: dict[str, Any],
     payload: dict[str, Any],
@@ -511,6 +559,7 @@ class WorkerSettings:
         dispatch_notification_job,
         run_fs_import_job,
         run_user_export_job,
+        run_user_erasure_job,
     ]
     on_startup = startup
     on_shutdown = shutdown

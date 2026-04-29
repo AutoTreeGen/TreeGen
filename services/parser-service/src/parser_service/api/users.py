@@ -127,7 +127,9 @@ class UserActionRequestResponse(BaseModel):
 
     id: uuid.UUID
     kind: Literal["export", "erasure"]
-    status: Literal["pending", "processing", "done", "failed", "cancelled"]
+    status: Literal[
+        "pending", "processing", "done", "failed", "cancelled", "manual_intervention_required"
+    ]
     created_at: Any
     processed_at: Any = None
     error: str | None = None
@@ -255,21 +257,24 @@ async def patch_me(
     "/users/me/erasure-request",
     response_model=ActionRequestCreatedResponse,
     status_code=status.HTTP_202_ACCEPTED,
-    summary="Open a GDPR erasure request (stub — processed in Phase 4.11b/c)",
+    summary="Open a GDPR erasure request (Phase 4.11b — async worker)",
 )
 async def request_erasure(
     body: ErasureRequestBody,
     user_id: RequireUser,
     session: Annotated[AsyncSession, Depends(get_session)],
+    pool: Annotated[ArqRedis, Depends(get_arq_pool)],
 ) -> ActionRequestCreatedResponse:
-    """Создать ``user_action_requests`` row с ``kind='erasure'``.
+    """Создать ``user_action_requests`` row + enqueue erasure-worker job.
 
     * 422 если ``confirm_email`` не совпадает с user.email
       (case-insensitive).
     * 409 если у user'а уже есть active erasure request (pending или
-      processing). Не множим — один request живёт до Phase 4.11b/c.
-    * 202 Accepted на success. Phase 4.11a записывает audit-entry
-      ``ERASURE_REQUESTED``. Реальный hard-delete cascade — Phase 4.11c.
+      processing).
+    * 202 Accepted на success. Phase 4.11b enqueue'ит arq job
+      ``run_user_erasure_job`` сразу после insert'а row — worker
+      выполняет cascade soft-delete + DNA hard-delete + Clerk delete +
+      email confirmation (см. ADR-0049).
     """
     user = await _load_user_or_500(session, user_id)
     if body.confirm_email.lower() != user.email.lower():
@@ -295,6 +300,13 @@ async def request_erasure(
         },
     )
     await session.commit()
+
+    # Enqueue после commit'а — worker увидит row в БД. Phase 4.11b ADR-0049.
+    await pool.enqueue_job(
+        "run_user_erasure_job",
+        str(response.request_id),
+        _job_id=f"erasure:{response.request_id}",
+    )
     return response
 
 
@@ -360,7 +372,10 @@ async def list_my_requests(
         Query(description="Фильтр по типу запроса."),
     ] = None,
     status_filter: Annotated[
-        Literal["pending", "processing", "done", "failed", "cancelled"] | None,
+        Literal[
+            "pending", "processing", "done", "failed", "cancelled", "manual_intervention_required"
+        ]
+        | None,
         Query(
             alias="status",
             description="Фильтр по статусу. Без значения — без фильтра.",
