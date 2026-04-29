@@ -36,6 +36,7 @@ members = [
     "packages/entity-resolution",
     "packages/familysearch-client",
     "packages/inference-engine",
+    "packages/ai-layer",
     "services/parser-service",
     "services/dna-service",
     "services/notification-service",
@@ -51,6 +52,7 @@ dna-analysis = { workspace = true }
 entity-resolution = { workspace = true }
 familysearch-client = { workspace = true }
 inference-engine = { workspace = true }
+ai-layer = { workspace = true }
 parser-service = { workspace = true }
 dna-service = { workspace = true }
 notification-service = { workspace = true }
@@ -201,6 +203,7 @@ plugins = ["pydantic.mypy"]
 # а X становился Any — что давало false-positive `redundant-cast` ниже по
 # цепочке. См. PR fix/mypy-hook-workspace-packages.
 mypy_path = [
+    "packages/ai-layer/src",
     "packages/dna-analysis/src",
     "packages/entity-resolution/src",
     "packages/familysearch-client/src",
