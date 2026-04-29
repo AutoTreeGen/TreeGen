@@ -1,4 +1,9 @@
 {
+  "access": {
+    "title": "Доступ к дереву",
+    "noPendingInvitations": "Нет ожидающих приглашений.",
+    "transferOwnership": "Передать владельца"
+  },
   "common": {
     "appName": "AutoTreeGen",
     "tagline": "Доказательная генеалогия со скоростью мысли",

@@ -1182,3 +1182,76 @@ class InvitationResendResponse(BaseModel):
             "До этого момента resend возвращает 429."
         ),
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 11.2 — public tree shares.
+# ---------------------------------------------------------------------------
+
+
+class PublicShareCreateRequest(BaseModel):
+    """``POST /trees/{tree_id}/public-share`` — owner создаёт public link.
+
+    ``expires_in_days`` — опциональный TTL. None = никогда не истекает
+    (только manual revoke).
+    """
+
+    expires_in_days: int | None = Field(
+        default=None,
+        ge=1,
+        le=3650,
+        description="TTL в днях. None = no expiration. Max 10 лет (3650 дней).",
+    )
+
+
+class PublicShareResponse(BaseModel):
+    """Owner-side представление активного share'а (POST/GET).
+
+    ``public_url`` собирается из ``settings.public_base_url`` + token.
+    """
+
+    id: uuid.UUID
+    tree_id: uuid.UUID
+    share_token: str
+    public_url: str
+    expires_at: datetime | None
+    created_at: datetime
+
+
+class PublicTreePerson(BaseModel):
+    """Person в публичном ответе. Anonymized для alive-персон.
+
+    Только year-precision дат; никаких places, notes, sources, DNA.
+    """
+
+    id: uuid.UUID
+    display_name: str
+    sex: str
+    birth_year: int | None
+    death_year: int | None
+    is_anonymized: bool = Field(
+        description="True если это alive person и поля заменены на «Living relative».",
+    )
+
+
+class PublicTreeFamily(BaseModel):
+    """Family edge (минимально нужное для рендера дерева)."""
+
+    id: uuid.UUID
+    husband_id: uuid.UUID | None
+    wife_id: uuid.UUID | None
+    children_ids: list[uuid.UUID]
+
+
+class PublicTreeResponse(BaseModel):
+    """``GET /public/trees/{token}`` — публичный read-only вид.
+
+    DNA-данные ВЫРЕЗАНЫ полностью (нет matches/kits/consents/etc.).
+    Persons-likely-alive анонимизированы (имя, dates).
+    Sources/notes/places не возвращаются — privacy-cautious default.
+    """
+
+    tree_name: str
+    person_count: int
+    persons: list[PublicTreePerson]
+    families: list[PublicTreeFamily]

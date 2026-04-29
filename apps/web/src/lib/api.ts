@@ -1049,6 +1049,74 @@ export function transferOwnership(
   });
 }
 
+// ---- Phase 11.2: public tree shares -----------------------------------------
+
+export type PublicShare = {
+  id: string;
+  tree_id: string;
+  share_token: string;
+  public_url: string;
+  expires_at: string | null;
+  created_at: string;
+};
+
+export type PublicTreePerson = {
+  id: string;
+  display_name: string;
+  sex: string;
+  birth_year: number | null;
+  death_year: number | null;
+  is_anonymized: boolean;
+};
+
+export type PublicTreeFamily = {
+  id: string;
+  husband_id: string | null;
+  wife_id: string | null;
+  children_ids: string[];
+};
+
+export type PublicTreeView = {
+  tree_name: string;
+  person_count: number;
+  persons: PublicTreePerson[];
+  families: PublicTreeFamily[];
+};
+
+export function fetchPublicShare(treeId: string): Promise<PublicShare | null> {
+  return getJson<PublicShare | null>(`/trees/${treeId}/public-share`);
+}
+
+export function createPublicShare(
+  treeId: string,
+  expiresInDays: number | null,
+): Promise<PublicShare> {
+  return postJson<PublicShare>(`/trees/${treeId}/public-share`, {
+    expires_in_days: expiresInDays,
+  });
+}
+
+export function deletePublicShare(treeId: string): Promise<void> {
+  return deleteEmpty(`/trees/${treeId}/public-share`);
+}
+
+/**
+ * Public read-only fetch. БЕЗ Authorization header — endpoint
+ * не требует JWT и даже игнорирует переданный. 404 при revoked/expired,
+ * 429 при rate-limit'е.
+ */
+export async function fetchPublicTreeView(token: string): Promise<PublicTreeView> {
+  const res = await fetch(`${API_BASE}/public/trees/${encodeURIComponent(token)}`, {
+    method: "GET",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) {
+    const message = await res.text().catch(() => res.statusText);
+    throw classifyHttpError(res.status, message);
+  }
+  return (await res.json()) as PublicTreeView;
+}
+
 /** Mask middle of an email so members list doesn't leak full address visually. */
 export function maskEmail(email: string): string {
   const [local, domain] = email.split("@");

@@ -29,6 +29,7 @@ from shared_models.orm.notification_preference import NotificationPreference
 from shared_models.orm.person import Person
 from shared_models.orm.person_merge_log import PersonMergeLog
 from shared_models.orm.place import Place, PlaceAlias
+from shared_models.orm.public_tree_share import PublicTreeShare
 from shared_models.orm.shared_match import SharedMatch
 from shared_models.orm.source import Source
 from shared_models.orm.telegram_user_link import TelegramUserLink
@@ -67,6 +68,7 @@ __all__ = [
     "PersonMergeLog",
     "Place",
     "PlaceAlias",
+    "PublicTreeShare",
     "SharedMatch",
     "Source",
     "TelegramUserLink",

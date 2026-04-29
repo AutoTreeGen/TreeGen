@@ -23,6 +23,7 @@ from parser_service.api import (
     imports_sse,
     metrics,
     persons,
+    public_share,
     sharing,
     sources,
     trees,
@@ -109,6 +110,14 @@ app.include_router(persons.router, tags=["persons", "merge"], dependencies=_AUTH
 # Включён после persons чтобы /trees/{id}/* пути в trees.router не
 # перехватывали /trees/{id}/invitations / /trees/{id}/members.
 app.include_router(sharing.router, tags=["sharing"], dependencies=_AUTH_DEPS)
+# Phase 11.2 — public share-link управление (owner-side). Auth required.
+app.include_router(
+    public_share.router_owner,
+    tags=["sharing", "public"],
+    dependencies=_AUTH_DEPS,
+)
+# Phase 11.2 — public read-only вид по token. БЕЗ auth, rate-limited внутри ручки.
+app.include_router(public_share.router_public, tags=["public"])
 # Phase 4.10b (ADR-0038): /users/me account settings + GDPR action requests.
 app.include_router(users.router, tags=["users", "settings"], dependencies=_AUTH_DEPS)
 # /metrics — Prometheus exposition (Phase 9.0). Без префикса, чтобы scrape
