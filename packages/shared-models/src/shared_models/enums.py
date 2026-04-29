@@ -188,8 +188,15 @@ class AuditAction(StrEnum):
     EXPORT_FAILED = "export_failed"
 
     # Phase 4.11b/c — GDPR right-of-erasure (Art. 17). Stub только request-side
-    # (Phase 4.10b создаёт user_action_request); processing — отдельная фаза.
+    # (Phase 4.10b создаёт user_action_request); processing — Phase 4.11b worker.
     ERASURE_REQUESTED = "erasure_requested"
+    ERASURE_PROCESSING = "erasure_processing"
+    ERASURE_COMPLETED = "erasure_completed"
+    ERASURE_FAILED = "erasure_failed"
+    # Phase 4.11b: блокирующий edge-case (shared tree, pending export, ...).
+    # Отличается от FAILED: row остаётся в processing-style состоянии до ручного
+    # вмешательства; не automatic-retry'ится.
+    ERASURE_BLOCKED = "erasure_blocked"
 
 
 class ActorKind(StrEnum):
@@ -429,6 +436,8 @@ class EmailKind(StrEnum):
     PAYMENT_FAILED = "payment_failed"
     # Phase 4.11a — async GDPR data export готов к скачиванию.
     EXPORT_READY = "export_ready"
+    # Phase 4.11b — GDPR erasure обработан, отправляем подтверждение.
+    ERASURE_CONFIRMATION = "erasure_confirmation"
 
 
 class EmailSendStatus(StrEnum):
