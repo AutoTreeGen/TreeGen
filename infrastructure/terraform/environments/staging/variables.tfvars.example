@@ -4,6 +4,8 @@ project_id    = "your-staging-project-id"
 region        = "europe-west1"
 zone          = "europe-west1-b"
 bucket_prefix = "your-staging-project-id" // GCS names are global — keep specific
+alert_email   = "you@example.com"          // Phase 13.1 — Cloud Monitoring alerts
+github_repository = "AutoTreeGen/TreeGen"  // Phase 13.1 — GHA OIDC source repo
 
 // images: leave empty on first apply. CI fills it in via -var on subsequent
 // applies, or just deploy new images with `gcloud run deploy --image=…`.

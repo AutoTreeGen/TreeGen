@@ -37,3 +37,18 @@ output "secret_names" {
   description = "Map of logical secret name → Secret Manager short name. Set initial values via `gcloud secrets versions add`."
   value       = module.secrets.secret_short_names
 }
+
+output "gha_workload_identity_provider" {
+  description = "Feed this to `google-github-actions/auth@v2` as `workload_identity_provider` (a GitHub repo variable)."
+  value       = module.gha_oidc.workload_identity_provider
+}
+
+output "gha_deployer_service_account_email" {
+  description = "Feed this to `google-github-actions/auth@v2` as `service_account` (a GitHub repo variable)."
+  value       = module.gha_oidc.deployer_service_account_email
+}
+
+output "monitoring_notification_channel" {
+  description = "Resource id of the email notification channel — useful for adding ad-hoc alerts later."
+  value       = module.monitoring.notification_channel_id
+}

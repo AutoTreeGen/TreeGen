@@ -102,3 +102,29 @@ module "services" {
   cloud_tasks_queue_ids = module.queue.queue_ids
   gcs_bucket_names      = module.storage.all_bucket_names
 }
+
+// Phase 13.1 — GitHub Actions OIDC. CI authenticates via Workload Identity
+// Federation, no JSON key checked into the repo.
+module "gha_oidc" {
+  source = "../../modules/gha-oidc"
+
+  name              = var.name
+  project_id        = var.project_id
+  github_repository = var.github_repository
+  allowed_refs      = var.gha_allowed_refs
+}
+
+// Phase 13.1 — log-based metrics + alert policies + email notification channel.
+module "monitoring" {
+  source = "../../modules/monitoring"
+
+  name               = var.name
+  project_id         = var.project_id
+  notification_email = var.alert_email
+
+  // Subjects of the alert policies — services whose 5xx / memory we care about.
+  cloud_run_service_names = [
+    for k, _ in module.services.service_urls : k
+  ]
+  alloydb_instance_name = module.database.instance_name
+}
