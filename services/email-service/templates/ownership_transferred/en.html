@@ -1,0 +1,20 @@
+{% extends "_base.html" %}
+{% block content %}
+<h1 style="font-size:22px;margin:0 0 16px 0;font-weight:normal;">You're now the owner of a tree, {{ user_display_name }}.</h1>
+<p>You've been transferred ownership of a {{ brand_name }} tree.</p>
+<table style="border-collapse:collapse;margin:16px 0;font-size:14px;">
+  <tr><td style="padding:4px 12px 4px 0;color:#666;">Tree:</td><td><code>{{ tree_id }}</code></td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#666;">Previous owner ID:</td><td><code>{{ previous_owner_user_id }}</code></td></tr>
+</table>
+<p>
+  This happened automatically as part of the previous owner's account
+  erasure (GDPR Article 17). You're now responsible for inviting members,
+  managing roles, and any further changes to this tree.
+</p>
+<p style="margin-top:24px;">
+  <a href="{{ web_base_url }}/trees/{{ tree_id }}" style="background:#A14E2A;color:#fff;padding:12px 20px;text-decoration:none;border-radius:6px;display:inline-block;">Open the tree</a>
+</p>
+<p style="font-size:13px;color:#888;margin-top:24px;">
+  If you weren't expecting this transfer, contact <a href="mailto:{{ support_email }}" style="color:#A14E2A;">{{ support_email }}</a>.
+</p>
+{% endblock %}

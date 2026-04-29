@@ -53,6 +53,9 @@ _ALLOWED_PARAM_KEYS: Final[frozenset[str]] = frozenset(
         "export_url",
         "export_size_bytes",
         "export_format",
+        # ownership_transferred (Phase 4.11c)
+        "tree_id",
+        "previous_owner_user_id",
         # erasure_confirmation (Phase 13.x)
         "erasure_completed_at",
         "data_retention_until",

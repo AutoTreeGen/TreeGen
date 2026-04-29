@@ -1,0 +1,20 @@
+{% extends "_base.html" %}
+{% block content %}
+<h1 style="font-size:22px;margin:0 0 16px 0;font-weight:normal;">Вы стали владельцем дерева, {{ user_display_name }}.</h1>
+<p>Вам передано владение деревом на {{ brand_name }}.</p>
+<table style="border-collapse:collapse;margin:16px 0;font-size:14px;">
+  <tr><td style="padding:4px 12px 4px 0;color:#666;">Дерево:</td><td><code>{{ tree_id }}</code></td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#666;">ID предыдущего владельца:</td><td><code>{{ previous_owner_user_id }}</code></td></tr>
+</table>
+<p>
+  Это произошло автоматически в рамках удаления аккаунта предыдущего
+  владельца (GDPR Статья 17). Теперь вы отвечаете за приглашение
+  участников, управление ролями и любые дальнейшие изменения дерева.
+</p>
+<p style="margin-top:24px;">
+  <a href="{{ web_base_url }}/trees/{{ tree_id }}" style="background:#A14E2A;color:#fff;padding:12px 20px;text-decoration:none;border-radius:6px;display:inline-block;">Открыть дерево</a>
+</p>
+<p style="font-size:13px;color:#888;margin-top:24px;">
+  Если вы не ожидали этой передачи, напишите на <a href="mailto:{{ support_email }}" style="color:#A14E2A;">{{ support_email }}</a>.
+</p>
+{% endblock %}

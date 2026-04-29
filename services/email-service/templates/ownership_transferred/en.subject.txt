@@ -1,0 +1,1 @@
+You're now the owner of a tree on {{ brand_name }}

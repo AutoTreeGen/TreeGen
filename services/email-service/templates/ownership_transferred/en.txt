@@ -1,0 +1,17 @@
+{% extends "_base.txt" %}
+{% block content %}
+Hi {{ user_display_name }},
+
+You've been transferred ownership of a {{ brand_name }} tree.
+
+  Tree:               {{ tree_id }}
+  Previous owner ID:  {{ previous_owner_user_id }}
+
+This happened automatically as part of the previous owner's account
+erasure (GDPR Article 17). You're now responsible for inviting members,
+managing roles, and any further changes to this tree.
+
+Open the tree at {{ web_base_url }}/trees/{{ tree_id }}
+
+If you weren't expecting this transfer, contact {{ support_email }}.
+{% endblock %}

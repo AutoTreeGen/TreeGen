@@ -34,7 +34,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from shared_models import TreeRole, role_satisfies
-from shared_models.orm import AuditLog, Tree, TreeInvitation, TreeMembership, User
+from shared_models.orm import AuditLog, TreeInvitation, TreeMembership, User
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -56,6 +56,10 @@ from parser_service.schemas import (
     TransferOwnerResponse,
 )
 from parser_service.services.email_dispatcher import send_share_invite
+from parser_service.services.ownership_transfer import (
+    TreeMembershipMissingError,
+    swap_tree_owner_atomic,
+)
 from parser_service.services.permissions import (
     check_tree_permission,
     require_tree_role,
@@ -662,7 +666,10 @@ async def transfer_owner(
             detail="new_owner_email matches current owner — choose a different member",
         )
 
-    # Найти target user'а через membership-row.
+    # Найти target user'а через membership-row + email-lookup. Email-lookup
+    # — это UI-affordance manual-flow'а; helper-side принимает уже
+    # резолвленный user_id, так что extract'нутая Phase 4.11c-логика
+    # одинаково работает и для async-worker'а (без email на руках).
     target_row = await session.execute(
         select(TreeMembership, User)
         .join(User, User.id == TreeMembership.user_id)
@@ -678,52 +685,26 @@ async def transfer_owner(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=(f"No active membership for {new_email} on this tree — invite them first"),
         )
-    target_membership, target_user = pair
+    _, target_user = pair
 
-    # Найти OWNER-row caller'а.
-    owner_row = await session.scalar(
-        select(TreeMembership).where(
-            TreeMembership.tree_id == tree_id,
-            TreeMembership.user_id == user.id,
-            TreeMembership.role == TreeRole.OWNER.value,
-            TreeMembership.revoked_at.is_(None),
-        )
-    )
-    if owner_row is None:
-        # gate проходит fallback на trees.owner_user_id — но transfer-flow
-        # требует явного membership-row (иначе нечего демоутить в editor).
-        # Создать row на лету: мы знаем что user.id == tree.owner_user_id.
-        owner_row = TreeMembership(
+    try:
+        result = await swap_tree_owner_atomic(
+            session,
             tree_id=tree_id,
-            user_id=user.id,
-            role=TreeRole.OWNER.value,
-            accepted_at=dt.datetime.now(dt.UTC),
+            current_owner_user_id=user.id,
+            new_owner_user_id=target_user.id,
         )
-        session.add(owner_row)
-        await session.flush()
-
-    # Tree-row для обновления owner_user_id.
-    tree = await session.get(Tree, tree_id)
-    if tree is None:  # pragma: no cover — gate уже проверил
+    except TreeMembershipMissingError as exc:  # pragma: no cover — pre-checked выше
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Tree {tree_id} not found",
-        )
-
-    # Атомарный swap: editor сначала, потом owner. Partial-unique позволяет
-    # ровно одному OWNER active одновременно, но в transaction-окне может
-    # быть ноль (после step 1 и до step 2) — что валидно.
-    owner_row.role = TreeRole.EDITOR.value
-    target_membership.role = TreeRole.OWNER.value
-    tree.owner_user_id = target_user.id
-
-    await session.flush()
+            detail=str(exc),
+        ) from exc
 
     return TransferOwnerResponse(
         tree_id=tree_id,
-        previous_owner_user_id=user.id,
-        new_owner_user_id=target_user.id,
-        transferred_at=dt.datetime.now(dt.UTC),
+        previous_owner_user_id=result.previous_owner_user_id,
+        new_owner_user_id=result.new_owner_user_id,
+        transferred_at=result.swapped_at,
     )
 
 
