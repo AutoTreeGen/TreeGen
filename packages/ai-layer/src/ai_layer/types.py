@@ -6,7 +6,7 @@
 прошивается в имени модели (``HypothesisSuggestion`` → ``HypothesisSuggestionV2``
 в будущем) и/или в имени prompt-шаблона.
 
-См. ADR-0043 §«Prompt versioning» и ADR-0057.
+См. ADR-0043 §«Prompt versioning», ADR-0057 и ADR-0060.
 """
 
 from __future__ import annotations
@@ -18,6 +18,36 @@ from pydantic import BaseModel, Field
 EvidenceDirectionLabel = Literal["supports", "contradicts", "neutral"]
 ConfidenceLabel = Literal["low", "medium", "high"]
 LocaleLabel = Literal["en", "ru"]
+
+# -----------------------------------------------------------------------------
+# Phase 10.3 — type aliases for AI normalization (см. ADR-0060).
+# -----------------------------------------------------------------------------
+
+#: Скрипт строки. Используется в name normalization и place normalization
+#: чтобы LLM не угадывал. ``mixed`` — для строк типа «Меер בן Avraham».
+ScriptLabel = Literal["latin", "cyrillic", "hebrew", "yiddish", "polish", "mixed", "unknown"]
+
+#: BCP-47-подобные коды языков, которые AI-нормализация обещает
+#: распознавать с надёжной точностью. ``other`` — fallback.
+LocaleHintLabel = Literal["en", "ru", "uk", "be", "pl", "yi", "he", "lt", "lv", "de", "ro", "other"]
+
+#: Грубая ethnic-подсказка для name normalization. Не финальный ground-truth —
+#: это эвристика для UI и downstream-сигналов (Daitch-Mokotoff bucket priors).
+EthnicityHintLabel = Literal[
+    "ashkenazi_jewish",
+    "sephardi_jewish",
+    "slavic",
+    "baltic",
+    "german",
+    "romanian",
+    "other",
+    "unknown",
+]
+
+#: Kohanim/Levite signal — first-class в еврейской генеалогии (ADR-0015 §
+#: «Daitch-Mokotoff» упоминает Cohen modal haplotype). LLM возвращает
+#: ``true`` только при явных признаках в тексте; ``unknown`` — default.
+TribeMarkerLabel = Literal["kohen", "levi", "israelite", "unknown"]
 
 
 class HypothesisSuggestion(BaseModel):
@@ -305,3 +335,166 @@ class HypothesisExplanation(BaseModel):
     cost_usd: float = Field(ge=0.0)
     model: str
     dry_run: bool = False
+
+
+# -----------------------------------------------------------------------------
+# Phase 10.3 — AI normalization (см. ADR-0060).
+# -----------------------------------------------------------------------------
+
+
+class PlaceNormalization(BaseModel):
+    """Структурированное представление одного raw-места после AI-нормализации.
+
+    Контракт зеркалит ``places.canonical_name`` + ``place_aliases.romanized``
+    из shared-models, но не зависит от ORM — caller сам мапит на ORM-row.
+
+    Attributes:
+        canonical_name: Современное caнонcoe название (latin script, без
+            обл./губ./oblast — добавляется через admin1). Пример:
+            «Юзерин, Гомельская обл» → ``"Yuzerin"``.
+        country_modern: ISO-страна по текущим границам. Тот же Юзерин —
+            ``"Belarus"``.
+        country_historical: Государство в момент исторического периода
+            (если LLM смог определить из контекста). Для Юзерина XIX в. —
+            ``"Russian Empire"``. ``None`` если контекст недостаточен.
+        admin1: Современный регион/область («Gomel oblast»).
+        admin2: Под-регион / уезд / район («Buda-Koshelyovo district»).
+        settlement: Тип поселения (``city``, ``town``, ``village``,
+            ``shtetl``, ``hamlet``); важно для shtetl-маркировки в
+            еврейской генеалогии.
+        latitude: Широта в десятичных градусах. ``None`` если LLM не
+            уверен — координаты НЕ должны фабриковаться.
+        longitude: Долгота в десятичных градусах.
+        confidence: Self-assessed уверенность LLM ``[0, 1]``.
+        ethnicity_hint: Этно-исторический контекст места (Pale of Settlement,
+            Galicia и т.п.). Для UI hint, не ground-truth.
+        alternative_forms: Альтернативные транслитерации / исторические
+            названия («Юзерин», «Yuzeryn», «Юзяри»). Latin-приоритет.
+        notes: Свободно-форменные нюансы — на английском.
+    """
+
+    canonical_name: str = Field(min_length=1, max_length=256)
+    country_modern: str | None = Field(default=None, max_length=128)
+    country_historical: str | None = Field(default=None, max_length=128)
+    admin1: str | None = Field(default=None, max_length=128)
+    admin2: str | None = Field(default=None, max_length=128)
+    settlement: Literal["city", "town", "village", "shtetl", "hamlet", "unknown"] = "unknown"
+    latitude: float | None = Field(default=None, ge=-90.0, le=90.0)
+    longitude: float | None = Field(default=None, ge=-180.0, le=180.0)
+    confidence: float = Field(ge=0.0, le=1.0)
+    ethnicity_hint: EthnicityHintLabel = "unknown"
+    alternative_forms: list[str] = Field(default_factory=list, max_length=10)
+    notes: str | None = Field(default=None, max_length=512)
+
+
+class NameNormalization(BaseModel):
+    """Структурированное представление одного raw-имени после AI-нормализации.
+
+    Поля зеркалят ORM ``Name`` (given_name / surname / patronymic /
+    maiden_surname / prefix / suffix / nickname) — caller мапит 1:1.
+
+    Attributes:
+        given: Имя в latin-транслитерации.
+        surname: Фамилия в latin-транслитерации.
+        patronymic: Отчество (русско-восточнославянская традиция) или
+            ``ben/bat``-паттерн (иврит/идиш) после нормализации.
+            ``None`` если не применимо.
+        maiden_surname: Девичья фамилия — если в источнике явно указано
+            (married name vs. maiden). Для еврейской генеалогии важно
+            (часто записывалась в скобках или через «née»).
+        prefix: Титульный/религиозный префикс («Reb», «Rabbi», «гр.»).
+        suffix: Суффикс («Jr.», «II»).
+        nickname: Уменьшительная форма / прозвище в скобках.
+        given_alts: Альтернативные транслитерации given-имени
+            («Yosef», «Joseph», «Иосиф»). Помогает downstream
+            entity-resolution с phonetic bucket'ами.
+        surname_alts: Альтернативные формы фамилии («Zhitnitzky»,
+            «Żytnicki», «Жидницкий»).
+        script_detected: Скрипт raw-input'а до нормализации.
+        transliteration_scheme: Какую схему LLM применил («yivo» для
+            идиша, «iso9_1995» для русского, «ala_lc» для иврита,
+            ``other`` если ad-hoc или несколько).
+        ethnicity_hint: Эвристика по фамильному паттерну.
+        tribe_marker: Kohanim / Levi / Israelite — only ``kohen``/``levi``
+            если есть **явные** признаки в источнике (см. ADR-0060).
+        confidence: ``[0, 1]``.
+        notes: Свободно-форменные нюансы.
+    """
+
+    given: str | None = Field(default=None, max_length=128)
+    surname: str | None = Field(default=None, max_length=128)
+    patronymic: str | None = Field(default=None, max_length=128)
+    maiden_surname: str | None = Field(default=None, max_length=128)
+    prefix: str | None = Field(default=None, max_length=64)
+    suffix: str | None = Field(default=None, max_length=64)
+    nickname: str | None = Field(default=None, max_length=128)
+    given_alts: list[str] = Field(default_factory=list, max_length=10)
+    surname_alts: list[str] = Field(default_factory=list, max_length=10)
+    script_detected: ScriptLabel = "unknown"
+    transliteration_scheme: Literal[
+        "yivo", "iso9_1995", "bgn_pcgn", "ala_lc", "ad_hoc", "none", "other"
+    ] = "none"
+    ethnicity_hint: EthnicityHintLabel = "unknown"
+    tribe_marker: TribeMarkerLabel = "unknown"
+    confidence: float = Field(ge=0.0, le=1.0)
+    notes: str | None = Field(default=None, max_length=512)
+
+
+class CandidateMatch(BaseModel):
+    """Воссоединение нормализованной формы с известным canonical-кандидатом.
+
+    Caller-уровень передаёт список candidates (например, существующие
+    ``places.canonical_name`` для tree'а пользователя), AI-слой возвращает
+    top-K с similarity scores. Используется UI: «AI считает, что этот
+    raw похож на эти 3 ваших уже-сохранённых места».
+
+    Attributes:
+        candidate_id: Opaque-идентификатор кандидата, переданный caller'ом.
+        candidate_text: Сам текст кандидата (для UI-рендера без round-trip).
+        score: Cosine similarity ``[0, 1]`` (0 — ортогональны, 1 — идентичны).
+        rank: 1-based позиция в ranked list (1 = top).
+    """
+
+    candidate_id: str = Field(min_length=1)
+    candidate_text: str = Field(min_length=1)
+    score: float = Field(ge=0.0, le=1.0)
+    rank: int = Field(ge=1)
+
+
+class NormalizationResult(BaseModel):
+    """Финальная обёртка вокруг AI-нормализации одной строки.
+
+    Содержит и LLM-output, и Voyage-candidate-match (если caller просил),
+    и telemetry-поля (tokens / cost) для UI / биллинга. Generic-параметризация
+    через discriminated payload не нужна — у нас два ровно похожих use-case'а
+    (place / name); сами разные типы лежат в ``place`` / ``name`` полях,
+    ровно одно из них заполнено.
+
+    Attributes:
+        kind: ``"place"`` или ``"name"`` — тип нормализации.
+        place: Заполнено если ``kind == "place"``.
+        name: Заполнено если ``kind == "name"``.
+        candidates: Voyage-ranked top-K кандидатов из caller-supplied списка.
+            Пустой если caller не передал candidates или Voyage отключен.
+        input_tokens: Anthropic prompt tokens (для telemetry / биллинга).
+        output_tokens: Anthropic generated tokens (отдельно от input —
+            модели стоят разное за in/out, см. ``ai_layer.pricing``).
+        cost_usd: Cтоимость по pricing-таблице.
+        model: Имя модели Anthropic, которая обслужила вызов.
+        dry_run: ``True`` если ответ — mock из dry-run mode.
+    """
+
+    kind: Literal["place", "name"]
+    place: PlaceNormalization | None = None
+    name: NameNormalization | None = None
+    candidates: list[CandidateMatch] = Field(default_factory=list)
+    input_tokens: int = Field(ge=0)
+    output_tokens: int = Field(ge=0)
+    cost_usd: float = Field(ge=0.0)
+    model: str
+    dry_run: bool = False
+
+    @property
+    def tokens_used(self) -> int:
+        """Сумма input + output (для legacy-вызывающих и UI-сводок)."""
+        return self.input_tokens + self.output_tokens

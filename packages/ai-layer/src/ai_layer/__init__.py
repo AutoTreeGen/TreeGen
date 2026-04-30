@@ -1,4 +1,4 @@
-"""AutoTreeGen ai-layer — Phase 10.0 skeleton + Phase 10.1 explainer + Phase 10.2 source extraction.
+"""AutoTreeGen ai-layer — Phase 10.0 skeleton + 10.1 explainer + 10.2 extraction + 10.3 normalization.
 
 Public API:
 
@@ -12,7 +12,8 @@ Public API:
   ``ExtractionResult``, ``PersonExtract``, ``EventExtract``,
   ``RelationshipExtract``, ``EvidenceItem``, ``HypothesisExplanation``,
   ``HypothesisExplanationPayload``, ``HypothesisInput``,
-  ``PersonSubject``.
+  ``PersonSubject``, ``PlaceNormalization``, ``NameNormalization``,
+  ``NormalizationResult``, ``CandidateMatch``.
 - Budget / runs (Phase 10.2 / ADR-0059): ``BudgetLimits``,
   ``BudgetReport``, ``BudgetExceededError``, ``evaluate_budget``,
   ``AIRunStatus``, ``build_raw_response``.
@@ -20,11 +21,13 @@ Public API:
   ``log_ai_usage``.
 - Use cases: ``HypothesisSuggester`` + companions; ``HypothesisExplainer``
   (Phase 10.1); ``SourceExtractor`` + ``SourceMetadata`` +
-  extraction-error hierarchy.
+  extraction-error hierarchy; ``PlaceNormalizer`` / ``NameNormalizer``
+  + ``CandidateRecord`` (Phase 10.3).
 
 См. ``README.md``, ``docs/adr/0043-ai-layer-architecture.md``,
-``docs/adr/0057-ai-hypothesis-explanation.md`` и
-``docs/adr/0059-ai-source-extraction.md``.
+``docs/adr/0057-ai-hypothesis-explanation.md``,
+``docs/adr/0059-ai-source-extraction.md`` и
+``docs/adr/0060-ai-normalization.md``.
 """
 
 from ai_layer.budget import (
@@ -54,6 +57,7 @@ from ai_layer.prompts.registry import (
 from ai_layer.runs import AIRunStatus, build_raw_response
 from ai_layer.telemetry import log_ai_usage
 from ai_layer.types import (
+    CandidateMatch,
     EmbeddingResult,
     EventExtract,
     EvidenceItem,
@@ -62,8 +66,11 @@ from ai_layer.types import (
     HypothesisExplanationPayload,
     HypothesisInput,
     HypothesisSuggestion,
+    NameNormalization,
+    NormalizationResult,
     PersonExtract,
     PersonSubject,
+    PlaceNormalization,
     RelationshipExtract,
 )
 from ai_layer.use_cases.explain_hypothesis import HypothesisExplainer
@@ -71,6 +78,14 @@ from ai_layer.use_cases.hypothesis_suggestion import (
     FabricatedEvidenceError,
     HypothesisSuggester,
     PersonFact,
+)
+from ai_layer.use_cases.normalize import (
+    CandidateRecord,
+    EmptyInputError,
+    NameNormalizer,
+    NormalizationError,
+    PlaceNormalizer,
+    RawInputTooLargeError,
 )
 from ai_layer.use_cases.source_extraction import (
     DocumentTooLargeError,
@@ -91,9 +106,12 @@ __all__ = [
     "BudgetExceededError",
     "BudgetLimits",
     "BudgetReport",
+    "CandidateMatch",
+    "CandidateRecord",
     "DocumentTooLargeError",
     "EmbeddingResult",
     "EmptyDocumentError",
+    "EmptyInputError",
     "EventExtract",
     "EvidenceItem",
     "ExtractionResult",
@@ -106,11 +124,18 @@ __all__ = [
     "HypothesisSuggester",
     "HypothesisSuggestion",
     "ImageInput",
+    "NameNormalization",
+    "NameNormalizer",
+    "NormalizationError",
+    "NormalizationResult",
     "PersonExtract",
     "PersonFact",
     "PersonSubject",
+    "PlaceNormalization",
+    "PlaceNormalizer",
     "PromptRegistry",
     "PromptTemplate",
+    "RawInputTooLargeError",
     "RelationshipExtract",
     "RenderedPrompt",
     "SourceExtractionError",
