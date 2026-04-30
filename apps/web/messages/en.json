@@ -537,5 +537,42 @@
       "manage": "Manage trees",
       "loading": "Loading trees…"
     }
+  },
+  "relationshipEvidence": {
+    "ariaLabel": "Relationship evidence panel",
+    "headerTitle": "Evidence for {kind}",
+    "kind": {
+      "parent_child": "parent → child",
+      "spouse": "spouse",
+      "sibling": "sibling"
+    },
+    "close": "Close",
+    "tabs": {
+      "supporting": "Supporting",
+      "contradicting": "Contradicting",
+      "provenance": "Provenance"
+    },
+    "confidenceMethod": {
+      "bayesian_fusion_v2": "Bayesian fusion",
+      "naive_count": "Naive count"
+    },
+    "reliability": "reliability {value}",
+    "openSource": "Open source",
+    "emptySupporting": {
+      "title": "No supporting evidence",
+      "description": "This link has no citations or rules yet. Adding archive searches helps anchor it.",
+      "cta": "Add archive search (coming soon)"
+    },
+    "emptyContradicting": "No contradictions found.",
+    "emptyProvenance": "No import or manual-edit history recorded.",
+    "provenance": {
+      "sourceFiles": "Source files",
+      "importJob": "Import job",
+      "manualEdits": "Manual edits",
+      "manualEditsCount": "{count, plural, =1 {# edit} other {# edits}} recorded"
+    },
+    "addEvidence": "Add evidence",
+    "addEvidenceHint": "Available in Phase 15.2",
+    "error": "Failed to load evidence: {message}"
   }
 }

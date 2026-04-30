@@ -29,6 +29,7 @@ from parser_service.api import (
     normalize,
     persons,
     public_share,
+    relationships,
     sharing,
     sources,
     trees,
@@ -100,6 +101,10 @@ app.include_router(imports_sse.router, prefix="/imports", tags=["imports", "sse"
 app.include_router(imports.router, prefix="/imports", tags=["imports"], dependencies=_AUTH_DEPS)
 app.include_router(trees.router, tags=["trees"], dependencies=_AUTH_DEPS)
 app.include_router(sources.router, tags=["sources"], dependencies=_AUTH_DEPS)
+# Phase 15.1 (ADR-0058): relationship-level evidence aggregation. Включён
+# до sharing-router'а, чтобы /trees/{id}/relationships/... маршрут не
+# перехватывался /trees/{id}/* generic'ами.
+app.include_router(relationships.router, tags=["relationships"], dependencies=_AUTH_DEPS)
 # Phase 10.2 (ADR-0059) — AI source extraction. Auth required;
 # permission gate (EDITOR) проверяется внутри ручек через resolve
 # source → tree.

@@ -707,6 +707,52 @@ licensing, EE-Jewish coverage, partnership effort). Краткая сводка:
 
 ---
 
+## 18A. Фаза 15 — Pro-tier evidence UI
+
+**Цель:** AutoTreeGen позиционируется как "evidence engine for genealogy".
+Phase 15 поверх готового backend (sources, citations, hypotheses, DNA)
+накатывает UI-слой, где пользователь **видит и работает с evidence**, а не
+с бесконечными списками персон.
+
+### 18A.0 Статус подфаз
+
+| Подфаза | Описание | Статус |
+|---|---|---|
+| **15.1** | **Relationship-level evidence panel — ADR-0058** | ✅ **Done (2026-05-01)** |
+| 15.2 | "Add evidence" flow (manual citation + source attach) | 🔜 Planned |
+| 15.3 | Hypothesis sandbox UI (rule playground + what-if) | 🔜 Planned |
+| 15.4 | Per-relationship audit log (kind/source/who/when) | 🔜 Planned |
+| 15.5 | Archive search integration (FamilySearch / Wikimedia) | 🔜 Planned |
+
+### 18A.1 Phase 15.1 — Relationship Evidence Panel ✅ (см. ADR-0058)
+
+`GET /trees/{tree_id}/relationships/{kind}/{subject_id}/{object_id}/evidence`
+плюс `<RelationshipEvidencePanel>` — read-only consumer над существующим
+provenance / citations / hypothesis_evidences:
+
+- `kind` ∈ `parent_child | spouse | sibling`. Composite-key URL —
+  компромисс на отсутствие single-relationship view в схеме.
+- Aggregation: `Citation` rows on family + (для spouse) on MARR/DIV
+  events + HypothesisEvidence rows.
+- Confidence rollup: `Hypothesis.composite_score` если есть hypothesis
+  → `method="bayesian_fusion_v2"`; иначе naive count.
+- UI: right-side drawer (Tailwind self-contained, без Sheet primitive),
+  3 tabs (Supporting / Contradicting / Provenance), color-coded
+  confidence badge (green ≥0.85 / amber 0.6-0.85 / red <0.6),
+  empty-state CTAs (disabled — wired в 15.2 / 15.5).
+- i18n en + ru через next-intl.
+
+### 18A.2 Что НЕ входит в 15.1 (anti-drift)
+
+- Tree rendering layer / D3 / canvas — не трогается.
+- Trigger (клик на edge / context menu) — отдельный wiring PR.
+- "Add evidence" / "Add archive search" — disabled placeholders.
+- Hypothesis sandbox — Phase 15.3.
+- Schema changes на FamilyChild/relationship — Phase 15.x при сильном
+  signal.
+
+---
+
 ## 19. Claude Code: настройка субагентов и MCP
 
 ### 19.1 Структура `CLAUDE.md`
