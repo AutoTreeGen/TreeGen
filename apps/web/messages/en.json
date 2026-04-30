@@ -286,7 +286,15 @@
     },
     "detail": {
       "noEvents": "No events recorded.",
-      "noCitations": "No citations recorded."
+      "noCitations": "No citations recorded.",
+      "externalSearch": {
+        "heading": "External searches",
+        "intro": "Open this person on external genealogy sources. We don't transmit any data — clicking opens a pre-filled search in a new tab.",
+        "jewishgen": {
+          "cta": "Search JewishGen for this person ",
+          "disclaimer": "Opens JewishGen Unified Search in a new tab. JewishGen has no public API; TreeGen never reads or caches results on your behalf."
+        }
+      }
     },
     "tree": {
       "title": "Family tree",
