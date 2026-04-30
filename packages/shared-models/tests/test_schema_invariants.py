@@ -107,6 +107,21 @@ SERVICE_TABLES = {
     # Stripe webhook idempotency log (Phase 12.0 / ADR-0042): stripe_event_id UNIQUE
     # для idempotent dispatch. Audit trail, без soft-delete.
     "stripe_event_log",
+    # DNA AutoClusters run (Phase 6.7a / ADR-0063): один cluster — результат
+    # одного auto-clustering запуска. Service-level audit/history; повторный
+    # run = новая row. Без tree_id (привязка по user_id, Clerk text id), без
+    # soft-delete (immutable history), без provenance/version_id (compute
+    # output, не пользовательский факт).
+    "dna_clusters",
+    # DNA AutoCluster membership (Phase 6.7a / ADR-0063): композитная PK
+    # (cluster_id, match_id), CASCADE при удалении любой стороны. Чистая
+    # m2m, без mixin'ов.
+    "dna_cluster_members",
+    # DNA pile-up regions (Phase 6.7a schema / 6.7b detector / ADR-0063):
+    # population-aggregate observations (HLA-локус, AJ founder regions,
+    # …). Read-mostly reference data, regenerируется detector'ом; нет
+    # tree_id и soft-delete.
+    "dna_pile_up_regions",
 }
 
 TREE_ENTITY_TABLES = {
