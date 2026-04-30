@@ -15,6 +15,7 @@ from shared_models.observability import setup_logging, setup_sentry
 from shared_models.security import apply_security_middleware
 
 from parser_service.api import (
+    ai_extraction,
     clerk_webhooks,
     dedup,
     dedup_attempts,
@@ -98,6 +99,10 @@ app.include_router(imports_sse.router, prefix="/imports", tags=["imports", "sse"
 app.include_router(imports.router, prefix="/imports", tags=["imports"], dependencies=_AUTH_DEPS)
 app.include_router(trees.router, tags=["trees"], dependencies=_AUTH_DEPS)
 app.include_router(sources.router, tags=["sources"], dependencies=_AUTH_DEPS)
+# Phase 10.2 (ADR-0059) — AI source extraction. Auth required;
+# permission gate (EDITOR) проверяется внутри ручек через resolve
+# source → tree.
+app.include_router(ai_extraction.router, tags=["sources", "ai"], dependencies=_AUTH_DEPS)
 app.include_router(dedup.router, tags=["dedup"], dependencies=_AUTH_DEPS)
 app.include_router(dedup_attempts.router, tags=["dedup-attempts"], dependencies=_AUTH_DEPS)
 # SSE роутер до основного hypotheses — у него специализированный путь

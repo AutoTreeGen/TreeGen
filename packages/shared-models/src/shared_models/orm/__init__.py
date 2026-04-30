@@ -15,6 +15,7 @@ from shared_models.orm.dna_match import DnaMatch
 from shared_models.orm.dna_test_record import DnaTestRecord
 from shared_models.orm.email_send_log import EmailSendLog
 from shared_models.orm.event import Event, EventParticipant
+from shared_models.orm.extracted_fact import ExtractedFact
 from shared_models.orm.family import Family, FamilyChild
 from shared_models.orm.fs_dedup_attempt import FsDedupAttempt
 from shared_models.orm.hypothesis import Hypothesis, HypothesisEvidence
@@ -32,6 +33,7 @@ from shared_models.orm.place import Place, PlaceAlias
 from shared_models.orm.public_tree_share import PublicTreeShare
 from shared_models.orm.shared_match import SharedMatch
 from shared_models.orm.source import Source
+from shared_models.orm.source_extraction import SourceExtraction
 from shared_models.orm.telegram_user_link import TelegramUserLink
 from shared_models.orm.tree import Tree, TreeCollaborator
 from shared_models.orm.user import User
@@ -52,6 +54,7 @@ __all__ = [
     "EntityNote",
     "Event",
     "EventParticipant",
+    "ExtractedFact",
     "Family",
     "FamilyChild",
     "FsDedupAttempt",
@@ -71,6 +74,7 @@ __all__ = [
     "PublicTreeShare",
     "SharedMatch",
     "Source",
+    "SourceExtraction",
     "TelegramUserLink",
     "Tree",
     "TreeCollaborator",
