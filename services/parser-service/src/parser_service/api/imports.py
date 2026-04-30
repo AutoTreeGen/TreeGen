@@ -37,6 +37,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from parser_service.auth import RequireUser
+from parser_service.billing import require_feature
 from parser_service.config import Settings, get_settings
 from parser_service.database import get_session
 from parser_service.queue import get_arq_pool
@@ -118,6 +119,9 @@ async def create_import(
     settings: Annotated[Settings, Depends(get_settings)],
     session: Annotated[AsyncSession, Depends(get_session)],
     pool: Annotated[ArqRedis, Depends(get_arq_pool)],
+    # Phase 12.0: feature-gate (булево «может вообще импортить»). При
+    # billing_enabled=false dependency пропускает (no-op).
+    _entitlement: Annotated[None, require_feature("import_quota")] = None,
 ) -> ImportJobResponse:
     """Принять multipart upload .ged → персистнуть job + enqueue worker.
 

@@ -469,3 +469,66 @@ class EmailSendStatus(StrEnum):
     SENT = "sent"
     FAILED = "failed"
     SKIPPED_OPTOUT = "skipped_optout"
+
+
+class Plan(StrEnum):
+    """Подписочный план пользователя (Phase 12.0, ADR-0042).
+
+    Хранится в ``subscriptions.plan`` (для PRO/PREMIUM) и резолвится
+    в ``Plan.FREE`` для users без активной подписки.
+
+    Бизнес-смысл — см. ADR-0042 §«Plan limits»:
+
+    * ``FREE`` — 1 tree, 100 persons, без DNA, без FS-импорта.
+    * ``PRO`` — без лимитов на trees/persons, DNA, FS-импорт
+      (rate-limited 5/день, см. ADR-0028).
+    * ``PREMIUM`` — Pro + bulk-инструменты, повышенные quota'ы
+      (резерв для Phase 12.x — gating пока сводится к Pro-флагам).
+    """
+
+    FREE = "free"
+    PRO = "pro"
+    PREMIUM = "premium"
+
+
+class SubscriptionStatus(StrEnum):
+    """Статус Stripe-подписки.
+
+    Зеркалирует подмножество значений из Stripe API
+    (``subscription.status``), которое мы реально используем для
+    feature-gating. См. ADR-0042 §«Failed payment policy».
+
+    * ``ACTIVE`` — подписка платится, фичи включены.
+    * ``PAST_DUE`` — последний платёж не прошёл, grace period 7 дней.
+      В этом окне фичи остаются включены — даём шанс обновить карту.
+    * ``CANCELED`` — отменена пользователем (или нами после grace period).
+      Фичи сразу off; запись остаётся для history.
+    * ``TRIALING`` — Stripe trial period: фичи включены, платёж ещё
+      не списан. По окончанию Stripe сам перейдёт в ACTIVE или CANCELED.
+
+    Stripe-ные ``incomplete`` / ``incomplete_expired`` / ``unpaid`` /
+    ``paused`` мы сюда не маппим — их обрабатывает event-handler:
+    ``incomplete`` → no-op (ждём перехода), ``incomplete_expired`` →
+    ``CANCELED``, ``unpaid``/``paused`` → ``PAST_DUE``.
+    """
+
+    ACTIVE = "active"
+    PAST_DUE = "past_due"
+    CANCELED = "canceled"
+    TRIALING = "trialing"
+
+
+class StripeEventStatus(StrEnum):
+    """Статус обработки Stripe webhook event'а (idempotency log).
+
+    * ``RECEIVED`` — event попал в БД, но обработчик ещё не отработал.
+      Должен быть редок (только если процесс упал между insert и dispatch).
+    * ``PROCESSED`` — event успешно применён к ORM, дубль будет проигнорирован.
+    * ``FAILED`` — обработчик бросил exception. Stripe пере-доставит event,
+      и тогда мы попробуем заново (idempotency-чек смотрит на
+      ``PROCESSED`` only).
+    """
+
+    RECEIVED = "received"
+    PROCESSED = "processed"
+    FAILED = "failed"

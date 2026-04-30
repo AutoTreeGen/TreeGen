@@ -96,6 +96,17 @@ SERVICE_TABLES = {
     # с status pending|accepted|rejected. Audit-trail review-decisions,
     # не доменная сущность.
     "extracted_facts",
+    # Stripe customer mapping (Phase 12.0 / ADR-0042): user → stripe_customer_id
+    # one-to-one. Service-level mapping, без soft-delete — revocation = hard delete
+    # после account deletion.
+    "stripe_customers",
+    # Subscription state (Phase 12.0 / ADR-0042): canonical billing state per user.
+    # Мутируется ТОЛЬКО webhook'ами (никогда не application-side). Без soft-delete —
+    # canceled — это status, не tombstone.
+    "subscriptions",
+    # Stripe webhook idempotency log (Phase 12.0 / ADR-0042): stripe_event_id UNIQUE
+    # для idempotent dispatch. Audit trail, без soft-delete.
+    "stripe_event_log",
 }
 
 TREE_ENTITY_TABLES = {

@@ -75,6 +75,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from parser_service.auth import RequireUser
+from parser_service.billing import require_feature
 from parser_service.config import Settings, get_settings
 from parser_service.database import get_session
 from parser_service.fs_oauth import (
@@ -236,6 +237,9 @@ async def create_familysearch_import(
     request: FamilySearchImportRequest,
     user_id: RequireUser,
     session: Annotated[AsyncSession, Depends(get_session)],
+    # Phase 12.0: FS-импорт доступен только на Pro/Premium
+    # (см. ADR-0042 §«Plan limits»). billing_enabled=false → no-op.
+    _entitlement: Annotated[None, require_feature("fs_import_enabled")] = None,
 ) -> FamilySearchImportResponse:
     """Импорт FS pedigree в существующее дерево (синхронный, stateless).
 
@@ -247,6 +251,8 @@ async def create_familysearch_import(
     проверка (тот ли user владеет ``tree_id``'ом) — следующий layer
     authorization, отложен в Phase 4.11+ (см. ROADMAP §16). Здесь мы
     ограничиваемся аутентификацией (any signed-in user).
+
+    Pro-only: см. ADR-0042 §«Plan limits».
     """
     _ = user_id  # auth checked, ownership-cross-check — follow-up
     tree = (
@@ -712,6 +718,8 @@ async def create_async_import(
     settings: Annotated[Settings, Depends(get_settings)],
     session: Annotated[AsyncSession, Depends(get_session)],
     pool: Annotated[ArqRedis, Depends(get_arq_pool)],
+    # Phase 12.0: FS-импорт доступен только на Pro/Premium.
+    _entitlement: Annotated[None, require_feature("fs_import_enabled")] = None,
 ) -> ImportJobResponse:
     """Создать ``ImportJob`` (queued) и enqueue ``run_fs_import_job`` в arq.
 
