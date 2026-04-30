@@ -130,6 +130,11 @@ class PromptRegistry:
     PERSON_NORMALIZER_V1: Final[PromptTemplate] = PromptTemplate("person_normalizer", 1)
     # Phase 10.2 (ADR-0059): single-pass source-document extraction.
     SOURCE_EXTRACTOR_V1: Final[PromptTemplate] = PromptTemplate("source_extractor", 1)
+    # Phase 10.3 (ADR-0060): AI normalization for places + names
+    # (Eastern European Jewish genealogy specifics: Cyrillic/Hebrew/Yiddish,
+    # Pale of Settlement, Kohanim/Levite markers, transliteration schemes).
+    PLACE_NORMALIZER_V1: Final[PromptTemplate] = PromptTemplate("place_normalizer", 1)
+    NAME_NORMALIZER_V1: Final[PromptTemplate] = PromptTemplate("name_normalizer", 1)
 
     @classmethod
     def all_templates(cls) -> list[PromptTemplate]:
