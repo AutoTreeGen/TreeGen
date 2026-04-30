@@ -30,7 +30,7 @@ from gedcom_parser.exceptions import GedcomReferenceWarning
 
 # EncodingInfo используется как тип Pydantic-поля и должен быть доступен в
 # runtime при разрешении model fields — поэтому импорт обычный, не TYPE_CHECKING.
-from gedcom_parser.models import EncodingInfo
+from gedcom_parser.models import EncodingInfo, RawTagBlock
 
 if TYPE_CHECKING:
     from collections.abc import Container
@@ -84,6 +84,13 @@ class GedcomDocument(BaseModel):
     repositories: dict[str, Repository] = Field(default_factory=dict)
     submitters: dict[str, Submitter] = Field(default_factory=dict)
     encoding: EncodingInfo | None = None
+    # Phase 5.5a: проприетарные / неизвестные теги, которые семантический
+    # слой не consumed. Заполняется ``quarantine.quarantine_document`` при
+    # построении из AST. На export — возвращаются builder'ом в свои места
+    # по ``path``. Default tuple — гарантирует hashable-immutable у
+    # frozen-model'ей, но GedcomDocument сам frozen=False, поэтому
+    # строим как tuple для consumer-side читаемости.
+    unknown_tags: tuple[RawTagBlock, ...] = Field(default_factory=tuple)
 
     # Документ — мутабельный контейнер: его ещё могут наполнять или фильтровать
     # снаружи. Сами сущности внутри — frozen.
@@ -108,7 +115,21 @@ class GedcomDocument(BaseModel):
         * Запись с известным тегом, но без xref — пропускается (нечего
           класть в индекс). Запись с неизвестным тегом — также пропускается:
           валидатор (отдельная подзадача) разберётся.
+
+        Phase 5.5a: после построения индексов вызываем
+        :func:`gedcom_parser.quarantine.quarantine_document` чтобы
+        собрать все неизвестные direct-children top-level records'ов в
+        ``unknown_tags``. Это нужно для round-trip без потерь
+        проприетарных тегов (Ancestry ``_FSFTID``, MyHeritage ``_UID``,
+        Geni ``_PUBLIC`` и др.). Импорт делается лениво в теле метода,
+        чтобы не создавать циклической зависимости quarantine ↔ document
+        на module-level.
         """
+        # Локальный импорт — quarantine импортирует RawTagBlock из models,
+        # а document — из models. Циклов нет, но lazy-импорт сохраняет
+        # читаемость списка зависимостей сверху файла.
+        from gedcom_parser.quarantine import quarantine_document  # noqa: PLC0415
+
         doc = cls(encoding=encoding)
 
         for record in records:
@@ -141,6 +162,8 @@ class GedcomDocument(BaseModel):
                 doc.submitters[record.xref_id] = Submitter.from_record(record)
             # Прочие теги верхнего уровня (проприетарные расширения и т.д.)
             # сохраняем в семантику только когда явно понадобятся.
+
+        doc.unknown_tags = quarantine_document(records)
 
         return doc
 

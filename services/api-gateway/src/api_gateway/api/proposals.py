@@ -1,13 +1,13 @@
-"""Tree change proposals — CRUD endpoints (Phase 15.4a).
+"""Tree change proposals — CRUD endpoints (Phase 16.1a).
 
 * ``POST   /trees/{tree_id}/proposals``       — создать новый proposal.
 * ``GET    /trees/{tree_id}/proposals``       — список (filter by status).
 * ``GET    /proposals/{proposal_id}``         — single full record.
 
-Phase 15.4b добавит approve / reject / evidence attach + permission
+Phase 16.1b добавит approve / reject / evidence attach + permission
 boundary differences (VIEWER vs EDITOR vs OWNER). Здесь — все три
 endpoint'а доступны любому залогиненному user'у с access к дереву
-(viewer+); пермишен на approve/merge будет в 15.4b.
+(viewer+); пермишен на approve/merge будет в 16.1b.
 
 Auto-evidence-population: при ``POST`` если ``tree.protected=True`` и
 ``protection_policy.require_evidence_for`` не пуст, проходим по
@@ -218,5 +218,5 @@ async def get_proposal(
 
 
 # Suppress unused-import in type-checked context — RelationshipKind exported
-# для будущих 15.4b/c handlers, держим в публичном API схем.
+# для будущих 16.1b/c handlers, держим в публичном API схем.
 _ = RelationshipKind

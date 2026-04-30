@@ -3,7 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-05-01
 - **Authors:** @vladimir
-- **Tags:** `phase-15.4`, `collaboration`, `data-model`, `permissions`
+- **Tags:** `phase-16.1`, `collaboration`, `data-model`, `permissions`
 
 ## Контекст
 
@@ -48,10 +48,10 @@ diff применяется к дереву одной транзакцией + 
 
 - ✅ Mental model знаком всем (GitHub PRs).
 - ✅ Bulk-changes group'ятся естественно.
-- ✅ Atomic merge → atomic rollback (15.4c).
+- ✅ Atomic merge → atomic rollback (16.1c).
 - ✅ Evidence требуется к proposal'у, не к каждой строке отдельно.
 - ❌ Дополнительный layer схемы (2 новые таблицы + ALTER trees).
-- ❌ Diff-engine (15.4c) — нетривиальный код для validation +
+- ❌ Diff-engine (16.1c) — нетривиальный код для validation +
   conflict detection.
 
 ### Вариант C — Real-time collab (CRDT)
@@ -83,7 +83,7 @@ Google-Docs-style: все правки видны мгновенно, conflict r
 
 Плюс ``trees.protected boolean default false`` + ``protection_policy
 jsonb default '{}'`` — opt-in флаг и политика, которая enforced'ится
-endpoint'ами Phase 15.4b/c.
+endpoint'ами Phase 16.1b/c.
 
 ## Зафиксированные подрешения (из обсуждения PR'а)
 
@@ -112,7 +112,7 @@ endpoint'ами Phase 15.4b/c.
 ### Protection mode default = `false`
 
 Solo users не получают friction. Power users явно включают через UI
-toggle (15.4d) и настраивают policy.
+toggle (16.1d) и настраивают policy.
 
 ### Evidence-required gate semantics
 
@@ -122,7 +122,7 @@ protected И ``policy.require_evidence_for`` не пуст — проходим 
 ``kind/relation_kind ∈ require_evidence_for`` кладём
 ``EvidenceRequirement(relationship_id, kind)`` в ``evidence_required``.
 
-Validation на approve (Phase 15.4b): для каждого item из
+Validation на approve (Phase 16.1b): для каждого item из
 ``evidence_required`` должен существовать хотя бы один
 ``tree_change_proposal_evidence`` row с совпадающим
 ``relationship_ref``. Иначе 422 «Evidence missing for relationship X».
@@ -131,7 +131,7 @@ Reasoning: caller (UI) сразу видит при создании proposal'а
 sources надо приаттачить; gate'ится на approve, не на create — author
 может сохранить draft и потом донабрать evidence.
 
-### Rollback strategy — ОТКРЫТО до 15.4c
+### Rollback strategy — ОТКРЫТО до 16.1c
 
 Три варианта (см. бриф):
 
@@ -142,11 +142,11 @@ sources надо приаттачить; gate'ится на approve, не на c
 - **C:** Compute inverse on-demand (хрупко при последующих
   изменениях).
 
-Не решаем здесь — нужна week-of-design в 15.4c с прототипом
+Не решаем здесь — нужна week-of-design в 16.1c с прототипом
 diff-engine'а. Текущая схема уже имеет ``rolled_back_at`` /
 ``rolled_back_by_user_id`` колонки; конкретный механизм добавит
 либо новую колонку (B), либо разрастёт audit_log payload (A) —
-ни то, ни то не breaking change для 15.4a contract'а.
+ни то, ни то не breaking change для 16.1a contract'а.
 
 ## Последствия
 
@@ -159,9 +159,9 @@ diff-engine'а. Текущая схема уже имеет ``rolled_back_at`` /
 
 **Отрицательные / стоимость:**
 
-- ~600 LOC на 15.4a (data model + bare CRUD + scaffold api-gateway).
-- 15.4c diff-engine — отдельная неделя дизайна и реализации.
-- Frontend (15.4d) — split-pane diff viewer, evidence attach UI,
+- ~600 LOC на 16.1a (data model + bare CRUD + scaffold api-gateway).
+- 16.1c diff-engine — отдельная неделя дизайна и реализации.
+- Frontend (16.1d) — split-pane diff viewer, evidence attach UI,
   permission tooltips — ещё ~800 LOC.
 
 **Риски:**
@@ -169,17 +169,17 @@ diff-engine'а. Текущая схема уже имеет ``rolled_back_at`` /
 - Adoption: solo users могут счесть PR-flow over-engineered. Mitigation:
   default off, opt-in toggle, empty-state CTA «Tree is open — direct
   edits enabled».
-- Diff-engine ambiguity при concurrent edits: 15.4c может потребовать
+- Diff-engine ambiguity при concurrent edits: 16.1c может потребовать
   вернуться к этой ADR с решением по conflict-strategy.
 
-**Что нужно сделать в коде (Phase 15.4 split):**
+**Что нужно сделать в коде (Phase 16.1 split):**
 
-- **15.4a (this commit):** alembic 0028, 2 ORM, новый services/api-gateway,
+- **16.1a (this commit):** alembic 0029, 2 ORM, новый services/api-gateway,
   POST/GET endpoint'ы CRUD-уровня. Тесты + ADR + ROADMAP.
-- **15.4b:** approve / reject / evidence attach + permission boundaries.
-- **15.4c:** atomic merge engine (diff → tree mutations + audit_log) plus
+- **16.1b:** approve / reject / evidence attach + permission boundaries.
+- **16.1c:** atomic merge engine (diff → tree mutations + audit_log) plus
   rollback (с зафиксированной по варианту A/B/C strategy).
-- **15.4d:** frontend (proposals list, diff viewer, evidence panel,
+- **16.1d:** frontend (proposals list, diff viewer, evidence panel,
   protected-tree badge).
 
 ## Когда пересмотреть
@@ -190,7 +190,7 @@ diff-engine'а. Текущая схема уже имеет ``rolled_back_at`` /
 - Если CRDT becomes shippable infrastructure (Yjs/Automerge для
   реляционных данных) — рассмотреть как complement (real-time для
   draft-edits, PR-flow для финализации).
-- Если Phase 15.4c показывает, что atomic-rollback требует
+- Если Phase 16.1c показывает, что atomic-rollback требует
   fundamental изменений в audit_log shape — extension или suppression
   этого ADR.
 

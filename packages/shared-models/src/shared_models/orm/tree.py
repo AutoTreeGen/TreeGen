@@ -49,9 +49,9 @@ class Tree(TreeOwnedMixins, Base):
         server_default=text("'{}'::jsonb"),
     )
 
-    # Phase 15.4 (ADR-0062) — Protected Tree Mode + change-proposal policy.
+    # Phase 16.1 (ADR-0062) — Protected Tree Mode + change-proposal policy.
     # ``protected=True`` → все мутации обязаны идти через
-    # ``tree_change_proposals`` (review-flow, см. Phase 15.4b/c). Default
+    # ``tree_change_proposals`` (review-flow, см. Phase 16.1b/c). Default
     # ``False`` сохраняет существующее поведение (direct edits) для всех
     # уже существующих деревьев — solo-users не получают friction.
     protected: Mapped[bool] = mapped_column(

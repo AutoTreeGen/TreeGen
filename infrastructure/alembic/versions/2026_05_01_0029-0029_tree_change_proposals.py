@@ -1,7 +1,7 @@
-"""tree_change_proposals + protected tree mode (Phase 15.4a / ADR-0062).
+"""tree_change_proposals + protected tree mode (Phase 16.1a / ADR-0062).
 
-Revision ID: 0028
-Revises: 0027
+Revision ID: 0029
+Revises: 0028
 Create Date: 2026-05-01
 
 Adds the data-model layer for "Genealogy Git" — PR-style change review
@@ -27,8 +27,8 @@ Adds the data-model layer for "Genealogy Git" — PR-style change review
 Не TreeEntity — это audit/workflow log (без provenance/version_id/
 status/soft-delete). См. ``test_schema_invariants.SERVICE_TABLES``.
 
-Phase 15.4b/c добавит endpoint'ы review/approve/merge; здесь только
-schema + минимальный CRUD (15.4a).
+Phase 16.1b/c добавит endpoint'ы review/approve/merge; здесь только
+schema + минимальный CRUD (16.1a).
 """
 
 from __future__ import annotations
@@ -39,8 +39,8 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "0028"
-down_revision: str | None = "0027"
+revision: str = "0029"
+down_revision: str | None = "0028"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

@@ -444,6 +444,31 @@
       "title": "Возможные дубликаты"
     }
   },
+  "aiExtraction": {
+    "panelTitle": "AI-извлечение фактов",
+    "panelDescription": "Claude прочитает источник и предложит структурированные факты (персоны, события, связи). Каждое предложение нужно подтвердить вручную перед добавлением в дерево.",
+    "uploadHeading": "Загрузите изображение",
+    "uploadDescription": "Скан, фото или скриншот источника. JPEG / PNG / GIF / WEBP, до 25 МБ.",
+    "chooseFileButton": "Выбрать файл",
+    "noFileChosen": "Файл не выбран",
+    "submit": "Извлечь факты из изображения",
+    "submitting": "Извлекаю…",
+    "imageOptimized": "Оптимизировано {originalKb} КБ → {processedKb} КБ",
+    "imageRotated": "Авто-поворот по EXIF",
+    "imageResized": "Уменьшено до 2048 px",
+    "statusHeading": "Статус извлечения",
+    "statusNone": "Для этого источника AI-извлечение ещё не запускалось.",
+    "statusCompleted": "Готово — {facts} {facts, plural, one {факт} few {факта} many {фактов} other {факта}} для проверки",
+    "statusFailed": "Последняя попытка завершилась с ошибкой",
+    "statusPending": "Извлечение выполняется…",
+    "costLabel": "Стоимость",
+    "costRemaining": "Доступно {remaining} из {cap} (per-source лимит)",
+    "budgetRunsRemaining": "Осталось извлечений сегодня: {remaining}",
+    "budgetTokensRemaining": "Осталось токенов в этом месяце: {remaining}",
+    "errorBudget": "Достигнут лимит AI-извлечений ({kind}).",
+    "errorVisionRejected": "Не удалось обработать изображение. Попробуйте другой файл.",
+    "errorGeneric": "Не удалось извлечь факты. Попробуйте ещё раз."
+  },
   "sharing": {
     "owner": {
       "title": "Совместный доступ",
@@ -537,5 +562,42 @@
       "manage": "Все деревья",
       "loading": "Загрузка деревьев…"
     }
+  },
+  "relationshipEvidence": {
+    "ariaLabel": "Панель доказательств связи",
+    "headerTitle": "Доказательства для связи: {kind}",
+    "kind": {
+      "parent_child": "родитель → ребёнок",
+      "spouse": "супруги",
+      "sibling": "брат/сестра"
+    },
+    "close": "Закрыть",
+    "tabs": {
+      "supporting": "Подтверждающие",
+      "contradicting": "Противоречащие",
+      "provenance": "Происхождение"
+    },
+    "confidenceMethod": {
+      "bayesian_fusion_v2": "Байесовское слияние",
+      "naive_count": "Простой подсчёт"
+    },
+    "reliability": "достоверность {value}",
+    "openSource": "Открыть источник",
+    "emptySupporting": {
+      "title": "Нет подтверждающих доказательств",
+      "description": "У этой связи пока нет цитат или правил. Поиск в архивах поможет её зафиксировать.",
+      "cta": "Поиск в архивах (скоро)"
+    },
+    "emptyContradicting": "Противоречий не найдено.",
+    "emptyProvenance": "История импорта или ручных правок не записана.",
+    "provenance": {
+      "sourceFiles": "Исходные файлы",
+      "importJob": "Импорт-job",
+      "manualEdits": "Ручные правки",
+      "manualEditsCount": "{count, plural, one {# правка} few {# правки} many {# правок} other {# правки}} записано"
+    },
+    "addEvidence": "Добавить доказательство",
+    "addEvidenceHint": "Будет доступно в Phase 15.2",
+    "error": "Не удалось загрузить доказательства: {message}"
   }
 }

@@ -1,4 +1,4 @@
-"""Tree change proposals — CRUD endpoint tests (Phase 15.4a).
+"""Tree change proposals — CRUD endpoint tests (Phase 16.1a).
 
 Каждый тест создаёт изолированного User+Tree через прямой ORM-insert
 (паттерн test_digest_summary.py): parser-service shared session

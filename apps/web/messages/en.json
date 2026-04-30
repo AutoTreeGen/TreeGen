@@ -444,6 +444,31 @@
       "title": "Duplicate suggestions"
     }
   },
+  "aiExtraction": {
+    "panelTitle": "AI extraction",
+    "panelDescription": "Let Claude read this source and propose structured facts (persons, events, relationships). You review every suggestion before it reaches the tree.",
+    "uploadHeading": "Upload an image",
+    "uploadDescription": "Scan, photo, or screenshot of the source. JPEG / PNG / GIF / WEBP, ≤ 25 MB.",
+    "chooseFileButton": "Choose file",
+    "noFileChosen": "No file chosen",
+    "submit": "Extract facts from image",
+    "submitting": "Extracting…",
+    "imageOptimized": "Optimized {originalKb} KB → {processedKb} KB",
+    "imageRotated": "Auto-rotated by EXIF",
+    "imageResized": "Resized to fit 2048 px",
+    "statusHeading": "Extraction status",
+    "statusNone": "No AI extraction has run for this source yet.",
+    "statusCompleted": "Completed — {facts} new fact suggestions ready for review",
+    "statusFailed": "Last attempt failed",
+    "statusPending": "Extraction running…",
+    "costLabel": "Cost",
+    "costRemaining": "{remaining} of {cap} remaining (per-source cap)",
+    "budgetRunsRemaining": "{remaining} extractions left today",
+    "budgetTokensRemaining": "{remaining} tokens left this month",
+    "errorBudget": "You've reached an AI extraction limit ({kind}).",
+    "errorVisionRejected": "Couldn't process this image. Try another file.",
+    "errorGeneric": "Couldn't extract facts. Please try again."
+  },
   "sharing": {
     "owner": {
       "title": "Sharing",
@@ -537,5 +562,42 @@
       "manage": "Manage trees",
       "loading": "Loading trees…"
     }
+  },
+  "relationshipEvidence": {
+    "ariaLabel": "Relationship evidence panel",
+    "headerTitle": "Evidence for {kind}",
+    "kind": {
+      "parent_child": "parent → child",
+      "spouse": "spouse",
+      "sibling": "sibling"
+    },
+    "close": "Close",
+    "tabs": {
+      "supporting": "Supporting",
+      "contradicting": "Contradicting",
+      "provenance": "Provenance"
+    },
+    "confidenceMethod": {
+      "bayesian_fusion_v2": "Bayesian fusion",
+      "naive_count": "Naive count"
+    },
+    "reliability": "reliability {value}",
+    "openSource": "Open source",
+    "emptySupporting": {
+      "title": "No supporting evidence",
+      "description": "This link has no citations or rules yet. Adding archive searches helps anchor it.",
+      "cta": "Add archive search (coming soon)"
+    },
+    "emptyContradicting": "No contradictions found.",
+    "emptyProvenance": "No import or manual-edit history recorded.",
+    "provenance": {
+      "sourceFiles": "Source files",
+      "importJob": "Import job",
+      "manualEdits": "Manual edits",
+      "manualEditsCount": "{count, plural, =1 {# edit} other {# edits}} recorded"
+    },
+    "addEvidence": "Add evidence",
+    "addEvidenceHint": "Available in Phase 15.2",
+    "error": "Failed to load evidence: {message}"
   }
 }

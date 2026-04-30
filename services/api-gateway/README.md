@@ -2,14 +2,14 @@
 
 AutoTreeGen API gateway service — tree-domain workflow endpoints.
 
-Phase 15.4a (this commit): genealogy git data model + minimal CRUD for
+Phase 16.1a (this commit): genealogy git data model + minimal CRUD for
 `tree_change_proposals`. See `docs/adr/0062-genealogy-git-collaborative-review.md`.
 
 Subsequent sub-phases:
 
-- **15.4b** — review actions (approve / reject / evidence attach) + permissions.
-- **15.4c** — atomic merge engine + rollback (audit_log linkage).
-- **15.4d** — frontend (`apps/web/src/app/trees/[id]/proposals/...`).
+- **16.1b** — review actions (approve / reject / evidence attach) + permissions.
+- **16.1c** — atomic merge engine + rollback (audit_log linkage).
+- **16.1d** — frontend (`apps/web/src/app/trees/[id]/proposals/...`).
 
 ## Run locally
 

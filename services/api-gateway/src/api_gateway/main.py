@@ -1,4 +1,4 @@
-"""FastAPI entry point для api-gateway (Phase 15.4).
+"""FastAPI entry point для api-gateway (Phase 16.1).
 
 Запуск:
     uv run uvicorn api_gateway.main:app --reload --port 8007
@@ -35,7 +35,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title="AutoTreeGen — api-gateway",
-    description="Tree-domain workflow endpoints (Phase 15.4 genealogy git). См. ADR-0062.",
+    description="Tree-domain workflow endpoints (Phase 16.1 genealogy git). См. ADR-0062.",
     version="0.1.0",
     lifespan=lifespan,
 )

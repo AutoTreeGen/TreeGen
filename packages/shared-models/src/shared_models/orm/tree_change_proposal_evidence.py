@@ -1,9 +1,9 @@
-"""TreeChangeProposalEvidence — source-citation для одного proposal (Phase 15.4 / ADR-0062).
+"""TreeChangeProposalEvidence — source-citation для одного proposal (Phase 16.1 / ADR-0062).
 
 Many-to-many между ``tree_change_proposals`` и ``sources`` с opaque
 ``relationship_ref`` jsonb (caller указывает, какой конкретный change
 из proposal-diff support'ит этот источник; формат — opaque JSON,
-парсится 15.4b approve-validator'ом).
+парсится 16.1b approve-validator'ом).
 
 Audit-trail, не tree-entity: без provenance / version_id / soft-delete.
 В ``test_schema_invariants.SERVICE_TABLES``.
@@ -81,7 +81,7 @@ class TreeChangeProposalEvidence(IdMixin, Base):
         comment=(
             "Opaque pointer на конкретный change в diff-е proposal'а. "
             "Формат — caller-defined ({entity_type, entity_id, kind, ...}); "
-            "парсится approve-validator'ом (15.4b)."
+            "парсится approve-validator'ом (16.1b)."
         ),
     )
     added_by_user_id: Mapped[uuid.UUID] = mapped_column(

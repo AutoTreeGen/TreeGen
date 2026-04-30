@@ -182,6 +182,50 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 ссылки, проприетарные теги Ancestry, иврит-даты).
 ```
 
+### 5.5 Safe Import/Export (round-trip + loss simulator)
+
+Cross-platform GEDCOM теряет sources, parent–child, witnesses, godparents
+и проприетарные теги при экспорте между Ancestry / MyHeritage / Geni /
+RootsMagic / Family Tree Maker. Phase 5.5 закрывает эту дыру:
+quarantine на import → preserve в DB → re-emit на export. Pre-export
+loss simulator + validator выдают report до того, как пользователь
+теряет данные.
+
+Split на 5.5a + 5.5b (мега-PR не пройдёт review):
+
+#### 5.5a — Quarantine import + AST round-trip
+
+- `RawTagBlock` Pydantic + `GedcomDocument.unknown_tags` populated
+  whitelist-driven walk над AST.
+- ORM `import_jobs.unknown_tags` jsonb (mirror of 10.2
+  `source_extractions.raw_response` pattern). Один additive column,
+  no new tables.
+- AST-level round-trip tests на synthetic + real corpus
+  (`gedcom_real` marker, `D:/Projects/GED`). Variant B — structural
+  diff после re-parse, не byte-diff (ANSEL → UTF-8 normalize).
+- Existing entity models (`Person`/`Family`/`Source`/`Event`/...)
+  остаются frozen; quarantine — отдельный модуль.
+- ADR documenting jsonb-on-import_jobs vs per-entity provenance vs
+  new table.
+
+#### 5.5b — Loss simulator + validators + endpoints
+
+Зависит от 5.5a merge.
+
+- `TargetDialect` enum (ANCESTRY, MYHERITAGE, GENI, ROOTSMAGIC, FTM,
+  GEDCOM_555, GEDCOM_551) + per-dialect support matrix
+  `dict[tag_path, SupportLevel]`.
+- `LossSimulator(dialect).simulate(doc) → LossReport`.
+- `StructuralValidator` (broken refs, orphaned records) +
+  `SemanticValidator` (impossible dates, child before mother).
+- Endpoints (versioned, первый `/api/v1/` namespace):
+  - `POST /api/v1/gedcom/simulate-export {tree_id, target_dialect}` →
+    counts + per-tag breakdown.
+  - `POST /api/v1/gedcom/validate {file or tree_id}` → warnings + stats.
+- UI selector — отдельный 5.5c PR после обоих back-end merge.
+
+Спека и handoff trace: `.agent-tasks/07-phase-5-5-gedcom-safe-io.md`.
+
 ---
 
 ## 6. Фаза 2 — Модель данных и БД
@@ -707,7 +751,60 @@ licensing, EE-Jewish coverage, partnership effort). Краткая сводка:
 
 ---
 
-## 18a. Фаза 15 — Genealogy Git: collaborative review + Protected Tree Mode
+## 18A. Фаза 15 — Pro-tier evidence UI
+
+**Цель:** AutoTreeGen позиционируется как "evidence engine for genealogy".
+Phase 15 поверх готового backend (sources, citations, hypotheses, DNA)
+накатывает UI-слой, где пользователь **видит и работает с evidence**, а не
+с бесконечными списками персон.
+
+### 18A.0 Статус подфаз
+
+| Подфаза | Описание | Статус |
+|---|---|---|
+| **15.1** | **Relationship-level evidence panel — ADR-0058** | ✅ **Done (2026-05-01)** |
+| 15.2 | "Add evidence" flow (manual citation + source attach) | 🔜 Planned |
+| 15.3 | Hypothesis sandbox UI (rule playground + what-if) | 🔜 Planned |
+| 15.4 | Per-relationship audit log (kind/source/who/when) | 🔜 Planned |
+| 15.5 | Archive search integration (FamilySearch / Wikimedia) | 🔜 Planned |
+
+### 18A.1 Phase 15.1 — Relationship Evidence Panel ✅ (см. ADR-0058)
+
+`GET /trees/{tree_id}/relationships/{kind}/{subject_id}/{object_id}/evidence`
+плюс `<RelationshipEvidencePanel>` — read-only consumer над существующим
+provenance / citations / hypothesis_evidences:
+
+- `kind` ∈ `parent_child | spouse | sibling`. Composite-key URL —
+  компромисс на отсутствие single-relationship view в схеме.
+- Aggregation: `Citation` rows on family + (для spouse) on MARR/DIV
+  events + HypothesisEvidence rows.
+- Confidence rollup: `Hypothesis.composite_score` если есть hypothesis
+  → `method="bayesian_fusion_v2"`; иначе naive count.
+- UI: right-side drawer (Tailwind self-contained, без Sheet primitive),
+  3 tabs (Supporting / Contradicting / Provenance), color-coded
+  confidence badge (green ≥0.85 / amber 0.6-0.85 / red <0.6),
+  empty-state CTAs (disabled — wired в 15.2 / 15.5).
+- i18n en + ru через next-intl.
+
+### 18A.2 Что НЕ входит в 15.1 (anti-drift)
+
+- Tree rendering layer / D3 / canvas — не трогается.
+- Trigger (клик на edge / context menu) — отдельный wiring PR.
+- "Add evidence" / "Add archive search" — disabled placeholders.
+- Hypothesis sandbox — Phase 15.3.
+- Schema changes на FamilyChild/relationship — Phase 15.x при сильном
+  signal.
+
+---
+
+## 18B. Фаза 16 — Genealogy Git: collaborative review + Protected Tree Mode
+
+> **Note on numbering.** Phase 15 уже зарезервирована под evidence-UI
+> (см. §18A). Эта фаза изначально планировалась как "15.4 Genealogy Git",
+> но 15.4-слот занят "Per-relationship audit log" (см. таблицу 18A.0),
+> поэтому переименована в Phase 16. Branch / migration / file names в
+> исходниках сохраняют исходное `phase-15-4a` обозначение как
+> исторический артефакт; ADR-0062 — каноническая ссылка.
 
 «Moat builder» — без version control + collab review TreeGen остаётся
 hobbyist-tool. ICP: pro genealogist + research-сценарии где несколько
@@ -721,14 +818,14 @@ Pattern: PR-style change proposal над деревом. Любая мутаци
 protection через флаг + policy (jsonb): `require_evidence_for`,
 `min_reviewers`, `allow_owner_bypass`. См. ADR-0062.
 
-### Phase 15.4 split
+### Phase 16.1 split
 
 | Sub-phase | Scope | Зависит от |
 |---|---|---|
-| **15.4a** — data model + bare CRUD | alembic 0028 (ALTER trees protected/policy + 2 новые таблицы), ORM `TreeChangeProposal` / `TreeChangeProposalEvidence`, новый `services/api-gateway` scaffold, эндпоинты `POST /trees/{id}/proposals`, `GET /trees/{id}/proposals`, `GET /proposals/{id}`. ADR-0062. | — |
-| **15.4b** — review actions + permissions | `POST /proposals/{id}/approve` / `reject`, evidence attach/detach endpoints, 4-eye gate (author не может approve свой), evidence-required validation (422 если не покрыто), permission boundaries (VIEWER 403, EDITOR approve/reject, OWNER merge). | 15.4a merged |
-| **15.4c** — merge engine + rollback | Atomic apply diff → tree entities + audit_log linkage; rollback через replay reverse diff; pre-merge snapshot strategy (см. ADR-0062 §«Rollback» — открытое решение, decided in 15.4c). | 15.4b merged |
-| **15.4d** — frontend | `/trees/[id]/proposals` (list) + `/trees/[id]/proposals/[id]` (detail с diff viewer); компоненты `<ProposalsList>`, `<ProposalDiffView>`, `<EvidenceAttachPanel>`, `<ProposalActions>`, `<ProtectedTreeBadge>`. i18n en/ru. | 15.4c merged (нужен полный API surface) |
+| **16.1a** — data model + bare CRUD | alembic 0029 (ALTER trees protected/policy + 2 новые таблицы), ORM `TreeChangeProposal` / `TreeChangeProposalEvidence`, новый `services/api-gateway` scaffold, эндпоинты `POST /trees/{id}/proposals`, `GET /trees/{id}/proposals`, `GET /proposals/{id}`. ADR-0062. | — |
+| **16.1b** — review actions + permissions | `POST /proposals/{id}/approve` / `reject`, evidence attach/detach endpoints, 4-eye gate (author не может approve свой), evidence-required validation (422 если не покрыто), permission boundaries (VIEWER 403, EDITOR approve/reject, OWNER merge). | 16.1a merged |
+| **16.1c** — merge engine + rollback | Atomic apply diff → tree entities + audit_log linkage; rollback через replay reverse diff; pre-merge snapshot strategy (см. ADR-0062 §«Rollback» — открытое решение, decided in 16.1c). | 16.1b merged |
+| **16.1d** — frontend | `/trees/[id]/proposals` (list) + `/trees/[id]/proposals/[id]` (detail с diff viewer); компоненты `<ProposalsList>`, `<ProposalDiffView>`, `<EvidenceAttachPanel>`, `<ProposalActions>`, `<ProtectedTreeBadge>`. i18n en/ru. | 16.1c merged (нужен полный API surface) |
 
 ### Зафиксированные решения (см. ADR-0062)
 
@@ -738,11 +835,11 @@ protection через флаг + policy (jsonb): `require_evidence_for`,
   `test_schema_invariants.py`. Не tree-entities (нет provenance /
   version_id / status / soft-delete) — это audit/workflow log.
 - **`protected` default = `false`** — solo users не получают friction.
-  Power users opt in через UI toggle (15.4d).
+  Power users opt in через UI toggle (16.1d).
 - **Анти-drift**: НЕ строим CRDT real-time collab, НЕ добавляем
-  auto-merge, НЕ трогаем audit_log schema (read-only consumer в 15.4c).
+  auto-merge, НЕ трогаем audit_log schema (read-only consumer в 16.1c).
 
-### Phase 15.5+ (future)
+### Phase 16.2+ (future)
 
 - Branching (long-lived working trees per researcher).
 - Subscribe-to-tree (кузен видит уведомления о merged proposals).

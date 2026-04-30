@@ -1,7 +1,7 @@
 [project]
 name = "api-gateway"
 version = "0.1.0"
-description = "AutoTreeGen API gateway — tree-domain workflow endpoints (Phase 15.4 genealogy git)."
+description = "AutoTreeGen API gateway — tree-domain workflow endpoints (Phase 16.1 genealogy git)."
 readme = "README.md"
 requires-python = ">=3.13"
 license = { text = "Proprietary" }

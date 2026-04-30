@@ -1,11 +1,11 @@
 """Pydantic-схемы api-gateway.
 
-Phase 15.4a — proposal CRUD: входящий ``ProposalCreate`` (с валидацией
+Phase 16.1a — proposal CRUD: входящий ``ProposalCreate`` (с валидацией
 ``diff`` shape) + outbound ``ProposalRead`` / ``ProposalListResponse``.
 
 ``ProtectionPolicy`` валидирует ``trees.protection_policy`` jsonb на
 читателе (не на writer'е — owner мутирует policy через отдельный
-endpoint Phase 15.4b).
+endpoint Phase 16.1b).
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ RelationshipKind = Literal["parent_child", "spouse", "sibling", "other"]
 class EvidenceRequirement(BaseModel):
     """Один элемент ``evidence_required`` (auto-populated из policy).
 
-    Caller (15.4b approve-validator) проверяет, что для каждого item-а
+    Caller (16.1b approve-validator) проверяет, что для каждого item-а
     есть хотя бы один ``tree_change_proposal_evidence``-row с совпадающим
     ``relationship_ref``.
     """
@@ -48,7 +48,7 @@ class ProtectionPolicy(BaseModel):
 class ProposalDiff(BaseModel):
     """Структурированный diff одного proposal.
 
-    Каждая запись — opaque dict caller'а (15.4c merge engine
+    Каждая запись — opaque dict caller'а (16.1c merge engine
     интерпретирует). Здесь валидируем только верхнюю shape (три ключа,
     каждый — list).
     """

@@ -1,4 +1,4 @@
-"""TreeChangeProposal — PR-style change request над деревом (Phase 15.4 / ADR-0062).
+"""TreeChangeProposal — PR-style change request над деревом (Phase 16.1 / ADR-0062).
 
 Audit/workflow log, не tree-entity:
 
@@ -17,11 +17,11 @@ identity-целостность и cascade при удалении user'а.
 ``diff`` jsonb — структурированный representation предлагаемого
 изменения (``{creates: [...], updates: [...], deletes: [...]}`` per
 entity type). Schema валидируется на API-уровне (Pydantic) при
-``POST /proposals``; здесь — opaque jsonb (15.4c merge engine
+``POST /proposals``; здесь — opaque jsonb (16.1c merge engine
 интерпретирует).
 
 ``merge_commit_id`` — указатель на ``audit_log`` row, созданный при
-успешном merge (15.4c). NULL для proposals в состояниях
+успешном merge (16.1c). NULL для proposals в состояниях
 ``open/approved/rejected``. ``ondelete="SET NULL"`` потому что
 ``audit_log`` может purge'аться отдельной retention-политикой, а
 proposal-row остаётся как исторический факт.
@@ -110,7 +110,7 @@ class TreeChangeProposal(IdMixin, Base):
         comment=(
             "Структурированный diff: ``{creates: [...], updates: [...], "
             "deletes: [...]}`` per entity type. Pydantic-валидация на "
-            "POST. Merge engine (Phase 15.4c) интерпретирует."
+            "POST. Merge engine (Phase 16.1c) интерпретирует."
         ),
     )
     status: Mapped[str] = mapped_column(
@@ -128,7 +128,7 @@ class TreeChangeProposal(IdMixin, Base):
             "Auto-populated из ``tree.protection_policy.require_evidence_for`` "
             "при POST. Список ``{relationship_id, kind}`` — каждый item "
             "должен быть покрыт ``tree_change_proposal_evidence``-row "
-            "перед approve (15.4b validation)."
+            "перед approve (16.1b validation)."
         ),
     )
 
@@ -162,7 +162,7 @@ class TreeChangeProposal(IdMixin, Base):
         ForeignKey("audit_log.id", ondelete="SET NULL"),
         nullable=True,
         comment=(
-            "Pointer на audit_log row, созданный при atomic-merge (15.4c). "
+            "Pointer на audit_log row, созданный при atomic-merge (16.1c). "
             "SET NULL on delete: audit_log retention purges не должны "
             "ломать proposal history."
         ),
