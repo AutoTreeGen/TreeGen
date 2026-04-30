@@ -33,6 +33,11 @@ dependencies = [
     # Phase 4.10 — Clerk webhook signature verification (Svix HMAC).
     # PyJWT и httpx уже идут через shared-models.auth.
     "svix>=1.40",
+    # Phase 10.2 (ADR-0059) — AI source extraction.
+    # ai-layer: prompt registry + Anthropic/Voyage клиенты + use cases.
+    # pypdf: text-extraction для PDF-источников до vision-fallback'а.
+    "ai-layer",
+    "pypdf>=5.0",
 ]
 
 [project.optional-dependencies]
