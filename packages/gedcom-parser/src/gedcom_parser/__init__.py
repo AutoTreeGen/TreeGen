@@ -53,7 +53,7 @@ from gedcom_parser.exceptions import (
     GedcomWarning,
 )
 from gedcom_parser.lexer import iter_lines
-from gedcom_parser.models import EncodingInfo, GedcomLine, GedcomRecord
+from gedcom_parser.models import EncodingInfo, GedcomLine, GedcomRecord, RawTagBlock
 from gedcom_parser.names import (
     NameVariant,
     VariantKind,
@@ -74,8 +74,9 @@ from gedcom_parser.places import (
     parse_coordinate,
     parse_place_levels,
 )
+from gedcom_parser.quarantine import quarantine_document, quarantine_record
 from gedcom_parser.transliteration import is_cyrillic, transliterate_iso9
-from gedcom_parser.writer import write_records
+from gedcom_parser.writer import inject_unknown_tags, write_records
 
 __version__ = "0.1.0"
 
@@ -111,6 +112,7 @@ __all__ = [
     "Person",
     "PlaceVariant",
     "Qualifier",
+    "RawTagBlock",
     "Repository",
     "Source",
     "Submitter",
@@ -122,6 +124,7 @@ __all__ = [
     "detect_patronymic",
     "french_republican_to_gregorian",
     "hebrew_to_gregorian",
+    "inject_unknown_tags",
     "is_cyrillic",
     "iter_lines",
     "julian_to_gregorian",
@@ -133,6 +136,8 @@ __all__ = [
     "parse_place_levels",
     "parse_records",
     "parse_text",
+    "quarantine_document",
+    "quarantine_record",
     "split_compound_surname",
     "transliterate_iso9",
     "write_records",
