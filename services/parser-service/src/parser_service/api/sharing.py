@@ -34,7 +34,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from shared_models import TreeRole, role_satisfies
-from shared_models.orm import AuditLog, TreeInvitation, TreeMembership, User
+from shared_models.orm import AuditLog, Tree, TreeInvitation, TreeMembership, User
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -47,6 +47,7 @@ from parser_service.schemas import (
     InvitationAcceptResponse,
     InvitationCreateRequest,
     InvitationListResponse,
+    InvitationLookupResponse,
     InvitationResendResponse,
     InvitationResponse,
     MemberListResponse,
@@ -66,6 +67,10 @@ from parser_service.services.permissions import (
 )
 
 router = APIRouter()
+# Phase 11.1: public lookup endpoint для invitation accept-flow. Auth НЕ
+# требуется — token сам по себе secret. Включается без ``_AUTH_DEPS`` в
+# ``main.py``, симметрично ``public_share.router_public``.
+router_public = APIRouter()
 
 
 # ---- helpers --------------------------------------------------------------
@@ -223,6 +228,72 @@ async def revoke_invitation(
         invitation.revoked_at = dt.datetime.now(dt.UTC)
         invitation.revoked_by_user_id = user.id
         await session.flush()
+
+
+# ---- GET /invitations/{token} --------------------------------------------
+
+
+@router_public.get(
+    "/invitations/{token}",
+    response_model=InvitationLookupResponse,
+    summary="Public lookup приглашения по token — БЕЗ accept'а",
+)
+async def lookup_invitation(
+    token: uuid.UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> InvitationLookupResponse:
+    """Read-only детали invitation'а для UI accept-flow.
+
+    Phase 11.1 — landing page ``/invitations/[token]`` использует этот
+    endpoint чтобы показать invitee, на какое дерево он приглашён и кем,
+    до того как он нажмёт «Accept». Не consume'ит invitation, поэтому
+    multiple GET'ов безопасны.
+
+    Auth: НЕ требуется. Token сам по себе secret (UUIDv4, 122 бита
+    энтропии); знание токена = доступ к view-данным. Accept остаётся
+    auth-gated (``POST /invitations/{token}/accept``).
+
+    Status codes:
+
+    * 404 — invitation не найден.
+    * 410 — revoked или expired (UI рисует «invalid/expired» state).
+    * 200 — валидный pending или already-accepted invitation.
+    """
+    row = await session.execute(
+        select(TreeInvitation, Tree, User)
+        .join(Tree, Tree.id == TreeInvitation.tree_id)
+        .join(User, User.id == TreeInvitation.inviter_user_id)
+        .where(TreeInvitation.token == token)
+    )
+    pair = row.one_or_none()
+    if pair is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invitation not found",
+        )
+    invitation, tree, inviter = pair
+
+    if invitation.revoked_at is not None:
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="Invitation has been revoked",
+        )
+
+    if invitation.expires_at <= dt.datetime.now(dt.UTC):
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="Invitation has expired",
+        )
+
+    return InvitationLookupResponse(
+        invitee_email=invitation.invitee_email,
+        role=invitation.role,
+        tree_id=tree.id,
+        tree_name=tree.name,
+        inviter_display_name=inviter.display_name or inviter.email,
+        expires_at=invitation.expires_at,
+        accepted_at=invitation.accepted_at,
+    )
 
 
 # ---- POST /invitations/{token}/accept ------------------------------------
