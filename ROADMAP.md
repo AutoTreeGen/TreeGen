@@ -435,6 +435,9 @@ Split на 5.5a + 5.5b (мега-PR не пройдёт review):
 | **6.3** | **Match list/detail UI + chromosome painting + link-to-person — ADR-0033** | ✅ **Done (2026-04-28)** |
 | 6.4 | Triangulation engine (compute-only) + Bayes-prior heuristic — ADR-0054 | ✅ Done |
 | 6.5 | Imputation + IBD2 + dedicated `dna_match_segments` table | 🔜 Planned |
+| **6.7a** | **DNA AutoClusters: data model + Leiden clustering (NetworkX fallback) + endogamy heuristic — ADR-0063** | 🚧 In progress |
+| 6.7b | Pile-up region detection (segment_overlap_analysis по популяциям) | ⏳ Blocked on 6.7a |
+| 6.7c | AI cluster labels (opt-in) + frontend (`/dna/clusters` + components) + e2e | ⏳ Blocked on 6.7b |
 
 ---
 

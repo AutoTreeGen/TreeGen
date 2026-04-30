@@ -7,6 +7,17 @@ HTTP — `services/dna-service/` (Phase 6.1).
 
 from __future__ import annotations
 
+from dna_analysis.clustering import (
+    Cluster,
+    ClusterEdge,
+    ClusteringAlgorithm,
+    ClusteringResult,
+    ClusterMatch,
+    EndogamyAssessment,
+    build_co_match_graph,
+    detect_endogamy,
+    run_clustering,
+)
 from dna_analysis.errors import DnaParseError, UnsupportedFormatError
 from dna_analysis.genetic_map import GeneticMap, GeneticMapError
 from dna_analysis.matching import (
@@ -33,8 +44,14 @@ from dna_analysis.triangulation import (
 
 __all__ = [
     "Chromosome",
+    "Cluster",
+    "ClusterEdge",
+    "ClusterMatch",
+    "ClusteringAlgorithm",
+    "ClusteringResult",
     "DnaParseError",
     "DnaTest",
+    "EndogamyAssessment",
     "GeneticMap",
     "GeneticMapError",
     "Genotype",
@@ -48,7 +65,10 @@ __all__ = [
     "TriangulationSegment",
     "UnsupportedFormatError",
     "bayes_boost",
+    "build_co_match_graph",
+    "detect_endogamy",
     "find_shared_segments",
     "find_triangulation_groups",
     "predict_relationship",
+    "run_clustering",
 ]
