@@ -537,5 +537,42 @@
       "manage": "Все деревья",
       "loading": "Загрузка деревьев…"
     }
+  },
+  "relationshipEvidence": {
+    "ariaLabel": "Панель доказательств связи",
+    "headerTitle": "Доказательства для связи: {kind}",
+    "kind": {
+      "parent_child": "родитель → ребёнок",
+      "spouse": "супруги",
+      "sibling": "брат/сестра"
+    },
+    "close": "Закрыть",
+    "tabs": {
+      "supporting": "Подтверждающие",
+      "contradicting": "Противоречащие",
+      "provenance": "Происхождение"
+    },
+    "confidenceMethod": {
+      "bayesian_fusion_v2": "Байесовское слияние",
+      "naive_count": "Простой подсчёт"
+    },
+    "reliability": "достоверность {value}",
+    "openSource": "Открыть источник",
+    "emptySupporting": {
+      "title": "Нет подтверждающих доказательств",
+      "description": "У этой связи пока нет цитат или правил. Поиск в архивах поможет её зафиксировать.",
+      "cta": "Поиск в архивах (скоро)"
+    },
+    "emptyContradicting": "Противоречий не найдено.",
+    "emptyProvenance": "История импорта или ручных правок не записана.",
+    "provenance": {
+      "sourceFiles": "Исходные файлы",
+      "importJob": "Импорт-job",
+      "manualEdits": "Ручные правки",
+      "manualEditsCount": "{count, plural, one {# правка} few {# правки} many {# правок} other {# правки}} записано"
+    },
+    "addEvidence": "Добавить доказательство",
+    "addEvidenceHint": "Будет доступно в Phase 15.2",
+    "error": "Не удалось загрузить доказательства: {message}"
   }
 }
