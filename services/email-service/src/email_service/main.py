@@ -10,6 +10,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from shared_models.security import apply_security_middleware
 
 from email_service.api import health, send
 from email_service.config import get_settings
@@ -31,6 +32,9 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+# Phase 13.2 (ADR-0053) — security middleware.
+apply_security_middleware(app, service_name="email-service")
 
 app.include_router(health.router)
 app.include_router(send.router)

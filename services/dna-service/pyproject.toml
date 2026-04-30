@@ -17,7 +17,7 @@ dependencies = [
     "asyncpg>=0.30",
     "python-dotenv>=1.0",
     "anyio>=4.0",
-    "shared-models",
+    "shared-models[security]",
     "dna-analysis",
 ]
 

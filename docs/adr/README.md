@@ -40,4 +40,8 @@
 | 0040 | [Sharing UI architecture (Phase 11.1)](./0040-sharing-ui-architecture.md) | Accepted |
 | 0044 | [Person merge UI architecture (Phase 6.4)](./0044-person-merge-ui.md) | Accepted |
 | 0051 | [Tree statistics philosophy (Phase 6.5)](./0051-tree-statistics.md) | Accepted |
+<<<<<<< HEAD
 | 0056 | [Telegram bot commands + subscription (Phase 14.1)](./0056-telegram-bot-commands.md) | Accepted |
+=======
+| 0053 | [Production security hardening (Phase 13.2)](./0053-production-security-hardening.md) | Accepted |
+>>>>>>> 4a84ed9 (feat(infra): phase 13.2 — production security hardening (CSP + headers + rate limits))
