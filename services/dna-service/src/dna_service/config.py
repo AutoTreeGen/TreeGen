@@ -37,6 +37,15 @@ class Settings(BaseSettings):
     )
     debug: bool = Field(default=False)
 
+    # ---- Cache (Phase 6.4 / ADR-0054) ---------------------------------------
+    redis_url: str = Field(
+        default="",
+        description=(
+            "Optional Redis URL для cache compute-heavy ответов "
+            "(Phase 6.4 — triangulation). Пусто → no-op cache (всегда recompute)."
+        ),
+    )
+
     # ---- Clerk authentication (Phase 4.10, ADR-0033) ------------------------
     clerk_issuer: str = Field(
         default="",
