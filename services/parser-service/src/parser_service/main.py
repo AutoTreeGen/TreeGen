@@ -16,6 +16,7 @@ from parser_service.api import (
     clerk_webhooks,
     dedup,
     dedup_attempts,
+    digest,
     familysearch,
     hypotheses,
     hypotheses_sse,
@@ -122,6 +123,10 @@ app.include_router(waitlist.router, tags=["waitlist"])
 # Clerk webhooks — отдельный путь /webhooks/clerk (Phase 4.10, ADR-0033).
 # Аутентификация — Svix HMAC внутри ручки, не Bearer.
 app.include_router(clerk_webhooks.router, tags=["auth", "webhooks"])
+# Phase 14.2 — internal digest-summary endpoint. Auth — service-token
+# через ``X-Internal-Service-Token`` header (зеркало telegram-bot /notify).
+# БЕЗ ``_AUTH_DEPS``: caller — telegram-bot worker, не end-user.
+app.include_router(digest.router, tags=["digest", "internal"])
 
 
 @app.get("/healthz", tags=["meta"])
