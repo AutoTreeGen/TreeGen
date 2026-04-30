@@ -1139,3 +1139,86 @@ export function maskEmail(email: string): string {
   if (local.length <= 2) return `${local[0]}*@${domain}`;
   return `${local[0]}${"*".repeat(Math.min(local.length - 2, 4))}${local[local.length - 1]}@${domain}`;
 }
+
+// ---- Phase 10.2b — AI source extraction (vision + status) -----------------
+
+export type AIExtractionStatus = "pending" | "completed" | "failed";
+
+export type AIExtractionDetail = {
+  id: string;
+  source_id: string;
+  tree_id: string;
+  requested_by_user_id: string | null;
+  model_version: string;
+  prompt_version: string;
+  status: AIExtractionStatus;
+  input_tokens: number;
+  output_tokens: number;
+  error: string | null;
+  created_at: string;
+  completed_at: string | null;
+};
+
+export type AIExtractStatusResponse = {
+  source_id: string;
+  has_extraction: boolean;
+  extraction: AIExtractionDetail | null;
+  fact_count: number;
+  cost_usd: number;
+  budget_remaining_runs: number;
+  budget_remaining_tokens: number;
+  extract_budget_usd: number;
+};
+
+export type AIExtractVisionResponse = {
+  extraction: AIExtractionDetail;
+  fact_count: number;
+  budget_remaining_runs: number;
+  budget_remaining_tokens: number;
+  estimated_cost_usd: number;
+  image_was_resized: boolean;
+  image_was_rotated: boolean;
+  image_original_bytes: number;
+  image_processed_bytes: number;
+};
+
+export function fetchAIExtractStatus(sourceId: string): Promise<AIExtractStatusResponse> {
+  return getJson<AIExtractStatusResponse>(
+    `/sources/${encodeURIComponent(sourceId)}/ai-extract-status`,
+  );
+}
+
+/**
+ * Phase 10.2b — multipart upload изображения для vision extraction.
+ *
+ * Браузер сам form-encode'ит через ``FormData``; ``getJson`` тут не
+ * подходит (он JSON-only). Auth-header добавляется stack'ом fetch'а
+ * (см. ``setAuthTokenProvider``).
+ */
+export async function postAIExtractVision(
+  sourceId: string,
+  file: File,
+  ocrTextHint?: string,
+): Promise<AIExtractVisionResponse> {
+  const body = new FormData();
+  body.append("image", file);
+  if (ocrTextHint && ocrTextHint.length > 0) {
+    body.append("ocr_text_hint", ocrTextHint);
+  }
+  const response = await fetch(
+    `${API_BASE}/sources/${encodeURIComponent(sourceId)}/ai-extract-vision`,
+    {
+      method: "POST",
+      body,
+      headers: { Accept: "application/json" },
+    },
+  );
+  if (!response.ok) {
+    const detail = await safeReadDetail(response);
+    throw classifyHttpError(
+      response.status,
+      detail ?? `Vision extraction failed with ${response.status}`,
+    );
+  }
+  return (await response.json()) as AIExtractVisionResponse;
+}

@@ -48,7 +48,12 @@ from ai_layer.config import (
     AILayerDisabledError,
 )
 from ai_layer.gates import ensure_ai_layer_enabled, make_ai_layer_gate
-from ai_layer.pricing import estimate_cost_usd
+from ai_layer.pricing import (
+    estimate_cost_usd,
+    estimate_extraction_cost_usd,
+    estimate_input_tokens_from_image,
+    estimate_input_tokens_from_text,
+)
 from ai_layer.prompts.registry import (
     PromptRegistry,
     PromptTemplate,
@@ -145,6 +150,9 @@ __all__ = [
     "build_raw_response",
     "ensure_ai_layer_enabled",
     "estimate_cost_usd",
+    "estimate_extraction_cost_usd",
+    "estimate_input_tokens_from_image",
+    "estimate_input_tokens_from_text",
     "evaluate_budget",
     "log_ai_usage",
     "make_ai_layer_gate",

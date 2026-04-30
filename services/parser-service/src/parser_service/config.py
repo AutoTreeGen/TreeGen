@@ -202,6 +202,19 @@ class Settings(BaseSettings):
             "выключить budget. ADR-0059 default — 100000/month."
         ),
     )
+    extract_budget_usd: float = Field(
+        default=0.50,
+        ge=0.0,
+        description=(
+            "Phase 10.2b: per-source pre-flight cost cap в USD. До вызова "
+            "Claude мы оцениваем стоимость (input_tokens × pricing × safety "
+            "factor); если оценка > этого лимита — 429 ещё до запроса. "
+            "Дополнение к per-user 24h/30d guards (которые ловят cumulative "
+            "abuse) — этот предотвращает один разорительный документ. "
+            "``0.0`` отключает per-source cap. Override через "
+            "``PARSER_SERVICE_EXTRACT_BUDGET_USD``."
+        ),
+    )
 
     # ---- Phase 14.2 — internal service auth (digest worker → parser) -------
     internal_service_token: str = Field(
