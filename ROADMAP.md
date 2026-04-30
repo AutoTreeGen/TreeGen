@@ -182,6 +182,50 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 ссылки, проприетарные теги Ancestry, иврит-даты).
 ```
 
+### 5.5 Safe Import/Export (round-trip + loss simulator)
+
+Cross-platform GEDCOM теряет sources, parent–child, witnesses, godparents
+и проприетарные теги при экспорте между Ancestry / MyHeritage / Geni /
+RootsMagic / Family Tree Maker. Phase 5.5 закрывает эту дыру:
+quarantine на import → preserve в DB → re-emit на export. Pre-export
+loss simulator + validator выдают report до того, как пользователь
+теряет данные.
+
+Split на 5.5a + 5.5b (мега-PR не пройдёт review):
+
+#### 5.5a — Quarantine import + AST round-trip
+
+- `RawTagBlock` Pydantic + `GedcomDocument.unknown_tags` populated
+  whitelist-driven walk над AST.
+- ORM `import_jobs.unknown_tags` jsonb (mirror of 10.2
+  `source_extractions.raw_response` pattern). Один additive column,
+  no new tables.
+- AST-level round-trip tests на synthetic + real corpus
+  (`gedcom_real` marker, `D:/Projects/GED`). Variant B — structural
+  diff после re-parse, не byte-diff (ANSEL → UTF-8 normalize).
+- Existing entity models (`Person`/`Family`/`Source`/`Event`/...)
+  остаются frozen; quarantine — отдельный модуль.
+- ADR documenting jsonb-on-import_jobs vs per-entity provenance vs
+  new table.
+
+#### 5.5b — Loss simulator + validators + endpoints
+
+Зависит от 5.5a merge.
+
+- `TargetDialect` enum (ANCESTRY, MYHERITAGE, GENI, ROOTSMAGIC, FTM,
+  GEDCOM_555, GEDCOM_551) + per-dialect support matrix
+  `dict[tag_path, SupportLevel]`.
+- `LossSimulator(dialect).simulate(doc) → LossReport`.
+- `StructuralValidator` (broken refs, orphaned records) +
+  `SemanticValidator` (impossible dates, child before mother).
+- Endpoints (versioned, первый `/api/v1/` namespace):
+  - `POST /api/v1/gedcom/simulate-export {tree_id, target_dialect}` →
+    counts + per-tag breakdown.
+  - `POST /api/v1/gedcom/validate {file or tree_id}` → warnings + stats.
+- UI selector — отдельный 5.5c PR после обоих back-end merge.
+
+Спека и handoff trace: `.agent-tasks/07-phase-5-5-gedcom-safe-io.md`.
+
 ---
 
 ## 6. Фаза 2 — Модель данных и БД
