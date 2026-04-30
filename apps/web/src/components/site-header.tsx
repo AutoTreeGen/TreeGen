@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { NotificationBell } from "@/components/notification-bell";
+import { TreePicker } from "@/components/tree-picker";
 import { cn } from "@/lib/utils";
 
 /**
@@ -31,6 +32,11 @@ export function SiteHeader() {
         {t("appName")}
       </Link>
       <div className="flex items-center gap-3">
+        <SignedIn>
+          {/* Phase 11.1: tree-picker виден только signed-in user'ам и
+              скрывается сам если у них 0 деревьев. */}
+          <TreePicker />
+        </SignedIn>
         <LocaleSwitcher />
         <SignedIn>
           <NotificationBell />
