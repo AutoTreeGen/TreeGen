@@ -31,6 +31,7 @@ from aiogram.types import (
     Message,
 )
 from aiogram.types.inline_query_result_union import InlineQueryResultUnion
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from telegram_bot.services.db_queries import (
@@ -479,3 +480,39 @@ async def handle_inline_query(
         cache_time=_INLINE_CACHE_SECONDS,
         is_personal=True,
     )
+
+
+# -----------------------------------------------------------------------------
+# digest:unsubscribe callback (Phase 14.2)
+# -----------------------------------------------------------------------------
+
+
+@router.callback_query(F.data == "digest:unsubscribe")
+async def handle_digest_unsubscribe(
+    callback: CallbackQuery,
+    session_factory: async_sessionmaker[AsyncSession],
+    redis: Redis,
+) -> None:
+    """Поставить opt-out флаг в Redis, чтобы worker больше не слал digest.
+
+    Storage в Redis (а не в ``user_settings.digest_enabled``) — потому
+    что в Phase 14.2 alembic-миграции не вводятся (см. task spec).
+    Phase 14.3 мигрирует в столбец ``users.digest_enabled`` либо в
+    ``user_settings``-таблицу.
+    """
+    if callback.message is None or callback.message.chat is None:
+        await callback.answer("Сообщение недоступно.")
+        return
+    chat_id = callback.message.chat.id
+    async with session_factory() as session:
+        user_id = await resolve_user_id_from_chat(session, tg_chat_id=chat_id)
+    if user_id is None:
+        await callback.answer("Связь не найдена.", show_alert=True)
+        return
+
+    await redis.set(
+        f"digest:optout:{user_id}",
+        "1",
+        ex=365 * 24 * 60 * 60,  # 1 year
+    )
+    await callback.answer("🔕 Дайджест отключён.", show_alert=False)
