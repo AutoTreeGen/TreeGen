@@ -90,8 +90,9 @@ async def test_compute_zhitnitzky_hypothesis_persists(app_client, postgres_dsn) 
             )
             assert hyp is not None
             assert hyp.hypothesis_type == "same_person"
-            assert hyp.composite_score >= 0.85, (
-                f"expected ≥0.85 для Zhitnitzky pair, got {hyp.composite_score}"
+            # Phase 7.5: Bayesian fusion даёт ниже clamped-1.0, threshold 0.75.
+            assert hyp.composite_score >= 0.75, (
+                f"expected ≥0.75 (Phase 7.5) для Zhitnitzky pair, got {hyp.composite_score}"
             )
             assert hyp.reviewed_status == "pending"
             assert hyp.subject_a_type == "person"

@@ -358,7 +358,17 @@ def test_composer_combines_dna_with_gedcom_rules() -> None:
 
 
 def test_composer_dna_contradiction_can_pull_score_down() -> None:
-    """Strong CONTRADICTS DNA-evidence перевешивает name-match — composite ≈ 0."""
+    """DNA CONTRADICTS снижает score (Phase 7.5: фиксированный штраф 0.1 за evidence).
+
+    Phase 7.5 (ADR-0057): contradictions используют флэт-штраф независимо
+    от веса. surname SUPPORTS 0.5 → fused 0.5; одно DNA CONTRADICTS → −0.1;
+    итог 0.4. Это сильно ниже SAME_PERSON threshold (0.75), что и нужно
+    для тестируемого свойства «strong DNA contradiction can pull score down».
+    Trade-off: Phase 7.0–7.4 вычитал DNA weight (0.85) напрямую и обнулял
+    score; Phase 7.5 более «мягкий» по дизайну. ADR-0057 §«Consequences»
+    отмечает это как known characteristic — последующая ручная review всё
+    равно увидит CONTRADICTS-evidence через ``contradiction_flags``.
+    """
     rules = [SurnameMatchRule(), DnaSegmentRelationshipRule()]
     h = compose_hypothesis(
         hypothesis_type=HypothesisType.SAME_PERSON,
@@ -377,5 +387,5 @@ def test_composer_dna_contradiction_can_pull_score_down() -> None:
         },
         rules=rules,
     )
-    # surname SUPPORTS 0.5 - DNA CONTRADICTS 0.85 = -0.35 → clamp 0.
-    assert h.composite_score == 0.0
+    # surname SUPPORTS 0.5 (fused alone) − 0.1 penalty = 0.4.
+    assert abs(h.composite_score - 0.4) < 1e-9
