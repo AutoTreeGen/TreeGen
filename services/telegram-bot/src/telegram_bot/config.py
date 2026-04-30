@@ -70,6 +70,27 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ---- Phase 14.2 — weekly digest worker ----
+    # Token для исходящих вызовов parser-service /users/{id}/digest-summary
+    # (зеркало `internal_service_token`, который parser-service ожидает в
+    # `X-Internal-Service-Token`). На dev-машине одна и та же строка для
+    # обеих сторон; в проде — Secret Manager.
+    parser_service_base_url: str = Field(
+        default="http://localhost:8000",
+        description=(
+            "Base URL parser-service для weekly-digest worker. Без trailing "
+            "slash. В проде — internal cluster-DNS, не публичный домен."
+        ),
+    )
+    parser_service_internal_token: str = Field(
+        default="",
+        description=(
+            "Shared secret отправляемый в X-Internal-Service-Token при вызове "
+            "parser-service /users/{id}/digest-summary. Пустой → digest worker "
+            "skip'нет цикл с warning'ом (fail-safe)."
+        ),
+    )
+
     debug: bool = Field(default=False)
 
     model_config = SettingsConfigDict(

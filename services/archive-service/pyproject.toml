@@ -1,0 +1,44 @@
+# =====================================================================
+# archive-service — Phase 9.0 (ADR-0055).
+# Read-only прокси к внешним архивам (FamilySearch first), без записи в
+# наше дерево (запись — Phase 9.1+). Reuse `familysearch-client` (ADR-0011)
+# для PKCE/Tree API; service-уровень добавляет rate-limit, ETag-кэш и
+# at-rest-encryption токенов.
+# =====================================================================
+
+[project]
+name = "archive-service"
+version = "0.1.0"
+description = "AutoTreeGen archive-service — read-only proxy к внешним архивам (Phase 9.0)."
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "Proprietary" }
+authors = [{ name = "AutoTreeGen", email = "autotreegen@gmail.com" }]
+
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.10",
+    "pydantic-settings>=2.6",
+    "httpx>=0.27",
+    "redis[hiredis]>=5.0",
+    # Fernet — at-rest-encryption refresh-токенов (см. ADR-0055 §«Tokens at rest»).
+    "cryptography>=42",
+    "shared-models[security]",
+    "familysearch-client",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-httpx>=0.30",
+    "fakeredis>=2.20",
+]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/archive_service"]

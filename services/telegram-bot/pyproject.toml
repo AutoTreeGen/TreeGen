@@ -20,6 +20,9 @@ dependencies = [
     # aiogram 3.x — async-нативный Bot API клиент с Pydantic v2
     # моделями. Pinned до 4.0 (см. ADR-0040 §«Когда пересмотреть»).
     "aiogram>=3.13,<4.0",
+    # Phase 14.2 — weekly digest cron (arq cron_jobs). Тот же arq что и
+    # parser-service, единый Redis-broker.
+    "arq>=0.26",
     "shared-models[security,observability]",
 ]
 

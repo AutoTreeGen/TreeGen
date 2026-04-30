@@ -203,6 +203,18 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ---- Phase 14.2 — internal service auth (digest worker → parser) -------
+    internal_service_token: str = Field(
+        default="",
+        description=(
+            "Shared secret для X-Internal-Service-Token validation на "
+            "internal endpoint'ах parser-service (Phase 14.2: "
+            "/users/{id}/digest-summary). Пустая строка → endpoint'ы "
+            "возвращают 503 (отказ обслуживания), потому что без секрета "
+            "любой может дёргать internal data о произвольном user'е."
+        ),
+    )
+
     model_config = SettingsConfigDict(
         env_prefix="PARSER_SERVICE_",
         env_file=".env",

@@ -13,6 +13,7 @@ from typing import Final
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.client.session.aiohttp import AiohttpSession
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from telegram_bot.services.handlers import router as commands_router
@@ -41,6 +42,7 @@ def init_dispatcher(
     link_tokens: LinkTokenStore,
     web_base_url: str,
     session_factory: async_sessionmaker[AsyncSession],
+    redis: Redis,
 ) -> Dispatcher:
     """Создать Dispatcher с зарегистрированным command-router'ом.
 
@@ -48,6 +50,9 @@ def init_dispatcher(
     DB-запросов из handler'ов (``/imports``, ``/persons``, ``/tree``).
     Каждый handler открывает свою короткую транзакцию через
     ``async with session_factory() as session:``.
+
+    ``redis`` (Phase 14.2) — async Redis для digest opt-out флага в
+    callback ``digest:unsubscribe``.
     """
     global _dispatcher  # noqa: PLW0603
     dispatcher = Dispatcher()
@@ -56,6 +61,7 @@ def init_dispatcher(
     dispatcher["link_tokens"] = link_tokens
     dispatcher["web_base_url"] = web_base_url
     dispatcher["session_factory"] = session_factory
+    dispatcher["redis"] = redis
     _dispatcher = dispatcher
     return dispatcher
 
