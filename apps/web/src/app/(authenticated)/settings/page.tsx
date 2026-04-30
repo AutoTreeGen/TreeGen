@@ -17,8 +17,10 @@
 
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { type ChangeEvent, useState } from "react";
 
+import { RestartTourButton } from "@/components/onboarding-tour";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -81,7 +83,27 @@ export default function SettingsPage() {
         {tab === "sessions" ? <SessionsTab /> : null}
         {tab === "danger" ? <DangerZoneTab /> : null}
       </section>
+
+      {/* Phase 4.15 — restart-tour pinned под tab-content на любом активном
+          tab'е. Дизайн-выбор: не делать отдельный tab "Help" ради одной
+          кнопки; tour — preference, не самостоятельный feature-area. */}
+      {tab === "profile" ? <RestartTourCard /> : null}
     </main>
+  );
+}
+
+function RestartTourCard() {
+  const t = useTranslations("onboarding.tour");
+  return (
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle>{t("restart")}</CardTitle>
+        <CardDescription>{t("restartHint")}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex justify-end">
+        <RestartTourButton />
+      </CardContent>
+    </Card>
   );
 }
 
