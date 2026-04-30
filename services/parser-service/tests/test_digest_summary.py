@@ -8,6 +8,14 @@
 * фильтр по ``since`` (старые persons вне окна);
 * top-3 cards по created_at DESC с primary_name;
 * hypotheses pending count.
+
+Изоляция: каждый «count»-тест создаёт **уникального** ``User`` и ``Tree``
+напрямую через ORM (минуя ``/imports``), потому что parser-service test
+session делит один Postgres-instance между всеми тестами, а
+``conftest._fake_current_user_id_override`` отдаёт фиксированный
+``clerk_user_id`` → один и тот же ``users.id`` на всю сессию. Любой
+запрос к ``/digest-summary?user_id=<fake>`` иначе видит сотни персон,
+которые загрузили другие тесты в эту же fake-user'у.
 """
 
 from __future__ import annotations
@@ -18,31 +26,11 @@ import uuid
 
 import pytest
 from shared_models.enums import HypothesisReviewStatus
-from shared_models.orm import Hypothesis, Tree
-from sqlalchemy import select
+from shared_models.orm import Hypothesis, Name, Person, Tree, User
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 pytestmark = [pytest.mark.db, pytest.mark.integration]
 
-
-_GED_FIXTURE = b"""\
-0 HEAD
-1 SOUR test
-1 GEDC
-2 VERS 5.5.5
-2 FORM LINEAGE-LINKED
-1 CHAR UTF-8
-0 @I1@ INDI
-1 NAME Anna /Petrova/
-1 SEX F
-0 @I2@ INDI
-1 NAME Boris /Petrov/
-1 SEX M
-0 @I3@ INDI
-1 NAME Catherine /Sidorova/
-1 SEX F
-0 TRLR
-"""
 
 _TOKEN = "x" * 32
 
@@ -58,22 +46,61 @@ def _configured_token(app):
     app.dependency_overrides.pop(get_settings, None)
 
 
-async def _import_fixture(app_client) -> tuple[uuid.UUID, uuid.UUID]:
-    """Импортировать фикстуру и вернуть ``(tree_id, owner_user_id)``."""
-    files = {"file": ("digest.ged", _GED_FIXTURE, "application/octet-stream")}
-    created = await app_client.post("/imports", files=files)
-    assert created.status_code in (200, 201), created.text
-    tree_id = uuid.UUID(created.json()["tree_id"])
-
+def _async_engine():
+    """Engine для прямых ORM-операций (минуя FastAPI app_client)."""
     sync_url = os.environ["DATABASE_URL"]
     async_url = sync_url.replace("postgresql+psycopg://", "postgresql+asyncpg://", 1)
-    engine = create_async_engine(async_url)
+    return create_async_engine(async_url)
+
+
+async def _create_isolated_user_and_tree(
+    *,
+    persons: list[tuple[str, str]] | None = None,
+) -> tuple[uuid.UUID, uuid.UUID]:
+    """Создать уникальные User+Tree+Persons через прямой ORM-insert.
+
+    Возвращает ``(tree_id, user_id)``. ``persons`` — список
+    ``(given_name, surname)`` для добавления; ``None`` = без persons.
+    """
+    engine = _async_engine()
     factory = async_sessionmaker(engine, expire_on_commit=False)
-    async with factory() as session:
-        owner_id = await session.scalar(select(Tree.owner_user_id).where(Tree.id == tree_id))
-        assert owner_id is not None
-    await engine.dispose()
-    return tree_id, owner_id
+    try:
+        async with factory() as session:
+            unique = uuid.uuid4().hex[:12]
+            user = User(
+                email=f"digest-{unique}@test.local",
+                external_auth_id=f"local:digest-{unique}",
+                clerk_user_id=None,
+                display_name="Digest Test User",
+                locale="en",
+            )
+            session.add(user)
+            await session.flush()
+
+            tree = Tree(
+                owner_user_id=user.id,
+                name=f"digest-test-tree-{unique}",
+            )
+            session.add(tree)
+            await session.flush()
+
+            if persons:
+                for given, surname in persons:
+                    person = Person(tree_id=tree.id, sex="U")
+                    session.add(person)
+                    await session.flush()
+                    session.add(
+                        Name(
+                            person_id=person.id,
+                            given_name=given,
+                            surname=surname,
+                            sort_order=0,
+                        )
+                    )
+            await session.commit()
+            return tree.id, user.id
+    finally:
+        await engine.dispose()
 
 
 @pytest.mark.asyncio
@@ -124,8 +151,14 @@ async def test_digest_summary_401_wrong_token(app_client) -> None:
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("_configured_token")
 async def test_digest_summary_counts_new_persons_in_window(app_client) -> None:
-    """3 импортированных persons → new_persons_count=3, top_3 заполнен."""
-    _, owner_id = await _import_fixture(app_client)
+    """3 свежесозданных persons → new_persons_count=3, top_3 заполнен."""
+    _, owner_id = await _create_isolated_user_and_tree(
+        persons=[
+            ("Anna", "Petrova"),
+            ("Boris", "Petrov"),
+            ("Catherine", "Sidorova"),
+        ]
+    )
     since = (dt.datetime.now(dt.UTC) - dt.timedelta(days=7)).isoformat()
 
     response = await app_client.get(
@@ -146,7 +179,7 @@ async def test_digest_summary_counts_new_persons_in_window(app_client) -> None:
 @pytest.mark.usefixtures("_configured_token")
 async def test_digest_summary_since_filter_excludes_old(app_client) -> None:
     """``since`` в будущем → 0 новых persons (все импортированные старше)."""
-    _, owner_id = await _import_fixture(app_client)
+    _, owner_id = await _create_isolated_user_and_tree(persons=[("Anna", "Petrova")])
     future = (dt.datetime.now(dt.UTC) + dt.timedelta(days=1)).isoformat()
 
     response = await app_client.get(
@@ -164,32 +197,30 @@ async def test_digest_summary_since_filter_excludes_old(app_client) -> None:
 @pytest.mark.usefixtures("_configured_token")
 async def test_digest_summary_counts_pending_hypotheses(app_client) -> None:
     """Pending-hypothesis count берётся как snapshot, не привязан к ``since``."""
-    tree_id, owner_id = await _import_fixture(app_client)
+    tree_id, owner_id = await _create_isolated_user_and_tree()
 
-    sync_url = os.environ["DATABASE_URL"]
-    async_url = sync_url.replace("postgresql+psycopg://", "postgresql+asyncpg://", 1)
-    engine = create_async_engine(async_url)
+    engine = _async_engine()
     factory = async_sessionmaker(engine, expire_on_commit=False)
-    async with factory() as session:
-        # Inject две pending-hypothesis на это дерево. UNIQUE constraint
-        # требует уникальной (type, subject_a, subject_b) — берём разные
-        # пары persons.
-        for i in range(2):
-            session.add(
-                Hypothesis(
-                    tree_id=tree_id,
-                    hypothesis_type=f"duplicate_person_{i}",
-                    subject_a_type="person",
-                    subject_a_id=uuid.uuid4(),
-                    subject_b_type="person",
-                    subject_b_id=uuid.uuid4(),
-                    composite_score=0.5,
-                    rules_version="test-1",
-                    reviewed_status=HypothesisReviewStatus.PENDING.value,
+    try:
+        async with factory() as session:
+            # UNIQUE constraint требует разных (type, subject_a, subject_b).
+            for i in range(2):
+                session.add(
+                    Hypothesis(
+                        tree_id=tree_id,
+                        hypothesis_type=f"duplicate_person_{i}",
+                        subject_a_type="person",
+                        subject_a_id=uuid.uuid4(),
+                        subject_b_type="person",
+                        subject_b_id=uuid.uuid4(),
+                        composite_score=0.5,
+                        rules_version="test-1",
+                        reviewed_status=HypothesisReviewStatus.PENDING.value,
+                    )
                 )
-            )
-        await session.commit()
-    await engine.dispose()
+            await session.commit()
+    finally:
+        await engine.dispose()
 
     since = (dt.datetime.now(dt.UTC) - dt.timedelta(days=7)).isoformat()
     response = await app_client.get(
