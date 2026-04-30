@@ -126,6 +126,7 @@ class PromptRegistry:
     """
 
     HYPOTHESIS_SUGGESTER_V1: Final[PromptTemplate] = PromptTemplate("hypothesis_suggester", 1)
+    HYPOTHESIS_EXPLANATION_V1: Final[PromptTemplate] = PromptTemplate("hypothesis_explanation", 1)
     PERSON_NORMALIZER_V1: Final[PromptTemplate] = PromptTemplate("person_normalizer", 1)
 
     @classmethod
