@@ -19,6 +19,11 @@ dependencies = [
     "anyio>=4.0",
     "shared-models[security]",
     "dna-analysis",
+    # Phase 6.4 — optional Redis cache для triangulation endpoint.
+    # Lazy-import в `services/cache.py`; если DNA_SERVICE_REDIS_URL пуст,
+    # клиент не создаётся, dependency не нужна. Держим в основных deps,
+    # чтобы prod-deploy с включённым cache'ом просто работал.
+    "redis[hiredis]>=5.0",
 ]
 
 [project.optional-dependencies]
