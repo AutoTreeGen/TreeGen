@@ -135,6 +135,21 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ---- Phase 9.1 — Wikimedia Commons (ADR-0058) --------------------------
+    wikimedia_user_agent: str = Field(
+        default=(
+            "AutoTreeGen/0.1 (+https://github.com/AutoTreeGen/TreeGen; "
+            "autotreegen@gmail.com) parser-service/0.1"
+        ),
+        description=(
+            "User-Agent для запросов к Wikimedia Commons. "
+            "Required by WMF policy: descriptive UA с контактами; generic "
+            "UA блокируется 403'ой. Format: "
+            "``<client>/<version> (<contact>) <library>/<version>``. "
+            "См. https://foundation.wikimedia.org/wiki/Policy:User-Agent_policy."
+        ),
+    )
+
     # ---- Phase 4.11a — GDPR export (ADR-0046) ------------------------------
     export_signing_key: str = Field(
         default="",

@@ -23,6 +23,7 @@ from parser_service.api import (
     imports_sse,
     metrics,
     persons,
+    places,
     public_share,
     sharing,
     sources,
@@ -100,6 +101,10 @@ app.include_router(hypotheses.router, tags=["hypotheses"], dependencies=_AUTH_DE
 # persons router включается ПОСЛЕ trees (тот владеет `GET /persons/{id}`),
 # но имена путей не пересекаются: тут `/persons/{id}/merge*`.
 app.include_router(persons.router, tags=["persons", "merge"], dependencies=_AUTH_DEPS)
+# Phase 9.1 (ADR-0058) — Wikimedia Commons place imagery endpoints.
+# Включается ПОСЛЕ trees, чтобы /trees/{tid}/places/{pid}/* паттерны
+# не перехватывались более общими /trees/{id}-эндпоинтами.
+app.include_router(places.router, tags=["places", "wikimedia"], dependencies=_AUTH_DEPS)
 # Phase 11.0 — sharing endpoints (invitations, memberships). Auth required.
 # Включён после persons чтобы /trees/{id}/* пути в trees.router не
 # перехватывали /trees/{id}/invitations / /trees/{id}/members.

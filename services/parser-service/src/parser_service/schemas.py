@@ -1255,3 +1255,57 @@ class PublicTreeResponse(BaseModel):
     person_count: int
     persons: list[PublicTreePerson]
     families: list[PublicTreeFamily]
+
+
+# -----------------------------------------------------------------------------
+# Phase 9.1 — Wikimedia Commons place imagery (ADR-0058).
+# -----------------------------------------------------------------------------
+
+
+class WikimediaFetchResponse(BaseModel):
+    """Сводка одного fetch'а для ``POST /trees/{tid}/places/{pid}/wikimedia-fetch``.
+
+    Counts матчат :class:`WikimediaImportStats` из importer'а; URL'ы новых
+    multimedia записей не возвращаем сразу — фронт всё равно пере-запрашивает
+    список через отдельный endpoint, чтобы не дублировать source-of-truth.
+    """
+
+    place_id: uuid.UUID
+    search_strategy: Literal["geosearch", "text"]
+    fetched: int = Field(ge=0, description="Сколько изображений вернул Commons.")
+    created: int = Field(ge=0, description="Сколько новых MultimediaObject вставлено.")
+    skipped_existing: int = Field(
+        ge=0,
+        description=(
+            "Сколько пропущено как уже импортированных в этом дереве "
+            "(idempotency по provenance.commons_page_url)."
+        ),
+    )
+
+
+class WikimediaImageItem(BaseModel):
+    """Один image-row для ``GET /trees/{tid}/places/{pid}/wikimedia-images``.
+
+    Привязан к Place'у через ``entity_multimedia``; license/attribution
+    собирается из ``MultimediaObject.object_metadata`` + ``provenance``.
+    """
+
+    id: uuid.UUID
+    title: str
+    image_url: str
+    thumb_url: str | None
+    page_url: str
+    license_short_name: str | None
+    license_url: str | None
+    credit_html: str | None
+    attribution_required: bool
+    width: int | None
+    height: int | None
+    fetched_at: datetime | None
+
+
+class WikimediaImageListResponse(BaseModel):
+    """Список изображений Place'а из Commons."""
+
+    place_id: uuid.UUID
+    items: list[WikimediaImageItem]
