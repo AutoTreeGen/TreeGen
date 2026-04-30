@@ -97,6 +97,57 @@ async def _run_import_via_runner(postgres_dsn: str, ged_bytes: bytes, filename: 
 
 
 @pytest.mark.asyncio
+async def test_run_import_persists_unknown_tags(postgres_dsn) -> None:
+    """Phase 5.5a: проприетарные теги сохраняются в ``ImportJob.unknown_tags``.
+
+    Этот тест проверяет полный wire-up: парсер квaрантинит ``_FSFTID`` /
+    ``_UID`` / ``_CUSTOM`` в ``GedcomDocument.unknown_tags``, runner
+    сериализует их через ``model_dump`` и пишет в jsonb-колонку. Без
+    этого 5.5b loss simulator потеряет input для своих репортов, и
+    round-trip-export станет невозможным.
+    """
+    from shared_models.orm import ImportJob
+    from sqlalchemy import select
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    ged_with_props = b"""\
+0 HEAD
+1 GEDC
+2 VERS 5.5.5
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME John /Smith/
+1 SEX M
+1 _FSFTID 12345-ABC
+1 _UID ABCDEF
+0 @I2@ INDI
+1 NAME Mary /Smith/
+1 _CUSTOM payload
+0 TRLR
+"""
+    tree_id, _stats = await _run_import_via_runner(postgres_dsn, ged_with_props, "props.ged")
+
+    engine = create_async_engine(postgres_dsn, future=True)
+    try:
+        SessionMaker = async_sessionmaker(engine, expire_on_commit=False)  # noqa: N806
+        async with SessionMaker() as session:
+            job = (
+                await session.execute(select(ImportJob).where(ImportJob.tree_id == tree_id))
+            ).scalar_one()
+            assert isinstance(job.unknown_tags, list)
+            tags = sorted((b["owner_xref_id"], b["record"]["tag"]) for b in job.unknown_tags)
+            assert ("I1", "_FSFTID") in tags
+            assert ("I1", "_UID") in tags
+            assert ("I2", "_CUSTOM") in tags
+            # owner_kind правильно установлен на сериализации.
+            kinds = {b["owner_kind"] for b in job.unknown_tags}
+            assert kinds == {"individual"}
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
 async def test_run_import_creates_job_and_persons(postgres_dsn) -> None:
     """``run_import`` парсит минимальный .ged и заливает 2 persons + 1 family."""
     _tree_id, stats = await _run_import_via_runner(postgres_dsn, _MINIMAL_GED, "test.ged")

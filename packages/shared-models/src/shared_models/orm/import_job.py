@@ -81,6 +81,20 @@ class ImportJob(IdMixin, Base):
         default=None,
     )
 
+    # Phase 5.5a (ADR-0061): проприетарные / неизвестные GEDCOM-теги,
+    # которые семантический слой парсера не consumes. Сохраняются как-есть
+    # для round-trip без потерь при export'е (пользователь импортирует из
+    # Ancestry с ``_FSFTID``, не теряет на выход; см. ROADMAP §5.5).
+    # Структура совпадает с ``list[gedcom_parser.models.RawTagBlock]``,
+    # сериализованным через ``model_dump(mode="json")``. Pattern зеркалит
+    # ``source_extractions.raw_response`` jsonb из Phase 10.2 (ADR-0059).
+    unknown_tags: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=list,
+        server_default=text("'[]'::jsonb"),
+    )
+
     # Cancel-сигнал (Phase 3.5). Ставится PATCH /imports/{id}/cancel,
     # читается worker'ом между стадиями.
     cancel_requested: Mapped[bool] = mapped_column(
