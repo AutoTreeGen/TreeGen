@@ -41,10 +41,14 @@ from ai_layer import (
     BudgetExceededError,
     BudgetLimits,
     BudgetReport,
+    ImageInput,
     SourceExtractor,
     SourceMetadata,
     build_raw_response,
     ensure_ai_layer_enabled,
+    estimate_extraction_cost_usd,
+    estimate_input_tokens_from_image,
+    estimate_input_tokens_from_text,
     evaluate_budget,
 )
 from ai_layer.use_cases.source_extraction import (
@@ -157,6 +161,95 @@ async def compute_user_budget_report(
 # -----------------------------------------------------------------------------
 
 
+@dataclass(frozen=True)
+class PdfFallbackImage:
+    """Phase 10.2b — image, извлечённый из scanned PDF для vision-fallback'а.
+
+    Attributes:
+        image_bytes: Raw bytes изображения (caller передаёт в
+            ``image_preprocessing.preprocess_image``).
+        media_type: MIME type — ``image/jpeg`` или ``image/png``;
+            определяется pypdf'ом по embedded-format'у.
+        page_index: Номер страницы (0-based), на которой нашёлся image.
+            Caller использует для UI «vision-fallback применён к стр. N».
+    """
+
+    image_bytes: bytes
+    media_type: str
+    page_index: int
+
+
+def extract_first_image_from_scanned_pdf(pdf_bytes: bytes) -> PdfFallbackImage:
+    """Phase 10.2b — извлечь первое embedded image из scanned PDF.
+
+    Сценарий: пользователь загрузил PDF, который на самом деле — серия
+    отсканированных страниц (один image-блок на страницу). pypdf-text
+    extraction вернул < ``_PDF_TEXT_QUALITY_MIN_CHARS`` (см.
+    :class:`PoorPdfQualityError`); вместо того чтобы фейлить, тянем raw
+    image из первой страницы и отправляем в Claude vision через image
+    preprocessing.
+
+    Покрывает 90% scanned-PDF сценариев (один большой JPEG/PNG на
+    страницу). Не покрывает: vector-PDF без embedded images
+    (теоретически невозможно, потому что для них pypdf-text работает),
+    multi-image страницы (берём первый — для метрик/писем достаточно;
+    сложные случаи в Phase 10.4 через PyMuPDF rendering).
+
+    Raises:
+        AISourceExtractionError: pypdf не открыл PDF, или ни одной
+            страницы с embedded image не нашлось.
+    """
+    try:
+        from pypdf import PdfReader  # noqa: PLC0415
+        from pypdf.errors import PdfReadError  # noqa: PLC0415
+    except ImportError as exc:  # pragma: no cover
+        msg = "pypdf is not installed; cannot extract images from PDF"
+        raise AISourceExtractionError(msg) from exc
+
+    try:
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+    except (PdfReadError, ValueError, OSError) as exc:
+        msg = f"PDF parse failed: {exc}"
+        raise AISourceExtractionError(msg) from exc
+
+    for page_index, page in enumerate(reader.pages):
+        try:
+            images = list(page.images)
+        except Exception as exc:
+            # pypdf API на странных PDF'ах кидает разные исключения —
+            # broad-catch чтобы один битый page не валил весь fallback.
+            _logger.warning("pypdf page.images failed on page %d: %s", page_index, exc)
+            continue
+        if not images:
+            continue
+        first = images[0]
+        image_data = getattr(first, "data", None)
+        if not image_data:
+            continue
+        # pypdf возвращает name типа "/Image1.jpg"; парсим extension для media_type.
+        name = getattr(first, "name", "") or ""
+        ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+        media_type = (
+            "image/jpeg"
+            if ext in {"jpg", "jpeg"}
+            else "image/png"
+            if ext == "png"
+            else "image/jpeg"  # fallback — JPEG как default scanned-PDF format
+        )
+        return PdfFallbackImage(
+            image_bytes=image_data,
+            media_type=media_type,
+            page_index=page_index,
+        )
+
+    msg = (
+        "PDF text extraction yielded too little text, and no embedded "
+        "images found in the first pages — vision fallback impossible. "
+        "Consider re-uploading individual page images via /ai-extract-vision."
+    )
+    raise AISourceExtractionError(msg)
+
+
 def extract_text_from_pdf(pdf_bytes: bytes) -> str:
     """Извлечь plain text из PDF-байтов через pypdf.
 
@@ -251,6 +344,44 @@ def assert_source_not_dna(source: Source) -> None:
 # -----------------------------------------------------------------------------
 
 
+def _enforce_per_source_cost_cap(
+    *,
+    estimated_input_tokens: int,
+    max_output_tokens: int,
+    model: str,
+    cap_usd: float,
+) -> None:
+    """Phase 10.2b — pre-flight per-source $-cap.
+
+    ``cap_usd <= 0`` отключает гейт (env override / dev-mode). Иначе:
+    оцениваем worst-case стоимость через ``estimate_extraction_cost_usd``
+    и поднимаем :class:`BudgetExceededError` если оценка > cap'а.
+
+    Параллельный per-user 24h/30d guard (``evaluate_budget``) ловит
+    cumulative abuse; этот предотвращает один разорительный документ
+    (например, 200k-symbol PDF, который в одиночку съест 10× обычного
+    бюджета).
+    """
+    if cap_usd <= 0:
+        return
+    estimated = estimate_extraction_cost_usd(
+        model=model,
+        estimated_input_tokens=estimated_input_tokens,
+        max_output_tokens=max_output_tokens,
+    )
+    if estimated > cap_usd:
+        # Используем существующий BudgetExceededError для того же UX
+        # 429-ответа: caller ловит один тип, разные limit_kind'ы.
+        # Multiplied 1e4 на int — мы конвертируем в «cents × 100», чтобы
+        # удовлетворить int-типу полей (limit_kind фиксирован, остальные
+        # int). Caller рендерит обратно в $ для UI.
+        raise BudgetExceededError(
+            limit_kind="cost_per_source_usd_x10000",
+            limit_value=round(cap_usd * 10_000),
+            current_value=round(estimated * 10_000),
+        )
+
+
 async def run_source_extraction(
     session: AsyncSession,
     *,
@@ -260,6 +391,8 @@ async def run_source_extraction(
     config: AILayerConfig,
     limits: BudgetLimits,
     extractor: SourceExtractor,
+    cost_cap_usd: float = 0.0,
+    image: ImageInput | None = None,
 ) -> ExtractionRunResult:
     """Запустить full extraction flow: gates → call → persist.
 
@@ -267,22 +400,45 @@ async def run_source_extraction(
 
     1. ``ensure_ai_layer_enabled(config)`` — kill-switch.
     2. ``assert_source_not_dna(source)`` — privacy.
-    3. ``evaluate_budget(report)`` — rate limit + token budget.
-    4. Создание ``SourceExtraction(status=PENDING)`` (commit'нем после
+    3. ``evaluate_budget(report)`` — rate limit + token budget per-user.
+    4. Phase 10.2b: ``_enforce_per_source_cost_cap`` — отдельный per-source
+       $-cap до отправки в Claude.
+    5. Создание ``SourceExtraction(status=PENDING)`` (commit'нем после
        завершения, чтобы не оставлять висящих PENDING при rollback).
-    5. ``extractor.extract_from_text(...)`` — Claude.
-    6. Парсинг ответа в ``ExtractedFact`` rows.
-    7. Status → COMPLETED, токены, raw_response. Commit.
+    6. ``extractor.extract_from_text(...)`` или ``extract_from_image(...)``
+       (если ``image is not None``) — Claude.
+    7. Парсинг ответа в ``ExtractedFact`` rows.
+    8. Status → COMPLETED, токены, raw_response. Commit.
 
     На любом exception'е status выставляется FAILED и row commit'ится
     (cost-tracking всё равно: input-tokens были потрачены, даже если
     output невалиден). Caller получает exception обратно для UI.
+
+    Args:
+        cost_cap_usd: Per-source $ cap. ``0.0`` отключает гейт.
+        image: Опциональный image-input для vision-режима. Если задан,
+            ``document_text`` интерпретируется как ``ocr_text_hint`` для
+            quote-validation (см. ``SourceExtractor.extract_from_image``).
     """
     ensure_ai_layer_enabled(config)
     assert_source_not_dna(source)
 
     report = await compute_user_budget_report(session, user_id=user_id, limits=limits)
     evaluate_budget(report)
+
+    # Phase 10.2b: per-source pre-flight cost cap.
+    if image is None:
+        estimated_in = estimate_input_tokens_from_text(len(document_text))
+    else:
+        estimated_in = estimate_input_tokens_from_image(
+            ocr_text_hint_length_chars=len(document_text) if document_text else 0,
+        )
+    _enforce_per_source_cost_cap(
+        estimated_input_tokens=estimated_in,
+        max_output_tokens=extractor.max_tokens,
+        model=config.anthropic_model,
+        cap_usd=cost_cap_usd,
+    )
 
     extraction = SourceExtraction(
         source_id=source.id,
@@ -307,7 +463,18 @@ async def run_source_extraction(
     )
 
     try:
-        completion = await extractor.extract_from_text(document_text, metadata)
+        if image is None:
+            completion = await extractor.extract_from_text(document_text, metadata)
+        else:
+            # Vision-mode: document_text используется как ocr_text_hint для
+            # quote-validation. Если caller не предоставил OCR-hint
+            # (vision-only), text будет sentinel "[image-only document...]"
+            # из use-case'а — quote-validation пропустится автоматически.
+            completion = await extractor.extract_from_image(
+                image,
+                metadata,
+                ocr_text_hint=document_text if document_text else None,
+            )
     except (
         EmptyDocumentError,
         DocumentTooLargeError,
@@ -445,12 +612,14 @@ __all__ = [
     "BudgetExceededError",
     "DnaSourceForbiddenError",
     "ExtractionRunResult",
+    "PdfFallbackImage",
     "PoorPdfQualityError",
     "SourceNotFoundError",
     "accept_extracted_fact",
     "assert_source_not_dna",
     "build_extractor",
     "compute_user_budget_report",
+    "extract_first_image_from_scanned_pdf",
     "extract_text_from_pdf",
     "fetch_source_or_404",
     "reject_extracted_fact",

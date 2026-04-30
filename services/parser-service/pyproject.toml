@@ -40,8 +40,10 @@ dependencies = [
     # Phase 10.2 (ADR-0059) — AI source extraction.
     # ai-layer: prompt registry + Anthropic/Voyage клиенты + use cases.
     # pypdf: text-extraction для PDF-источников до vision-fallback'а.
+    # Pillow (Phase 10.2b): EXIF auto-rotate + resize >2048px перед vision-вызовом.
     "ai-layer",
     "pypdf>=5.0",
+    "Pillow>=11.0",
 ]
 
 [project.optional-dependencies]

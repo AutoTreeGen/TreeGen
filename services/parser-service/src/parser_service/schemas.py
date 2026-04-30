@@ -1679,3 +1679,71 @@ class RelationshipEvidenceResponse(BaseModel):
     contradicting: list[RelationshipEvidenceSource]
     confidence: RelationshipEvidenceConfidence
     provenance: RelationshipEvidenceProvenance
+
+
+# =============================================================================
+# Phase 10.2b — vision endpoint + extraction status.
+# =============================================================================
+
+
+class AIExtractVisionResponse(BaseModel):
+    """Ответ на ``POST /sources/{id}/ai-extract-vision``.
+
+    Аналог :class:`AIExtractTriggerResponse` для vision-режима плюс поля
+    о preprocessing'е изображения (для UI «оптимизировано с 5.2 МБ → 0.8 МБ»).
+    """
+
+    extraction: AIExtractionDetail
+    fact_count: int
+    budget_remaining_runs: int
+    budget_remaining_tokens: int
+    estimated_cost_usd: float = Field(
+        ge=0.0,
+        description=(
+            "Pre-flight cost estimate (worst-case input + max_output). "
+            "Реальный cost — в ``extraction.input_tokens`` × pricing после "
+            "ответа Claude'а."
+        ),
+    )
+    image_was_resized: bool
+    image_was_rotated: bool
+    image_original_bytes: int
+    image_processed_bytes: int
+
+
+class AIExtractStatusResponse(BaseModel):
+    """Ответ на ``GET /sources/{id}/ai-extract-status``.
+
+    Возвращает последний (по ``created_at``) extraction-run для source'а.
+    Phase 10.2b sync-mode: значение либо ``COMPLETED`` либо ``FAILED``
+    почти сразу. 10.2c добавит async-arq, и тогда ``PENDING`` будет
+    реальным переходным состоянием — endpoint и shape останутся теми же.
+    """
+
+    source_id: uuid.UUID
+    has_extraction: bool = Field(
+        description=(
+            "False если у source'а никогда не было AI-extraction'а — "
+            "frontend рисует «AI extraction not started» вместо "
+            "progress-spinner'а."
+        ),
+    )
+    extraction: AIExtractionDetail | None = None
+    fact_count: int = 0
+    cost_usd: float = Field(
+        default=0.0,
+        ge=0.0,
+        description="Реальный cost для последнего run'а (input+output × pricing).",
+    )
+    budget_remaining_runs: int = Field(
+        description="Сколько ещё AI-вызовов сегодня. ``-1`` = unlimited.",
+    )
+    budget_remaining_tokens: int = Field(
+        description="Сколько ещё tokens за месяц. ``-1`` = unlimited."
+    )
+    extract_budget_usd: float = Field(
+        ge=0.0,
+        description=(
+            "Текущий per-source $-cap (``PARSER_SERVICE_EXTRACT_BUDGET_USD``). 0 = cap отключён."
+        ),
+    )
