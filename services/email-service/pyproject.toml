@@ -19,7 +19,7 @@ dependencies = [
     # Sandboxed jinja2 environment для рендеринга шаблонов из user-controlled
     # params без RCE-рисков (см. ADR-0039 §«Templates»).
     "jinja2>=3.1",
-    "shared-models[security]",
+    "shared-models[security,observability]",
 ]
 
 [project.optional-dependencies]

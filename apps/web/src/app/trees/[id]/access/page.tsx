@@ -87,7 +87,7 @@ function AccessPageContent() {
   };
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-10">
+    <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
       <header className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="mt-1 text-sm text-[color:var(--color-ink-500)]">
@@ -95,8 +95,10 @@ function AccessPageContent() {
         </p>
       </header>
 
+      {/* Phase 4.14a — горизонтальный scroll на mobile, чтобы локализованные
+          tab-лейблы не ломали layout. min-h-11 для touch-target. */}
       <nav
-        className="mb-6 flex gap-1 border-b border-[color:var(--color-border)]"
+        className="mb-6 -mx-4 flex gap-1 overflow-x-auto border-b border-[color:var(--color-border)] px-4 sm:mx-0 sm:overflow-visible sm:px-0"
         role="tablist"
         aria-label="Access tabs"
       >
@@ -108,7 +110,7 @@ function AccessPageContent() {
             aria-selected={tab === t.id}
             data-testid={`tab-${t.id}`}
             onClick={() => setTab(t.id)}
-            className={`px-4 py-2 text-sm font-medium transition ${
+            className={`min-h-11 shrink-0 px-4 py-2 text-sm font-medium transition sm:min-h-0 ${
               tab === t.id
                 ? "border-b-2 border-[color:var(--color-ink-900)] text-[color:var(--color-ink-900)]"
                 : "text-[color:var(--color-ink-500)] hover:text-[color:var(--color-ink-900)]"
@@ -523,7 +525,7 @@ function TransferOwnerCard({
         {step === 1 ? (
           <>
             <select
-              className="w-full rounded border border-[color:var(--color-border)] bg-transparent px-2 py-1 text-sm"
+              className="min-h-11 w-full rounded border border-[color:var(--color-border)] bg-transparent px-2 py-1 text-base sm:min-h-0 sm:text-sm"
               value={newOwnerEmail}
               onChange={(e) => setNewOwnerEmail(e.target.value)}
               aria-label="New owner"

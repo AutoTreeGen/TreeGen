@@ -31,6 +31,8 @@ from shared_models.observability import (
     CloudLoggingJSONFormatter,
     configure_json_logging,
     init_sentry,
+    setup_logging,
+    setup_sentry,
 )
 
 __version__ = "0.1.0"
@@ -56,4 +58,6 @@ __all__ = [
     "register_audit_listeners",
     "role_satisfies",
     "set_audit_skip",
+    "setup_logging",
+    "setup_sentry",
 ]

@@ -1,4 +1,4 @@
-"""AutoTreeGen ai-layer — Phase 10.0 skeleton + Phase 10.2 source extraction.
+"""AutoTreeGen ai-layer — Phase 10.0 skeleton + Phase 10.1 explainer + Phase 10.2 source extraction.
 
 Public API:
 
@@ -10,14 +10,20 @@ Public API:
 - Prompts: ``PromptRegistry``, ``PromptTemplate``, ``RenderedPrompt``.
 - Types: ``EmbeddingResult``, ``HypothesisSuggestion``,
   ``ExtractionResult``, ``PersonExtract``, ``EventExtract``,
-  ``RelationshipExtract``.
+  ``RelationshipExtract``, ``EvidenceItem``, ``HypothesisExplanation``,
+  ``HypothesisExplanationPayload``, ``HypothesisInput``,
+  ``PersonSubject``.
 - Budget / runs (Phase 10.2 / ADR-0059): ``BudgetLimits``,
   ``BudgetReport``, ``BudgetExceededError``, ``evaluate_budget``,
   ``AIRunStatus``, ``build_raw_response``.
-- Use cases: ``HypothesisSuggester`` + companions; ``SourceExtractor`` +
-  ``SourceMetadata`` + extraction-error hierarchy.
+- Pricing / telemetry (Phase 10.1): ``estimate_cost_usd``,
+  ``log_ai_usage``.
+- Use cases: ``HypothesisSuggester`` + companions; ``HypothesisExplainer``
+  (Phase 10.1); ``SourceExtractor`` + ``SourceMetadata`` +
+  extraction-error hierarchy.
 
-См. ``README.md`` и ``docs/adr/0043-ai-layer-architecture.md`` /
+См. ``README.md``, ``docs/adr/0043-ai-layer-architecture.md``,
+``docs/adr/0057-ai-hypothesis-explanation.md`` и
 ``docs/adr/0059-ai-source-extraction.md``.
 """
 
@@ -39,20 +45,28 @@ from ai_layer.config import (
     AILayerDisabledError,
 )
 from ai_layer.gates import ensure_ai_layer_enabled, make_ai_layer_gate
+from ai_layer.pricing import estimate_cost_usd
 from ai_layer.prompts.registry import (
     PromptRegistry,
     PromptTemplate,
     RenderedPrompt,
 )
 from ai_layer.runs import AIRunStatus, build_raw_response
+from ai_layer.telemetry import log_ai_usage
 from ai_layer.types import (
     EmbeddingResult,
     EventExtract,
+    EvidenceItem,
     ExtractionResult,
+    HypothesisExplanation,
+    HypothesisExplanationPayload,
+    HypothesisInput,
     HypothesisSuggestion,
     PersonExtract,
+    PersonSubject,
     RelationshipExtract,
 )
+from ai_layer.use_cases.explain_hypothesis import HypothesisExplainer
 from ai_layer.use_cases.hypothesis_suggestion import (
     FabricatedEvidenceError,
     HypothesisSuggester,
@@ -81,14 +95,20 @@ __all__ = [
     "EmbeddingResult",
     "EmptyDocumentError",
     "EventExtract",
+    "EvidenceItem",
     "ExtractionResult",
     "FabricatedEvidenceError",
     "FabricatedQuoteError",
+    "HypothesisExplainer",
+    "HypothesisExplanation",
+    "HypothesisExplanationPayload",
+    "HypothesisInput",
     "HypothesisSuggester",
     "HypothesisSuggestion",
     "ImageInput",
     "PersonExtract",
     "PersonFact",
+    "PersonSubject",
     "PromptRegistry",
     "PromptTemplate",
     "RelationshipExtract",
@@ -99,6 +119,8 @@ __all__ = [
     "VoyageEmbeddingClient",
     "build_raw_response",
     "ensure_ai_layer_enabled",
+    "estimate_cost_usd",
     "evaluate_budget",
+    "log_ai_usage",
     "make_ai_layer_gate",
 ]

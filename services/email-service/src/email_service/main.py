@@ -6,15 +6,21 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from shared_models.observability import setup_logging, setup_sentry
 from shared_models.security import apply_security_middleware
 
 from email_service.api import health, send
 from email_service.config import get_settings
 from email_service.database import dispose_engine, init_engine
+
+# Phase 13.1b — observability. См. parser-service/main.py.
+setup_logging(service_name="email-service")
+setup_sentry(service_name="email-service", environment=os.environ.get("ENVIRONMENT"))
 
 
 @asynccontextmanager

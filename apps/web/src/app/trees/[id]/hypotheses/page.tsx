@@ -181,7 +181,7 @@ export default function HypothesesListPage() {
             id="hyp-filter-status"
             value={status}
             onChange={(e) => setStatus(e.target.value as HypothesisReviewStatus | "all")}
-            className="h-10 rounded-md bg-[color:var(--color-surface)] px-3 text-sm ring-1 ring-[color:var(--color-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)]"
+            className="min-h-11 rounded-md bg-[color:var(--color-surface)] px-3 text-base ring-1 ring-[color:var(--color-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] sm:min-h-0 sm:h-10 sm:text-sm"
           >
             {STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -201,7 +201,7 @@ export default function HypothesesListPage() {
             id="hyp-filter-type"
             value={hypType}
             onChange={(e) => setHypType(e.target.value as HypothesisType | "all")}
-            className="h-10 rounded-md bg-[color:var(--color-surface)] px-3 text-sm ring-1 ring-[color:var(--color-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)]"
+            className="min-h-11 rounded-md bg-[color:var(--color-surface)] px-3 text-base ring-1 ring-[color:var(--color-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] sm:min-h-0 sm:h-10 sm:text-sm"
           >
             {TYPE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>

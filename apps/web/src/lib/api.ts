@@ -955,6 +955,21 @@ export type InvitationAcceptResponse = {
   role: ShareRole;
 };
 
+/** Phase 11.1 — read-only lookup перед accept'ом (см. parser_service.api.sharing.lookup_invitation). */
+export type InvitationLookup = {
+  invitee_email: string;
+  role: ShareRole;
+  tree_id: string;
+  tree_name: string;
+  inviter_display_name: string;
+  expires_at: string;
+  accepted_at: string | null;
+};
+
+export function fetchInvitationLookup(token: string): Promise<InvitationLookup> {
+  return getJson<InvitationLookup>(`/invitations/${encodeURIComponent(token)}`);
+}
+
 export function fetchMembers(treeId: string): Promise<MemberListResponse> {
   return getJson<MemberListResponse>(`/trees/${treeId}/members`);
 }
