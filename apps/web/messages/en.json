@@ -179,6 +179,45 @@
       "subtitle": "Your tree is ready. Open it to start exploring or jump to the dashboard.",
       "openTree": "Open my tree →",
       "dashboard": "Go to dashboard"
+    },
+    "tour": {
+      "stepLabel": "Step {current} of {total}",
+      "next": "Next",
+      "back": "Back",
+      "skip": "Skip tour",
+      "close": "Close",
+      "finish": "Finish",
+      "restart": "Restart tour",
+      "restartHint": "Replay the welcome tour from the beginning.",
+      "restartingNotice": "Tour restarted. Refresh the page to see it again.",
+      "step1": {
+        "title": "Welcome to AutoTreeGen",
+        "body": "Let's take a quick 6-step tour through the parts of the app you'll use the most. You can skip anytime."
+      },
+      "step2": {
+        "title": "Import your first GEDCOM",
+        "body": "Bring an existing tree from Ancestry, MyHeritage, or any GEDCOM 5.5.1 / 5.5.5 file. Round-trip preserves provenance — nothing silently dropped."
+      },
+      "step3": {
+        "title": "Search persons",
+        "body": "Find people across all your trees with phonetic (Daitch-Mokotoff) search — works for Cyrillic, Yiddish, and transliterated names alike."
+      },
+      "step4": {
+        "title": "Family tree visualization",
+        "body": "Open any person to see a 10-generation collapsible pedigree. DNA badges, confidence indicators, and links to underlying evidence are inline."
+      },
+      "step5": {
+        "title": "DNA matches",
+        "body": "Connect a kit (Ancestry / 23andMe / MyHeritage / FTDNA) and see your matches with shared cM and chromosome painting per match."
+      },
+      "step6": {
+        "title": "Hypotheses",
+        "body": "Suggested same-person and parent-child links live here for review. Approve, reject, or defer — automation never auto-merges (CLAUDE.md §5)."
+      },
+      "step7": {
+        "title": "Share with family",
+        "body": "Invite collaborators to a tree (read / edit / admin) or publish a privacy-aware public link. Settings let you replay this tour anytime."
+      }
     }
   },
   "pricing": {
