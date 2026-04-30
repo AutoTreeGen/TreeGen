@@ -26,6 +26,7 @@ from parser_service.api import (
     imports,
     imports_sse,
     metrics,
+    normalize,
     persons,
     public_share,
     sharing,
@@ -103,6 +104,11 @@ app.include_router(sources.router, tags=["sources"], dependencies=_AUTH_DEPS)
 # permission gate (EDITOR) проверяется внутри ручек через resolve
 # source → tree.
 app.include_router(ai_extraction.router, tags=["sources", "ai"], dependencies=_AUTH_DEPS)
+# Phase 10.3 (ADR-0060) — AI normalization for places + names.
+# Auth required; нет tree-scoped permission'а (вход — личная raw-строка).
+# Cost-guards (kill switch + per-user-day rate limit + per-month tokens budget)
+# ставятся внутри ручек, выровнено с 10.2.
+app.include_router(normalize.router, tags=["ai", "normalization"], dependencies=_AUTH_DEPS)
 app.include_router(dedup.router, tags=["dedup"], dependencies=_AUTH_DEPS)
 app.include_router(dedup_attempts.router, tags=["dedup-attempts"], dependencies=_AUTH_DEPS)
 # SSE роутер до основного hypotheses — у него специализированный путь

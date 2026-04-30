@@ -1427,3 +1427,157 @@ class AIFactReviewRequest(BaseModel):
     )
 
     model_config = ConfigDict(extra="forbid")
+
+
+# -----------------------------------------------------------------------------
+# Phase 10.3 — AI normalization (см. ADR-0060).
+# -----------------------------------------------------------------------------
+
+
+class NormalizationCandidateInput(BaseModel):
+    """Один кандидат, передаваемый в endpoint для Voyage-ranking.
+
+    Caller-уровень (UI / inference-pipeline) сам выбирает что подавать —
+    обычно ``places.canonical_name`` для tree'а пользователя, либо
+    ``names.surname`` для дедупa person'ов.
+    """
+
+    id: str = Field(min_length=1, max_length=128)
+    text: str = Field(min_length=1, max_length=512)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class PlaceNormalizeRequest(BaseModel):
+    """Тело ``POST /places/normalize``.
+
+    Attributes:
+        raw: Исходная строка места («Юзерин, Гомельская обл»). Один вход —
+            одна нормализация. Чтобы нормализовать список — слать N запросов.
+        locale_hint: Подсказка для LLM (BCP-47-like). Не обязательно.
+        context: Surrounding context (например, family-card excerpt) для
+            LLM-disambig'а. Не PII-чувствительная — но caller отвечает.
+        candidates: Опциональный список существующих canonical-форм для
+            Voyage-ranked match'а (top-K возвращается в ответе).
+        top_k: Сколько candidate'ов оставить в ответе после Voyage-ranking.
+    """
+
+    raw: str = Field(min_length=1, max_length=1024)
+    locale_hint: str | None = Field(default=None, max_length=16)
+    context: str | None = Field(default=None, max_length=2048)
+    candidates: list[NormalizationCandidateInput] = Field(default_factory=list, max_length=50)
+    top_k: int = Field(default=5, ge=1, le=20)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class NameNormalizeRequest(BaseModel):
+    """Тело ``POST /names/normalize``.
+
+    Attributes:
+        raw: Исходная строка имени.
+        script_hint: Скрипт raw-input'а (``cyrillic`` / ``hebrew`` / ...).
+        locale_hint: BCP-47-like локаль.
+        context: Surrounding context.
+        candidates: Опциональный список существующих имён (для дедупa).
+        top_k: Сколько candidate'ов оставить.
+    """
+
+    raw: str = Field(min_length=1, max_length=1024)
+    script_hint: str | None = Field(default=None, max_length=16)
+    locale_hint: str | None = Field(default=None, max_length=16)
+    context: str | None = Field(default=None, max_length=2048)
+    candidates: list[NormalizationCandidateInput] = Field(default_factory=list, max_length=50)
+    top_k: int = Field(default=5, ge=1, le=20)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class CandidateMatchResponse(BaseModel):
+    """Один Voyage-ranked match для UI-рендера."""
+
+    candidate_id: str
+    candidate_text: str
+    score: float
+    rank: int
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class PlaceNormalizationDetail(BaseModel):
+    """Структурированное представление места для ответа endpoint'а."""
+
+    canonical_name: str
+    country_modern: str | None
+    country_historical: str | None
+    admin1: str | None
+    admin2: str | None
+    settlement: str
+    latitude: float | None
+    longitude: float | None
+    confidence: float
+    ethnicity_hint: str
+    alternative_forms: list[str]
+    notes: str | None
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class NameNormalizationDetail(BaseModel):
+    """Структурированное представление имени для ответа endpoint'а."""
+
+    given: str | None
+    surname: str | None
+    patronymic: str | None
+    maiden_surname: str | None
+    prefix: str | None
+    suffix: str | None
+    nickname: str | None
+    given_alts: list[str]
+    surname_alts: list[str]
+    script_detected: str
+    transliteration_scheme: str
+    ethnicity_hint: str
+    tribe_marker: str
+    confidence: float
+    notes: str | None
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class PlaceNormalizeResponse(BaseModel):
+    """Ответ ``POST /places/normalize``.
+
+    Поле ``budget_remaining_runs`` помогает UI рендерить «осталось N
+    из лимита M» без дополнительного round-trip.
+    """
+
+    place: PlaceNormalizationDetail
+    candidates: list[CandidateMatchResponse] = Field(default_factory=list)
+    input_tokens: int
+    output_tokens: int
+    cost_usd: float
+    model: str
+    dry_run: bool
+    budget_remaining_runs: int = Field(
+        description="Сколько ещё normalize-вызовов осталось сегодня (-1 = unlimited)."
+    )
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class NameNormalizeResponse(BaseModel):
+    """Ответ ``POST /names/normalize``."""
+
+    name: NameNormalizationDetail
+    candidates: list[CandidateMatchResponse] = Field(default_factory=list)
+    input_tokens: int
+    output_tokens: int
+    cost_usd: float
+    model: str
+    dry_run: bool
+    budget_remaining_runs: int = Field(
+        description="Сколько ещё normalize-вызовов осталось сегодня (-1 = unlimited)."
+    )
+
+    model_config = ConfigDict(extra="forbid")
