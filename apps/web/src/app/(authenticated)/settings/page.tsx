@@ -46,16 +46,20 @@ export default function SettingsPage() {
   const [tab, setTab] = useState<TabId>("profile");
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10" data-testid="settings-page">
-      <header className="mb-8">
+    <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-10" data-testid="settings-page">
+      <header className="mb-6 sm:mb-8">
         <h1 className="text-2xl font-semibold tracking-tight">Account settings</h1>
         <p className="mt-1 text-sm text-[color:var(--color-ink-500)]">
           Manage your profile, active sessions, and account data.
         </p>
       </header>
 
+      {/* Phase 4.14a — на mobile tabs scroll-snap горизонтально (3 короткие
+          вкладки помещаются и так, но при переводе в RU/длинных лейблах
+          избегаем wrap). На ≥sm стандартный flex без overflow. Каждая
+          вкладка получает min-h-11 для тач-target. */}
       <nav
-        className="mb-6 flex gap-1 border-b border-[color:var(--color-border)]"
+        className="mb-6 -mx-4 flex gap-1 overflow-x-auto border-b border-[color:var(--color-border)] px-4 sm:mx-0 sm:overflow-visible sm:px-0"
         role="tablist"
         aria-label="Settings tabs"
       >
@@ -67,7 +71,7 @@ export default function SettingsPage() {
             aria-selected={tab === t.id}
             data-testid={`tab-${t.id}`}
             onClick={() => setTab(t.id)}
-            className={`px-4 py-2 text-sm font-medium transition ${
+            className={`min-h-11 shrink-0 px-4 py-2 text-sm font-medium transition sm:min-h-0 ${
               tab === t.id
                 ? "border-b-2 border-[color:var(--color-ink-900)] text-[color:var(--color-ink-900)]"
                 : "text-[color:var(--color-ink-500)] hover:text-[color:var(--color-ink-900)]"
@@ -215,7 +219,7 @@ function ProfileTab() {
             value={locale ?? "en"}
             data-testid="profile-locale"
             onChange={(e: ChangeEvent<HTMLSelectElement>) => setLocale(e.target.value)}
-            className="h-9 rounded-md border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-2 text-sm"
+            className="min-h-11 rounded-md border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-2 text-base sm:min-h-0 sm:h-9 sm:text-sm"
           >
             <option value="en">English</option>
             <option value="ru">Русский</option>
@@ -555,14 +559,17 @@ function DeleteAccountModal({
   submitting: boolean;
   error: string | null;
 }) {
+  // Phase 4.14a — на mobile (<sm) modal превращается в bottom-sheet:
+  // полная ширина, прижатый к низу, скруглённые верхние углы. На ≥sm
+  // вернуть классический центрированный диалог.
   return (
     <dialog
       open
-      className="fixed inset-0 z-50 m-0 flex h-full w-full items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 m-0 flex h-full w-full items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4"
       aria-labelledby="delete-modal-title"
       data-testid="delete-modal"
     >
-      <div className="w-full max-w-md rounded-lg bg-[color:var(--color-surface)] p-6 shadow-xl">
+      <div className="w-full max-w-md rounded-t-2xl bg-[color:var(--color-surface)] p-6 shadow-xl sm:rounded-lg">
         <h2 id="delete-modal-title" className="text-lg font-semibold text-red-700">
           Delete this account?
         </h2>

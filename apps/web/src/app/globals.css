@@ -22,3 +22,28 @@ body {
   color: var(--color-ink-900);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
+
+/* Phase 4.14a — mobile-responsive безопасностные сетки.
+   Защитный слой для form-controls которые не прошли через
+   <Input> / <Checkbox> компонент (raw <input>, <select>, <textarea>):
+   на mobile font-size ≥16px предотвращает iOS Safari auto-zoom при
+   focus. На ≥640px вернёмся к 14px компактности. */
+@media (max-width: 639px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* `touch-action: manipulation` отключает 300мс double-tap zoom на
+   интерактивных элементах. Без него каждый tap по кнопке получает
+   "ленивый" feel из-за ожидания второго tap. */
+button,
+[role="button"],
+a,
+label,
+input[type="checkbox"],
+input[type="radio"] {
+  touch-action: manipulation;
+}
