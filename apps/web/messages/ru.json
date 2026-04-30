@@ -443,5 +443,99 @@
     "duplicates": {
       "title": "Возможные дубликаты"
     }
+  },
+  "sharing": {
+    "owner": {
+      "title": "Совместный доступ",
+      "subtitle": "Пригласите соавторов и управляйте тем, кто видит дерево.",
+      "forbiddenTitle": "Только для владельца",
+      "forbiddenBody": "Управлять доступом может только владелец дерева. Если это ошибка — попросите текущего владельца добавить вас.",
+      "loading": "Загрузка…"
+    },
+    "members": {
+      "heading": "Участники",
+      "description": "Те, у кого есть доступ к этому дереву.",
+      "empty": "Соавторов пока нет — дерево видит только владелец.",
+      "loadError": "Не удалось загрузить участников.",
+      "columnPerson": "Участник",
+      "columnRole": "Роль",
+      "columnJoined": "С",
+      "columnActions": "Действия",
+      "joinedAt": "Присоединился {date}",
+      "changeRole": "Изменить роль",
+      "promoteToEditor": "Сделать редактором",
+      "demoteToViewer": "Сделать наблюдателем",
+      "revoke": "Отозвать доступ",
+      "revokeConfirm": "Отозвать доступ у {email}? Доступ прекратится сразу.",
+      "revokePending": "Отзываю…"
+    },
+    "invitations": {
+      "heading": "Ожидающие приглашения",
+      "description": "Приглашения, которые ещё не приняты. Ссылка действует 14 дней.",
+      "empty": "Ожидающих приглашений нет.",
+      "loadError": "Не удалось загрузить приглашения.",
+      "columnEmail": "Email",
+      "columnRole": "Роль",
+      "columnSent": "Отправлено",
+      "columnActions": "Действия",
+      "sentAt": "Отправлено {date}",
+      "revoke": "Отозвать",
+      "revokeConfirm": "Отозвать приглашение для {email}?"
+    },
+    "invite": {
+      "heading": "Пригласить соавтора",
+      "description": "Отправим email-приглашение. Получателю нужно будет войти (или зарегистрироваться), чтобы присоединиться.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "cousin@example.com",
+      "roleLabel": "Роль",
+      "roleViewer": "Наблюдатель — только чтение",
+      "roleEditor": "Редактор — может добавлять и менять данные",
+      "messageLabel": "Личное сообщение (необязательно)",
+      "messagePlaceholder": "Привет! Хочу поделиться с тобой результатами исследования.",
+      "submit": "Отправить приглашение",
+      "submitting": "Отправляю…",
+      "successToast": "Приглашение отправлено",
+      "errorInvalidEmail": "Введите корректный email.",
+      "errorGeneric": "Не удалось отправить приглашение."
+    },
+    "roles": {
+      "owner": "Владелец",
+      "editor": "Редактор",
+      "viewer": "Наблюдатель"
+    },
+    "accept": {
+      "title": "Принять приглашение",
+      "loadingLookup": "Загрузка приглашения…",
+      "invitedAs": "Вас пригласили как {role}",
+      "invitedToTree": "в дерево «{treeName}»",
+      "invitedBy": "от {inviter}",
+      "expiresAt": "Действует до {date}",
+      "alreadyAcceptedTitle": "Вы уже приняли это приглашение",
+      "alreadyAcceptedBody": "Откройте дерево из dashboard.",
+      "goToTree": "Открыть дерево",
+      "invalidTitle": "Приглашение больше не действует",
+      "invalidBody": "Ссылка истекла или была отозвана. Попросите нового приглашения у автора.",
+      "notFoundTitle": "Приглашение не найдено",
+      "notFoundBody": "Возможно, ссылка некорректна или приглашение удалено.",
+      "goToDashboard": "В dashboard",
+      "signInPrompt": "Войдите, чтобы принять приглашение",
+      "signInDescription": "Чтобы присоединиться к дереву, нужен аккаунт. Войдите или создайте новый — это бесплатно.",
+      "signInButton": "Войти",
+      "signUpButton": "Создать аккаунт",
+      "emailMismatchTitle": "Это приглашение для другого email",
+      "emailMismatchBody": "Вы вошли как {currentEmail}, а приглашение отправлено на {invitedEmail}. Выйдите и войдите под приглашённым email, чтобы продолжить.",
+      "emailMismatchAction": "Войти как {invitedEmail}",
+      "acceptButton": "Принять приглашение",
+      "accepting": "Присоединяюсь к дереву…",
+      "successTitle": "Добро пожаловать!",
+      "successBody": "Перенаправляем в дерево…",
+      "errorGeneric": "Не удалось принять приглашение."
+    },
+    "treePicker": {
+      "label": "Сменить дерево",
+      "current": "Текущее дерево",
+      "manage": "Все деревья",
+      "loading": "Загрузка деревьев…"
+    }
   }
 }

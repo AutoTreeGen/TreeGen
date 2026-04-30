@@ -1088,6 +1088,30 @@ class InvitationAcceptResponse(BaseModel):
     role: str
 
 
+class InvitationLookupResponse(BaseModel):
+    """``GET /invitations/{token}`` — pre-accept lookup для UI accept-flow.
+
+    Phase 11.1: invitee landing page (``/invitations/[token]``) делает GET
+    до accept'а, чтобы показать «You've been invited to <Tree> by <Inviter>
+    as <Role>» + детектировать expired/revoked без consume'а токена.
+
+    Endpoint **публичный** (auth не требуется для view — токен сам по себе
+    secret); accept по-прежнему требует Clerk auth (``POST .../accept``).
+
+    Возвращает безопасный subset полей: invitee_email (чтобы UI мог сравнить
+    с email текущего user'а и предупредить о mismatch'е), role, tree_id +
+    name, inviter display_name. Token обратно не возвращаем — он уже в URL.
+    """
+
+    invitee_email: str
+    role: str
+    tree_id: uuid.UUID
+    tree_name: str
+    inviter_display_name: str
+    expires_at: datetime
+    accepted_at: datetime | None = None
+
+
 class MemberResponse(BaseModel):
     """Read-модель active membership."""
 

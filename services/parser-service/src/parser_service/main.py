@@ -104,6 +104,10 @@ app.include_router(persons.router, tags=["persons", "merge"], dependencies=_AUTH
 # Включён после persons чтобы /trees/{id}/* пути в trees.router не
 # перехватывали /trees/{id}/invitations / /trees/{id}/members.
 app.include_router(sharing.router, tags=["sharing"], dependencies=_AUTH_DEPS)
+# Phase 11.1 — public invitation lookup (GET /invitations/{token}) без auth:
+# UI accept-landing нужно показать tree+inviter ДО Clerk sign-in. Token —
+# secret 122-bit UUIDv4. Симметрично ``public_share.router_public``.
+app.include_router(sharing.router_public, tags=["sharing", "public"])
 # Phase 11.2 — public share-link управление (owner-side). Auth required.
 app.include_router(
     public_share.router_owner,
