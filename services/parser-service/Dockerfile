@@ -41,8 +41,20 @@ COPY services/parser-service/src/ services/parser-service/src/
 RUN uv sync --frozen --no-dev \
  && uv pip install "google-cloud-tasks>=2.16"
 
+# Phase 13.1b — non-root execution per ADR-0032. Создаём system user/group
+# и передаём владение /app, чтобы uvicorn не работал из-под root.
+RUN groupadd --system app \
+ && useradd --system --gid app --home-dir /app --no-create-home appuser \
+ && chown -R appuser:app /app
+USER appuser
+
 # Cloud Run sets PORT (default 8080); fall back to 8000 for local parity.
 ENV PORT=8000
 EXPOSE 8000
+
+# Phase 13.1b — Docker-level liveness. Cloud Run использует свой собственный
+# healthcheck, но локальный `docker run` без этого не репортит unhealthy.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import os, urllib.request; urllib.request.urlopen(f'http://localhost:{os.environ.get(\"PORT\", \"8000\")}/healthz').read()" || exit 1
 
 CMD ["sh", "-c", "uv run uvicorn parser_service.main:app --host 0.0.0.0 --port ${PORT}"]

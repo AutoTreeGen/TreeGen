@@ -23,6 +23,13 @@ from dna_analysis.models import (
     ReferenceBuild,
     Snp,
 )
+from dna_analysis.triangulation import (
+    Match,
+    TriangulationGroup,
+    TriangulationSegment,
+    bayes_boost,
+    find_triangulation_groups,
+)
 
 __all__ = [
     "Chromosome",
@@ -31,12 +38,17 @@ __all__ = [
     "GeneticMap",
     "GeneticMapError",
     "Genotype",
+    "Match",
     "Provider",
     "ReferenceBuild",
     "RelationshipRange",
     "SharedSegment",
     "Snp",
+    "TriangulationGroup",
+    "TriangulationSegment",
     "UnsupportedFormatError",
+    "bayes_boost",
     "find_shared_segments",
+    "find_triangulation_groups",
     "predict_relationship",
 ]

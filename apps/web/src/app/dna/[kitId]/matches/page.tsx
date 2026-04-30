@@ -190,63 +190,124 @@ function MatchesTable({ items }: { items: DnaMatchListItem[] }) {
     );
   }
   return (
-    <div className="mt-4 overflow-x-auto rounded-md border border-[color:var(--color-border)]">
-      <table className="min-w-full text-sm">
-        <thead className="bg-[color:var(--color-surface-muted)] text-left text-xs uppercase tracking-wide text-[color:var(--color-ink-500)]">
-          <tr>
-            <th className="px-3 py-2">Name</th>
-            <th className="px-3 py-2">{t("totalCm")}</th>
-            <th className="px-3 py-2">Longest</th>
-            <th className="px-3 py-2">Segments</th>
-            <th className="px-3 py-2">Predicted</th>
-            <th className="px-3 py-2">Linked</th>
-            <th className="px-3 py-2" />
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((m) => (
-            <tr key={m.id} className="border-t border-[color:var(--color-border)]">
-              <td className="px-3 py-2">
-                <div className="font-medium">
+    <>
+      {/* Phase 4.14a — mobile (<sm): card stack; ≥sm: вернуть таблицу.
+          Семантика остаётся (table headers + sortable cells будут добавлены
+          в 6.5), card-вариант повторяет ту же информацию в сжатом виде. */}
+      <ul
+        className="mt-4 flex flex-col gap-2 sm:hidden"
+        aria-label="DNA matches"
+        data-testid="dna-matches-card-list"
+      >
+        {items.map((m) => (
+          <li
+            key={m.id}
+            className="rounded-md border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium">
                   {m.display_name ?? <span className="text-[color:var(--color-ink-500)]">—</span>}
-                </div>
+                </p>
                 {m.external_match_id ? (
-                  <div className="font-mono text-[11px] text-[color:var(--color-ink-500)]">
+                  <p className="truncate font-mono text-[11px] text-[color:var(--color-ink-500)]">
                     {m.external_match_id}
-                  </div>
+                  </p>
                 ) : null}
-              </td>
-              <td className="px-3 py-2 font-mono">
-                {m.total_cm !== null ? m.total_cm.toFixed(1) : "—"}
-              </td>
-              <td className="px-3 py-2 font-mono">
-                {m.largest_segment_cm !== null ? m.largest_segment_cm.toFixed(1) : "—"}
-              </td>
-              <td className="px-3 py-2 font-mono">
-                {m.segment_count !== null ? m.segment_count : "—"}
-              </td>
-              <td className="px-3 py-2">
+              </div>
+              {m.matched_person_id ? (
+                <Badge variant="accent">linked</Badge>
+              ) : (
+                <Badge variant="outline">unlinked</Badge>
+              )}
+            </div>
+            <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
+              <div>
+                <dt className="text-[color:var(--color-ink-500)]">{t("totalCm")}</dt>
+                <dd className="font-mono">{m.total_cm !== null ? m.total_cm.toFixed(1) : "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-[color:var(--color-ink-500)]">Longest</dt>
+                <dd className="font-mono">
+                  {m.largest_segment_cm !== null ? m.largest_segment_cm.toFixed(1) : "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[color:var(--color-ink-500)]">Segments</dt>
+                <dd className="font-mono">{m.segment_count !== null ? m.segment_count : "—"}</dd>
+              </div>
+            </dl>
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <span className="truncate text-xs text-[color:var(--color-ink-700)]">
                 {m.predicted_relationship ?? (
                   <span className="text-[color:var(--color-ink-500)]">—</span>
                 )}
-              </td>
-              <td className="px-3 py-2">
-                {m.matched_person_id ? (
-                  <Badge variant="accent">linked</Badge>
-                ) : (
-                  <Badge variant="outline">unlinked</Badge>
-                )}
-              </td>
-              <td className="px-3 py-2">
-                <Button variant="link" size="sm" asChild>
-                  <Link href={`/dna/matches/${m.id}`}>Open →</Link>
-                </Button>
-              </td>
+              </span>
+              <Button variant="secondary" size="sm" asChild>
+                <Link href={`/dna/matches/${m.id}`}>Open →</Link>
+              </Button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-4 hidden overflow-x-auto rounded-md border border-[color:var(--color-border)] sm:block">
+        <table className="min-w-full text-sm">
+          <thead className="bg-[color:var(--color-surface-muted)] text-left text-xs uppercase tracking-wide text-[color:var(--color-ink-500)]">
+            <tr>
+              <th className="px-3 py-2">Name</th>
+              <th className="px-3 py-2">{t("totalCm")}</th>
+              <th className="px-3 py-2">Longest</th>
+              <th className="px-3 py-2">Segments</th>
+              <th className="px-3 py-2">Predicted</th>
+              <th className="px-3 py-2">Linked</th>
+              <th className="px-3 py-2" />
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {items.map((m) => (
+              <tr key={m.id} className="border-t border-[color:var(--color-border)]">
+                <td className="px-3 py-2">
+                  <div className="font-medium">
+                    {m.display_name ?? <span className="text-[color:var(--color-ink-500)]">—</span>}
+                  </div>
+                  {m.external_match_id ? (
+                    <div className="font-mono text-[11px] text-[color:var(--color-ink-500)]">
+                      {m.external_match_id}
+                    </div>
+                  ) : null}
+                </td>
+                <td className="px-3 py-2 font-mono">
+                  {m.total_cm !== null ? m.total_cm.toFixed(1) : "—"}
+                </td>
+                <td className="px-3 py-2 font-mono">
+                  {m.largest_segment_cm !== null ? m.largest_segment_cm.toFixed(1) : "—"}
+                </td>
+                <td className="px-3 py-2 font-mono">
+                  {m.segment_count !== null ? m.segment_count : "—"}
+                </td>
+                <td className="px-3 py-2">
+                  {m.predicted_relationship ?? (
+                    <span className="text-[color:var(--color-ink-500)]">—</span>
+                  )}
+                </td>
+                <td className="px-3 py-2">
+                  {m.matched_person_id ? (
+                    <Badge variant="accent">linked</Badge>
+                  ) : (
+                    <Badge variant="outline">unlinked</Badge>
+                  )}
+                </td>
+                <td className="px-3 py-2">
+                  <Button variant="link" size="sm" asChild>
+                    <Link href={`/dna/matches/${m.id}`}>Open →</Link>
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 

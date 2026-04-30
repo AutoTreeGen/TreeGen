@@ -6,11 +6,13 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from redis.asyncio import Redis
+from shared_models.observability import setup_logging, setup_sentry
 from shared_models.security import apply_security_middleware
 
 from telegram_bot.api import health, link, notify, webhook
@@ -22,6 +24,10 @@ from telegram_bot.services.dispatcher import (
     shutdown_bot,
 )
 from telegram_bot.services.link_tokens import LinkTokenStore
+
+# Phase 13.1b — observability. См. parser-service/main.py.
+setup_logging(service_name="telegram-bot")
+setup_sentry(service_name="telegram-bot", environment=os.environ.get("ENVIRONMENT"))
 
 
 @asynccontextmanager

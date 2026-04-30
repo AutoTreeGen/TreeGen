@@ -17,7 +17,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import enMessages from "../../messages/en.json";
 
 // ---- Mocks ------------------------------------------------------------------
 
@@ -69,10 +72,14 @@ function renderPage() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
+  // Phase 4.15: settings page теперь содержит RestartTourCard, который
+  // вызывает useTranslations — поэтому оборачиваем в NextIntlClientProvider.
   return render(
-    <QueryClientProvider client={queryClient}>
-      <SettingsPage />
-    </QueryClientProvider>,
+    <NextIntlClientProvider locale="en" messages={enMessages}>
+      <QueryClientProvider client={queryClient}>
+        <SettingsPage />
+      </QueryClientProvider>
+    </NextIntlClientProvider>,
   );
 }
 
