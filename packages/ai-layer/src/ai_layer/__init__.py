@@ -10,7 +10,7 @@ Public API:
   ``FabricatedEvidenceError``
 - ``HypothesisExplainer`` / ``HypothesisInput`` / ``HypothesisExplanation`` /
   ``PersonSubject`` / ``EvidenceItem`` (Phase 10.1)
-- ``estimate_cost_usd`` (Phase 10.1)
+- ``estimate_cost_usd`` / ``log_ai_usage`` (Phase 10.1)
 
 См. ``README.md``, ``docs/adr/0043-ai-layer-architecture.md`` и
 ``docs/adr/0057-ai-hypothesis-explanation.md``.
@@ -29,6 +29,7 @@ from ai_layer.prompts.registry import (
     PromptTemplate,
     RenderedPrompt,
 )
+from ai_layer.telemetry import log_ai_usage
 from ai_layer.types import (
     EmbeddingResult,
     EvidenceItem,
@@ -67,4 +68,5 @@ __all__ = [
     "RenderedPrompt",
     "VoyageEmbeddingClient",
     "estimate_cost_usd",
+    "log_ai_usage",
 ]
