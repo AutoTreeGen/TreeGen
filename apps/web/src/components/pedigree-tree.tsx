@@ -144,10 +144,16 @@ export function PedigreeTree({ root }: { root: AncestorTreeNode }) {
     );
   };
 
+  // Phase 4.14a — `touch-none` (touch-action: none) на контейнере, чтобы
+  // pinch-zoom и drag-pan уходили в d3-zoom (внутри react-d3-tree), а
+  // браузер не пытался скроллить/refresh-pull-down при касании. d3-zoom
+  // сам поддерживает touch-events начиная с v3, так что отдельной
+  // gesture-логики не нужно. На десктопе touch-action ничего не ломает —
+  // mouse-зум через wheel/drag работает прежним маршрутом.
   return (
     <div
       ref={containerRef}
-      className="h-[70vh] w-full rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface-muted)]"
+      className="h-[70vh] w-full touch-none select-none rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface-muted)]"
     >
       {dimensions ? (
         <Tree

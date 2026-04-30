@@ -1,19 +1,21 @@
 """Hypothesis composition: применить rule's, агрегировать Evidence, посчитать score.
 
-ADR-0016 §«Composer» — формула:
+Phase 7.0–7.4 использовали линейную weighted-sum формулу
+``clamp(Σ supports.weight − Σ contradicts.weight, 0, 1)`` (ADR-0016).
+Two evidence на 0.6 → 1.0 (clamp), CONTRADICTS вычитал свой weight
+напрямую, корреляция между rule's игнорировалась.
 
-    score = clamp(Σ supports.weight − Σ contradicts.weight, 0, 1)
+Phase 7.5 (см. ADR-0057) разделила сигналы:
 
-Это **не** Bayes posterior. В Phase 7.0 у нас нет prior'ов из дерева,
-поэтому композиция — простая weighted sum. Phase 7.4+ может ввести
-prior из tree-context и переключить формулу на posterior-style;
-контракт InferenceRule при этом не меняется.
+* **Bayesian fusion** для разных ``rule_id``: ``1 − Π(1 − p_i)``.
+* **Same-source corroboration** для одного ``rule_id``: weighted average.
+* **Contradictions**: фиксированный штраф 0.1 за evidence, capped at 0.5.
+* **Floor 0.05** при наличии хоть какого-то evidence.
 
-Корреляция между evidences не учитывается: два rule's, смотрящих на
-один и тот же сигнал с разных углов, оба добавляют свой weight как
-независимые факты. Это known limitation, документируется в ADR-0016
-§«Минусы» — Mitigation планируется в Phase 7.5 (explicit correlation
-matrix или Bayes-network).
+Контракт ``Hypothesis`` остаётся прежним: ``composite_score: float``
+в ``[0, 1]``. Вся новая логика — в ``aggregation.aggregate_confidence``;
+composer лишь делегирует туда. ORM-схема, API и тестовые fixtures
+не меняются.
 """
 
 from __future__ import annotations
@@ -21,10 +23,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
+from inference_engine.aggregation import aggregate_confidence
 from inference_engine.rules.registry import all_rules
 from inference_engine.types import (
     Evidence,
-    EvidenceDirection,
     Hypothesis,
     HypothesisType,
 )
@@ -57,7 +59,8 @@ def compose_hypothesis(
 
     Returns:
         Hypothesis с собранными evidences, посчитанным composite_score
-        и пустым ``alternatives`` (генерация альтернатив — Phase 7.4).
+        (через ``aggregate_confidence``, см. ADR-0057) и пустым
+        ``alternatives`` (генерация альтернатив — Phase 7.4).
     """
     effective_context: dict[str, Any] = {} if context is None else context
     effective_rules: list[InferenceRule] = all_rules() if rules is None else rules
@@ -66,7 +69,7 @@ def compose_hypothesis(
     for rule in effective_rules:
         evidences.extend(rule.apply(subject_a, subject_b, effective_context))
 
-    composite = _composite_score(evidences)
+    aggregated = aggregate_confidence(evidences)
 
     return Hypothesis(
         id=uuid4(),
@@ -74,22 +77,6 @@ def compose_hypothesis(
         subject_a_id=subject_a_id if subject_a_id is not None else uuid4(),
         subject_b_id=subject_b_id if subject_b_id is not None else uuid4(),
         evidences=evidences,
-        composite_score=composite,
+        composite_score=aggregated.composite_score,
         alternatives=[],
     )
-
-
-def _composite_score(evidences: list[Evidence]) -> float:
-    """Weighted-sum формула с clamp в ``[0, 1]``.
-
-    Supports добавляют свой weight, contradicts вычитают, neutral
-    игнорируется в score (но виден в evidences-листе для UI).
-    """
-    supports_total = sum(
-        ev.weight for ev in evidences if ev.direction is EvidenceDirection.SUPPORTS
-    )
-    contradicts_total = sum(
-        ev.weight for ev in evidences if ev.direction is EvidenceDirection.CONTRADICTS
-    )
-    raw = supports_total - contradicts_total
-    return max(0.0, min(1.0, raw))

@@ -1,7 +1,17 @@
-"""Тесты compose_hypothesis: weighted-sum формула, edge cases, registry-fallback."""
+"""Тесты compose_hypothesis: Phase 7.5 aggregation (Bayesian fusion + contradictions).
+
+ADR-0057. Phase 7.0–7.4 использовала линейную ``Σ supports − Σ contradicts``
+формулу; ожидаемые значения в этих тестах обновлены под новую семантику:
+
+* Two SUPPORTS из разных rule_ids → 1 − (1−w1)(1−w2).
+* CONTRADICTS — не вычитает свой weight, а добавляет фиксированный
+  штраф 0.1 за единицу (cap 0.5).
+* Floor 0.05 применяется когда есть хоть какое-то evidence.
+"""
 
 from __future__ import annotations
 
+import math
 from typing import Any
 from uuid import uuid4
 
@@ -51,6 +61,7 @@ def test_compose_with_no_rules_yields_empty_evidences_and_zero_score() -> None:
         subject_b={},
     )
     assert hyp.evidences == []
+    # Пустой evidence-list → 0.0 (floor не применяется без данных).
     assert hyp.composite_score == 0.0
 
 
@@ -64,31 +75,36 @@ def test_compose_with_no_registered_rules_yields_zero_score() -> None:
     assert hyp.composite_score == 0.0
 
 
-def test_supports_increase_score() -> None:
+def test_supports_from_different_sources_use_bayesian_fusion() -> None:
+    """Phase 7.5: 0.3 + 0.4 → 1 − 0.7·0.6 = 0.58, не 0.7."""
     hyp = compose_hypothesis(
         hypothesis_type=HypothesisType.SAME_PERSON,
         subject_a={},
         subject_b={},
         rules=[
-            _ConstRule("a", [_ev(EvidenceDirection.SUPPORTS, 0.3)]),
-            _ConstRule("b", [_ev(EvidenceDirection.SUPPORTS, 0.4)]),
+            _ConstRule("a", [_ev(EvidenceDirection.SUPPORTS, 0.3, "a")]),
+            _ConstRule("b", [_ev(EvidenceDirection.SUPPORTS, 0.4, "b")]),
         ],
     )
-    assert hyp.composite_score == 0.7
+    assert math.isclose(hyp.composite_score, 0.58, abs_tol=1e-9)
     assert len(hyp.evidences) == 2
 
 
-def test_contradicts_decrease_score() -> None:
+def test_single_contradiction_subtracts_fixed_penalty() -> None:
+    """Phase 7.5: penalty 0.1 за CONTRADICTS, не зависит от weight.
+
+    SUPPORTS 0.6 → fused 0.6; одно CONTRADICTS → −0.1; итог 0.5.
+    """
     hyp = compose_hypothesis(
         hypothesis_type=HypothesisType.SAME_PERSON,
         subject_a={},
         subject_b={},
         rules=[
-            _ConstRule("a", [_ev(EvidenceDirection.SUPPORTS, 0.6)]),
-            _ConstRule("b", [_ev(EvidenceDirection.CONTRADICTS, 0.4)]),
+            _ConstRule("a", [_ev(EvidenceDirection.SUPPORTS, 0.6, "a")]),
+            _ConstRule("b", [_ev(EvidenceDirection.CONTRADICTS, 0.4, "b")]),
         ],
     )
-    assert abs(hyp.composite_score - 0.2) < 1e-9
+    assert math.isclose(hyp.composite_score, 0.5, abs_tol=1e-9)
 
 
 def test_neutral_does_not_change_score() -> None:
@@ -97,39 +113,48 @@ def test_neutral_does_not_change_score() -> None:
         subject_a={},
         subject_b={},
         rules=[
-            _ConstRule("a", [_ev(EvidenceDirection.SUPPORTS, 0.5)]),
-            _ConstRule("b", [_ev(EvidenceDirection.NEUTRAL, 0.7)]),
+            _ConstRule("a", [_ev(EvidenceDirection.SUPPORTS, 0.5, "a")]),
+            _ConstRule("b", [_ev(EvidenceDirection.NEUTRAL, 0.7, "b")]),
         ],
     )
-    assert hyp.composite_score == 0.5
+    assert math.isclose(hyp.composite_score, 0.5, abs_tol=1e-9)
     # Neutral evidence остаётся видимой — UI explanation должен её показать.
     assert any(ev.direction is EvidenceDirection.NEUTRAL for ev in hyp.evidences)
 
 
-def test_score_clamped_to_one_when_supports_overflow() -> None:
+def test_strong_supports_approach_one_via_bayesian_fusion() -> None:
+    """Phase 7.5: высокие SUPPORTS подходят к 1.0 без явного clamp.
+
+    0.9 + 0.8 → 1 − 0.1·0.2 = 0.98; не 1.0, но «почти уверенно».
+    """
     hyp = compose_hypothesis(
         hypothesis_type=HypothesisType.SAME_PERSON,
         subject_a={},
         subject_b={},
         rules=[
-            _ConstRule("a", [_ev(EvidenceDirection.SUPPORTS, 0.9)]),
-            _ConstRule("b", [_ev(EvidenceDirection.SUPPORTS, 0.8)]),
+            _ConstRule("a", [_ev(EvidenceDirection.SUPPORTS, 0.9, "a")]),
+            _ConstRule("b", [_ev(EvidenceDirection.SUPPORTS, 0.8, "b")]),
         ],
     )
-    assert hyp.composite_score == 1.0
+    assert math.isclose(hyp.composite_score, 0.98, abs_tol=1e-9)
 
 
-def test_score_clamped_to_zero_when_contradicts_overflow() -> None:
+def test_floor_applied_when_strong_contradiction_dominates() -> None:
+    """Phase 7.5: weak SUPPORTS + сильный CONTRADICTS → floor 0.05, не 0.
+
+    0.2 SUPPORTS → fused 0.2; одно CONTRADICTS (вес неважен) → −0.1;
+    итог 0.1 — выше floor'а, поэтому возвращается как есть.
+    """
     hyp = compose_hypothesis(
         hypothesis_type=HypothesisType.SAME_PERSON,
         subject_a={},
         subject_b={},
         rules=[
-            _ConstRule("a", [_ev(EvidenceDirection.SUPPORTS, 0.2)]),
-            _ConstRule("b", [_ev(EvidenceDirection.CONTRADICTS, 0.9)]),
+            _ConstRule("a", [_ev(EvidenceDirection.SUPPORTS, 0.2, "a")]),
+            _ConstRule("b", [_ev(EvidenceDirection.CONTRADICTS, 0.9, "b")]),
         ],
     )
-    assert hyp.composite_score == 0.0
+    assert math.isclose(hyp.composite_score, 0.1, abs_tol=1e-9)
 
 
 def test_default_uses_registry_when_rules_is_none() -> None:
@@ -139,7 +164,7 @@ def test_default_uses_registry_when_rules_is_none() -> None:
         subject_a={},
         subject_b={},
     )
-    assert hyp.composite_score == 0.6
+    assert math.isclose(hyp.composite_score, 0.6, abs_tol=1e-9)
     assert hyp.evidences[0].rule_id == "registered"
 
 
@@ -151,7 +176,8 @@ def test_explicit_rules_override_registry() -> None:
         subject_b={},
         rules=[_ConstRule("explicit", [_ev(EvidenceDirection.SUPPORTS, 0.1, "explicit")])],
     )
-    assert hyp.composite_score == 0.1
+    # 0.1 fused в одиночку = 0.1; floor 0.05 ≤ 0.1, значит 0.1.
+    assert math.isclose(hyp.composite_score, 0.1, abs_tol=1e-9)
     assert hyp.evidences[0].rule_id == "explicit"
 
 

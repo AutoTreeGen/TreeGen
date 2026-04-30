@@ -800,6 +800,23 @@ class BulkComputeRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class HypothesisRecomputeScoresResponse(BaseModel):
+    """Ответ на POST /trees/{id}/hypotheses/recompute-scores (Phase 7.5).
+
+    Сводка по recompute-job'у: сколько строк пересчитали и насколько
+    в среднем поменялся score. UI может использовать ``mean_absolute_delta``
+    как hint «много изменилось — стоит пересмотреть pending list».
+    """
+
+    tree_id: uuid.UUID
+    algorithm: str = Field(description="Версия aggregation algorithm (ADR-0057, Phase 7.5).")
+    recomputed_count: int = Field(ge=0)
+    mean_absolute_delta: float = Field(ge=0.0, le=1.0)
+    max_absolute_delta: float = Field(ge=0.0, le=1.0)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 # -----------------------------------------------------------------------------
 # Phase 4.6 — manual person merge (ADR-0022)
 # -----------------------------------------------------------------------------
@@ -1069,6 +1086,30 @@ class InvitationAcceptResponse(BaseModel):
     tree_id: uuid.UUID
     membership_id: uuid.UUID
     role: str
+
+
+class InvitationLookupResponse(BaseModel):
+    """``GET /invitations/{token}`` — pre-accept lookup для UI accept-flow.
+
+    Phase 11.1: invitee landing page (``/invitations/[token]``) делает GET
+    до accept'а, чтобы показать «You've been invited to <Tree> by <Inviter>
+    as <Role>» + детектировать expired/revoked без consume'а токена.
+
+    Endpoint **публичный** (auth не требуется для view — токен сам по себе
+    secret); accept по-прежнему требует Clerk auth (``POST .../accept``).
+
+    Возвращает безопасный subset полей: invitee_email (чтобы UI мог сравнить
+    с email текущего user'а и предупредить о mismatch'е), role, tree_id +
+    name, inviter display_name. Token обратно не возвращаем — он уже в URL.
+    """
+
+    invitee_email: str
+    role: str
+    tree_id: uuid.UUID
+    tree_name: str
+    inviter_display_name: str
+    expires_at: datetime
+    accepted_at: datetime | None = None
 
 
 class MemberResponse(BaseModel):
