@@ -16,9 +16,51 @@ from jinja2 import UndefinedError
 def test_all_registered_templates_load() -> None:
     """Каждый шаблон в реестре существует на диске и парсится."""
     templates = PromptRegistry.all_templates()
-    assert len(templates) >= 2  # hypothesis_suggester_v1 + person_normalizer_v1
+    # hypothesis_suggester_v1 + hypothesis_explanation_v1 + person_normalizer_v1
+    assert len(templates) >= 3
     for tpl in templates:
         assert tpl.path.exists(), f"missing prompt file: {tpl.path}"
+
+
+def test_hypothesis_explanation_v1_renders_en() -> None:
+    """Базовый рендеринг hypothesis_explanation_v1 с en-локалью."""
+    tpl = PromptRegistry.HYPOTHESIS_EXPLANATION_V1
+    rendered = tpl.render(
+        subjects=[
+            {"id": "p:1", "summary": "Iosif Kaminskii, b. 1872 Vilna"},
+            {"id": "p:2", "summary": "Joseph Kaminsky, b. 1872 Vilna"},
+        ],
+        evidence=[
+            {
+                "rule_id": "rule.birth.exact",
+                "direction": "supports",
+                "confidence": 0.95,
+                "details": "Birth year exact match",
+            }
+        ],
+        composite_score="0.85",
+        locale="en",
+    )
+    assert "senior genealogist" in rendered.system.lower()
+    assert "respond in **english**" in rendered.system.lower()
+    assert "Vilna" in rendered.user
+    assert "rule.birth.exact" in rendered.user
+    assert "0.85" in rendered.user
+
+
+def test_hypothesis_explanation_v1_renders_ru() -> None:
+    """Локаль ru переключает language directive в системном промпте."""
+    tpl = PromptRegistry.HYPOTHESIS_EXPLANATION_V1
+    rendered = tpl.render(
+        subjects=[
+            {"id": "p:1", "summary": "A"},
+            {"id": "p:2", "summary": "B"},
+        ],
+        evidence=[],
+        composite_score=None,
+        locale="ru",
+    )
+    assert "respond in **russian**" in rendered.system.lower()
 
 
 def test_hypothesis_suggester_v1_renders_with_facts() -> None:

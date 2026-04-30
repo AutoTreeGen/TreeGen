@@ -23,7 +23,7 @@ dependencies = [
     # Phase 14.2 — weekly digest cron (arq cron_jobs). Тот же arq что и
     # parser-service, единый Redis-broker.
     "arq>=0.26",
-    "shared-models[security]",
+    "shared-models[security,observability]",
 ]
 
 [project.optional-dependencies]

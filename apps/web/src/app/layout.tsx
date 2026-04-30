@@ -3,10 +3,11 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import type { ReactNode } from "react";
 
-import { ClerkProvider } from "@clerk/nextjs";
+import { ClerkProvider, SignedIn } from "@clerk/nextjs";
 
 import { GlobalErrorBoundary } from "@/components/error-boundary";
 import { OfflineIndicator } from "@/components/offline-indicator";
+import { OnboardingTour } from "@/components/onboarding-tour";
 import { SiteHeader } from "@/components/site-header";
 import { ServiceWorkerBootstrap } from "@/components/sw-bootstrap";
 
@@ -84,6 +85,16 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               <OfflineIndicator />
               <SiteHeader />
               <GlobalErrorBoundary>{children}</GlobalErrorBoundary>
+              {/* Phase 4.15 — onboarding tour. Mounted в root layout
+                  под <SignedIn>, потому что (authenticated)/ группа
+                  частичная (см. ADR-0061): /dashboard, /persons,
+                  /trees находятся в top-level. Компонент сам решает,
+                  показывать ли overlay (auto-trigger на /dashboard
+                  для new user'ов, manual trigger через
+                  ?restartTour=1). */}
+              <SignedIn>
+                <OnboardingTour />
+              </SignedIn>
             </Providers>
           </NextIntlClientProvider>
         </body>

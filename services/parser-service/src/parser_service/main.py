@@ -6,10 +6,12 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI
+from shared_models.observability import setup_logging, setup_sentry
 from shared_models.security import apply_security_middleware
 
 from parser_service.api import (
@@ -35,6 +37,11 @@ from parser_service.auth import get_current_claims
 from parser_service.config import get_settings
 from parser_service.database import dispose_engine, init_engine
 from parser_service.queue import close_arq_pool
+
+# Phase 13.1b — observability. Идемпотентно при пустом SENTRY_DSN /
+# отсутствии LOG_FORMAT_JSON: в local-dev оба вызова no-op.
+setup_logging(service_name="parser-service")
+setup_sentry(service_name="parser-service", environment=os.environ.get("ENVIRONMENT"))
 
 
 @asynccontextmanager
@@ -105,6 +112,10 @@ app.include_router(persons.router, tags=["persons", "merge"], dependencies=_AUTH
 # Включён после persons чтобы /trees/{id}/* пути в trees.router не
 # перехватывали /trees/{id}/invitations / /trees/{id}/members.
 app.include_router(sharing.router, tags=["sharing"], dependencies=_AUTH_DEPS)
+# Phase 11.1 — public invitation lookup (GET /invitations/{token}) без auth:
+# UI accept-landing нужно показать tree+inviter ДО Clerk sign-in. Token —
+# secret 122-bit UUIDv4. Симметрично ``public_share.router_public``.
+app.include_router(sharing.router_public, tags=["sharing", "public"])
 # Phase 11.2 — public share-link управление (owner-side). Auth required.
 app.include_router(
     public_share.router_owner,

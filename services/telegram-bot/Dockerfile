@@ -23,7 +23,16 @@ COPY services/telegram-bot/src/       services/telegram-bot/src/
 
 RUN uv sync --frozen --no-dev
 
+# Phase 13.1b — non-root execution per ADR-0032.
+RUN groupadd --system app \
+ && useradd --system --gid app --home-dir /app --no-create-home appuser \
+ && chown -R appuser:app /app
+USER appuser
+
 ENV PORT=8006
 EXPOSE 8006
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import os, urllib.request; urllib.request.urlopen(f'http://localhost:{os.environ.get(\"PORT\", \"8006\")}/healthz').read()" || exit 1
 
 CMD ["sh", "-c", "uv run uvicorn telegram_bot.main:app --host 0.0.0.0 --port ${PORT}"]  # pragma: allowlist secret

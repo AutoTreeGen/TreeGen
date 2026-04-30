@@ -6,6 +6,11 @@ import { cn } from "@/lib/utils";
  * Базовый Input — shadcn-style.
  * Стилистически совмещён с Button (та же высота h-10 на md, такая же
  * рамка через --color-border, focus ring через --color-accent).
+ *
+ * Phase 4.14a — на mobile (<sm) минимум `min-h-11` (WCAG touch-target)
+ * и `text-base` = 16px (предотвращает iOS Safari auto-zoom при focus
+ * на любом form-control с font-size <16px). На ≥sm возвращаемся к
+ * h-10 / text-sm — на десктопе дюймовый input выглядит лучше.
  */
 export type InputProps = InputHTMLAttributes<HTMLInputElement>;
 
@@ -15,7 +20,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       ref={ref}
       type={type}
       className={cn(
-        "flex h-10 w-full rounded-md bg-[color:var(--color-surface)] px-3 py-2 text-sm",
+        "flex min-h-11 w-full rounded-md bg-[color:var(--color-surface)] px-3 py-2 text-base",
+        "sm:min-h-0 sm:h-10 sm:text-sm",
         "ring-1 ring-[color:var(--color-border)] transition-colors",
         "placeholder:text-[color:var(--color-ink-500)]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)]",

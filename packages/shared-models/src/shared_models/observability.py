@@ -191,3 +191,8 @@ def configure_json_logging(
     handler.setFormatter(CloudLoggingJSONFormatter(service_name=service_name))
     root.addHandler(handler)
     root.setLevel(level)
+
+
+# Алиасы для consumer-сервисов (Phase 13.1b) — короткие имена с тем же поведением.
+setup_logging = configure_json_logging
+setup_sentry = init_sentry
