@@ -1581,3 +1581,101 @@ class NameNormalizeResponse(BaseModel):
     )
 
     model_config = ConfigDict(extra="forbid")
+
+
+# =============================================================================
+# Phase 15.1 — relationship-level evidence panel (ADR-0058)
+# =============================================================================
+
+
+class RelationshipReference(BaseModel):
+    """Описание relationship в ответе evidence-endpoint'а.
+
+    ``kind`` — string-копия :class:`RelationshipKind` (parent_child / spouse /
+    sibling). Для PARENT_CHILD subject = родитель, object = ребёнок;
+    SPOUSE / SIBLING — симметричны.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    kind: str
+    subject_person_id: uuid.UUID
+    object_person_id: uuid.UUID
+
+
+class RelationshipEvidenceSource(BaseModel):
+    """Один пункт supporting/contradicting в ответе.
+
+    ``kind`` отделяет настоящие Source/Citation pair от inference-rule
+    evidences (synthesized DTO). UI может раскрашивать их по-разному
+    (см. ADR-0058).
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    source_id: uuid.UUID | None = None
+    citation_id: uuid.UUID | None = None
+    title: str
+    repository: str | None = None
+    reliability: float | None = Field(
+        default=None,
+        description="Quality / weight 0..1. Citation — derived QUAY; rule — Evidence.weight.",
+    )
+    citation: str | None = Field(
+        default=None,
+        description="Page / section / volume reference (Citation.page_or_section).",
+    )
+    snippet: str | None = Field(
+        default=None,
+        description="Quoted text fragment или rule observation.",
+    )
+    url: str | None = None
+    added_at: datetime
+    kind: Literal["citation", "inference_rule"] = "citation"
+    rule_id: str | None = Field(
+        default=None,
+        description="Заполняется только когда kind='inference_rule'.",
+    )
+
+
+class RelationshipEvidenceConfidence(BaseModel):
+    """Confidence rollup для relationship.
+
+    ``method``:
+
+    * ``bayesian_fusion_v2`` — score from existing Hypothesis.composite_score.
+    * ``naive_count`` — fallback supporting / (supporting + contradicting).
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    score: float = Field(ge=0.0, le=1.0)
+    method: Literal["bayesian_fusion_v2", "naive_count"]
+    computed_at: datetime
+    hypothesis_id: uuid.UUID | None = None
+
+
+class RelationshipEvidenceProvenance(BaseModel):
+    """Aggregated provenance из вошедших Family-rows.
+
+    Структура совместима с ADR-0003 §«provenance jsonb»: ``source_files``
+    (union), последний ``import_job_id``, ``manual_edits`` (concat).
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    source_files: list[str] = Field(default_factory=list)
+    import_job_id: uuid.UUID | None = None
+    manual_edits: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class RelationshipEvidenceResponse(BaseModel):
+    """Ответ ``GET /trees/{id}/relationships/{kind}/{a}/{b}/evidence``."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    relationship: RelationshipReference
+    supporting: list[RelationshipEvidenceSource]
+    contradicting: list[RelationshipEvidenceSource]
+    confidence: RelationshipEvidenceConfidence
+    provenance: RelationshipEvidenceProvenance
