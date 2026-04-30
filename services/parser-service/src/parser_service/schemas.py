@@ -800,6 +800,23 @@ class BulkComputeRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class HypothesisRecomputeScoresResponse(BaseModel):
+    """Ответ на POST /trees/{id}/hypotheses/recompute-scores (Phase 7.5).
+
+    Сводка по recompute-job'у: сколько строк пересчитали и насколько
+    в среднем поменялся score. UI может использовать ``mean_absolute_delta``
+    как hint «много изменилось — стоит пересмотреть pending list».
+    """
+
+    tree_id: uuid.UUID
+    algorithm: str = Field(description="Версия aggregation algorithm (ADR-0057, Phase 7.5).")
+    recomputed_count: int = Field(ge=0)
+    mean_absolute_delta: float = Field(ge=0.0, le=1.0)
+    max_absolute_delta: float = Field(ge=0.0, le=1.0)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 # -----------------------------------------------------------------------------
 # Phase 4.6 — manual person merge (ADR-0022)
 # -----------------------------------------------------------------------------
