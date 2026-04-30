@@ -6,10 +6,12 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI
+from shared_models.observability import setup_logging, setup_sentry
 from shared_models.security import apply_security_middleware
 
 from parser_service.api import (
@@ -34,6 +36,11 @@ from parser_service.auth import get_current_claims
 from parser_service.config import get_settings
 from parser_service.database import dispose_engine, init_engine
 from parser_service.queue import close_arq_pool
+
+# Phase 13.1b — observability. Идемпотентно при пустом SENTRY_DSN /
+# отсутствии LOG_FORMAT_JSON: в local-dev оба вызова no-op.
+setup_logging(service_name="parser-service")
+setup_sentry(service_name="parser-service", environment=os.environ.get("ENVIRONMENT"))
 
 
 @asynccontextmanager
