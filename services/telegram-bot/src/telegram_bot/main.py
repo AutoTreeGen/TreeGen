@@ -47,6 +47,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         link_tokens=link_tokens,
         web_base_url=settings.web_base_url,
         session_factory=get_session_factory(),
+        redis=redis,
     )
     try:
         yield

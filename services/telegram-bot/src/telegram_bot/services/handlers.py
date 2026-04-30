@@ -25,16 +25,23 @@ from aiogram.types import (
     CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    InlineQuery,
+    InlineQueryResultArticle,
+    InputTextMessageContent,
     Message,
 )
+from aiogram.types.inline_query_result_union import InlineQueryResultUnion
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from telegram_bot.services.db_queries import (
     ImportSummary,
+    InlineSearchHit,
     PersonSearchHit,
     TreeSummary,
     fetch_active_tree,
     fetch_recent_imports,
+    inline_search_persons_in_active_tree,
     resolve_user_id_from_chat,
     search_persons_in_active_tree,
     toggle_notifications,
@@ -308,3 +315,204 @@ async def handle_subscribe(
         )
     else:
         await message.answer("🔕 Подписка отключена. /subscribe ещё раз чтобы снова включить.")
+
+
+# -----------------------------------------------------------------------------
+# Inline-search (Phase 14.2)
+# -----------------------------------------------------------------------------
+
+# Cache TTL для inline-результатов на стороне Telegram. 60 секунд —
+# баланс: пользователь может уточнять запрос побуквенно (новый кэш каждые
+# 60 сек), но повторный набор того же `@bot Иванов` не дёргает наш
+# backend каждый раз.
+_INLINE_CACHE_SECONDS: Final = 60
+
+# Максимум inline-результатов (Telegram'ом разрешено до 50, но 5 — UX-кап
+# из spec'а Phase 14.2: ограниченный prompt в чате).
+_INLINE_RESULTS_LIMIT: Final = 5
+
+
+def parse_inline_query(text: str) -> tuple[str, str | None, int | None]:
+    """Распарсить inline-query формата ``surname [given...] [year]``.
+
+    * surname — первый токен (обязателен). Если пустая строка — caller
+      покажет prompt «начни с фамилии».
+    * year — первый 4-значный числовой токен после surname (если есть).
+      Trail-токены после year считаются частью given_name (редкий кейс,
+      пользователь обычно ставит год в конце).
+    * given — остальные токены, joined пробелом. ``None`` если их нет.
+
+    Pure function для unit-теста — без БД, без aiogram.
+    """
+    parts = [p for p in text.strip().split() if p]
+    if not parts:
+        return ("", None, None)
+    surname = parts[0]
+    rest = parts[1:]
+    year: int | None = None
+    given_parts: list[str] = []
+    for tok in rest:
+        if year is None and len(tok) == 4 and tok.isdigit():
+            y = int(tok)
+            if 1000 <= y <= 9999:
+                year = y
+                continue
+        given_parts.append(tok)
+    given = " ".join(given_parts) if given_parts else None
+    return (surname, given, year)
+
+
+def render_inline_results(
+    hits: list[InlineSearchHit],
+    *,
+    web_base_url: str,
+) -> list[InlineQueryResultArticle]:
+    """Сконвертировать ``InlineSearchHit``-ы в Telegram inline-results.
+
+    Каждая article:
+
+    * ``id`` — стрингифицированный person.id (≤64 байт guaranteed для UUID);
+    * ``title`` — primary_name либо «Без имени»;
+    * ``description`` — ``"YYYY • place"``, опускается если оба пусты;
+    * ``input_message_content`` — deep-link на web с краткой подписью;
+    * ``url`` — тот же deep-link (Telegram отдельной ссылкой подсветит).
+
+    Pure function для unit-теста.
+    """
+    web = web_base_url.rstrip("/")
+    results: list[InlineQueryResultArticle] = []
+    for hit in hits:
+        display = hit.primary_name or "Без имени"
+        deep_link = f"{web}/persons/{hit.id}?from=tg"
+        desc_parts: list[str] = []
+        if hit.birth_year is not None:
+            desc_parts.append(str(hit.birth_year))
+        if hit.birth_place_label:
+            desc_parts.append(hit.birth_place_label)
+        description = " • ".join(desc_parts) if desc_parts else None
+        results.append(
+            InlineQueryResultArticle(
+                id=str(hit.id),
+                title=display,
+                description=description,
+                url=deep_link,
+                input_message_content=InputTextMessageContent(
+                    message_text=f"<b>{display}</b>\n{deep_link}",
+                    parse_mode="HTML",
+                    link_preview_options=None,
+                ),
+            )
+        )
+    return results
+
+
+@router.inline_query()
+async def handle_inline_query(
+    inline_query: InlineQuery,
+    session_factory: async_sessionmaker[AsyncSession],
+    web_base_url: str,
+) -> None:
+    """Inline-search по active tree (Phase 14.2).
+
+    Aiogram dispatch'ит сюда любой ``@bot <text>`` query. Ветки:
+
+    * Пользователь не залинкован: пустой массив + ``switch_pm_text``
+      «Link your account: /start».
+    * Залинкован, но нет деревьев: пустой массив + кнопка «Choose a tree»
+      (deep-link в web).
+    * Запрос пустой / только год: prompt «начни с фамилии».
+    * Иначе — top-5 articles c deep-link'ами.
+
+    Не sleep'ит и не делает HTTP. Cache_time=60 → Telegram не будет
+    долбить нас на каждое нажатие клавиши.
+    """
+    surname, given, year = parse_inline_query(inline_query.query)
+
+    async with session_factory() as session:
+        user_id = await resolve_user_id_from_chat(session, tg_chat_id=inline_query.from_user.id)
+        if user_id is None:
+            await inline_query.answer(
+                results=[],
+                cache_time=_INLINE_CACHE_SECONDS,
+                is_personal=True,
+                switch_pm_text="Link your account: /start",
+                switch_pm_parameter="link",
+            )
+            return
+
+        if not surname:
+            # Пустой / только year — нужно подсказать, а не сыпать full-table.
+            await inline_query.answer(
+                results=[],
+                cache_time=_INLINE_CACHE_SECONDS,
+                is_personal=True,
+                switch_pm_text="Type a surname (e.g. Ivanov 1850)",
+                switch_pm_parameter="hint",
+            )
+            return
+
+        tree_id, hits = await inline_search_persons_in_active_tree(
+            session,
+            user_id=user_id,
+            surname=surname,
+            given=given,
+            year=year,
+            limit=_INLINE_RESULTS_LIMIT,
+        )
+
+    if tree_id is None:
+        await inline_query.answer(
+            results=[],
+            cache_time=_INLINE_CACHE_SECONDS,
+            is_personal=True,
+            switch_pm_text="Choose a tree",
+            switch_pm_parameter="dashboard",
+        )
+        return
+
+    # ``InlineQueryResultUnion``-list invariance: явный list[InlineQueryResultUnion]
+    # вместо list[Article], иначе mypy ругается на список-литерал.
+    results: list[InlineQueryResultUnion] = list(
+        render_inline_results(hits, web_base_url=web_base_url)
+    )
+    await inline_query.answer(
+        results=results,
+        cache_time=_INLINE_CACHE_SECONDS,
+        is_personal=True,
+    )
+
+
+# -----------------------------------------------------------------------------
+# digest:unsubscribe callback (Phase 14.2)
+# -----------------------------------------------------------------------------
+
+
+@router.callback_query(F.data == "digest:unsubscribe")
+async def handle_digest_unsubscribe(
+    callback: CallbackQuery,
+    session_factory: async_sessionmaker[AsyncSession],
+    redis: Redis,
+) -> None:
+    """Поставить opt-out флаг в Redis, чтобы worker больше не слал digest.
+
+    Storage в Redis (а не в ``user_settings.digest_enabled``) — потому
+    что в Phase 14.2 alembic-миграции не вводятся (см. task spec).
+    Phase 14.3 мигрирует в столбец ``users.digest_enabled`` либо в
+    ``user_settings``-таблицу.
+    """
+    if callback.message is None or callback.message.chat is None:
+        await callback.answer("Сообщение недоступно.")
+        return
+    chat_id = callback.message.chat.id
+    async with session_factory() as session:
+        user_id = await resolve_user_id_from_chat(session, tg_chat_id=chat_id)
+    if user_id is None:
+        await callback.answer("Связь не найдена.", show_alert=True)
+        return
+
+    await redis.set(
+        f"digest:optout:{user_id}",
+        "1",
+        ex=365 * 24 * 60 * 60,  # 1 year
+    )
+    await callback.answer("🔕 Дайджест отключён.", show_alert=False)
