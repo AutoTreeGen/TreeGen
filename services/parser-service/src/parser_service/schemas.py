@@ -800,6 +800,23 @@ class BulkComputeRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class HypothesisRecomputeScoresResponse(BaseModel):
+    """Ответ на POST /trees/{id}/hypotheses/recompute-scores (Phase 7.5).
+
+    Сводка по recompute-job'у: сколько строк пересчитали и насколько
+    в среднем поменялся score. UI может использовать ``mean_absolute_delta``
+    как hint «много изменилось — стоит пересмотреть pending list».
+    """
+
+    tree_id: uuid.UUID
+    algorithm: str = Field(description="Версия aggregation algorithm (ADR-0057, Phase 7.5).")
+    recomputed_count: int = Field(ge=0)
+    mean_absolute_delta: float = Field(ge=0.0, le=1.0)
+    max_absolute_delta: float = Field(ge=0.0, le=1.0)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 # -----------------------------------------------------------------------------
 # Phase 4.6 — manual person merge (ADR-0022)
 # -----------------------------------------------------------------------------
@@ -1071,6 +1088,30 @@ class InvitationAcceptResponse(BaseModel):
     role: str
 
 
+class InvitationLookupResponse(BaseModel):
+    """``GET /invitations/{token}`` — pre-accept lookup для UI accept-flow.
+
+    Phase 11.1: invitee landing page (``/invitations/[token]``) делает GET
+    до accept'а, чтобы показать «You've been invited to <Tree> by <Inviter>
+    as <Role>» + детектировать expired/revoked без consume'а токена.
+
+    Endpoint **публичный** (auth не требуется для view — токен сам по себе
+    secret); accept по-прежнему требует Clerk auth (``POST .../accept``).
+
+    Возвращает безопасный subset полей: invitee_email (чтобы UI мог сравнить
+    с email текущего user'а и предупредить о mismatch'е), role, tree_id +
+    name, inviter display_name. Token обратно не возвращаем — он уже в URL.
+    """
+
+    invitee_email: str
+    role: str
+    tree_id: uuid.UUID
+    tree_name: str
+    inviter_display_name: str
+    expires_at: datetime
+    accepted_at: datetime | None = None
+
+
 class MemberResponse(BaseModel):
     """Read-модель active membership."""
 
@@ -1255,3 +1296,134 @@ class PublicTreeResponse(BaseModel):
     person_count: int
     persons: list[PublicTreePerson]
     families: list[PublicTreeFamily]
+
+
+# -----------------------------------------------------------------------------
+# Phase 10.2 — AI source extraction (см. ADR-0059).
+# -----------------------------------------------------------------------------
+
+
+AIExtractionStatus = Literal["pending", "completed", "failed"]
+AIFactKind = Literal["person", "event", "relationship"]
+AIFactStatus = Literal["pending", "accepted", "rejected"]
+
+
+class AIExtractTriggerRequest(BaseModel):
+    """Тело ``POST /sources/{id}/ai-extract``.
+
+    ``document_text`` опционален: если не передан, parser-service сам
+    попробует достать текст из ``Source.text_excerpt`` (TEXT-блок из
+    GEDCOM SOUR.TEXT). Это покрывает 90% inline-документов; для PDF/
+    image — caller передаёт уже извлечённый текст явно.
+    """
+
+    document_text: str | None = Field(
+        default=None,
+        description=(
+            "Plain text для extraction'а. ``None`` = взять "
+            "``Source.text_excerpt``. Caller, у которого есть PDF, должен "
+            "сам прогнать через pypdf и передать результат сюда."
+        ),
+        max_length=200_000,
+    )
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class AIExtractedFactDetail(BaseModel):
+    """Один extract'нутый факт в API-ответе.
+
+    ``data`` — opaque jsonb (контракт зависит от ``fact_kind``):
+
+    * ``person`` → :class:`ai_layer.types.PersonExtract`
+    * ``event`` → :class:`ai_layer.types.EventExtract`
+    * ``relationship`` → :class:`ai_layer.types.RelationshipExtract`
+
+    UI парсит обратно через знание ``fact_kind``. Здесь не специализируем,
+    чтобы schemas.py остался без cross-package import.
+    """
+
+    id: uuid.UUID
+    extraction_id: uuid.UUID
+    fact_index: int
+    fact_kind: AIFactKind
+    data: dict[str, Any]
+    confidence: float
+    status: AIFactStatus
+    reviewed_at: datetime | None = None
+    reviewed_by_user_id: uuid.UUID | None = None
+    review_note: str | None = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AIExtractionDetail(BaseModel):
+    """Run-level информация об одном extraction'е."""
+
+    id: uuid.UUID
+    source_id: uuid.UUID
+    tree_id: uuid.UUID
+    requested_by_user_id: uuid.UUID | None
+    model_version: str
+    prompt_version: str
+    status: AIExtractionStatus
+    input_tokens: int
+    output_tokens: int
+    error: str | None = None
+    created_at: datetime
+    completed_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AIExtractTriggerResponse(BaseModel):
+    """Ответ на ``POST /sources/{id}/ai-extract``.
+
+    Возвращает run-record + сколько фактов получилось. Фронту достаточно
+    для перехода на review-screen без второго round-trip'а.
+    """
+
+    extraction: AIExtractionDetail
+    fact_count: int
+    budget_remaining_runs: int = Field(
+        description=(
+            "Сколько ещё AI-вызовов user может сделать сегодня. ``-1`` = "
+            "безлимит (rate-limit отключён конфигом)."
+        ),
+    )
+    budget_remaining_tokens: int = Field(
+        description=("Сколько ещё tokens user может потратить за месяц. ``-1`` = безлимит."),
+    )
+
+
+class AIExtractionFactsResponse(BaseModel):
+    """Ответ на ``GET /sources/{id}/extracted-facts``."""
+
+    source_id: uuid.UUID
+    extractions: list[AIExtractionDetail]
+    facts: list[AIExtractedFactDetail]
+
+
+class AIFactReviewRequest(BaseModel):
+    """Тело ``POST /sources/{id}/extracted-facts/{fact_id}/{accept|reject}``.
+
+    Опциональный ``note`` сохраняется в ``ExtractedFact.review_note`` —
+    каузальный комментарий пользователя («заменил имя», «дублирует
+    существующего person'а»). Для accept_with_edit на 10.2a (без UI):
+    переданный ``data`` override'ит сохранённый — frontend для phase
+    10.2b будет это активно использовать.
+    """
+
+    note: str | None = Field(default=None, max_length=1024)
+    data: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "Optional override данных факта (edit-before-accept). Если "
+            "передан, заменяет ``ExtractedFact.data``. Пользователь "
+            "ответствен за сохранение совместимой shape (PersonExtract/"
+            "EventExtract/RelationshipExtract)."
+        ),
+    )
+
+    model_config = ConfigDict(extra="forbid")

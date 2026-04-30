@@ -17,7 +17,7 @@ dependencies = [
     "asyncpg>=0.30",
     "python-dotenv>=1.0",
     "prometheus-client>=0.20",
-    "shared-models",
+    "shared-models[security,observability]",
     "gedcom-parser",
     "entity-resolution",
     "familysearch-client",
@@ -37,6 +37,11 @@ dependencies = [
     # Phase 4.10 — Clerk webhook signature verification (Svix HMAC).
     # PyJWT и httpx уже идут через shared-models.auth.
     "svix>=1.40",
+    # Phase 10.2 (ADR-0059) — AI source extraction.
+    # ai-layer: prompt registry + Anthropic/Voyage клиенты + use cases.
+    # pypdf: text-extraction для PDF-источников до vision-fallback'а.
+    "ai-layer",
+    "pypdf>=5.0",
 ]
 
 [project.optional-dependencies]

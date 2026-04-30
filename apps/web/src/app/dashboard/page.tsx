@@ -39,7 +39,9 @@ function DashboardView({ treesCount }: { treesCount: number }) {
         </CardHeader>
         <CardContent>
           <Button variant="primary" size="md" asChild>
-            <Link href="/onboarding">{t("ctaNewTree")}</Link>
+            <Link href="/onboarding" data-tour-id="import-gedcom">
+              {t("ctaNewTree")}
+            </Link>
           </Button>
         </CardContent>
       </Card>

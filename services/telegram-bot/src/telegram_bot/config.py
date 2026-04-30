@@ -56,6 +56,41 @@ class Settings(BaseSettings):
     # ---- HTTP ----
     bot_api_timeout_seconds: float = Field(default=10.0, ge=1.0)
 
+    # ---- Internal service auth (Phase 14.1, ADR-0056) ----
+    # Shared secret для notification-service → telegram-bot вызовов.
+    # Notification-service кладёт значение в ``X-Internal-Service-Token``
+    # header; bot сравнивает constant-time. Пустой → /notify endpoint
+    # возвращает 503 (отказ обслуживания), потому что без секрета любой
+    # может слать push'и нашим user'ам.
+    internal_service_token: str = Field(
+        default="",
+        description=(
+            "Shared secret для X-Internal-Service-Token validation "
+            "на /telegram/notify endpoint. Пустой → 503."
+        ),
+    )
+
+    # ---- Phase 14.2 — weekly digest worker ----
+    # Token для исходящих вызовов parser-service /users/{id}/digest-summary
+    # (зеркало `internal_service_token`, который parser-service ожидает в
+    # `X-Internal-Service-Token`). На dev-машине одна и та же строка для
+    # обеих сторон; в проде — Secret Manager.
+    parser_service_base_url: str = Field(
+        default="http://localhost:8000",
+        description=(
+            "Base URL parser-service для weekly-digest worker. Без trailing "
+            "slash. В проде — internal cluster-DNS, не публичный домен."
+        ),
+    )
+    parser_service_internal_token: str = Field(
+        default="",
+        description=(
+            "Shared secret отправляемый в X-Internal-Service-Token при вызове "
+            "parser-service /users/{id}/digest-summary. Пустой → digest worker "
+            "skip'нет цикл с warning'ом (fail-safe)."
+        ),
+    )
+
     debug: bool = Field(default=False)
 
     model_config = SettingsConfigDict(

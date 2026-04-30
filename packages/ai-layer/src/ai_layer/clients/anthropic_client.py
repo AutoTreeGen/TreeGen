@@ -23,6 +23,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
@@ -31,6 +32,21 @@ from ai_layer.config import AILayerConfig, AILayerConfigError, AILayerDisabledEr
 
 if TYPE_CHECKING:
     from anthropic import AsyncAnthropic
+
+
+@dataclass(frozen=True)
+class ImageInput:
+    """Image-блок для vision-режима ``complete_structured``.
+
+    Attributes:
+        data_b64: Base64-кодированные байты изображения. Caller сам
+            кодирует — wrapper не делает file-IO.
+        media_type: ``image/jpeg``, ``image/png``, ``image/gif`` или
+            ``image/webp`` (поддерживаемые Anthropic vision API).
+    """
+
+    data_b64: str
+    media_type: str
 
 
 class AnthropicCompletion[T: BaseModel](BaseModel):
@@ -80,6 +96,7 @@ class AnthropicClient:
         model: str | None = None,
         max_tokens: int = 1024,
         temperature: float = 0.0,
+        image: ImageInput | None = None,
     ) -> AnthropicCompletion[T]:
         """Сделать вызов Claude и распарсить ответ в ``response_model``.
 
@@ -90,6 +107,11 @@ class AnthropicClient:
             model: Override модели; ``None`` → ``config.anthropic_model``.
             max_tokens: Лимит на ответ.
             temperature: ``0.0`` для детерминированности (skeleton-default).
+            image: Опциональный image-input для vision-режима. Когда
+                задан, в SDK отправляется content-list с image-block
+                плюс text-block (см. Anthropic vision API docs). Phase
+                10.2 / ADR-0059: используется ``SourceExtractor`` для
+                сканов и фотографий низкокачественных документов.
 
         Raises:
             AILayerDisabledError: Если ``config.enabled is False``.
@@ -104,12 +126,31 @@ class AnthropicClient:
         client = self._get_client()
         chosen_model = model or self._config.anthropic_model
 
+        user_content: str | list[dict[str, Any]]
+        if image is None:
+            user_content = user
+        else:
+            # Vision-формат SDK: content — список блоков. Image кладём
+            # первым, чтобы text-инструкция (отсылка к "image above")
+            # читалась естественно.
+            user_content = [
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": image.media_type,
+                        "data": image.data_b64,
+                    },
+                },
+                {"type": "text", "text": user},
+            ]
+
         response = await client.messages.create(
             model=chosen_model,
             max_tokens=max_tokens,
             temperature=temperature,
             system=system,
-            messages=[{"role": "user", "content": user}],
+            messages=[{"role": "user", "content": user_content}],
         )
 
         text = _extract_text(response)

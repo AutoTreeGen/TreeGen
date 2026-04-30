@@ -17,8 +17,13 @@ dependencies = [
     "asyncpg>=0.30",
     "python-dotenv>=1.0",
     "anyio>=4.0",
-    "shared-models",
+    "shared-models[security,observability]",
     "dna-analysis",
+    # Phase 6.4 — optional Redis cache для triangulation endpoint.
+    # Lazy-import в `services/cache.py`; если DNA_SERVICE_REDIS_URL пуст,
+    # клиент не создаётся, dependency не нужна. Держим в основных deps,
+    # чтобы prod-deploy с включённым cache'ом просто работал.
+    "redis[hiredis]>=5.0",
     # Phase 12.0 — entitlement-gating через billing-service.
     "billing-service",
 ]

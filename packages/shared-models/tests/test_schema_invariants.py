@@ -87,6 +87,15 @@ SERVICE_TABLES = {
     # links к дереву. Sharing-artifact как tree_memberships/tree_invitations,
     # не доменная сущность — не требует provenance/version_id/soft-delete.
     "public_tree_shares",
+    # AI source extraction run-log (Phase 10.2 / ADR-0059): per-vendor-call
+    # cost tracking + raw_response для debug/analytics. Immutable history;
+    # purge через retention policy (TBD), не tombstone.
+    "source_extractions",
+    # Per-fact suggestions из AI source extraction (Phase 10.2 / ADR-0059):
+    # каждая Pydantic-модель из ExtractionResult сохраняется как одна row
+    # с status pending|accepted|rejected. Audit-trail review-decisions,
+    # не доменная сущность.
+    "extracted_facts",
     # Stripe customer mapping (Phase 12.0 / ADR-0042): user → stripe_customer_id
     # one-to-one. Service-level mapping, без soft-delete — revocation = hard delete
     # после account deletion.

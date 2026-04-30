@@ -126,7 +126,10 @@ class PromptRegistry:
     """
 
     HYPOTHESIS_SUGGESTER_V1: Final[PromptTemplate] = PromptTemplate("hypothesis_suggester", 1)
+    HYPOTHESIS_EXPLANATION_V1: Final[PromptTemplate] = PromptTemplate("hypothesis_explanation", 1)
     PERSON_NORMALIZER_V1: Final[PromptTemplate] = PromptTemplate("person_normalizer", 1)
+    # Phase 10.2 (ADR-0059): single-pass source-document extraction.
+    SOURCE_EXTRACTOR_V1: Final[PromptTemplate] = PromptTemplate("source_extractor", 1)
 
     @classmethod
     def all_templates(cls) -> list[PromptTemplate]:

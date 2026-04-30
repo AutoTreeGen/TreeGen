@@ -24,6 +24,9 @@ export function LocaleSwitcher() {
     window.location.reload();
   };
 
+  // Phase 4.14a — text-base sm:text-xs: 16px на mobile предотвращает iOS
+  // auto-zoom при focus, на ≥sm возвращаемся к компактному 12px.
+  // min-h-11 sm:min-h-8 — WCAG 2.1 AA touch target ≥44px на mobile.
   return (
     <label className="flex items-center gap-2 text-xs text-[color:var(--color-ink-500)]">
       <span className="sr-only">{t("language")}</span>
@@ -31,7 +34,7 @@ export function LocaleSwitcher() {
         aria-label={t("language")}
         value={locale}
         onChange={(e) => onChange(e.target.value as Locale)}
-        className="rounded-md border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-2 py-1 text-xs"
+        className="min-h-11 rounded-md border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-2 py-1 text-base sm:min-h-8 sm:text-xs"
       >
         {SUPPORTED_LOCALES.map((code) => (
           <option key={code} value={code}>

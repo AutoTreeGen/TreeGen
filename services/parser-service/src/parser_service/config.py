@@ -180,6 +180,41 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ---- Phase 10.2 — AI source extraction (ADR-0059) ----------------------
+    # ``ai_layer.config.AILayerConfig`` читает свои переменные напрямую
+    # (``AI_LAYER_ENABLED``, ``ANTHROPIC_API_KEY``, ``ANTHROPIC_MODEL``,
+    # ``VOYAGE_*``) — здесь не дублируем, чтобы один источник правды.
+    # Эти поля управляют parser-service-уровнем (budget, что caller
+    # видит снаружи endpoint'ов).
+    ai_max_runs_per_day: int = Field(
+        default=10,
+        ge=0,
+        description=(
+            "Per-user rate limit на AI source extraction. ``0`` = "
+            "выключить rate limit (для dev). ADR-0059 default — 10/day."
+        ),
+    )
+    ai_max_tokens_per_month: int = Field(
+        default=100_000,
+        ge=0,
+        description=(
+            "Per-user month-tokens budget на AI source extraction. ``0`` = "
+            "выключить budget. ADR-0059 default — 100000/month."
+        ),
+    )
+
+    # ---- Phase 14.2 — internal service auth (digest worker → parser) -------
+    internal_service_token: str = Field(
+        default="",
+        description=(
+            "Shared secret для X-Internal-Service-Token validation на "
+            "internal endpoint'ах parser-service (Phase 14.2: "
+            "/users/{id}/digest-summary). Пустая строка → endpoint'ы "
+            "возвращают 503 (отказ обслуживания), потому что без секрета "
+            "любой может дёргать internal data о произвольном user'е."
+        ),
+    )
+
     model_config = SettingsConfigDict(
         env_prefix="PARSER_SERVICE_",
         env_file=".env",

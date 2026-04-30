@@ -179,6 +179,45 @@
       "subtitle": "Your tree is ready. Open it to start exploring or jump to the dashboard.",
       "openTree": "Open my tree →",
       "dashboard": "Go to dashboard"
+    },
+    "tour": {
+      "stepLabel": "Step {current} of {total}",
+      "next": "Next",
+      "back": "Back",
+      "skip": "Skip tour",
+      "close": "Close",
+      "finish": "Finish",
+      "restart": "Restart tour",
+      "restartHint": "Replay the welcome tour from the beginning.",
+      "restartingNotice": "Tour restarted. Refresh the page to see it again.",
+      "step1": {
+        "title": "Welcome to AutoTreeGen",
+        "body": "Let's take a quick 6-step tour through the parts of the app you'll use the most. You can skip anytime."
+      },
+      "step2": {
+        "title": "Import your first GEDCOM",
+        "body": "Bring an existing tree from Ancestry, MyHeritage, or any GEDCOM 5.5.1 / 5.5.5 file. Round-trip preserves provenance — nothing silently dropped."
+      },
+      "step3": {
+        "title": "Search persons",
+        "body": "Find people across all your trees with phonetic (Daitch-Mokotoff) search — works for Cyrillic, Yiddish, and transliterated names alike."
+      },
+      "step4": {
+        "title": "Family tree visualization",
+        "body": "Open any person to see a 10-generation collapsible pedigree. DNA badges, confidence indicators, and links to underlying evidence are inline."
+      },
+      "step5": {
+        "title": "DNA matches",
+        "body": "Connect a kit (Ancestry / 23andMe / MyHeritage / FTDNA) and see your matches with shared cM and chromosome painting per match."
+      },
+      "step6": {
+        "title": "Hypotheses",
+        "body": "Suggested same-person and parent-child links live here for review. Approve, reject, or defer — automation never auto-merges (CLAUDE.md §5)."
+      },
+      "step7": {
+        "title": "Share with family",
+        "body": "Invite collaborators to a tree (read / edit / admin) or publish a privacy-aware public link. Settings let you replay this tour anytime."
+      }
     }
   },
   "pricing": {
@@ -403,6 +442,100 @@
     },
     "duplicates": {
       "title": "Duplicate suggestions"
+    }
+  },
+  "sharing": {
+    "owner": {
+      "title": "Sharing",
+      "subtitle": "Invite collaborators and manage who can see this tree.",
+      "forbiddenTitle": "Owner-only page",
+      "forbiddenBody": "Only the tree owner can manage sharing. If you think this is a mistake, ask the current owner to add you.",
+      "loading": "Loading…"
+    },
+    "members": {
+      "heading": "Members",
+      "description": "People with access to this tree.",
+      "empty": "No collaborators yet — only the owner can see this tree.",
+      "loadError": "Couldn't load members.",
+      "columnPerson": "Person",
+      "columnRole": "Role",
+      "columnJoined": "Joined",
+      "columnActions": "Actions",
+      "joinedAt": "Joined {date}",
+      "changeRole": "Change role",
+      "promoteToEditor": "Make editor",
+      "demoteToViewer": "Make viewer",
+      "revoke": "Remove access",
+      "revokeConfirm": "Remove access for {email}? They will lose access immediately.",
+      "revokePending": "Removing…"
+    },
+    "invitations": {
+      "heading": "Pending invitations",
+      "description": "Invitations not yet accepted. Each link is valid for 14 days.",
+      "empty": "No pending invitations.",
+      "loadError": "Couldn't load invitations.",
+      "columnEmail": "Email",
+      "columnRole": "Role",
+      "columnSent": "Sent",
+      "columnActions": "Actions",
+      "sentAt": "Sent {date}",
+      "revoke": "Revoke",
+      "revokeConfirm": "Revoke invitation for {email}?"
+    },
+    "invite": {
+      "heading": "Invite a collaborator",
+      "description": "Send an email invitation. The recipient will need to sign in (or sign up) before joining.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "cousin@example.com",
+      "roleLabel": "Role",
+      "roleViewer": "Viewer — read-only access",
+      "roleEditor": "Editor — can add and change data",
+      "messageLabel": "Personal message (optional)",
+      "messagePlaceholder": "Hi! I'd love to share my family research with you.",
+      "submit": "Send invitation",
+      "submitting": "Sending…",
+      "successToast": "Invitation sent",
+      "errorInvalidEmail": "Enter a valid email address.",
+      "errorGeneric": "Couldn't send invitation."
+    },
+    "roles": {
+      "owner": "Owner",
+      "editor": "Editor",
+      "viewer": "Viewer"
+    },
+    "accept": {
+      "title": "Accept invitation",
+      "loadingLookup": "Loading invitation…",
+      "invitedAs": "You've been invited as {role}",
+      "invitedToTree": "to {treeName}",
+      "invitedBy": "by {inviter}",
+      "expiresAt": "Expires {date}",
+      "alreadyAcceptedTitle": "You've already accepted this invitation",
+      "alreadyAcceptedBody": "Open the tree from your dashboard.",
+      "goToTree": "Open tree",
+      "invalidTitle": "Invitation is no longer valid",
+      "invalidBody": "This link has expired or was revoked. Ask the inviter for a new one.",
+      "notFoundTitle": "Invitation not found",
+      "notFoundBody": "The link may be wrong or already deleted.",
+      "goToDashboard": "Go to dashboard",
+      "signInPrompt": "Sign in to accept this invitation",
+      "signInDescription": "You need an account to join the tree. Sign in or create one — it's free.",
+      "signInButton": "Sign in",
+      "signUpButton": "Create account",
+      "emailMismatchTitle": "This invitation is for a different email",
+      "emailMismatchBody": "Signed in as {currentEmail}, but the invitation was sent to {invitedEmail}. Sign out and sign in with the invited email to continue.",
+      "emailMismatchAction": "I'll sign in as {invitedEmail}",
+      "acceptButton": "Accept invitation",
+      "accepting": "Joining the tree…",
+      "successTitle": "Welcome aboard!",
+      "successBody": "Redirecting you to the tree…",
+      "errorGeneric": "Couldn't accept invitation."
+    },
+    "treePicker": {
+      "label": "Switch tree",
+      "current": "Current tree",
+      "manage": "Manage trees",
+      "loading": "Loading trees…"
     }
   }
 }

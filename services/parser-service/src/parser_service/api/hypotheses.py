@@ -28,12 +28,14 @@ from typing import Annotated, Literal
 
 from arq.connections import ArqRedis
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from shared_models import TreeRole
 from shared_models.enums import HypothesisType
 from shared_models.orm import Hypothesis
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from parser_service.auth import RequireUser
 from parser_service.database import get_session
 from parser_service.queue import get_arq_pool
 from parser_service.schemas import (
@@ -41,6 +43,7 @@ from parser_service.schemas import (
     HypothesisComputeJobResponse,
     HypothesisCreateRequest,
     HypothesisListResponse,
+    HypothesisRecomputeScoresResponse,
     HypothesisResponse,
     HypothesisReviewRequest,
     HypothesisSummary,
@@ -52,7 +55,12 @@ from parser_service.services.bulk_hypothesis_runner import (
     get_compute_job,
 )
 from parser_service.services.hypothesis_runner import compute_hypothesis
+from parser_service.services.hypothesis_score_recompute import (
+    RECOMPUTE_ALGORITHM_VERSION,
+    recompute_all_hypothesis_scores,
+)
 from parser_service.services.metrics import hypothesis_review_action_total
+from parser_service.services.permissions import require_tree_role
 
 router = APIRouter()
 
@@ -356,6 +364,47 @@ async def request_cancel_compute_job(
     # терминального события от worker'а (CANCELLED). Для уже-terminal
     # job'ов worker не публикует ничего нового, но и SSE не подключён.
     return payload.model_copy(update={"events_url": _events_url(job.tree_id, job.id)})
+
+
+# -----------------------------------------------------------------------------
+# Phase 7.5 — recompute composite_score with aggregation v2 (ADR-0057).
+# -----------------------------------------------------------------------------
+
+
+@router.post(
+    "/trees/{tree_id}/hypotheses/recompute-scores",
+    response_model=HypothesisRecomputeScoresResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["hypotheses"],
+    summary="Пересчитать composite_score у всех гипотез дерева через v2-aggregation.",
+    description=(
+        "Phase 7.5 (ADR-0057). Используется когда algorithm aggregation "
+        "сменился, а persisted hypotheses держат старые scores. Не запускает "
+        "rules заново — пересчитывает только из persisted ``HypothesisEvidence``-"
+        "rows через ``inference_engine.aggregate_confidence``. Идемпотентно. "
+        "Не трогает ``reviewed_status`` (user judgment сохраняется). "
+        "Owner-only: triggers AuditLog row."
+    ),
+    dependencies=[Depends(require_tree_role(TreeRole.OWNER))],
+)
+async def recompute_hypothesis_scores(
+    tree_id: uuid.UUID,
+    user_id: RequireUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> HypothesisRecomputeScoresResponse:
+    result = await recompute_all_hypothesis_scores(
+        session,
+        tree_id,
+        actor_user_id=user_id,
+    )
+    await session.commit()
+    return HypothesisRecomputeScoresResponse(
+        tree_id=result.tree_id,
+        algorithm=RECOMPUTE_ALGORITHM_VERSION,
+        recomputed_count=result.recomputed_count,
+        mean_absolute_delta=result.mean_absolute_delta,
+        max_absolute_delta=result.max_absolute_delta,
+    )
 
 
 # -----------------------------------------------------------------------------

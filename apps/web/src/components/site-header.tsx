@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { NotificationBell } from "@/components/notification-bell";
+import { TreePicker } from "@/components/tree-picker";
 import { cn } from "@/lib/utils";
 
 /**
@@ -13,24 +14,31 @@ import { cn } from "@/lib/utils";
  * для signed-out. NotificationBell виден только signed-in.
  * Phase 4.13 — добавлен LocaleSwitcher (виден всегда, чтобы можно было
  * переключить язык до логина).
+ * Phase 4.14a — header выше на mobile (h-14 vs sm:h-12), Sign-in кнопка
+ * получает min-h-11 для соблюдения WCAG 2.1 AA touch target.
  */
 export function SiteHeader() {
   const t = useTranslations("header");
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 flex h-12 items-center justify-between gap-4 border-b",
+        "sticky top-0 z-40 flex h-14 items-center justify-between gap-4 border-b sm:h-12",
         "border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4",
       )}
     >
       <Link
         href="/"
         aria-label={t("home")}
-        className="text-sm font-semibold text-[color:var(--color-ink-900)]"
+        className="text-base font-semibold text-[color:var(--color-ink-900)] sm:text-sm"
       >
         {t("appName")}
       </Link>
       <div className="flex items-center gap-3">
+        <SignedIn>
+          {/* Phase 11.1: tree-picker виден только signed-in user'ам и
+              скрывается сам если у них 0 деревьев. */}
+          <TreePicker />
+        </SignedIn>
         <LocaleSwitcher />
         <SignedIn>
           <NotificationBell />
@@ -40,7 +48,7 @@ export function SiteHeader() {
           <SignInButton mode="modal">
             <button
               type="button"
-              className="text-sm font-medium text-[color:var(--color-ink-900)] hover:underline"
+              className="inline-flex min-h-11 items-center px-2 text-base font-medium text-[color:var(--color-ink-900)] hover:underline sm:min-h-0 sm:px-0 sm:text-sm"
             >
               Sign in
             </button>

@@ -10,6 +10,7 @@ resolution-markers = [
 [manifest]
 members = [
     "ai-layer",
+    "archive-service",
     "autotreegen",
     "billing-service",
     "dna-analysis",
@@ -38,6 +39,7 @@ dependencies = [
 
 [package.optional-dependencies]
 test = [
+    { name = "fakeredis" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
@@ -46,6 +48,7 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "anthropic", specifier = ">=0.40" },
+    { name = "fakeredis", marker = "extra == 'test'", specifier = ">=2.26" },
     { name = "jinja2", specifier = ">=3.1" },
     { name = "pydantic", specifier = ">=2.10" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3" },
@@ -241,6 +244,48 @@ sdist = { url = "https://files.pythonhosted.org/packages/19/14/2c5dd9f512b66549a
 wheels = [
     { url = "https://files.pythonhosted.org/packages/da/42/e921fccf5015463e32a3cf6ee7f980a6ed0f395ceeaa45060b61d86486c2/anyio-4.13.0-py3-none-any.whl", hash = "sha256:08b310f9e24a9594186fd75b4f73f4a4152069e3853f1ed8bfbf58369f4ad708", size = 114353, upload-time = "2026-03-24T12:59:08.246Z" },
 ]
+
+[[package]]
+name = "archive-service"
+version = "0.1.0"
+source = { editable = "services/archive-service" }
+dependencies = [
+    { name = "cryptography" },
+    { name = "familysearch-client" },
+    { name = "fastapi" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "redis", extra = ["hiredis"] },
+    { name = "shared-models", extra = ["security"] },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "fakeredis" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-httpx" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "cryptography", specifier = ">=42" },
+    { name = "fakeredis", marker = "extra == 'test'", specifier = ">=2.20" },
+    { name = "familysearch-client", editable = "packages/familysearch-client" },
+    { name = "fastapi", specifier = ">=0.115" },
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "pydantic", specifier = ">=2.10" },
+    { name = "pydantic-settings", specifier = ">=2.6" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3" },
+    { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.24" },
+    { name = "pytest-httpx", marker = "extra == 'test'", specifier = ">=0.30" },
+    { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
+    { name = "shared-models", extras = ["security"], editable = "packages/shared-models" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.32" },
+]
+provides-extras = ["test"]
 
 [[package]]
 name = "arq"
@@ -806,7 +851,8 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "python-dotenv" },
     { name = "python-multipart" },
-    { name = "shared-models" },
+    { name = "redis", extra = ["hiredis"] },
+    { name = "shared-models", extra = ["observability", "security"] },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -835,7 +881,8 @@ requires-dist = [
     { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.24" },
     { name = "python-dotenv", specifier = ">=1.0" },
     { name = "python-multipart", specifier = ">=0.0.20" },
-    { name = "shared-models", editable = "packages/shared-models" },
+    { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
+    { name = "shared-models", extras = ["security", "observability"], editable = "packages/shared-models" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "testcontainers", extras = ["postgres"], marker = "extra == 'test'", specifier = ">=4.8" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.32" },
@@ -886,7 +933,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "python-dotenv" },
-    { name = "shared-models" },
+    { name = "shared-models", extra = ["observability", "security"] },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -913,7 +960,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3" },
     { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.24" },
     { name = "python-dotenv", specifier = ">=1.0" },
-    { name = "shared-models", editable = "packages/shared-models" },
+    { name = "shared-models", extras = ["security", "observability"], editable = "packages/shared-models" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "testcontainers", extras = ["postgres"], marker = "extra == 'test'", specifier = ">=4.8" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.32" },
@@ -1847,6 +1894,20 @@ wheels = [
 ]
 
 [[package]]
+name = "limits"
+version = "5.8.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "deprecated" },
+    { name = "packaging" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/71/69/826a5d1f45426c68d8f6539f8d275c0e4fcaa57f0c017ec3100986558a41/limits-5.8.0.tar.gz", hash = "sha256:c9e0d74aed837e8f6f50d1fcebcf5fd8130957287206bc3799adaee5092655da", size = 226104, upload-time = "2026-02-05T07:17:35.859Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b9/98/cb5ca20618d205a09d5bec7591fbc4130369c7e6308d9a676a28ff3ab22c/limits-5.8.0-py3-none-any.whl", hash = "sha256:ae1b008a43eb43073c3c579398bd4eb4c795de60952532dc24720ab45e1ac6b8", size = 60954, upload-time = "2026-02-05T07:17:34.425Z" },
+]
+
+[[package]]
 name = "magic-filter"
 version = "1.0.12"
 source = { registry = "https://pypi.org/simple" }
@@ -2097,7 +2158,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "python-dotenv" },
-    { name = "shared-models" },
+    { name = "shared-models", extra = ["observability", "security"] },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -2122,7 +2183,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3" },
     { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.24" },
     { name = "python-dotenv", specifier = ">=1.0" },
-    { name = "shared-models", editable = "packages/shared-models" },
+    { name = "shared-models", extras = ["security", "observability"], editable = "packages/shared-models" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "testcontainers", extras = ["postgres"], marker = "extra == 'test'", specifier = ">=4.8" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.32" },
@@ -2231,6 +2292,7 @@ name = "parser-service"
 version = "0.1.0"
 source = { editable = "services/parser-service" }
 dependencies = [
+    { name = "ai-layer" },
     { name = "arq" },
     { name = "asyncpg" },
     { name = "billing-service" },
@@ -2243,10 +2305,11 @@ dependencies = [
     { name = "prometheus-client" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
+    { name = "pypdf" },
     { name = "python-dotenv" },
     { name = "python-multipart" },
     { name = "redis", extra = ["hiredis"] },
-    { name = "shared-models" },
+    { name = "shared-models", extra = ["observability", "security"] },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "sse-starlette" },
     { name = "svix" },
@@ -2274,6 +2337,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ai-layer", editable = "packages/ai-layer" },
     { name = "arq", specifier = ">=0.26" },
     { name = "asyncpg", specifier = ">=0.30" },
     { name = "billing-service", editable = "services/billing-service" },
@@ -2290,12 +2354,13 @@ requires-dist = [
     { name = "psycopg", extras = ["binary"], marker = "extra == 'test'", specifier = ">=3.2" },
     { name = "pydantic", specifier = ">=2.10" },
     { name = "pydantic-settings", specifier = ">=2.6" },
+    { name = "pypdf", specifier = ">=5.0" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3" },
     { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.24" },
     { name = "python-dotenv", specifier = ">=1.0" },
     { name = "python-multipart", specifier = ">=0.0.20" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
-    { name = "shared-models", editable = "packages/shared-models" },
+    { name = "shared-models", extras = ["security", "observability"], editable = "packages/shared-models" },
     { name = "shared-models", extras = ["storage-gcs"], marker = "extra == 'storage-gcs'", editable = "packages/shared-models" },
     { name = "shared-models", extras = ["storage-minio"], marker = "extra == 'storage-minio'", editable = "packages/shared-models" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
@@ -2796,6 +2861,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/81/76/599896b37e60f43078afd8354b3802eb7ca257a7e7f6253cc21c4c672877/PyMeeus-0.5.12.tar.gz", hash = "sha256:548f7186bd8b96cbc069cf649a8e8e377dce49ac74486709849fe63a99cad684", size = 5752712, upload-time = "2022-12-11T11:37:48.504Z" }
 
 [[package]]
+name = "pypdf"
+version = "6.10.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/7b/3f/9f2167401c2e94833ca3b69535bad89e533b5de75fefe4197a2c224baec2/pypdf-6.10.2.tar.gz", hash = "sha256:7d09ce108eff6bf67465d461b6ef352dcb8d84f7a91befc02f904455c6eea11d", size = 5315679, upload-time = "2026-04-15T16:37:36.978Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0c/d6/1d5c60cc17bbdf37c1552d9c03862fc6d32c5836732a0415b2d637edc2d0/pypdf-6.10.2-py3-none-any.whl", hash = "sha256:aa53be9826655b51c96741e5d7983ca224d898ac0a77896e64636810517624aa", size = 336308, upload-time = "2026-04-15T16:37:34.851Z" },
+]
+
+[[package]]
 name = "pyphonetics"
 version = "0.5.3"
 source = { registry = "https://pypi.org/simple" }
@@ -3138,6 +3212,19 @@ wheels = [
 ]
 
 [[package]]
+name = "sentry-sdk"
+version = "2.58.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "certifi" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/26/b3/fb8291170d0e844173164709fc0fa0c221ed75a5da740c8746f2a83b4eb1/sentry_sdk-2.58.0.tar.gz", hash = "sha256:c1144d947352d54e5b7daa63596d9f848adf684989c06c4f5a659f0c85a18f6f", size = 438764, upload-time = "2026-04-13T17:23:26.265Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fa/eb/d875669993b762556ae8b2efd86219943b4c0864d22204d622a9aee3052b/sentry_sdk-2.58.0-py2.py3-none-any.whl", hash = "sha256:688d1c704ddecf382ea3326f21a67453d4caa95592d722b7c780a36a9d23109e", size = 460919, upload-time = "2026-04-13T17:23:24.675Z" },
+]
+
+[[package]]
 name = "shared-models"
 version = "0.1.0"
 source = { editable = "packages/shared-models" }
@@ -3151,6 +3238,12 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+observability = [
+    { name = "sentry-sdk" },
+]
+security = [
+    { name = "slowapi" },
+]
 storage-gcs = [
     { name = "anyio" },
     { name = "google-cloud-storage" },
@@ -3180,10 +3273,12 @@ requires-dist = [
     { name = "pyjwt", extras = ["crypto"], specifier = ">=2.10.0" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3" },
     { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.24" },
+    { name = "sentry-sdk", marker = "extra == 'observability'", specifier = ">=2.0" },
+    { name = "slowapi", marker = "extra == 'security'", specifier = ">=0.1.9" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.36" },
     { name = "testcontainers", extras = ["postgres"], marker = "extra == 'test'", specifier = ">=4.8" },
 ]
-provides-extras = ["test", "storage-minio", "storage-gcs"]
+provides-extras = ["test", "security", "observability", "storage-minio", "storage-gcs"]
 
 [[package]]
 name = "shellingham"
@@ -3201,6 +3296,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81", size = 34031, upload-time = "2024-12-04T17:35:28.174Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274", size = 11050, upload-time = "2024-12-04T17:35:26.475Z" },
+]
+
+[[package]]
+name = "slowapi"
+version = "0.1.9"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "limits" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a0/99/adfc7f94ca024736f061257d39118e1542bade7a52e86415a4c4ae92d8ff/slowapi-0.1.9.tar.gz", hash = "sha256:639192d0f1ca01b1c6d95bf6c71d794c3a9ee189855337b4821f7f457dddad77", size = 14028, upload-time = "2024-02-05T12:11:52.13Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2b/bb/f71c4b7d7e7eb3fc1e8c0458a8979b912f40b58002b9fbf37729b8cb464b/slowapi-0.1.9-py3-none-any.whl", hash = "sha256:cfad116cfb84ad9d763ee155c1e5c5cbf00b0d47399a769b227865f5df576e36", size = 14670, upload-time = "2024-02-05T12:11:50.898Z" },
 ]
 
 [[package]]
@@ -3356,6 +3463,7 @@ version = "0.1.0"
 source = { editable = "services/telegram-bot" }
 dependencies = [
     { name = "aiogram" },
+    { name = "arq" },
     { name = "asyncpg" },
     { name = "fastapi" },
     { name = "httpx" },
@@ -3363,7 +3471,7 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "python-dotenv" },
     { name = "redis" },
-    { name = "shared-models" },
+    { name = "shared-models", extra = ["observability", "security"] },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -3379,6 +3487,7 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "aiogram", specifier = ">=3.13,<4.0" },
+    { name = "arq", specifier = ">=0.26" },
     { name = "asyncpg", specifier = ">=0.30" },
     { name = "fakeredis", marker = "extra == 'test'", specifier = ">=2.26" },
     { name = "fastapi", specifier = ">=0.115" },
@@ -3390,7 +3499,7 @@ requires-dist = [
     { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.24" },
     { name = "python-dotenv", specifier = ">=1.0" },
     { name = "redis", specifier = ">=5.2" },
-    { name = "shared-models", editable = "packages/shared-models" },
+    { name = "shared-models", extras = ["security", "observability"], editable = "packages/shared-models" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.32" },
 ]

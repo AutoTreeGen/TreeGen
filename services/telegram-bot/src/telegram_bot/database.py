@@ -51,6 +51,18 @@ def set_session_factory(factory: async_sessionmaker[AsyncSession]) -> None:
     _session_factory = factory
 
 
+def get_session_factory() -> async_sessionmaker[AsyncSession]:
+    """Достать session factory или ``RuntimeError``.
+
+    Используется в ``init_dispatcher`` (Phase 14.1) для пробрасывания
+    в aiogram handler'ы через kwargs-DI.
+    """
+    if _session_factory is None:
+        msg = "Session factory not initialized; call init_engine() first."
+        raise RuntimeError(msg)
+    return _session_factory
+
+
 async def get_session() -> AsyncIterator[AsyncSession]:
     """FastAPI dependency: async session с auto-commit/rollback."""
     if _session_factory is None:

@@ -34,6 +34,18 @@ test = [
     "testcontainers[postgres]>=4.8",
     "psycopg[binary]>=3.2",
 ]
+# Phase 13.2 — security middleware. slowapi реализует rate-limiting
+# поверх Starlette; in-memory storage по умолчанию (см. ADR-0053). Услугу
+# импортирует ``shared_models.security.apply_security_middleware``.
+security = [
+    "slowapi>=0.1.9",
+]
+# Phase 13.1b — Sentry SDK для consumer-сервисов. Lazy-imported в
+# shared_models.observability.init_sentry; без extra `init_sentry` —
+# no-op даже если SENTRY_DSN задан.
+observability = [
+    "sentry-sdk>=2.0",
+]
 # Phase 4.11a — GDPR export storage backends. Lazy-imported в
 # shared_models.storage; устанавливаются по необходимости (CI / dev /
 # prod выбирает один). Тесты используют InMemoryStorage без extras.

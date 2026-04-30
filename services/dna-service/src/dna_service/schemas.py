@@ -244,3 +244,37 @@ class DnaMatchLinkRequest(BaseModel):
 
     tree_id: uuid.UUID
     person_id: uuid.UUID
+
+
+# ---- Phase 6.4 — triangulation -------------------------------------------
+
+
+class TriangulationGroupItem(BaseModel):
+    """Одна triangulation-группа (DTO над dna_analysis.TriangulationGroup).
+
+    Содержит aggregate-only данные: chromosome, cM-интервал и список
+    DnaMatch.id'шников. Никаких raw DNA-фрагментов.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    chromosome: int = Field(..., ge=1, le=22)
+    start_cm: float = Field(..., ge=0.0)
+    end_cm: float = Field(..., gt=0.0)
+    members: list[uuid.UUID] = Field(..., min_length=2)
+    confidence_boost: float = Field(..., ge=0.0, le=10.0)
+
+
+class TriangulationListResponse(BaseModel):
+    """Ответ ``GET /trees/{tree_id}/triangulation``.
+
+    ``min_overlap_cm`` дублируется в ответе — позволяет UI показать
+    активный фильтр и кэшу/клиенту проверить, что отдан правильный
+    параметр (на случай rare race с миграцией параметра в URL).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    tree_id: uuid.UUID
+    min_overlap_cm: float
+    groups: list[TriangulationGroupItem]

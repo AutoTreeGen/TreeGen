@@ -7,6 +7,14 @@ import { cn } from "@/lib/utils";
 /**
  * Базовый Button — варианты primary / secondary / ghost / link.
  * Совместим с shadcn-style API (asChild, variant, size).
+ *
+ * Phase 4.14a — каждый размер получает `min-h-11` floor на mobile (<sm),
+ * чтобы соблюсти WCAG 2.1 AA touch target ≥44×44px. На ≥sm возвращаемся
+ * к компактным desktop-высотам (8/10/12) — UI с десятком mid-size кнопок
+ * в фильтре не разъезжается. Visual height на ≥sm не меняется.
+ *
+ * `link` — отдельный случай: inline-текст внутри предложений. Для него
+ * touch-target не делаем (был бы строкой 44px высоты внутри текста).
  */
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium " +
@@ -25,11 +33,17 @@ const buttonVariants = cva(
         destructive: "bg-red-600 text-white hover:bg-red-700",
       },
       size: {
-        sm: "h-8 px-3 text-sm",
-        md: "h-10 px-4 text-sm",
-        lg: "h-12 px-6 text-base",
+        sm: "min-h-11 px-3 text-sm sm:min-h-0 sm:h-8",
+        md: "min-h-11 px-4 text-sm sm:min-h-0 sm:h-10",
+        lg: "min-h-12 px-6 text-base sm:min-h-0 sm:h-12",
       },
     },
+    compoundVariants: [
+      // link не получает min-h-11 — он inline-элемент в тексте.
+      { variant: "link", size: "sm", class: "min-h-0 sm:min-h-0" },
+      { variant: "link", size: "md", class: "min-h-0 sm:min-h-0" },
+      { variant: "link", size: "lg", class: "min-h-0 sm:min-h-0" },
+    ],
     defaultVariants: {
       variant: "primary",
       size: "md",

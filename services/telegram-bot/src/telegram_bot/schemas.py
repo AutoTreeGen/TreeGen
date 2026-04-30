@@ -46,3 +46,36 @@ class HealthResponse(BaseModel):
     status: str
     bot_configured: bool
     webhook_secret_configured: bool
+
+
+class NotifyRequest(BaseModel):
+    """POST /telegram/notify — body (Phase 14.1, ADR-0056).
+
+    Internal endpoint, вызывается из notification-service после успешного
+    создания Notification. Bot пушит ``message`` в Telegram чат
+    залинкованного user'а, если ``notifications_enabled=True``.
+    """
+
+    user_id: uuid.UUID = Field(..., description="TreeGen user_id (Notification.user_id).")
+    message: str = Field(
+        ...,
+        min_length=1,
+        max_length=4000,
+        description="Plain-text сообщение (Telegram cap 4096; берём 4000 с запасом).",
+    )
+
+
+class NotifyResponse(BaseModel):
+    """POST /telegram/notify — response."""
+
+    delivered: bool = Field(
+        ...,
+        description=(
+            "True — сообщение отправлено через Bot.send_message. "
+            "False — у user'а нет активного link или notifications_enabled=False."
+        ),
+    )
+    reason: str | None = Field(
+        default=None,
+        description="Human-readable причина если delivered=False.",
+    )
