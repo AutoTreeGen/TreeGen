@@ -927,6 +927,10 @@ async def run_import(
     job.status = ImportJobStatus.SUCCEEDED.value
     job.stats = stats
     job.finished_at = dt.datetime.now(dt.UTC)
+    # Phase 5.5a (ADR-0061): persist quarantined proprietary tags из GEDCOM-AST
+    # в jsonb для round-trip при export. Сериализация — через Pydantic model_dump
+    # с mode="json" чтобы UUID-strings и т.п. шли как text, не как Python repr.
+    job.unknown_tags = [block.model_dump(mode="json") for block in document.unknown_tags]
 
     session.add(
         AuditLog(
