@@ -37,6 +37,7 @@ members = [
     "packages/familysearch-client",
     "packages/inference-engine",
     "packages/ai-layer",
+    "services/api-gateway",
     "services/parser-service",
     "services/dna-service",
     "services/archive-service",
@@ -55,6 +56,7 @@ entity-resolution = { workspace = true }
 familysearch-client = { workspace = true }
 inference-engine = { workspace = true }
 ai-layer = { workspace = true }
+api-gateway = { workspace = true }
 parser-service = { workspace = true }
 dna-service = { workspace = true }
 archive-service = { workspace = true }

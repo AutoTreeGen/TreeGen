@@ -6,7 +6,7 @@ import datetime as dt
 import uuid
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import DateTime, ForeignKey, String, func, text
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, false, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -43,6 +43,30 @@ class Tree(TreeOwnedMixins, Base):
     )
     default_locale: Mapped[str] = mapped_column(String(8), nullable=False, default="en")
     settings: Mapped[dict[str, Any]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=dict,
+        server_default=text("'{}'::jsonb"),
+    )
+
+    # Phase 15.4 (ADR-0062) — Protected Tree Mode + change-proposal policy.
+    # ``protected=True`` → все мутации обязаны идти через
+    # ``tree_change_proposals`` (review-flow, см. Phase 15.4b/c). Default
+    # ``False`` сохраняет существующее поведение (direct edits) для всех
+    # уже существующих деревьев — solo-users не получают friction.
+    protected: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=false(),
+    )
+    # Свободно-форменный jsonb для policy-настроек:
+    # ``{require_evidence_for: ["parent_child","spouse"], min_reviewers: 1,
+    #   allow_owner_bypass: false}``. Pydantic-схема валидации — в
+    # ``api_gateway.schemas.ProtectionPolicy``. Default ``{}`` — пустая
+    # policy (только бинарный флаг ``protected`` имеет силу, ничего не
+    # требуется кроме самого PR-flow'а).
+    protection_policy: Mapped[dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,

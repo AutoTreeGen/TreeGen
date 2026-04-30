@@ -43,3 +43,4 @@
 | 0053 | [Production security hardening (Phase 13.2)](./0053-production-security-hardening.md) | Accepted |
 | 0054 | [DNA triangulation engine (Phase 6.4)](./0054-dna-triangulation-engine.md) | Accepted |
 | 0056 | [Telegram bot commands + subscription (Phase 14.1)](./0056-telegram-bot-commands.md) | Accepted |
+| 0062 | [Genealogy git collaborative review (Phase 15.4)](./0062-genealogy-git-collaborative-review.md) | Accepted |

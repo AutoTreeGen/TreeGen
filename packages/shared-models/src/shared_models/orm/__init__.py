@@ -39,6 +39,10 @@ from shared_models.orm.stripe_event_log import StripeEventLog
 from shared_models.orm.subscription import Subscription
 from shared_models.orm.telegram_user_link import TelegramUserLink
 from shared_models.orm.tree import Tree, TreeCollaborator
+from shared_models.orm.tree_change_proposal import TreeChangeProposal
+from shared_models.orm.tree_change_proposal_evidence import (
+    TreeChangeProposalEvidence,
+)
 from shared_models.orm.user import User
 from shared_models.orm.user_action_request import UserActionRequest
 from shared_models.orm.version import Version
@@ -83,6 +87,8 @@ __all__ = [
     "Subscription",
     "TelegramUserLink",
     "Tree",
+    "TreeChangeProposal",
+    "TreeChangeProposalEvidence",
     "TreeCollaborator",
     "TreeInvitation",
     "TreeMembership",

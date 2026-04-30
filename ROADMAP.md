@@ -707,6 +707,49 @@ licensing, EE-Jewish coverage, partnership effort). Краткая сводка:
 
 ---
 
+## 18a. Фаза 15 — Genealogy Git: collaborative review + Protected Tree Mode
+
+«Moat builder» — без version control + collab review TreeGen остаётся
+hobbyist-tool. ICP: pro genealogist + research-сценарии где несколько
+кузенов параллельно правят одно дерево, и нужна protection от tree
+contamination (cross-language research показывает — FamilySearch
+wiki-style chaos не работает).
+
+Pattern: PR-style change proposal над деревом. Любая мутация в
+**Protected Tree Mode** идёт через `tree_change_proposal` с
+`status open → approved/rejected → merged`. Owner может включить
+protection через флаг + policy (jsonb): `require_evidence_for`,
+`min_reviewers`, `allow_owner_bypass`. См. ADR-0062.
+
+### Phase 15.4 split
+
+| Sub-phase | Scope | Зависит от |
+|---|---|---|
+| **15.4a** — data model + bare CRUD | alembic 0028 (ALTER trees protected/policy + 2 новые таблицы), ORM `TreeChangeProposal` / `TreeChangeProposalEvidence`, новый `services/api-gateway` scaffold, эндпоинты `POST /trees/{id}/proposals`, `GET /trees/{id}/proposals`, `GET /proposals/{id}`. ADR-0062. | — |
+| **15.4b** — review actions + permissions | `POST /proposals/{id}/approve` / `reject`, evidence attach/detach endpoints, 4-eye gate (author не может approve свой), evidence-required validation (422 если не покрыто), permission boundaries (VIEWER 403, EDITOR approve/reject, OWNER merge). | 15.4a merged |
+| **15.4c** — merge engine + rollback | Atomic apply diff → tree entities + audit_log linkage; rollback через replay reverse diff; pre-merge snapshot strategy (см. ADR-0062 §«Rollback» — открытое решение, decided in 15.4c). | 15.4b merged |
+| **15.4d** — frontend | `/trees/[id]/proposals` (list) + `/trees/[id]/proposals/[id]` (detail с diff viewer); компоненты `<ProposalsList>`, `<ProposalDiffView>`, `<EvidenceAttachPanel>`, `<ProposalActions>`, `<ProtectedTreeBadge>`. i18n en/ru. | 15.4c merged (нужен полный API surface) |
+
+### Зафиксированные решения (см. ADR-0062)
+
+- **`author_user_id`** = `uuid FK users(id)` (не Clerk-id text). Сохраняем
+  CASCADE on user delete для GDPR-erasure и FK-целостность.
+- **Allowlist**: оба новых table — `SERVICE_TABLES` в
+  `test_schema_invariants.py`. Не tree-entities (нет provenance /
+  version_id / status / soft-delete) — это audit/workflow log.
+- **`protected` default = `false`** — solo users не получают friction.
+  Power users opt in через UI toggle (15.4d).
+- **Анти-drift**: НЕ строим CRDT real-time collab, НЕ добавляем
+  auto-merge, НЕ трогаем audit_log schema (read-only consumer в 15.4c).
+
+### Phase 15.5+ (future)
+
+- Branching (long-lived working trees per researcher).
+- Subscribe-to-tree (кузен видит уведомления о merged proposals).
+- Bot-командой `/proposals` (Phase 14.x integration).
+
+---
+
 ## 19. Claude Code: настройка субагентов и MCP
 
 ### 19.1 Структура `CLAUDE.md`

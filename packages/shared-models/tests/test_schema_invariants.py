@@ -107,6 +107,16 @@ SERVICE_TABLES = {
     # Stripe webhook idempotency log (Phase 12.0 / ADR-0042): stripe_event_id UNIQUE
     # для idempotent dispatch. Audit trail, без soft-delete.
     "stripe_event_log",
+    # Genealogy Git change proposals (Phase 15.4 / ADR-0062): PR-style
+    # workflow log с собственной state machine
+    # (open/approved/rejected/merged/rolled_back) — не доменная сущность
+    # дерева, а audit/workflow record. Без provenance/version_id/
+    # soft-delete (status — explicit machine, не tombstone).
+    "tree_change_proposals",
+    # Source-citation attachments к proposal'у (Phase 15.4 / ADR-0062):
+    # many-to-many между proposals и sources с opaque relationship_ref
+    # jsonb. Audit-trail evidence, не tree-entity.
+    "tree_change_proposal_evidence",
 }
 
 TREE_ENTITY_TABLES = {
