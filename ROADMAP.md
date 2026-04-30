@@ -387,7 +387,7 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 | 6.2 | dna-service: consents + storage + matching API — ADR-0020 | ✅ Done |
 | 6.2.x | Consent audit-log + per-user list endpoint | ✅ Done |
 | **6.3** | **Match list/detail UI + chromosome painting + link-to-person — ADR-0033** | ✅ **Done (2026-04-28)** |
-| 6.4 | Triangulation + Bayes-prior из дерева | 🔜 Planned |
+| 6.4 | Triangulation engine (compute-only) + Bayes-prior heuristic — ADR-0054 | ✅ Done |
 | 6.5 | Imputation + IBD2 + dedicated `dna_match_segments` table | 🔜 Planned |
 
 ---
