@@ -212,3 +212,8 @@ install-and-dev.bat
 just-install.bat
 rebuild-step1-restore.bat
 scripts/auto-merge.ps1
+# Backup-копии скриптов, оставленные редактором (ADR-0069: precondition
+# для безопасного `git add -A` через wrapper `save`).
+*.bak
+# Локальная папка с патч-файлами от агентов.
+/saved-patches/
