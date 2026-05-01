@@ -28,12 +28,18 @@ license = { text = "Proprietary" }
 authors = [{ name = "AutoTreeGen" }]
 dependencies = [
     "anthropic>=0.40",
+    "entity-resolution",
+    "inference-engine",
     "jinja2>=3.1",
     "mutagen>=1.47",
     "openai>=1.0",
     "pydantic>=2.10",
     "voyageai>=0.3",
 ]
+
+[tool.uv.sources]
+entity-resolution = { workspace = true }
+inference-engine = { workspace = true }
 
 [project.optional-dependencies]
 test = [
