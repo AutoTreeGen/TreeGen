@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoTreeGen — The library of your blood</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="../../assets/logo/favicon.svg">
+<link rel="stylesheet" href="../../colors_and_type.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  /* ─────────────────────────────────────────────────────────────
+     Marketing landing — "grand" version.
+     The previous page was a polite SaaS landing. This one treats
+     AutoTreeGen as something closer to an institution: a library,
+     an archive, a piece of personal patrimony. It opens with a full-
+     bleed deep-purple hero, editorial-scale serif typography ("THE
+     LIBRARY / OF YOUR / BLOOD"), a constellation of haplogroup
+     ribbons climbing up the right column, and proceeds through three
+     more wide-bleed bands — manifesto, archive grid, methodology —
+     before landing on a heavy "request access" gate.
+     ───────────────────────────────────────────────────────────── */
+
+  :root{
+    --ink:#1A0A33;
+    --ink-soft:#3A1568;
+    --paper:#F4ECDA;
+    --paper-warm:#FFF6E2;
+    --gold:#C99A20;
+    --gold-soft:#FFD566;
+    --line:#D8C9A8;
+    --serif:'Cormorant Garamond', 'Source Serif Pro', Georgia, serif;
+    --typewriter:'Special Elite', 'Courier New', monospace;
+  }
+
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+    font-family:var(--font-sans);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* — Floating top nav — translucent over the dark hero, then sticks
+       and turns paper-cream when you scroll past it. */
+  .nav{
+    position:absolute;top:0;left:0;right:0;z-index:20;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:22px 40px;
+    color:#FFFAF0;
+  }
+  .nav .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}
+  .nav .brand .wordmark{
+    font-family:var(--serif);font-weight:700;font-size:22px;
+    letter-spacing:-0.01em;color:#FFFAF0;
+  }
+  .nav .links{display:flex;gap:30px;align-items:center;font-size:13px;letter-spacing:0.04em}
+  .nav .links a{color:rgba(255,250,240,0.78);text-decoration:none;font-weight:500}
+  .nav .links a:hover{color:#FFFAF0}
+  .nav .cta{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:9px 18px;border:1px solid rgba(255,213,102,0.55);
+    color:var(--gold-soft);border-radius:999px;
+    font-family:var(--typewriter);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;
+    background:rgba(20,8,40,0.25);backdrop-filter:blur(6px);
+    text-decoration:none;
+    transition:background 160ms ease, border-color 160ms ease;
+  }
+  .nav .cta:hover{background:rgba(255,213,102,0.18);border-color:#FFD566;color:#FFFAF0}
+
+  /* ───── HERO ─────────────────────────────────────────────────── */
+  .hero{
+    position:relative;min-height:100vh;
+    background:
+      radial-gradient(ellipse 60% 40% at 30% 20%, rgba(255,213,102,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 80% 50% at 80% 80%, rgba(176,112,192,0.20) 0%, transparent 65%),
+      linear-gradient(180deg, #1A0A33 0%, #2C1054 60%, #1A0A33 100%);
+    color:#FFFAF0;
+    overflow:hidden;
+    display:grid;grid-template-columns:1.15fr 1fr;gap:0;
+    align-items:end;
+    padding:160px 40px 100px;
+  }
+  /* Constellation of stars / archival pinpricks */
+  .hero::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      radial-gradient(rgba(255,255,255,0.65) 0.6px, transparent 0.6px),
+      radial-gradient(rgba(255,213,102,0.40) 0.4px, transparent 0.4px);
+    background-size:80px 80px, 50px 50px;
+    background-position:0 0, 25px 25px;
+    opacity:0.45;pointer-events:none;
+    mask-image:radial-gradient(ellipse at 50% 40%, black 0%, transparent 80%);
+    -webkit-mask-image:radial-gradient(ellipse at 50% 40%, black 0%, transparent 80%);
+  }
+  .hero::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse 100% 100% at 50% 100%, transparent 60%, rgba(0,0,0,0.45) 100%);
+  }
+
+  .hero-eyebrow{
+    font-family:var(--typewriter);font-size:12px;letter-spacing:0.32em;
+    color:rgba(255,213,102,0.85);text-transform:uppercase;
+    display:inline-flex;align-items:center;gap:14px;
+    margin-bottom:32px;
+  }
+  .hero-eyebrow::before, .hero-eyebrow::after{
+    content:"";display:inline-block;width:36px;height:1px;background:rgba(255,213,102,0.55);
+  }
+
+  /* — The headline: editorial display serif, three lines, very large.
+       We lean into the type's natural drama and let it set the mood. */
+  .hero h1{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:clamp(64px, 9.8vw, 152px);
+    line-height:0.92;
+    letter-spacing:-0.02em;
+    color:#FFFAF0;
+    margin:0;
+    text-shadow:0 4px 24px rgba(0,0,0,0.45);
+  }
+  .hero h1 em{
+    font-style:italic;
+    font-weight:500;
+    color:var(--gold-soft);
+    background:linear-gradient(180deg, #FFE9A0 0%, #C99A20 100%);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+  .hero h1 .ampers{
+    font-family:var(--serif);font-style:italic;
+    color:rgba(255,213,102,0.55);font-weight:500;
+  }
+
+  .hero-lede{
+    margin-top:40px;
+    font-family:var(--serif);
+    font-size:22px;line-height:1.45;
+    color:rgba(255,250,240,0.78);
+    max-width:560px;
+    font-weight:500;
+  }
+  .hero-lede b{color:#FFFAF0;font-weight:600}
+
+  .hero-ctas{margin-top:44px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+  .btn-grand{
+    display:inline-flex;align-items:center;gap:10px;
+    padding:18px 32px;border-radius:0;
+    font-family:var(--typewriter);font-size:12px;letter-spacing:0.20em;
+    text-transform:uppercase;text-decoration:none;font-weight:400;
+    transition:all 180ms ease;
+    cursor:pointer;border:1px solid transparent;
+  }
+  .btn-grand.primary{
+    background:linear-gradient(180deg,#FFE9A0,#C99A20);
+    color:#1A0A33;
+    box-shadow:0 1px 0 rgba(255,255,255,0.4) inset, 0 12px 28px -8px rgba(201,154,32,0.55);
+  }
+  .btn-grand.primary:hover{transform:translateY(-2px);box-shadow:0 1px 0 rgba(255,255,255,0.5) inset, 0 16px 36px -8px rgba(201,154,32,0.70)}
+  .btn-grand.ghost{
+    color:#FFFAF0;
+    border:1px solid rgba(255,250,240,0.40);
+  }
+  .btn-grand.ghost:hover{border-color:#FFFAF0;background:rgba(255,250,240,0.08)}
+  .btn-grand .arrow{display:inline-block;transition:transform 180ms ease}
+  .btn-grand:hover .arrow{transform:translateX(4px)}
+
+  .hero-meta{
+    margin-top:70px;
+    display:flex;flex-wrap:wrap;gap:42px;
+    color:rgba(255,250,240,0.55);
+    font-family:var(--typewriter);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;
+    border-top:1px solid rgba(255,250,240,0.18);padding-top:24px;max-width:760px;
+  }
+  .hero-meta div{display:flex;flex-direction:column;gap:4px}
+  .hero-meta div b{color:#FFD566;font-weight:400;font-family:var(--serif);font-style:italic;font-size:18px;letter-spacing:0;text-transform:none}
+
+  /* Right column: floating ribbon constellation that climbs up.
+     Done as inline SVG so it scales with the hero. */
+  .hero-art{
+    position:relative;align-self:stretch;justify-self:end;
+    width:100%;max-width:540px;height:100%;min-height:540px;
+  }
+  .hero-art svg{display:block;width:100%;height:100%}
+
+  /* Vertical "ESTABLISHED" sidebar mark */
+  .hero-est{
+    position:absolute;left:18px;top:50%;transform:translateY(-50%) rotate(-90deg);transform-origin:left center;
+    font-family:var(--typewriter);font-size:10px;letter-spacing:0.40em;
+    color:rgba(255,213,102,0.55);text-transform:uppercase;
+    white-space:nowrap;
+  }
+
+  /* ───── MANIFESTO BAND ───────────────────────────────────────── */
+  .manifesto{
+    background:var(--paper);
+    padding:140px 40px;
+    border-top:1px solid var(--line);
+    position:relative;
+  }
+  .manifesto-inner{max-width:1100px;margin:0 auto}
+  .manifesto-eyebrow{
+    font-family:var(--typewriter);font-size:11px;letter-spacing:0.30em;
+    color:#8A6A3A;text-transform:uppercase;
+    display:flex;align-items:center;gap:14px;margin-bottom:48px;
+  }
+  .manifesto-eyebrow::before{content:"";width:48px;height:1px;background:#8A6A3A}
+  .manifesto h2{
+    font-family:var(--serif);
+    font-weight:500;
+    font-size:clamp(38px, 5.4vw, 76px);
+    line-height:1.05;
+    letter-spacing:-0.01em;
+    color:var(--ink);
+    margin:0;
+    max-width:920px;
+  }
+  .manifesto h2 em{font-style:italic;color:var(--gold)}
+  .manifesto h2 .strike{position:relative;display:inline-block}
+  .manifesto h2 .strike::after{
+    content:"";position:absolute;left:-2%;right:-2%;top:50%;height:3px;
+    background:var(--gold);transform:rotate(-2deg);
+  }
+
+  /* Three-up principle column */
+  .principles{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:48px;
+    margin-top:90px;
+    padding-top:48px;
+    border-top:1px solid var(--line);
+  }
+  .principle .num{
+    font-family:var(--typewriter);font-size:11px;letter-spacing:0.20em;
+    color:var(--gold);text-transform:uppercase;
+  }
+  .principle h3{
+    font-family:var(--serif);
+    font-weight:600;font-size:28px;line-height:1.15;letter-spacing:-0.005em;
+    margin:14px 0 12px;color:var(--ink);
+  }
+  .principle p{font-size:15px;line-height:1.65;color:#3a2410;max-width:300px}
+  .principle .stamp{
+    display:inline-block;margin-top:18px;
+    font-family:var(--typewriter);font-size:10px;letter-spacing:0.10em;text-transform:uppercase;
+    color:#8A6A3A;border:1px solid #C9A96A;border-radius:2px;padding:3px 8px;
+  }
+
+  /* ───── ARCHIVE BAND ─────────────────────────────────────────── */
+  .archive{
+    background:linear-gradient(180deg,#FFF6E2 0%, #F4ECDA 100%);
+    padding:140px 40px 120px;
+    border-top:1px solid var(--line);
+    position:relative;overflow:hidden;
+  }
+  /* Watermark — giant pale "AUTOTREEGEN" sits behind the grid */
+  .archive::before{
+    content:"AUTOTREEGEN";
+    position:absolute;left:-3%;top:30px;
+    font-family:var(--serif);font-style:italic;font-weight:500;
+    font-size:clamp(160px, 22vw, 380px);
+    color:#E8DCB0;opacity:0.55;letter-spacing:-0.02em;
+    line-height:1;pointer-events:none;
+    white-space:nowrap;
+  }
+  .archive-inner{position:relative;max-width:1200px;margin:0 auto;z-index:2}
+  .archive-head{display:flex;justify-content:space-between;align-items:flex-end;gap:32px;margin-bottom:60px;flex-wrap:wrap}
+  .archive-head h2{
+    font-family:var(--serif);font-weight:500;font-style:italic;
+    font-size:clamp(32px,4.4vw,56px);line-height:1.1;
+    color:var(--ink);margin:0;max-width:640px;
+  }
+  .archive-head .meta{
+    font-family:var(--typewriter);font-size:11px;letter-spacing:0.20em;
+    color:#8A6A3A;text-transform:uppercase;text-align:right;line-height:1.6;
+  }
+  .archive-grid{
+    display:grid;grid-template-columns:repeat(12,1fr);gap:18px;
+    grid-auto-rows:minmax(120px,auto);
+  }
+  .archive-card{
+    background:#FFFAF0;border:1px solid var(--line);
+    padding:24px;
+    position:relative;
+    box-shadow:0 1px 0 #FFFFFF inset, 0 4px 14px -4px rgba(80,50,20,0.18);
+    transition:transform 200ms ease, box-shadow 200ms ease;
+  }
+  .archive-card:hover{transform:translateY(-3px);box-shadow:0 1px 0 #FFFFFF inset, 0 12px 28px -6px rgba(80,50,20,0.30)}
+  .archive-card .corner{
+    position:absolute;top:14px;right:14px;
+    font-family:var(--typewriter);font-size:9px;letter-spacing:0.18em;
+    color:#8A6A3A;text-transform:uppercase;
+  }
+  .archive-card .glyph{
+    width:54px;height:54px;
+    margin-bottom:18px;
+  }
+  .archive-card h4{
+    font-family:var(--serif);font-weight:600;font-size:24px;line-height:1.15;
+    margin:0 0 10px;color:var(--ink);letter-spacing:-0.005em;
+  }
+  .archive-card p{font-size:14px;line-height:1.55;color:#3a2410;margin:0}
+  .archive-card .stat{
+    margin-top:18px;display:flex;align-items:baseline;gap:8px;
+    font-family:var(--serif);font-style:italic;
+  }
+  .archive-card .stat b{font-size:32px;color:var(--gold);font-weight:600;font-style:normal;font-family:var(--serif)}
+  .archive-card .stat span{font-size:13px;color:#5a3e1a}
+
+  /* Card placement — uneven, archival, like clippings on a board */
+  .ac-1{grid-column:1 / span 5;grid-row:span 2}
+  .ac-2{grid-column:6 / span 4}
+  .ac-3{grid-column:10 / span 3}
+  .ac-4{grid-column:6 / span 7}
+  .ac-5{grid-column:1 / span 4}
+  .ac-6{grid-column:5 / span 4}
+  .ac-7{grid-column:9 / span 4}
+
+  /* ───── METHODOLOGY (process) ────────────────────────────────── */
+  .method{
+    background:#1A0A33;color:#FFFAF0;
+    padding:140px 40px;
+    border-top:1px solid #3A1568;
+    position:relative;overflow:hidden;
+  }
+  .method::before{
+    content:"";position:absolute;inset:0;
+    background:radial-gradient(ellipse 80% 50% at 50% 0%, rgba(176,112,192,0.18) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .method-inner{max-width:1200px;margin:0 auto;position:relative}
+  .method .eyebrow-grand{
+    font-family:var(--typewriter);font-size:11px;letter-spacing:0.30em;
+    color:rgba(255,213,102,0.85);text-transform:uppercase;margin-bottom:32px;display:block;
+  }
+  .method h2{
+    font-family:var(--serif);font-weight:500;
+    font-size:clamp(40px,5.8vw,82px);line-height:1.0;letter-spacing:-0.01em;
+    color:#FFFAF0;margin:0;max-width:920px;
+  }
+  .method h2 em{font-style:italic;color:var(--gold-soft)}
+
+  .steps{
+    margin-top:90px;
+    display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+    border-top:1px solid rgba(255,250,240,0.18);
+  }
+  .step-grand{
+    padding:36px 28px 36px 0;
+    border-right:1px solid rgba(255,250,240,0.18);
+    position:relative;
+  }
+  .step-grand:last-child{border-right:0}
+  .step-grand .num{
+    font-family:var(--serif);font-style:italic;font-weight:500;
+    font-size:64px;line-height:1;
+    color:var(--gold-soft);margin-bottom:24px;
+  }
+  .step-grand h4{
+    font-family:var(--serif);font-weight:600;font-size:24px;line-height:1.2;letter-spacing:-0.005em;
+    margin:0 0 10px;color:#FFFAF0;
+  }
+  .step-grand p{font-size:14px;line-height:1.6;color:rgba(255,250,240,0.65);margin:0}
+  .step-grand .lab{
+    margin-top:18px;display:inline-block;
+    font-family:var(--typewriter);font-size:9.5px;letter-spacing:0.18em;text-transform:uppercase;
+    color:rgba(255,213,102,0.85);
+  }
+
+  /* ───── PRICING ──────────────────────────────────────────────── */
+  .pricing{
+    background:var(--paper);padding:140px 40px;border-top:1px solid var(--line);
+  }
+  .pricing-inner{max-width:1100px;margin:0 auto;text-align:center}
+  .pricing-eyebrow{
+    font-family:var(--typewriter);font-size:11px;letter-spacing:0.30em;
+    color:#8A6A3A;text-transform:uppercase;
+  }
+  .pricing h2{
+    font-family:var(--serif);font-weight:500;font-style:italic;
+    font-size:clamp(38px,5vw,68px);line-height:1.05;letter-spacing:-0.01em;
+    color:var(--ink);margin:14px 0 0;
+  }
+  .pricing-sub{margin-top:14px;color:#5a3e1a;font-size:16px}
+  .plans{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:64px;max-width:980px;margin-left:auto;margin-right:auto;border:1px solid var(--ink)}
+  .plan-grand{padding:48px 40px;background:#FFFAF0;text-align:left;position:relative}
+  .plan-grand + .plan-grand{border-left:1px solid var(--ink)}
+  .plan-grand.featured{background:#1A0A33;color:#FFFAF0}
+  .plan-grand .tag{font-family:var(--typewriter);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#8A6A3A}
+  .plan-grand.featured .tag{color:var(--gold-soft)}
+  .plan-grand h3{font-family:var(--serif);font-weight:600;font-size:36px;letter-spacing:-0.01em;margin:8px 0 6px;color:inherit}
+  .plan-grand .blurb{font-size:14px;color:#5a3e1a;line-height:1.55;max-width:300px}
+  .plan-grand.featured .blurb{color:rgba(255,250,240,0.70)}
+  .plan-grand .num{font-family:var(--serif);font-weight:600;font-size:72px;line-height:1;letter-spacing:-0.02em;margin-top:36px;color:var(--ink)}
+  .plan-grand.featured .num{color:#FFFAF0}
+  .plan-grand .num small{font-family:var(--font-sans);font-size:14px;color:#8A6A3A;font-weight:400;margin-left:8px}
+  .plan-grand.featured .num small{color:rgba(255,213,102,0.85)}
+  .plan-grand ul{list-style:none;padding:0;margin:32px 0;display:flex;flex-direction:column;gap:11px}
+  .plan-grand li{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5;color:var(--ink)}
+  .plan-grand.featured li{color:rgba(255,250,240,0.85)}
+  .plan-grand li::before{
+    content:"";display:inline-block;width:14px;height:1px;background:var(--gold);margin-top:10px;flex:none;
+  }
+  .plan-grand .btn-plan{
+    display:inline-flex;align-items:center;gap:10px;
+    padding:14px 24px;
+    font-family:var(--typewriter);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;
+    text-decoration:none;
+    border:1px solid var(--ink);color:var(--ink);background:transparent;
+    transition:all 160ms;
+  }
+  .plan-grand .btn-plan:hover{background:var(--ink);color:#FFFAF0}
+  .plan-grand.featured .btn-plan{
+    background:linear-gradient(180deg,#FFE9A0,#C99A20);color:#1A0A33;border-color:transparent;
+  }
+  .plan-grand.featured .btn-plan:hover{transform:translateY(-2px)}
+
+  /* ───── ACCESS GATE ──────────────────────────────────────────── */
+  .gate{
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,213,102,0.10) 0%, transparent 70%),
+      linear-gradient(180deg,#1A0A33 0%, #0A041A 100%);
+    color:#FFFAF0;
+    padding:140px 40px;border-top:1px solid #3A1568;
+    text-align:center;position:relative;overflow:hidden;
+  }
+  .gate::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      radial-gradient(rgba(255,255,255,0.45) 0.5px, transparent 0.5px);
+    background-size:64px 64px;
+    opacity:0.5;
+    mask-image:radial-gradient(ellipse at 50% 50%, black 0%, transparent 70%);
+    -webkit-mask-image:radial-gradient(ellipse at 50% 50%, black 0%, transparent 70%);
+  }
+  .gate-inner{max-width:780px;margin:0 auto;position:relative;z-index:2}
+  .gate-eyebrow{
+    font-family:var(--typewriter);font-size:11px;letter-spacing:0.30em;
+    color:rgba(255,213,102,0.85);text-transform:uppercase;
+    display:inline-flex;align-items:center;gap:14px;
+  }
+  .gate-eyebrow::before, .gate-eyebrow::after{
+    content:"";display:inline-block;width:36px;height:1px;background:rgba(255,213,102,0.55);
+  }
+  .gate h2{
+    font-family:var(--serif);font-weight:500;font-style:italic;
+    font-size:clamp(48px,7vw,108px);line-height:0.95;letter-spacing:-0.02em;
+    margin:24px 0 28px;color:#FFFAF0;
+  }
+  .gate p{font-family:var(--serif);font-size:20px;line-height:1.5;color:rgba(255,250,240,0.70);margin:0 auto 44px;max-width:540px}
+  .gate form{display:flex;gap:0;max-width:560px;margin:0 auto;border:1px solid rgba(255,250,240,0.30);background:rgba(20,8,40,0.5);backdrop-filter:blur(6px)}
+  .gate input{
+    flex:1;border:0;background:transparent;color:#FFFAF0;
+    padding:18px 20px;font-family:var(--font-sans);font-size:15px;
+    outline:none;
+  }
+  .gate input::placeholder{color:rgba(255,250,240,0.45)}
+  .gate button{
+    border:0;background:linear-gradient(180deg,#FFE9A0,#C99A20);color:#1A0A33;
+    padding:18px 28px;cursor:pointer;
+    font-family:var(--typewriter);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;font-weight:400;
+    transition:transform 160ms ease;
+  }
+  .gate button:hover{transform:translateY(-1px)}
+  .gate .fineprint{margin-top:28px;font-family:var(--typewriter);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,250,240,0.40)}
+
+  /* ───── FOOTER ───────────────────────────────────────────────── */
+  footer{
+    background:#0A041A;color:rgba(255,250,240,0.65);
+    padding:60px 40px 40px;
+    border-top:1px solid #3A1568;
+    display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:60px;
+    font-size:13px;
+  }
+  footer .ftr-brand{display:flex;flex-direction:column;gap:10px}
+  footer .ftr-brand .wm{font-family:var(--serif);font-weight:600;font-size:24px;color:#FFFAF0;letter-spacing:-0.01em}
+  footer .ftr-brand p{font-size:13px;line-height:1.6;color:rgba(255,250,240,0.50);max-width:300px;margin:6px 0 0}
+  footer h6{font-family:var(--typewriter);font-size:10px;letter-spacing:0.20em;text-transform:uppercase;color:rgba(255,213,102,0.85);margin:0 0 14px;font-weight:400}
+  footer ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+  footer a{color:rgba(255,250,240,0.65);text-decoration:none;font-size:13px}
+  footer a:hover{color:#FFFAF0}
+  .ftr-base{
+    grid-column:1 / -1;border-top:1px solid rgba(255,250,240,0.12);margin-top:40px;padding-top:24px;
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:var(--typewriter);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,250,240,0.40);
+  }
+
+  @media (max-width:900px){
+    .hero{grid-template-columns:1fr;padding:120px 24px 60px}
+    .hero-art{display:none}
+    .principles, .steps, .plans, footer{grid-template-columns:1fr}
+    .archive-grid > *{grid-column:1 / -1 !important}
+    .step-grand{border-right:0;border-bottom:1px solid rgba(255,250,240,0.18)}
+  }
+</style>
+</head>
+<body>
+
+  <!-- ─── NAV ───────────────────────────────────────── -->
+  <nav class="nav">
+    <a href="#" class="brand">
+      <img src="../../assets/logo/mark.svg" height="34" alt="">
+      <span class="wordmark">AutoTreeGen</span>
+    </a>
+    <div class="links">
+      <a href="#manifesto">Manifesto</a>
+      <a href="#archive">The archive</a>
+      <a href="#method">Methodology</a>
+      <a href="#pricing">Pricing</a>
+      <a class="cta" href="#gate">Request access →</a>
+    </div>
+  </nav>
+
+  <!-- ─── HERO ──────────────────────────────────────── -->
+  <section class="hero">
+    <span class="hero-est">Established MMXXV · Vilnius / Berlin</span>
+    <div style="position:relative;z-index:2">
+      <span class="hero-eyebrow">A research instrument · est. 2025</span>
+      <h1>The library<br><em>of your</em><br>blood.</h1>
+      <p class="hero-lede">
+        AutoTreeGen is a working archive for serious genealogy. Every name,
+        every date, every DNA segment is bound to a citation, a confidence
+        score, and a chain of provenance you can defend in print. <b>No fact
+        without a source.</b>
+      </p>
+      <div class="hero-ctas">
+        <a class="btn-grand primary" href="#gate">Request access <span class="arrow">→</span></a>
+        <a class="btn-grand ghost" href="#method">Read the methodology</a>
+      </div>
+      <div class="hero-meta">
+        <div><b>14,231</b><span>persons indexed</span></div>
+        <div><b>182</b><span>archives connected</span></div>
+        <div><b>4,890</b><span>DNA kits aligned</span></div>
+        <div><b>QUAY 1–3</b><span>citation grades</span></div>
+      </div>
+    </div>
+
+    <!-- Right column: ribbon constellation -->
+    <div class="hero-art" aria-hidden="true">
+      <svg viewBox="0 0 540 720" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g-r1a" x1="0.5" x2="0.5" y1="1" y2="0"><stop offset="0" stop-color="#1F4A82"/><stop offset="1" stop-color="#7AAFE8"/></linearGradient>
+          <linearGradient id="g-j2"  x1="0.5" x2="0.5" y1="1" y2="0"><stop offset="0" stop-color="#7A2A4F"/><stop offset="1" stop-color="#F08FB8"/></linearGradient>
+          <linearGradient id="g-h1a" x1="0.5" x2="0.5" y1="1" y2="0"><stop offset="0" stop-color="#1F6E5E"/><stop offset="1" stop-color="#7BD8C5"/></linearGradient>
+          <linearGradient id="g-t1"  x1="0.5" x2="0.5" y1="1" y2="0"><stop offset="0" stop-color="#7A5A1F"/><stop offset="1" stop-color="#F0C870"/></linearGradient>
+          <linearGradient id="g-e1b" x1="0.5" x2="0.5" y1="1" y2="0"><stop offset="0" stop-color="#4F2C7A"/><stop offset="1" stop-color="#C0A0EE"/></linearGradient>
+          <linearGradient id="g-i1"  x1="0.5" x2="0.5" y1="1" y2="0"><stop offset="0" stop-color="#1F7A4D"/><stop offset="1" stop-color="#7AE0AC"/></linearGradient>
+          <linearGradient id="g-g2"  x1="0.5" x2="0.5" y1="1" y2="0"><stop offset="0" stop-color="#7A2C2A"/><stop offset="1" stop-color="#F0A0A0"/></linearGradient>
+          <radialGradient id="proband" cx="0.4" cy="0.35" r="0.7">
+            <stop offset="0" stop-color="#FFE9A0"/>
+            <stop offset="1" stop-color="#C99A20"/>
+          </radialGradient>
+        </defs>
+
+        <!-- soft halo at trunk base -->
+        <ellipse cx="270" cy="660" rx="200" ry="60" fill="rgba(255,213,102,0.18)"/>
+
+        <!-- generation rings -->
+        <g fill="none" stroke="rgba(255,213,102,0.18)" stroke-width="1">
+          <circle cx="270" cy="660" r="180"/>
+          <circle cx="270" cy="660" r="320"/>
+          <circle cx="270" cy="660" r="460"/>
+          <circle cx="270" cy="660" r="600"/>
+        </g>
+
+        <!-- trunk + DNA helix -->
+        <rect x="265" y="540" width="10" height="120" rx="3" fill="rgba(255,250,240,0.20)"/>
+        <g stroke="#FFFAF0" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.85">
+          <path d="M260 660 C254 630 282 615 274 585 C266 555 256 540 270 510"/>
+          <path d="M280 660 C286 630 258 615 266 585 C274 555 284 540 270 510"/>
+        </g>
+
+        <!-- 8 ribbons -->
+        <g fill="none" stroke-linecap="round">
+          <path d="M268 510 C220 440 80 360 30 240" stroke="url(#g-r1a)" stroke-width="5"/>
+          <path d="M268 510 C200 420 90 280 50 80" stroke="url(#g-j2)" stroke-width="4" stroke-dasharray="10 6"/>
+          <path d="M269 510 C240 400 200 280 150 80" stroke="url(#g-h1a)" stroke-width="5"/>
+          <path d="M270 510 C272 400 254 260 240 60" stroke="url(#g-t1)" stroke-width="4" stroke-dasharray="3 5"/>
+          <path d="M271 510 C310 400 360 280 380 80" stroke="url(#g-e1b)" stroke-width="5"/>
+          <path d="M272 510 C340 420 460 280 500 80" stroke="url(#g-i1)" stroke-width="4" stroke-dasharray="10 6"/>
+          <path d="M273 510 C360 460 480 420 520 280" stroke="url(#g-g2)" stroke-width="5"/>
+        </g>
+
+        <!-- tip nodes -->
+        <g>
+          <circle cx="30"  cy="240" r="9"  fill="#FFFAF0"/><circle cx="30"  cy="240" r="5" fill="#7AAFE8"/>
+          <circle cx="50"  cy="80"  r="9"  fill="#FFFAF0"/><circle cx="50"  cy="80"  r="5" fill="#F08FB8"/>
+          <circle cx="150" cy="80"  r="9"  fill="#FFFAF0"/><circle cx="150" cy="80"  r="5" fill="#7BD8C5"/>
+          <circle cx="240" cy="60"  r="9"  fill="#FFFAF0"/><circle cx="240" cy="60"  r="5" fill="#F0C870"/>
+          <circle cx="380" cy="80"  r="9"  fill="#FFFAF0"/><circle cx="380" cy="80"  r="5" fill="#C0A0EE"/>
+          <circle cx="500" cy="80"  r="9"  fill="#FFFAF0"/><circle cx="500" cy="80"  r="5" fill="#7AE0AC"/>
+          <circle cx="520" cy="280" r="9"  fill="#FFFAF0"/><circle cx="520" cy="280" r="5" fill="#F0A0A0"/>
+        </g>
+
+        <!-- proband knot -->
+        <circle cx="270" cy="660" r="14" fill="url(#proband)" stroke="#8A5A1A" stroke-width="1.5"/>
+        <circle cx="270" cy="660" r="5" fill="#FFFFFF" opacity="0.5"/>
+
+        <!-- haplogroup labels (subtle) -->
+        <g font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(255,250,240,0.65)" letter-spacing="0.04em">
+          <text x="44"  y="244">R1a</text>
+          <text x="64"  y="84">J2</text>
+          <text x="164" y="84">H1a</text>
+          <text x="254" y="64">T1</text>
+          <text x="394" y="84">E1b</text>
+          <text x="486" y="84" text-anchor="end" style="text-anchor:end">I1</text>
+          <text x="506" y="284" text-anchor="end" style="text-anchor:end">G2</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ─── MANIFESTO ─────────────────────────────────── -->
+  <section class="manifesto" id="manifesto">
+    <div class="manifesto-inner">
+      <span class="manifesto-eyebrow">The thesis</span>
+      <h2>
+        Genealogy is <em>not a hobby</em>. It is the <span class="strike">guesswork</span> evidence
+        we owe to the people who came before us — and the ones who will come after.
+      </h2>
+
+      <div class="principles">
+        <div class="principle">
+          <span class="num">No. 01</span>
+          <h3>Cite, or it didn't happen.</h3>
+          <p>Every fact in your tree must trace back to a source — a parish register, a census line, a centiMorgan segment. Unsupported claims are stored separately, as hypotheses.</p>
+          <span class="stamp">QUAY 1 · 2 · 3</span>
+        </div>
+        <div class="principle">
+          <span class="num">No. 02</span>
+          <h3>Disagreements are versioned, never overwritten.</h3>
+          <p>Two cousins, two birth years, two scribes' handwriting. The archive remembers all of them. Confidence is computed, not asserted, and updates with new evidence.</p>
+          <span class="stamp">audit trail · permanent</span>
+        </div>
+        <div class="principle">
+          <span class="num">No. 03</span>
+          <h3>Paper and DNA, in one workspace.</h3>
+          <p>Y-DNA, mtDNA, autosomal cM segments and your scanned vital records sit in the same tree. The inference engine reads both at once.</p>
+          <span class="stamp">GEDCOM 5.5.5 strict</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── ARCHIVE GRID ──────────────────────────────── -->
+  <section class="archive" id="archive">
+    <div class="archive-inner">
+      <div class="archive-head">
+        <h2>An archive that<br>thinks in centuries.</h2>
+        <div class="meta">
+          Version 0.4 · Cohort III<br>
+          Indexed · 14,231 persons<br>
+          Connected · 182 archives
+        </div>
+      </div>
+
+      <div class="archive-grid">
+        <!-- Card 1: hero ribbon tree  -->
+        <div class="archive-card ac-1">
+          <span class="corner">Fig. 01 · ribbon tree</span>
+          <svg class="glyph" viewBox="0 0 60 60">
+            <path d="M30 56 V36" stroke="#1A0A33" stroke-width="2.4" stroke-linecap="round"/>
+            <g fill="none" stroke-width="2.4" stroke-linecap="round">
+              <path d="M30 36 C20 26 8 18 6 4" stroke="#2E5DA5"/>
+              <path d="M30 36 C30 22 26 12 22 4" stroke="#C04B7E" stroke-dasharray="3 2"/>
+              <path d="M30 36 C32 22 38 12 42 4" stroke="#4BB39E"/>
+              <path d="M30 36 C40 26 52 18 54 4" stroke="#7E4BC0"/>
+            </g>
+            <circle cx="30" cy="56" r="3.5" fill="url(#proband)"/>
+          </svg>
+          <h4>Eight lineages, four generations, one diagram.</h4>
+          <p>The signature ribbon-tree visualisation: each branch carries the haplogroup colour from root to tip, with portraits attaching where photographs survive in the archive.</p>
+          <div class="stat"><b>8</b><span>haplogroups traced per proband</span></div>
+        </div>
+
+        <!-- Card 2: hypothesis engine -->
+        <div class="archive-card ac-2">
+          <span class="corner">Fig. 02 · hypothesis</span>
+          <svg class="glyph" viewBox="0 0 60 60">
+            <circle cx="30" cy="30" r="20" fill="none" stroke="#1A0A33" stroke-width="2"/>
+            <circle cx="30" cy="30" r="20" fill="none" stroke="#C99A20" stroke-width="6" stroke-dasharray="76 50" stroke-linecap="round"/>
+            <text x="30" y="34" text-anchor="middle" font-family="Cormorant Garamond, serif" font-style="italic" font-size="14" font-weight="600" fill="#1A0A33">0.94</text>
+          </svg>
+          <h4>Confidence as a number, not a feeling.</h4>
+          <p>The hypothesis engine scores every proposed link and tells you which evidence raises or lowers it.</p>
+        </div>
+
+        <!-- Card 3: stat -->
+        <div class="archive-card ac-3" style="background:#1A0A33;color:#FFFAF0">
+          <span class="corner" style="color:rgba(255,213,102,0.85)">Fig. 03</span>
+          <div class="stat" style="margin-top:30px"><b style="color:#FFD566;font-size:56px">312</b></div>
+          <p style="color:rgba(255,250,240,0.78);margin-top:6px">centiMorgans · the longest shared segment in the Sokolov–Goldin match</p>
+        </div>
+
+        <!-- Card 4: methodology pull-quote -->
+        <div class="archive-card ac-4" style="background:transparent;border:0;box-shadow:none;padding:32px 0">
+          <p style="font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(28px,3.4vw,44px);line-height:1.2;color:#1A0A33;margin:0;max-width:720px">
+            "We built AutoTreeGen because every other genealogy tool let us write down what we hoped was true. We needed one that made us prove it."
+          </p>
+          <p style="margin-top:24px;font-family:var(--typewriter);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#8A6A3A">
+            — V. Sokolov, founder · Vilnius
+          </p>
+        </div>
+
+        <!-- Card 5: source citations -->
+        <div class="archive-card ac-5">
+          <span class="corner">Fig. 04 · sources</span>
+          <svg class="glyph" viewBox="0 0 60 60">
+            <rect x="14" y="10" width="32" height="42" rx="2" fill="#FFFAF0" stroke="#1A0A33" stroke-width="2"/>
+            <rect x="10" y="6" width="32" height="42" rx="2" fill="#FFFAF0" stroke="#1A0A33" stroke-width="2"/>
+            <line x1="14" y1="16" x2="38" y2="16" stroke="#1A0A33" stroke-width="1.4"/>
+            <line x1="14" y1="22" x2="36" y2="22" stroke="#1A0A33" stroke-width="1.4"/>
+            <line x1="14" y1="28" x2="32" y2="28" stroke="#1A0A33" stroke-width="1.4"/>
+            <circle cx="42" cy="38" r="6" fill="#C99A20"/>
+            <text x="42" y="42" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" font-weight="700" fill="#1A0A33">Q3</text>
+          </svg>
+          <h4>QUAY-graded provenance</h4>
+          <p>Sources are graded on a 1–3 scale. Trees lock only at QUAY 2 or higher.</p>
+        </div>
+
+        <!-- Card 6: helix glyph -->
+        <div class="archive-card ac-6">
+          <span class="corner">Fig. 05 · DNA</span>
+          <svg class="glyph" viewBox="0 0 60 60">
+            <path d="M20 6 C30 16 30 24 20 32 C10 40 10 48 20 56" fill="none" stroke="#2E5DA5" stroke-width="2.4" stroke-linecap="round"/>
+            <path d="M40 6 C30 16 30 24 40 32 C50 40 50 48 40 56" fill="none" stroke="#C04B7E" stroke-width="2.4" stroke-linecap="round"/>
+            <line x1="22" y1="14" x2="38" y2="14" stroke="#C99A20" stroke-width="1.6" stroke-linecap="round"/>
+            <line x1="20" y1="22" x2="40" y2="22" stroke="#C99A20" stroke-width="1.6" stroke-linecap="round"/>
+            <line x1="22" y1="34" x2="38" y2="34" stroke="#C99A20" stroke-width="1.6" stroke-linecap="round"/>
+            <line x1="20" y1="42" x2="40" y2="42" stroke="#C99A20" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          <h4>Y, mt, and autosomal in one view.</h4>
+          <p>Three independent evidence streams — paternal line, maternal line, recent cousins — overlay on the same tree.</p>
+        </div>
+
+        <!-- Card 7: stat -->
+        <div class="archive-card ac-7" style="background:#FFD566">
+          <span class="corner">Fig. 06</span>
+          <div class="stat" style="margin-top:18px"><b style="font-size:56px;color:#1A0A33">19th</b></div>
+          <p style="color:#3A1F0F;margin-top:6px">century · the average depth of a fully cited tree on the platform</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── METHODOLOGY ──────────────────────────────── -->
+  <section class="method" id="method">
+    <div class="method-inner">
+      <span class="eyebrow-grand">Methodology</span>
+      <h2>From GEDCOM and DNA<br>to a <em>defensible tree</em>.</h2>
+
+      <div class="steps">
+        <div class="step-grand">
+          <div class="num">i</div>
+          <h4>Import</h4>
+          <p>Drop a GEDCOM 5.5.5 file or connect FamilySearch. We parse strictly and tell you which records bend the spec.</p>
+          <span class="lab">≤ 60 sec · any size</span>
+        </div>
+        <div class="step-grand">
+          <div class="num">ii</div>
+          <h4>Match</h4>
+          <p>Upload Y, mt and autosomal kits or sync from GEDmatch / 23andMe / Ancestry. Each kit becomes its own evidence stream.</p>
+          <span class="lab">cM · segments · haplogroups</span>
+        </div>
+        <div class="step-grand">
+          <div class="num">iii</div>
+          <h4>Hypothesise</h4>
+          <p>The inference engine proposes parent–child links, scores them, and records the evidence both for and against.</p>
+          <span class="lab">confidence ∈ [0, 1]</span>
+        </div>
+        <div class="step-grand">
+          <div class="num">iv</div>
+          <h4>Cite</h4>
+          <p>Lock a finding into the canonical tree only with at least one QUAY-graded source. Disagreements are versioned, never overwritten.</p>
+          <span class="lab">QUAY 2+ to commit</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── PRICING ──────────────────────────────────── -->
+  <section class="pricing" id="pricing">
+    <div class="pricing-inner">
+      <span class="pricing-eyebrow">Two tiers · cancel any time</span>
+      <h2>For serious researchers,<br>not casual hobbyists.</h2>
+      <p class="pricing-sub">No upsells, no add-ons, no "premium plus".</p>
+
+      <div class="plans">
+        <div class="plan-grand">
+          <span class="tag">No. 01 · Researcher</span>
+          <h3>Free</h3>
+          <p class="blurb">For your own line. Single user, private, no collaboration.</p>
+          <div class="num">€0<small>/ mo.</small></div>
+          <ul>
+            <li>Up to 2,500 persons</li>
+            <li>1 GEDCOM · 1 DNA kit</li>
+            <li>QUAY-graded citations</li>
+            <li>Single user · private</li>
+          </ul>
+          <a class="btn-plan" href="#gate">Start free <span class="arrow">→</span></a>
+        </div>
+
+        <div class="plan-grand featured">
+          <span class="tag">No. 02 · Pro</span>
+          <h3>Pro</h3>
+          <p class="blurb">For client-facing genealogists and small research teams.</p>
+          <div class="num">€18<small>/ mo.</small></div>
+          <ul>
+            <li>Unlimited persons &amp; kits</li>
+            <li>Hypothesis engine + inference jobs</li>
+            <li>Multi-archive search · FamilySearch sync</li>
+            <li>Shared workspaces with audit trail</li>
+            <li>Print-ready citation reports</li>
+          </ul>
+          <a class="btn-plan" href="#gate">Start Pro <span class="arrow">→</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── ACCESS GATE ──────────────────────────────── -->
+  <section class="gate" id="gate">
+    <div class="gate-inner">
+      <span class="gate-eyebrow">Cohort IV · opens autumn 2026</span>
+      <h2>Request <em>access</em>.</h2>
+      <p>We onboard researchers in cohorts of forty. Tell us what line you work on; we'll reach out within a fortnight.</p>
+      <form onsubmit="event.preventDefault();this.querySelector('button').textContent='Joined ✓';this.querySelector('button').disabled=true;">
+        <input type="email" placeholder="researcher@institution.edu" required>
+        <button type="submit">Submit</button>
+      </form>
+      <p class="fineprint">No marketing emails · we only contact you about your beta access</p>
+    </div>
+  </section>
+
+  <!-- ─── FOOTER ──────────────────────────────────── -->
+  <footer>
+    <div class="ftr-brand">
+      <div style="display:flex;align-items:center;gap:10px">
+        <img src="../../assets/logo/mark.svg" height="32" alt="" style="filter:brightness(1.4)">
+        <span class="wm">AutoTreeGen</span>
+      </div>
+      <p>A research instrument for evidence-based genealogy. Built in Vilnius and Berlin.</p>
+    </div>
+    <div>
+      <h6>Product</h6>
+      <ul>
+        <li><a href="#manifesto">Manifesto</a></li>
+        <li><a href="#archive">The archive</a></li>
+        <li><a href="#method">Methodology</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+      </ul>
+    </div>
+    <div>
+      <h6>Practice</h6>
+      <ul>
+        <li><a href="#">QUAY guide</a></li>
+        <li><a href="#">DNA primer</a></li>
+        <li><a href="#">GEDCOM 5.5.5</a></li>
+        <li><a href="#">Citation manual</a></li>
+      </ul>
+    </div>
+    <div>
+      <h6>Company</h6>
+      <ul>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Privacy</a></li>
+        <li><a href="#">Terms</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+    <div class="ftr-base">
+      <span>© MMXXVI · AutoTreeGen · Vilnius / Berlin</span>
+      <span>v 0.4 · Cohort III</span>
+    </div>
+  </footer>
+
+</body>
+</html>

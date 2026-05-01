@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
+import { AIExtractionPanel } from "@/components/ai-extraction-panel";
 import { QuayBadge } from "@/components/quay-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -102,6 +103,11 @@ function SourceDetailView({ source }: { source: SourceDetail }) {
           </CardContent>
         </Card>
       ) : null}
+
+      <Separator />
+
+      {/* Phase 10.2b — AI extraction panel: vision upload + cost + status. */}
+      <AIExtractionPanel sourceId={source.id} />
 
       <Separator />
 

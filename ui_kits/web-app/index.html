@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AutoTreeGen — Tree explorer</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="../../assets/logo/favicon.svg">
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  body{background:var(--color-bg);min-height:100vh}
+  .app{display:grid;grid-template-columns:240px 1fr 360px;grid-template-rows:56px 1fr;height:100vh}
+  /* Topbar — 3D lifted bar with glossy buttons and a recessed search well */
+  .topbar{
+    grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;
+    padding:0 16px;
+    background:linear-gradient(180deg, #FFFFFF 0%, #F2EBF5 100%);
+    border-bottom:1px solid #C9BBD4;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.95),
+      inset 0 -1px 0 rgba(44,16,84,0.08),
+      0 6px 14px -6px rgba(44,16,84,0.18),
+      0 2px 3px -1px rgba(44,16,84,0.10);
+    position:relative;z-index:10;
+  }
+  .topbar .left{display:flex;align-items:center;gap:14px}
+  .topbar .crumbs{font-size:13px;color:var(--color-fg-muted);display:flex;gap:8px;align-items:center}
+  .topbar .crumbs b{color:var(--color-fg-strong);font-weight:500}
+  .search{
+    display:flex;align-items:center;gap:8px;
+    background:linear-gradient(180deg, #ECE2F1 0%, #F5ECF9 70%);
+    border:1px solid #C9BBD4;
+    border-radius:10px;
+    padding:8px 12px;width:340px;font-size:13px;color:var(--color-fg-muted);
+    box-shadow:
+      inset 0 2px 4px rgba(44,16,84,0.16),
+      inset 0 1px 0 rgba(44,16,84,0.06),
+      0 1px 0 rgba(255,255,255,0.85);
+  }
+  .search kbd{
+    font-family:var(--font-mono);font-size:10px;
+    background:linear-gradient(180deg,#FFFFFF,#ECE2F1);
+    padding:2px 6px;border-radius:4px;
+    border:1px solid #C9BBD4;
+    margin-left:auto;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.95) inset,
+      0 1px 2px rgba(44,16,84,0.18),
+      0 -1px 0 rgba(44,16,84,0.06) inset;
+  }
+  .top-actions{display:flex;align-items:center;gap:8px}
+  /* 3D buttons — extruded pill, light from above */
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--font-sans);font-weight:600;font-size:13px;
+    padding:8px 14px;border-radius:10px;
+    border:1px solid transparent;cursor:pointer;text-decoration:none;
+    transition:transform 120ms var(--ease-house), box-shadow 120ms var(--ease-house);
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{
+    background:linear-gradient(180deg, #4A78BD 0%, #25508F 100%);
+    color:#fff;
+    border-color:#1E4576;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.30) inset,
+      0 -2px 4px rgba(0,0,0,0.18) inset,
+      0 4px 8px rgba(46,93,165,0.40),
+      0 2px 3px rgba(44,16,84,0.18);
+    text-shadow:0 1px 0 rgba(0,0,0,0.20);
+  }
+  .btn-primary:hover{box-shadow:0 1px 0 rgba(255,255,255,0.30) inset, 0 -2px 4px rgba(0,0,0,0.18) inset, 0 6px 12px rgba(46,93,165,0.50), 0 2px 3px rgba(44,16,84,0.20)}
+  .btn-primary:active{box-shadow:inset 0 2px 4px rgba(0,0,0,0.30), 0 1px 2px rgba(46,93,165,0.30)}
+  .btn-secondary{
+    background:linear-gradient(180deg, #FFFFFF 0%, #ECE2F1 100%);
+    color:var(--color-fg-strong);
+    border-color:#C9BBD4;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.95) inset,
+      0 -1px 0 rgba(44,16,84,0.08) inset,
+      0 3px 6px rgba(44,16,84,0.16),
+      0 1px 2px rgba(44,16,84,0.10);
+  }
+  .btn-secondary:hover{background:linear-gradient(180deg, #FFFFFF 0%, #F5ECF9 100%)}
+  .btn-secondary:active{box-shadow:inset 0 2px 4px rgba(44,16,84,0.18)}
+  .btn-ghost{
+    background:transparent;color:var(--color-fg);
+    border-color:transparent;
+  }
+  .btn-ghost:hover{
+    background:linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(176,112,192,0.10) 100%);
+    box-shadow:0 1px 0 rgba(255,255,255,0.85) inset, 0 2px 4px rgba(44,16,84,0.12);
+  }
+  .ico{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  /* Sidebar — 3D depth: each section is a stacked card, rows are lifted "shelf" tiles. */
+  .sidebar{
+    position:relative;
+    background:linear-gradient(180deg,#FBF8FD 0%,#F2EBF5 100%);
+    border-right:1px solid var(--color-border);
+    padding:18px 14px 14px;
+    display:flex;flex-direction:column;gap:16px;overflow-y:auto;overflow-x:hidden;
+    perspective:1400px;perspective-origin:120% 50%;
+    box-shadow:inset -1px 0 0 rgba(255,255,255,0.7), inset -8px 0 18px -10px rgba(44,16,84,0.12);
+  }
+  .sb-section{
+    position:relative;
+    background:#FFFFFF;
+    border:1px solid var(--color-border);
+    border-radius:10px;
+    padding:10px 8px 8px;
+    transform:rotateY(2.5deg) translateZ(0);
+    transform-origin:100% 50%;
+    transform-style:preserve-3d;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.95),
+      0 1px 0 rgba(255,255,255,0.7),
+      0 4px 10px -2px rgba(44,16,84,0.10),
+      0 14px 24px -10px rgba(44,16,84,0.18);
+  }
+  .sb-section::after{
+    /* underside rim — gives the card thickness */
+    content:"";position:absolute;left:6px;right:6px;bottom:-3px;height:6px;
+    border-radius:0 0 10px 10px;
+    background:linear-gradient(180deg,rgba(44,16,84,0.18),rgba(44,16,84,0));
+    filter:blur(1px);z-index:-1;
+  }
+  .sb-section h6{
+    margin:0 6px 8px;
+    font-size:10px;letter-spacing:0.10em;text-transform:uppercase;
+    color:var(--color-fg-muted);font-weight:700;
+    /* engraved label */
+    text-shadow:0 1px 0 rgba(255,255,255,0.95);
+    border-bottom:1px solid var(--color-divider);
+    padding-bottom:6px;
+  }
+  .sb-link{
+    position:relative;
+    display:flex;align-items:center;gap:10px;
+    padding:7px 9px;border-radius:7px;
+    font-size:13px;color:var(--color-fg);cursor:pointer;
+    background:linear-gradient(180deg,#FFFFFF 0%,#F8F4FA 100%);
+    border:1px solid transparent;
+    transform:translateZ(0);
+    transition:transform 120ms var(--ease-house), box-shadow 120ms var(--ease-house);
+  }
+  .sb-link:hover{
+    background:linear-gradient(180deg,#FFFFFF 0%,#F2E9F6 100%);
+    border-color:var(--color-border);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.95),
+      0 1px 2px rgba(44,16,84,0.06),
+      0 4px 10px -3px rgba(44,16,84,0.18);
+    transform:translateZ(8px);
+  }
+  .sb-link.active{
+    color:var(--color-fg-strong);font-weight:500;
+    background:linear-gradient(180deg,#F0E2F6 0%,#E2D0EE 100%);
+    border-color:#D1B8DE;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.85),
+      inset 0 -1px 0 rgba(44,16,84,0.10),
+      0 1px 0 rgba(255,255,255,0.7),
+      0 6px 14px -4px rgba(44,16,84,0.22);
+    transform:translateZ(14px);
+  }
+  .sb-link .count{
+    margin-left:auto;font-family:var(--font-mono);font-size:11px;
+    color:var(--color-fg-muted);
+    background:#F2EBF5;border:1px solid var(--color-border);
+    padding:1px 6px;border-radius:999px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 0 rgba(44,16,84,0.04);
+  }
+  .sb-link.active .count{background:#FFFFFF;color:var(--color-deep-purple);border-color:#D1B8DE}
+  .sb-link .ico{width:15px;height:15px;color:var(--color-fg-muted);filter:drop-shadow(0 1px 0 rgba(255,255,255,0.9))}
+  .sb-link.active .ico{color:var(--color-deep-purple)}
+  .tree-list{display:flex;flex-direction:column;gap:3px;transform-style:preserve-3d}
+  /* Account chip at the bottom of the sidebar — also gets the 3D treatment */
+  .sb-account{
+    margin-top:auto;padding:10px 12px;
+    border-radius:10px;
+    background:linear-gradient(180deg,#FFFFFF 0%,#F4ECF8 100%);
+    border:1px solid var(--color-border);
+    display:flex;align-items:center;gap:10px;font-size:12px;
+    transform:rotateY(2.5deg);transform-origin:100% 50%;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.95),
+      0 1px 0 rgba(255,255,255,0.7),
+      0 4px 10px -2px rgba(44,16,84,0.10),
+      0 14px 24px -10px rgba(44,16,84,0.18);
+  }
+  /* Canvas */
+  .canvas{position:relative;background:var(--color-bg);overflow:hidden;background-image:radial-gradient(circle,var(--color-border) 0.8px,transparent 0.8px);background-size:24px 24px;perspective:1800px;perspective-origin:30% 50%}
+  /* Floating canvas toolbar — bigger, with chunky 3D "clay" icons.
+     Each tool gets a glossy rounded square tile that sits ON the
+     toolbar shelf, lit from above-left, with a colored bottom shadow.
+     The icon glyph itself is rendered into the SVG with gradient fills,
+     a top highlight, and a contact shadow on the tile floor. */
+  .canvas-toolbar{
+    position:absolute;top:14px;left:14px;display:flex;gap:6px;
+    background:linear-gradient(180deg, #FFFFFF 0%, #ECE2F1 100%);
+    border:1px solid #C9BBD4;
+    border-radius:18px;
+    padding:8px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.95) inset,
+      0 -1px 0 rgba(44,16,84,0.08) inset,
+      0 14px 28px -8px rgba(44,16,84,0.32),
+      0 4px 8px -2px rgba(44,16,84,0.18);
+    z-index:5;
+  }
+  .canvas-toolbar button{
+    position:relative;
+    border:0;
+    background:transparent;
+    width:46px;height:46px;
+    border-radius:13px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    transition:transform 140ms var(--ease-house);
+    padding:0;
+  }
+  .canvas-toolbar button svg{display:block;width:38px;height:38px;filter:drop-shadow(0 2px 3px rgba(44,16,84,0.20))}
+  .canvas-toolbar button:hover{transform:translateY(-1px)}
+  .canvas-toolbar button:hover svg{filter:drop-shadow(0 4px 6px rgba(44,16,84,0.28))}
+  .canvas-toolbar button:active{transform:translateY(1px)}
+  .canvas-toolbar button:active svg{filter:drop-shadow(0 1px 1.5px rgba(44,16,84,0.30))}
+  .canvas-toolbar button.on::before{
+    content:"";position:absolute;inset:3px;border-radius:11px;
+    background:radial-gradient(ellipse at 50% 25%, rgba(46,93,165,0.20), transparent 70%);
+    pointer-events:none;
+  }
+  .canvas-toolbar .sep{width:1px;align-self:stretch;background:linear-gradient(180deg,transparent,#C9BBD4,transparent);margin:6px 2px}
+  .canvas-toolbar .tip{
+    position:absolute;bottom:-30px;left:50%;transform:translateX(-50%);
+    background:#1A0A33;color:#fff;font-size:11px;font-family:var(--font-sans);
+    padding:4px 8px;border-radius:6px;white-space:nowrap;
+    opacity:0;pointer-events:none;transition:opacity 120ms;
+    box-shadow:0 4px 8px rgba(44,16,84,0.30);
+  }
+  .canvas-toolbar button:hover .tip{opacity:1}
+  .legend{position:absolute;right:14px;bottom:14px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px 12px;box-shadow:var(--shadow-sm);font-size:11px;display:flex;flex-direction:column;gap:5px;font-family:var(--font-mono);z-index:5}
+  .legend .row{display:flex;gap:8px;align-items:center}
+  .legend i{display:inline-block;width:16px;height:3px;border-radius:2px}
+  /* Tree */
+  .tree-svg{width:100%;height:100%;display:block;transform:rotateX(8deg) rotateY(-4deg) rotateZ(0.4deg);transform-style:preserve-3d;transform-origin:50% 60%;filter:drop-shadow(0 18px 30px rgba(44,16,84,0.18))}
+  .pcard{font-family:var(--font-sans)}
+  .pcard-3d{background:var(--color-snow);border-radius:10px;display:flex;gap:9px;align-items:center;padding:8px 10px;font-family:var(--font-sans);box-shadow:0 1px 0 rgba(255,255,255,0.9) inset, 0 2px 4px rgba(44,16,84,0.08), 0 10px 18px -8px rgba(44,16,84,0.22)}
+  .pcard-3d.root{box-shadow:0 1px 0 rgba(255,255,255,0.9) inset, 0 4px 8px rgba(44,16,84,0.12), 0 18px 30px -10px rgba(46,93,165,0.35)}
+  .portrait{flex:0 0 auto;width:42px;height:42px;border-radius:999px;position:relative;overflow:hidden;background:#0F0420;box-shadow:0 2px 4px rgba(44,16,84,0.25), inset 0 0 0 2px rgba(255,255,255,0.55)}
+  .portrait .ph{position:absolute;inset:0;display:block}
+  .portrait .ring{position:absolute;inset:0;border-radius:999px;box-shadow:inset 0 0 0 2px var(--ring,rgba(255,255,255,0.5))}
+  .portrait.sm{width:34px;height:34px}
+  .pcard-body{flex:1;min-width:0}
+  /* Inspector */
+  .inspector{background:var(--color-surface);border-left:1px solid var(--color-border);overflow-y:auto;display:flex;flex-direction:column}
+  .ins-head{padding:14px 16px;border-bottom:1px solid var(--color-divider);display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+  .ins-head h3{margin:0;font-family:var(--font-display);font-weight:700;font-size:18px;color:var(--color-fg-strong);letter-spacing:-0.01em}
+  .ins-head .sub{font-family:var(--font-mono);font-size:11px;color:var(--color-fg-muted);margin-top:2px}
+  .dna-tag{background:var(--color-brand-blue);color:#fff;font-size:10px;font-weight:600;padding:2px 6px;border-radius:var(--radius-sm);font-family:var(--font-mono);letter-spacing:0.02em}
+  .tabs{display:flex;border-bottom:1px solid var(--color-divider);padding:0 12px;gap:4px}
+  .tab{padding:10px 12px;font-size:13px;color:var(--color-fg-muted);cursor:pointer;border-bottom:2px solid transparent;font-weight:500}
+  .tab.on{color:var(--color-fg-strong);border-bottom-color:var(--color-brand-blue)}
+  .ins-body{padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+  .field{display:grid;grid-template-columns:90px 1fr;gap:10px;font-size:13px;align-items:baseline}
+  .field .k{color:var(--color-fg-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;padding-top:2px}
+  .field .v{color:var(--color-fg-strong)}
+  .field .v.mono{font-family:var(--font-mono);font-size:12px}
+  .quay{display:inline-flex;align-items:center;padding:1px 6px;border-radius:999px;font-size:11px;font-weight:500}
+  .q3{background:#E0F0E7;color:#1E5C3D}
+  .q2{background:#E2EAF3;color:#1E4576}
+  .q1{background:#F4E8D0;color:#6E4F18}
+  .ins-section{padding:14px 16px;border-top:1px solid var(--color-divider)}
+  .ins-section h5{margin:0 0 10px;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--color-fg-muted);font-weight:600;display:flex;justify-content:space-between;align-items:center}
+  .ins-section h5 a{font-family:var(--font-sans);font-size:11px;text-transform:none;letter-spacing:0;color:var(--color-brand-blue);font-weight:500}
+  /* Hypothesis */
+  .hypo{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:var(--color-surface-muted)}
+  .hypo .top{display:flex;justify-content:space-between;align-items:center}
+  .hypo .top .name{font-size:13px;color:var(--color-fg-strong);font-weight:500}
+  .hypo .conf{font-family:var(--font-mono);font-size:11px;color:var(--color-brand-blue);font-weight:500}
+  .hypo .meter{height:4px;background:#E5DDEB;border-radius:999px;overflow:hidden}
+  .hypo .meter i{display:block;height:100%;background:var(--color-brand-blue)}
+  .hypo .ev{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:11px;color:var(--color-fg-muted)}
+  /* Sources */
+  .src-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px dashed var(--color-divider);font-size:12px}
+  .src-item:last-child{border-bottom:0}
+  .src-item .num{font-family:var(--font-mono);color:var(--color-fg-muted);min-width:22px}
+  .src-item .body{flex:1;display:flex;flex-direction:column;gap:2px}
+  .src-item .body strong{font-weight:500;color:var(--color-fg-strong);font-size:13px}
+  .src-item .body span{color:var(--color-fg-muted);font-family:var(--font-mono);font-size:11px}
+  /* DNA list */
+  .dna-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--color-divider);font-size:12px}
+  .dna-row:last-child{border-bottom:0}
+  .dna-row .nm{flex:1;color:var(--color-fg-strong);font-weight:500;font-size:13px}
+  .dna-row .cm{font-family:var(--font-mono);color:var(--color-fg-muted)}
+  .hap-chip{display:inline-block;padding:1px 6px;border-radius:var(--radius-sm);color:#fff;font-size:11px;font-family:var(--font-mono)}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="left">
+      <a href="#" style="display:flex;align-items:center;gap:8px;text-decoration:none">
+        <img src="../../assets/logo/mark.svg" height="24" alt="">
+        <span style="font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:-0.01em;color:var(--color-fg-strong)">AutoTreeGen</span>
+      </a>
+      <span style="color:var(--color-border-strong)">|</span>
+      <div class="crumbs"><span>Sokolov line</span><span>›</span><b>Aron Sokolov</b><span>›</span><span>tree</span></div>
+    </div>
+    <div class="search">
+      <svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <span>Search persons, sources, kits</span>
+      <kbd>⌘K</kbd>
+    </div>
+    <div class="top-actions">
+      <button class="btn btn-ghost"><svg class="ico" viewBox="0 0 24 24"><path d="M3 7h18M3 12h18M3 17h12"/></svg> Filter</button>
+      <button class="btn btn-secondary"><svg class="ico" viewBox="0 0 24 24"><path d="M14 3H6v18h12V7l-4-4z"/><path d="M14 3v4h4"/></svg> Add citation</button>
+      <button class="btn btn-primary"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/></svg> Add person</button>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-section">
+      <h6>Workspace</h6>
+      <div class="tree-list">
+        <div class="sb-link active"><svg class="ico" viewBox="0 0 24 24"><path d="M12 22V8"/><path d="M5 12c4 0 7-3 7-7"/><path d="M19 12c-4 0-7-3-7-7"/></svg> Tree<span class="count">14,231</span></div>
+        <div class="sb-link"><svg class="ico" viewBox="0 0 24 24"><path d="M5 4c4 4 10 12 14 16M19 4c-4 4-10 12-14 16M7 7h10M9 12h6M7 17h10"/></svg> DNA kits<span class="count">4</span></div>
+        <div class="sb-link"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3v18M3 8l9-5 9 5"/><circle cx="12" cy="13" r="3"/></svg> Hypotheses<span class="count">37</span></div>
+        <div class="sb-link"><svg class="ico" viewBox="0 0 24 24"><path d="M14 3H6v18h12V7l-4-4z"/><path d="M14 3v4h4"/></svg> Sources<span class="count">182</span></div>
+        <div class="sb-link"><svg class="ico" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M9 6h6a3 3 0 0 1 3 3v6"/></svg> Evidence graph</div>
+      </div>
+    </div>
+    <div class="sb-section">
+      <h6>Trees</h6>
+      <div class="tree-list">
+        <div class="sb-link" style="color:var(--color-fg-strong);font-weight:500"><span style="color:var(--color-brand-blue)">●</span> Sokolov line</div>
+        <div class="sb-link"><span style="color:var(--color-fg-subtle)">●</span> Korsky / Levin</div>
+        <div class="sb-link"><span style="color:var(--color-fg-subtle)">●</span> Berg–Goldin</div>
+      </div>
+    </div>
+    <div class="sb-section">
+      <h6>Recent</h6>
+      <div class="tree-list">
+        <div class="sb-link" style="font-size:12px">Aron Sokolov · 1847</div>
+        <div class="sb-link" style="font-size:12px">Rivka Sokolov · 1851</div>
+        <div class="sb-link" style="font-size:12px">Vilnius vital records</div>
+      </div>
+    </div>
+    <div class="sb-account">
+      <div style="width:30px;height:30px;border-radius:999px;background:linear-gradient(180deg,#5A3486,var(--color-deep-purple));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 4px rgba(44,16,84,0.3)">VS</div>
+      <div style="flex:1"><div style="color:var(--color-fg-strong);font-weight:500">V. Sokolov</div><div class="caption">Pro · Vilnius</div></div>
+    </div>
+  </aside>
+
+  <!-- CANVAS -->
+  <main class="canvas">
+    <div class="canvas-toolbar">
+      <!-- Each toolbar tool is a 3D "clay" tile: a rounded-square base
+           with a top-light gradient + bottom rim, plus an iconographic
+           glyph in its own gradient. Hover lifts the tile slightly. -->
+      <button title="Pan">
+        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="tile-pan" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#FFFFFF"/>
+              <stop offset="0.5" stop-color="#F5ECF9"/>
+              <stop offset="1" stop-color="#D7C7E3"/>
+            </linearGradient>
+            <linearGradient id="hand-pan" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#F4D4A8"/>
+              <stop offset="1" stop-color="#B07840"/>
+            </linearGradient>
+          </defs>
+          <rect x="3" y="3" width="34" height="34" rx="9" fill="url(#tile-pan)" stroke="#B89DCC" stroke-width="0.6"/>
+          <rect x="3.5" y="3.5" width="33" height="14" rx="8.5" fill="#FFFFFF" opacity="0.55"/>
+          <!-- hand glyph -->
+          <path d="M14 22 v-7 a1.6 1.6 0 0 1 3.2 0 v5 m0 -2 v-9 a1.6 1.6 0 0 1 3.2 0 v9 m0 -2 v-7 a1.6 1.6 0 0 1 3.2 0 v8 m0 -3 v-5 a1.6 1.6 0 0 1 3.2 0 v9 c0 4 -2 6 -6 6 c-3.5 0 -5.5 -1.5 -6.8 -4 l-2 -3.5 a1.6 1.6 0 0 1 2.6 -1.8 z" fill="url(#hand-pan)" stroke="#7A5028" stroke-width="0.8" stroke-linejoin="round"/>
+        </svg>
+        <span class="tip">Pan</span>
+      </button>
+
+      <button class="on" title="Select">
+        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="tile-sel" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#7AABDD"/>
+              <stop offset="0.5" stop-color="#4A78BD"/>
+              <stop offset="1" stop-color="#1E4576"/>
+            </linearGradient>
+            <linearGradient id="cur-sel" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#FFFFFF"/>
+              <stop offset="1" stop-color="#DCE8F8"/>
+            </linearGradient>
+          </defs>
+          <rect x="3" y="3" width="34" height="34" rx="9" fill="url(#tile-sel)" stroke="#1E4576" stroke-width="0.6"/>
+          <rect x="3.5" y="3.5" width="33" height="13" rx="8.5" fill="#FFFFFF" opacity="0.30"/>
+          <!-- cursor arrow with subtle shadow -->
+          <path d="M14 11 L14 28 L18.5 24.5 L21.5 30.5 L24 29 L21 23 L26.5 22 Z" fill="#1A2A40" opacity="0.35" transform="translate(1,1.5)"/>
+          <path d="M14 11 L14 28 L18.5 24.5 L21.5 30.5 L24 29 L21 23 L26.5 22 Z" fill="url(#cur-sel)" stroke="#1A2A40" stroke-width="0.8" stroke-linejoin="round"/>
+        </svg>
+        <span class="tip">Select</span>
+      </button>
+
+      <button title="Add person">
+        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="tile-add" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#7AE0AC"/>
+              <stop offset="0.5" stop-color="#3DAA72"/>
+              <stop offset="1" stop-color="#1F6240"/>
+            </linearGradient>
+            <radialGradient id="head-add" cx="0.4" cy="0.35" r="0.6">
+              <stop offset="0" stop-color="#FFE9D0"/>
+              <stop offset="1" stop-color="#C08858"/>
+            </radialGradient>
+          </defs>
+          <rect x="3" y="3" width="34" height="34" rx="9" fill="url(#tile-add)" stroke="#1F6240" stroke-width="0.6"/>
+          <rect x="3.5" y="3.5" width="33" height="13" rx="8.5" fill="#FFFFFF" opacity="0.32"/>
+          <!-- person silhouette -->
+          <circle cx="17" cy="17" r="4.2" fill="url(#head-add)" stroke="#5A3018" stroke-width="0.6"/>
+          <path d="M9.5 30 c0 -4.5 3.4 -7.5 7.5 -7.5 c4.1 0 7.5 3 7.5 7.5 z" fill="url(#head-add)" stroke="#5A3018" stroke-width="0.6" stroke-linejoin="round"/>
+          <!-- plus badge -->
+          <circle cx="29" cy="11" r="5.5" fill="#FFFFFF" stroke="#1F6240" stroke-width="0.8"/>
+          <path d="M29 8.2 v5.6 M26.2 11 h5.6" stroke="#1F6240" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <span class="tip">Add person</span>
+      </button>
+
+      <span class="sep"></span>
+
+      <button title="Fit to screen">
+        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="tile-fit" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#FFFFFF"/>
+              <stop offset="0.5" stop-color="#F5ECF9"/>
+              <stop offset="1" stop-color="#D7C7E3"/>
+            </linearGradient>
+            <linearGradient id="frame-fit" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#9A6FCC"/>
+              <stop offset="1" stop-color="#4D2580"/>
+            </linearGradient>
+          </defs>
+          <rect x="3" y="3" width="34" height="34" rx="9" fill="url(#tile-fit)" stroke="#B89DCC" stroke-width="0.6"/>
+          <rect x="3.5" y="3.5" width="33" height="14" rx="8.5" fill="#FFFFFF" opacity="0.55"/>
+          <!-- frame corners (3D) -->
+          <g fill="url(#frame-fit)" stroke="#3A1568" stroke-width="0.6" stroke-linejoin="round">
+            <path d="M11 11 h7 v2 h-5 v5 h-2 z"/>
+            <path d="M29 11 h-7 v2 h5 v5 h2 z"/>
+            <path d="M11 29 h7 v-2 h-5 v-5 h-2 z"/>
+            <path d="M29 29 h-7 v-2 h5 v-5 h2 z"/>
+          </g>
+        </svg>
+        <span class="tip">Fit</span>
+      </button>
+
+      <button title="Zoom in">
+        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="tile-zoom" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#FFFFFF"/>
+              <stop offset="0.5" stop-color="#F5ECF9"/>
+              <stop offset="1" stop-color="#D7C7E3"/>
+            </linearGradient>
+            <radialGradient id="lens-zoom" cx="0.35" cy="0.30" r="0.7">
+              <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.95"/>
+              <stop offset="0.5" stop-color="#A0C0E8" stop-opacity="0.30"/>
+              <stop offset="1" stop-color="#4A78BD" stop-opacity="0.15"/>
+            </radialGradient>
+            <linearGradient id="ring-zoom" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#5C8DD6"/>
+              <stop offset="1" stop-color="#1E4576"/>
+            </linearGradient>
+          </defs>
+          <rect x="3" y="3" width="34" height="34" rx="9" fill="url(#tile-zoom)" stroke="#B89DCC" stroke-width="0.6"/>
+          <rect x="3.5" y="3.5" width="33" height="14" rx="8.5" fill="#FFFFFF" opacity="0.55"/>
+          <!-- handle -->
+          <rect x="22" y="22" width="11" height="3.5" rx="1.6" transform="rotate(45 22 22)" fill="#3A1F0F" stroke="#1E0F05" stroke-width="0.5"/>
+          <!-- lens -->
+          <circle cx="17" cy="17" r="7.5" fill="url(#lens-zoom)" stroke="url(#ring-zoom)" stroke-width="2.4"/>
+          <!-- + inside -->
+          <path d="M17 13.5 v7 M13.5 17 h7" stroke="#1E4576" stroke-width="1.8" stroke-linecap="round"/>
+          <!-- top highlight on lens -->
+          <ellipse cx="14.5" cy="13.5" rx="3.5" ry="1.8" fill="#FFFFFF" opacity="0.55" transform="rotate(-30 14.5 13.5)"/>
+        </svg>
+        <span class="tip">Zoom in</span>
+      </button>
+
+      <button title="Citations">
+        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="tile-cite" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#FFE9A0"/>
+              <stop offset="0.5" stop-color="#FFD566"/>
+              <stop offset="1" stop-color="#C99A20"/>
+            </linearGradient>
+            <linearGradient id="paper-cite" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#FFFAF0"/>
+              <stop offset="1" stop-color="#E8DCB0"/>
+            </linearGradient>
+          </defs>
+          <rect x="3" y="3" width="34" height="34" rx="9" fill="url(#tile-cite)" stroke="#8A6A1A" stroke-width="0.6"/>
+          <rect x="3.5" y="3.5" width="33" height="13" rx="8.5" fill="#FFFFFF" opacity="0.45"/>
+          <!-- stacked papers -->
+          <rect x="13" y="13" width="14" height="18" rx="1.4" fill="#C99A20"/>
+          <rect x="11.5" y="11" width="14" height="18" rx="1.4" fill="url(#paper-cite)" stroke="#8A6A1A" stroke-width="0.7"/>
+          <path d="M22.5 11 v3.5 h3" fill="none" stroke="#8A6A1A" stroke-width="0.7"/>
+          <g stroke="#8A6A1A" stroke-width="1" stroke-linecap="round">
+            <line x1="14" y1="19" x2="22" y2="19"/>
+            <line x1="14" y1="22" x2="23" y2="22"/>
+            <line x1="14" y1="25" x2="20" y2="25"/>
+          </g>
+        </svg>
+        <span class="tip">Citations</span>
+      </button>
+
+      <span class="sep"></span>
+
+      <button title="DNA">
+        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="tile-dna" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#F5BFE0"/>
+              <stop offset="0.5" stop-color="#C04B7E"/>
+              <stop offset="1" stop-color="#5A1A3A"/>
+            </linearGradient>
+            <linearGradient id="strA-dna" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#A0D0F0"/>
+              <stop offset="1" stop-color="#2E5DA5"/>
+            </linearGradient>
+            <linearGradient id="strB-dna" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#FFE9D0"/>
+              <stop offset="1" stop-color="#C08858"/>
+            </linearGradient>
+          </defs>
+          <rect x="3" y="3" width="34" height="34" rx="9" fill="url(#tile-dna)" stroke="#5A1A3A" stroke-width="0.6"/>
+          <rect x="3.5" y="3.5" width="33" height="13" rx="8.5" fill="#FFFFFF" opacity="0.35"/>
+          <!-- helix strands -->
+          <path d="M15 9 c4 4 4 8 0 11 c-4 3 -4 7 0 11" fill="none" stroke="url(#strA-dna)" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M25 9 c-4 4 -4 8 0 11 c4 3 4 7 0 11" fill="none" stroke="url(#strB-dna)" stroke-width="2.6" stroke-linecap="round"/>
+          <g stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round" opacity="0.85">
+            <line x1="16" y1="13" x2="24" y2="13"/>
+            <line x1="14.5" y1="20" x2="25.5" y2="20"/>
+            <line x1="16" y1="27" x2="24" y2="27"/>
+          </g>
+        </svg>
+        <span class="tip">DNA layer</span>
+      </button>
+    </div>
+
+    <div class="legend">
+      <div style="font-weight:600;color:var(--color-fg-strong);font-family:var(--font-sans);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Haplogroups</div>
+      <div class="row"><i style="background:#2E5DA5"></i><span>R1a-M198</span></div>
+      <div class="row"><i style="background:#C04B7E;background-image:radial-gradient(circle,#fff 1px,transparent 1.2px);background-size:6px 4px"></i><span>J2a-M410</span></div>
+      <div class="row"><i style="background:#4BB39E"></i><span>H1a</span></div>
+      <div class="row"><i style="background:#7E4BC0;background-image:repeating-linear-gradient(90deg,transparent 0 4px,rgba(255,255,255,.4) 4px 5px)"></i><span>E1b-M35</span></div>
+    </div>
+
+    <svg class="tree-svg" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Sepia portrait gradients per row -->
+        <linearGradient id="sep-warm" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#F0DBB8"/><stop offset="1" stop-color="#A88454"/></linearGradient>
+        <linearGradient id="sep-rose" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#E8C9D0"/><stop offset="1" stop-color="#9A6878"/></linearGradient>
+        <linearGradient id="sep-sage" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#D8E4D0"/><stop offset="1" stop-color="#688060"/></linearGradient>
+        <linearGradient id="sep-lilac" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#E8DCEC"/><stop offset="1" stop-color="#806890"/></linearGradient>
+        <linearGradient id="sep-mist" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#DDE2EC"/><stop offset="1" stop-color="#5A6A82"/></linearGradient>
+        <symbol id="silMan" viewBox="0 0 40 40"><circle cx="20" cy="15" r="7" fill="#3A2810" opacity="0.55"/><path d="M6 40 C 8 28, 14 24, 20 24 C 26 24, 32 28, 34 40 Z" fill="#3A2810" opacity="0.55"/><path d="M16 26 L20 32 L24 26" stroke="#FFFFFF" stroke-width="0.8" fill="none" opacity="0.6"/></symbol>
+        <symbol id="silWoman" viewBox="0 0 40 40"><path d="M11 18 C 11 9, 29 9, 29 18 L 28 22 L 12 22 Z" fill="#3A1828" opacity="0.55"/><circle cx="20" cy="18" r="6" fill="#3A1828" opacity="0.55"/><path d="M6 40 C 8 28, 14 23, 20 23 C 26 23, 32 28, 34 40 Z" fill="#3A1828" opacity="0.55"/></symbol>
+        <symbol id="silElder" viewBox="0 0 40 40"><circle cx="20" cy="14" r="6.5" fill="#1F3010" opacity="0.55"/><path d="M14 16 C 14 22, 20 26, 20 26 C 20 26, 26 22, 26 16 L 26 22 C 26 26, 23 28, 20 28 C 17 28, 14 26, 14 22 Z" fill="#1F3010" opacity="0.6"/><path d="M6 40 C 8 28, 14 25, 20 25 C 26 25, 32 28, 34 40 Z" fill="#1F3010" opacity="0.55"/></symbol>
+        <symbol id="silGeneric" viewBox="0 0 40 40"><circle cx="20" cy="15" r="6.5" fill="#2A1830" opacity="0.55"/><path d="M7 40 C 9 29, 14 25, 20 25 C 26 25, 31 29, 33 40 Z" fill="#2A1830" opacity="0.55"/></symbol>
+        <symbol id="silMissing" viewBox="0 0 40 40"><rect x="4" y="4" width="32" height="32" rx="3" fill="none" stroke="#897A95" stroke-width="1.4" stroke-dasharray="3 3"/><text x="20" y="26" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#897A95">?</text></symbol>
+      </defs>
+
+      <!-- Connection lines (pedigree, root left → ancestors right) -->
+      <g fill="none" stroke="#D1C4DA" stroke-width="1.4">
+        <path d="M260 350 L420 200"/>
+        <path d="M260 350 L420 500"/>
+        <path d="M580 200 L740 110"/>
+        <path d="M580 200 L740 290"/>
+        <path d="M580 500 L740 410"/>
+        <path d="M580 500 L740 590"/>
+        <path d="M900 110 L1060 70"/>
+        <path d="M900 110 L1060 150"/>
+        <path d="M900 290 L1060 250"/>
+        <path d="M900 290 L1060 330"/>
+        <path d="M900 410 L1060 370"/>
+        <path d="M900 410 L1060 450"/>
+        <path d="M900 590 L1060 550"/>
+        <path d="M900 590 L1060 630"/>
+      </g>
+      <!-- Haplogroup ribbons - rising along branches (signature). Color carries haplogroup. -->
+      <g fill="none" stroke-width="3" stroke-linecap="round" opacity="0.85">
+        <path d="M260 350 L420 200" stroke="#2E5DA5"/>
+        <path d="M420 200 L580 200" stroke="#2E5DA5"/>
+        <path d="M580 200 L740 110" stroke="#2E5DA5"/>
+        <path d="M580 200 L740 290" stroke="#C04B7E" stroke-dasharray="6 4"/>
+        <path d="M260 350 L420 500" stroke="#4BB39E"/>
+        <path d="M580 500 L740 410" stroke="#4BB39E"/>
+        <path d="M580 500 L740 590" stroke="#7E4BC0" stroke-dasharray="2 4"/>
+      </g>
+      <!-- PERSON CARDS as foreignObject — each carries a sepia portrait medallion ringed in haplogroup color -->
+      <foreignObject x="60" y="296" width="210" height="108">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="pcard">
+          <div class="pcard-3d root" style="border:1.5px solid var(--color-brand-blue);position:relative">
+            <span style="position:absolute;top:6px;right:6px;background:var(--color-brand-blue);color:#fff;font-size:9px;font-weight:600;padding:1px 5px;border-radius:3px;font-family:var(--font-mono)">DNA</span>
+            <div class="portrait" style="--ring:#2E5DA5;box-shadow:0 2px 4px rgba(44,16,84,0.25), inset 0 0 0 2px #2E5DA5">
+              <svg class="ph" viewBox="0 0 40 40"><rect width="40" height="40" fill="url(#sep-warm)"/><use href="#silMan" width="40" height="40"/></svg>
+            </div>
+            <div class="pcard-body">
+              <div style="font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--color-fg-strong);letter-spacing:-0.01em">Aron Sokolov ♂</div>
+              <div style="font-family:var(--font-mono);font-size:11px;color:var(--color-fg-muted);margin-top:2px">1847 – 1912 · Vilnius</div>
+              <div style="font-family:var(--font-mono);font-size:10px;color:#fff;background:#2E5DA5;display:inline-block;padding:1px 5px;border-radius:3px;margin-top:5px">R1a-M198</div>
+            </div>
+          </div>
+        </div>
+      </foreignObject>
+
+      <foreignObject x="410" y="152" width="180" height="96">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="pcard">
+          <div class="pcard-3d" style="border:1px solid var(--color-border)">
+            <div class="portrait sm" style="--ring:#2E5DA5;box-shadow:0 2px 4px rgba(44,16,84,0.2), inset 0 0 0 2px #2E5DA5">
+              <svg class="ph" viewBox="0 0 40 40"><rect width="40" height="40" fill="url(#sep-warm)"/><use href="#silMan" width="40" height="40"/></svg>
+            </div>
+            <div class="pcard-body">
+              <div style="font-family:var(--font-display);font-weight:700;font-size:12px;color:var(--color-fg-strong)">Mendel Sokolov ♂</div>
+              <div style="font-family:var(--font-mono);font-size:11px;color:var(--color-fg-muted);margin-top:2px">1820 – 1882 · father</div>
+              <div style="font-family:var(--font-mono);font-size:10px;color:#fff;background:#2E5DA5;display:inline-block;padding:1px 5px;border-radius:3px;margin-top:4px">R1a</div>
+            </div>
+          </div>
+        </div>
+      </foreignObject>
+
+      <foreignObject x="410" y="452" width="180" height="96">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="pcard">
+          <div class="pcard-3d" style="border:1px solid var(--color-border)">
+            <div class="portrait sm" style="--ring:#4BB39E;box-shadow:0 2px 4px rgba(44,16,84,0.2), inset 0 0 0 2px #4BB39E">
+              <svg class="ph" viewBox="0 0 40 40"><rect width="40" height="40" fill="url(#sep-rose)"/><use href="#silWoman" width="40" height="40"/></svg>
+            </div>
+            <div class="pcard-body">
+              <div style="font-family:var(--font-display);font-weight:700;font-size:12px;color:var(--color-fg-strong)">Sara Korsky ♀</div>
+              <div style="font-family:var(--font-mono);font-size:11px;color:var(--color-fg-muted);margin-top:2px">1822 – 1898 · mother</div>
+              <div style="font-family:var(--font-mono);font-size:10px;color:#fff;background:#4BB39E;display:inline-block;padding:1px 5px;border-radius:3px;margin-top:4px">H1a</div>
+            </div>
+          </div>
+        </div>
+      </foreignObject>
+
+      <foreignObject x="730" y="68" width="170" height="88">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="pcard">
+          <div class="pcard-3d" style="border:1px solid var(--color-border)">
+            <div class="portrait sm" style="--ring:#2E5DA5;box-shadow:0 2px 4px rgba(44,16,84,0.2), inset 0 0 0 2px #2E5DA5">
+              <svg class="ph" viewBox="0 0 40 40"><rect width="40" height="40" fill="url(#sep-sage)"/><use href="#silElder" width="40" height="40"/></svg>
+            </div>
+            <div class="pcard-body">
+              <div style="font-family:var(--font-display);font-weight:700;font-size:11px;color:var(--color-fg-strong)">Yosef Sokolov ♂</div>
+              <div style="font-family:var(--font-mono);font-size:10px;color:var(--color-fg-muted)">~1795 – 1860 · grandfather</div>
+              <div style="font-family:var(--font-mono);font-size:10px;color:#fff;background:#2E5DA5;display:inline-block;padding:1px 5px;border-radius:3px;margin-top:4px">R1a</div>
+            </div>
+          </div>
+        </div>
+      </foreignObject>
+
+      <foreignObject x="730" y="248" width="170" height="88">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="pcard">
+          <div class="pcard-3d" style="border:1px solid var(--color-border);border-left:2px solid var(--color-warning)">
+            <div class="portrait sm" style="--ring:var(--color-warning);box-shadow:0 2px 4px rgba(44,16,84,0.2), inset 0 0 0 2px var(--color-warning)">
+              <svg class="ph" viewBox="0 0 40 40"><rect width="40" height="40" fill="#F0E5D0"/><use href="#silMissing" width="40" height="40"/></svg>
+            </div>
+            <div class="pcard-body">
+              <div style="font-family:var(--font-display);font-weight:700;font-size:11px;color:var(--color-fg-strong)">Hava Levin ♀</div>
+              <div style="font-family:var(--font-mono);font-size:10px;color:var(--color-fg-muted)">? – ? · grandmother</div>
+              <div style="font-family:var(--font-mono);font-size:10px;color:var(--color-warning);margin-top:4px">conflict · 2 src</div>
+            </div>
+          </div>
+        </div>
+      </foreignObject>
+
+      <foreignObject x="730" y="368" width="170" height="88">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="pcard">
+          <div class="pcard-3d" style="border:1px solid var(--color-border)">
+            <div class="portrait sm" style="--ring:#4BB39E;box-shadow:0 2px 4px rgba(44,16,84,0.2), inset 0 0 0 2px #4BB39E">
+              <svg class="ph" viewBox="0 0 40 40"><rect width="40" height="40" fill="url(#sep-mist)"/><use href="#silMan" width="40" height="40"/></svg>
+            </div>
+            <div class="pcard-body">
+              <div style="font-family:var(--font-display);font-weight:700;font-size:11px;color:var(--color-fg-strong)">Iosif Korsky ♂</div>
+              <div style="font-family:var(--font-mono);font-size:10px;color:var(--color-fg-muted)">~1798 – 1855 · grandfather</div>
+            </div>
+          </div>
+        </div>
+      </foreignObject>
+
+      <foreignObject x="730" y="548" width="170" height="88">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="pcard">
+          <div class="pcard-3d" style="border:1px solid var(--color-border)">
+            <div class="portrait sm" style="--ring:#7E4BC0;box-shadow:0 2px 4px rgba(44,16,84,0.2), inset 0 0 0 2px #7E4BC0">
+              <svg class="ph" viewBox="0 0 40 40"><rect width="40" height="40" fill="url(#sep-lilac)"/><use href="#silWoman" width="40" height="40"/></svg>
+            </div>
+            <div class="pcard-body">
+              <div style="font-family:var(--font-display);font-weight:700;font-size:11px;color:var(--color-fg-strong)">Esther Vais ♀</div>
+              <div style="font-family:var(--font-mono);font-size:10px;color:var(--color-fg-muted)">~1800 – 1870 · grandmother</div>
+              <div style="font-family:var(--font-mono);font-size:10px;color:#fff;background:#7E4BC0;display:inline-block;padding:1px 5px;border-radius:3px;margin-top:4px">E1b</div>
+            </div>
+          </div>
+        </div>
+      </foreignObject>
+      <!-- Generation labels -->
+      <g font-family="JetBrains Mono, monospace" font-size="10" fill="#897A95">
+        <text x="170" y="660">G0 · proband</text>
+        <text x="500" y="660">G1 · parents</text>
+        <text x="820" y="660">G2 · grandparents</text>
+        <text x="1090" y="660">G3</text>
+      </g>
+    </svg>
+  </main>
+
+  <!-- INSPECTOR -->
+  <aside class="inspector">
+    <div class="ins-head">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="flex:0 0 auto;width:48px;height:48px;border-radius:999px;overflow:hidden;background:#0F0420;box-shadow:0 4px 8px rgba(44,16,84,0.18), inset 0 0 0 2px var(--color-brand-blue)">
+          <svg viewBox="0 0 40 40" style="width:100%;height:100%;display:block">
+            <defs><linearGradient id="insp-sep" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#F0DBB8"/><stop offset="1" stop-color="#A88454"/></linearGradient></defs>
+            <rect width="40" height="40" fill="url(#insp-sep)"/>
+            <circle cx="20" cy="15" r="7" fill="#3A2810" opacity="0.55"/>
+            <path d="M6 40 C 8 28, 14 24, 20 24 C 26 24, 32 28, 34 40 Z" fill="#3A2810" opacity="0.55"/>
+          </svg>
+        </div>
+        <div>
+          <h3>Aron Sokolov</h3>
+          <div class="sub">@I0042@ · root · imported 2024-03-12</div>
+        </div>
+      </div>
+      <span class="dna-tag">DNA</span>
+    </div>
+    <div class="tabs">
+      <div class="tab on">Facts</div>
+      <div class="tab">Hypotheses <span style="color:var(--color-fg-subtle);font-family:var(--font-mono)">3</span></div>
+      <div class="tab">DNA</div>
+      <div class="tab">Notes</div>
+    </div>
+
+    <div class="ins-body">
+      <div class="field"><span class="k">Sex</span><span class="v">Male</span></div>
+      <div class="field"><span class="k">Born</span><span class="v">1847-04-12 · Vilnius<div style="margin-top:4px"><span class="quay q3">QUAY 3 · primary</span></div></span></div>
+      <div class="field"><span class="k">Died</span><span class="v">1912-11-03 · Vilnius<div style="margin-top:4px"><span class="quay q2">QUAY 2 · good</span></div></span></div>
+      <div class="field"><span class="k">Y-DNA</span><span class="v mono">R1a-M198</span></div>
+      <div class="field"><span class="k">Confidence</span><span class="v"><div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);color:var(--color-brand-blue);font-weight:500">0.94</span><span style="flex:1;height:4px;background:#E5DDEB;border-radius:999px;overflow:hidden"><i style="display:block;height:100%;width:94%;background:var(--color-brand-blue)"></i></span></div></span></div>
+    </div>
+
+    <div class="ins-section">
+      <h5>Active hypotheses <a href="#">View all →</a></h5>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="hypo">
+          <div class="top"><span class="name">Father is Yosef Sokolov</span><span class="conf">0.94</span></div>
+          <div class="meter"><i style="width:94%"></i></div>
+          <div class="ev"><span>+3 evidence</span><span>−0 against</span></div>
+        </div>
+        <div class="hypo">
+          <div class="top"><span class="name">Mother is Hava Levin</span><span class="conf" style="color:var(--color-warning)">0.62</span></div>
+          <div class="meter"><i style="width:62%;background:var(--color-warning)"></i></div>
+          <div class="ev"><span>+2 evidence</span><span>−1 against</span></div>
+        </div>
+        <div class="hypo">
+          <div class="top"><span class="name">Birthplace was Trakai (not Vilnius)</span><span class="conf" style="color:var(--color-fg-muted)">0.21</span></div>
+          <div class="meter"><i style="width:21%;background:var(--color-fg-subtle)"></i></div>
+          <div class="ev"><span>+1 evidence</span><span>−3 against</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ins-section">
+      <h5>Sources <a href="#">+ Add</a></h5>
+      <div>
+        <div class="src-item"><span class="num">[1]</span><div class="body"><strong>Vilnius vital records, fond 728</strong><span>pp. 14–22 · scanned · QUAY 3</span></div></div>
+        <div class="src-item"><span class="num">[2]</span><div class="body"><strong>FamilySearch · Lithuania births</strong><span>batch B12-447 · QUAY 2</span></div></div>
+        <div class="src-item"><span class="num">[3]</span><div class="body"><strong>1875 Vilnius census household</strong><span>roll V-12 · QUAY 2</span></div></div>
+      </div>
+    </div>
+
+    <div class="ins-section">
+      <h5>DNA matches <a href="#">View all →</a></h5>
+      <div>
+        <div class="dna-row"><span class="nm">Eli Goldin</span><span class="hap-chip" style="background:#2E5DA5">R1a</span><span class="cm">312 cM</span></div>
+        <div class="dna-row"><span class="nm">Rachel Levin</span><span class="hap-chip" style="background:#4BB39E">H1a</span><span class="cm">187 cM</span></div>
+        <div class="dna-row"><span class="nm">Mara Korsky</span><span class="hap-chip" style="background:#C04B7E">J2</span><span class="cm">94 cM</span></div>
+      </div>
+    </div>
+  </aside>
+</div>
+</body>
+</html>

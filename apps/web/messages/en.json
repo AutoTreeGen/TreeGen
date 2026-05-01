@@ -444,6 +444,31 @@
       "title": "Duplicate suggestions"
     }
   },
+  "aiExtraction": {
+    "panelTitle": "AI extraction",
+    "panelDescription": "Let Claude read this source and propose structured facts (persons, events, relationships). You review every suggestion before it reaches the tree.",
+    "uploadHeading": "Upload an image",
+    "uploadDescription": "Scan, photo, or screenshot of the source. JPEG / PNG / GIF / WEBP, ≤ 25 MB.",
+    "chooseFileButton": "Choose file",
+    "noFileChosen": "No file chosen",
+    "submit": "Extract facts from image",
+    "submitting": "Extracting…",
+    "imageOptimized": "Optimized {originalKb} KB → {processedKb} KB",
+    "imageRotated": "Auto-rotated by EXIF",
+    "imageResized": "Resized to fit 2048 px",
+    "statusHeading": "Extraction status",
+    "statusNone": "No AI extraction has run for this source yet.",
+    "statusCompleted": "Completed — {facts} new fact suggestions ready for review",
+    "statusFailed": "Last attempt failed",
+    "statusPending": "Extraction running…",
+    "costLabel": "Cost",
+    "costRemaining": "{remaining} of {cap} remaining (per-source cap)",
+    "budgetRunsRemaining": "{remaining} extractions left today",
+    "budgetTokensRemaining": "{remaining} tokens left this month",
+    "errorBudget": "You've reached an AI extraction limit ({kind}).",
+    "errorVisionRejected": "Couldn't process this image. Try another file.",
+    "errorGeneric": "Couldn't extract facts. Please try again."
+  },
   "sharing": {
     "owner": {
       "title": "Sharing",

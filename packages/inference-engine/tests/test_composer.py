@@ -1,6 +1,6 @@
 """Тесты compose_hypothesis: Phase 7.5 aggregation (Bayesian fusion + contradictions).
 
-ADR-0057. Phase 7.0–7.4 использовала линейную ``Σ supports − Σ contradicts``
+ADR-0065. Phase 7.0–7.4 использовала линейную ``Σ supports − Σ contradicts``
 формулу; ожидаемые значения в этих тестах обновлены под новую семантику:
 
 * Two SUPPORTS из разных rule_ids → 1 − (1−w1)(1−w2).

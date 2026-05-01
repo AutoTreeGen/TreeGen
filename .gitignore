@@ -6,9 +6,29 @@
 .env
 .env.*
 !.env.example
+# TLS / сертификаты / приватные ключи (все распространённые форматы)
 *.pem
 *.key
 *.crt
+*.cer
+*.p8
+*.p12
+*.pfx
+*.jks
+*.keystore
+# SSH-ключи
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+*.ppk
+# Package-manager registry credentials
+.npmrc
+!.npmrc.example
+# Cloud-provider credential files
+gcp-key.json
+service-account*.json
+aws-credentials
 secrets/
 .secrets.baseline.local
 
@@ -30,6 +50,14 @@ packages/dna-analysis/test_data/real/
 # Скачивается через packages/dna-analysis/scripts/download_genetic_map.py.
 # Test fixture (одна хромосома) живёт в tests/fixtures/genetic_map/ и НЕ под этим правилом.
 packages/dna-analysis/data/genetic_maps/
+
+# Личные дизайн-материалы владельца (брифы, токены, логотип, source-zip).
+# Часть из них была интегрирована в код через PR #167; исходники остаются
+# локальными и не предназначены для публичного репо.
+/AutoTreeGen Design System.zip
+/design-prompt.md
+/design-tokens/
+/logo-brief/
 
 # ---- Python ----
 __pycache__/
@@ -133,6 +161,11 @@ desktop.ini
 docker-compose.override.yml
 volumes/
 data/
+# Phase 15.10 / ADR-0068: ICP-anchor synonyms shipped как package-data.
+# Глобальный ``data/`` ignore выше иначе drop'ает этот JSON, и tests
+# падают с FileNotFoundError на CI (см. PR #170 first run).
+!packages/entity-resolution/src/entity_resolution/names/data/
+!packages/entity-resolution/src/entity_resolution/names/data/**
 
 # ---- Логи и временные файлы ----
 *.log
@@ -170,3 +203,12 @@ crash.log
 
 # ---- pre-commit ----
 .pre-commit-cache/
+
+# ---- Локальные dev-скрипты (не для коммита) ----
+# Личные batch/PowerShell-обёртки для install/dev/restore цикла на машине
+# владельца. Содержат hardcoded пути и не предполагают переиспользования.
+*.log.cd
+install-and-dev.bat
+just-install.bat
+rebuild-step1-restore.bat
+scripts/auto-merge.ps1

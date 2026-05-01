@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Person card</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Cormorant+Garamond:wght@600;700&family=Cinzel:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  body{
+    margin:0;padding:40px;
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(255,200,120,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 100% 80% at 50% 60%, transparent 40%, rgba(0,0,0,0.55) 100%),
+      repeating-linear-gradient(95deg,
+        rgba(70,40,18,0.35) 0 1px,
+        transparent 1px 7px,
+        rgba(50,28,12,0.25) 7px 8px,
+        transparent 8px 24px),
+      repeating-linear-gradient(91deg,
+        rgba(30,15,5,0.20) 0 0.5px,
+        transparent 0.5px 40px),
+      linear-gradient(180deg, #5a3a1e 0%, #3a2410 60%, #2a1a08 100%);
+    font-family:'Special Elite', 'Courier New', monospace;
+    display:grid;grid-template-columns:1fr 1fr;gap:36px;
+    min-height:100vh;
+    align-content:start;
+  }
+
+  /* — Manila file folder with tab — */
+  .folder{
+    --tilt:0.5deg;
+    position:relative;
+    background:
+      repeating-linear-gradient(60deg, rgba(140,90,40,0.05) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(120deg, rgba(140,90,40,0.04) 0 1px, transparent 1px 3px),
+      linear-gradient(180deg, #E8C685 0%, #D4A864 100%);
+    border:1px solid #8a6a3a;
+    border-radius:2px 2px 8px 8px;
+    padding:22px 22px 20px 34px;
+    padding-top:34px;
+    display:flex;flex-direction:column;gap:12px;
+    transform:rotate(var(--tilt));
+    box-shadow:
+      inset 0 1px 0 rgba(255,235,180,0.55),
+      inset 0 -2px 6px rgba(80,50,20,0.25),
+      0 2px 4px rgba(0,0,0,0.25),
+      0 14px 24px -6px rgba(0,0,0,0.50),
+      0 24px 44px -12px rgba(0,0,0,0.40);
+  }
+  .folder.t2{--tilt:-0.7deg}
+
+  /* Folder tab on top — labeled with the case ID */
+  .folder .tab{
+    position:absolute;top:-14px;left:24px;
+    height:18px;
+    padding:0 14px;
+    display:flex;align-items:center;
+    background:linear-gradient(180deg,#E8C685,#D4A864);
+    border:1px solid #8a6a3a;
+    border-bottom:none;
+    border-radius:6px 6px 0 0;
+    box-shadow:inset 0 1px 0 rgba(255,235,180,0.55);
+    font-family:'Special Elite',monospace;
+    font-size:10px;letter-spacing:0.14em;
+    color:#3a2410;
+    text-transform:uppercase;
+  }
+
+  /* Two-hole punch on left edge */
+  .folder::after{
+    content:"";position:absolute;left:10px;top:50%;
+    width:7px;height:7px;
+    background:#3a2410;
+    border-radius:999px;
+    box-shadow:
+      0 -32px 0 #3a2410,
+      0 32px 0 #3a2410,
+      inset 0 1px 1px rgba(0,0,0,0.6);
+  }
+
+  .head{display:flex;align-items:center;gap:16px;position:relative;z-index:1;margin-bottom:4px}
+  .head-text{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0}
+
+  /* Photo-style avatar (sepia portrait with white border) */
+  .avatar{
+    width:48px;height:58px;flex:none;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Cormorant Garamond', serif;font-weight:700;font-size:18px;
+    color:#FAF0DA;letter-spacing:0.02em;
+    background:
+      radial-gradient(circle at 35% 30%, rgba(255,255,255,0.18), transparent 55%),
+      linear-gradient(160deg, var(--av-top), var(--av-bot));
+    border:2px solid #FAF0DA;
+    box-shadow:
+      0 0 0 1px rgba(120,80,30,0.50),
+      0 2px 3px rgba(0,0,0,0.30),
+      0 5px 9px -3px rgba(0,0,0,0.40);
+    text-shadow:0 1px 2px rgba(0,0,0,0.50);
+    filter:sepia(0.30) contrast(1.05);
+  }
+  .av-male{--av-top:#5d4a3a; --av-bot:#2a1d10}
+  .av-female{--av-top:#704d4a; --av-bot:#3a1d1d}
+
+  /* — Name — clear, bold, high-contrast dark ink on the manila card.
+     Readability over effect. Strong serif weight + dark ink + a tiny
+     paper-light highlight beneath each glyph for subtle dimensionality. */
+  .name{
+    font-family:'Cormorant Garamond', Georgia, "Times New Roman", serif;
+    font-weight:700;
+    font-size:22px;
+    line-height:1.1;
+    letter-spacing:-0.005em;
+    color:#1A0E04;
+    text-shadow:
+      0 1px 0 rgba(255,240,200,0.55),
+      0 2px 3px rgba(80,45,15,0.18);
+  }
+  .meta-row{display:flex;align-items:center;gap:8px}
+  /* Ancestry-style relationship label — the line beneath the name that
+     tells you how this person relates to the proband. Subtle, italic,
+     and quietly authoritative. */
+  .relation{
+    font-family:'Cormorant Garamond', Georgia, serif;
+    font-style:italic;font-weight:600;
+    font-size:10px;color:#7a5a2a;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    line-height:1.2;
+    margin-top:0;
+  }
+  .relation .you{
+    color:#3a2410;
+    border-bottom:1px dotted rgba(110,68,28,0.45);
+  }
+  .sex{font-size:14px;color:#3a2410;font-weight:700}
+  .years{font-family:'Special Elite',monospace;font-size:11px;color:#5a3e1a}
+
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;position:relative;z-index:1}
+
+  .pill{
+    font-size:11px;font-family:'Special Elite',monospace;
+    color:#3a2410;
+    background:#F8EFD0;
+    padding:3px 9px;border-radius:2px;
+    border:1px dashed #8a6a3a;
+  }
+
+  .hapchip{
+    font-family:'Special Elite',monospace;font-size:11px;letter-spacing:0.04em;
+    color:#FAF0DA;
+    padding:3px 10px;border-radius:2px;
+    background:linear-gradient(180deg, var(--c-top), var(--c-mid) 55%, var(--c-bot));
+    border:1px solid rgba(0,0,0,0.40);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.30),
+      inset 0 -1px 0 rgba(0,0,0,0.30),
+      0 1px 2px rgba(0,0,0,0.25);
+    text-shadow:0 1px 1px rgba(0,0,0,0.40);
+  }
+  .hap-r1a {--c-top:#5C8DD6; --c-mid:#2E5DA5; --c-bot:#173770}
+  .hap-h1a {--c-top:#7FD8C5; --c-mid:#4BB39E; --c-bot:#247868}
+
+  .conf{
+    display:flex;align-items:center;gap:10px;
+    font-size:11px;color:#5a3e1a;
+    font-family:'Special Elite',monospace;
+    position:relative;z-index:1;
+  }
+  .meter{
+    height:7px;width:90px;border-radius:1px;overflow:hidden;
+    background:#E0CC95;
+    box-shadow:inset 0 1px 2px rgba(120,80,30,0.30);
+    border:1px solid #B89A65;
+  }
+  .meter > i{
+    display:block;height:100%;
+    background:linear-gradient(180deg,#8a3a2a,#5a1a0a);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.20);
+  }
+
+  .src{
+    font-size:11px;color:#5a3e1a;
+    font-family:'Special Elite',monospace;
+    border-top:1px dashed #8a6a3a;
+    padding-top:10px;
+    line-height:1.5;
+    position:relative;z-index:1;
+  }
+
+  /* — Action row — archival ink-stamp buttons that send the user
+     into the tree, the timeline, or the inspector. Sit at the bottom
+     of every folder so the next click is always obvious. */
+  /* — Action row — small, soft chips. Like pencil-marks in the margin
+     of an archive folder, not stamped buttons. Letterspaced caps,
+     hairline border, almost-no-shadow; primary action gets the faint
+     warm tint, others sit on transparent paper. */
+  .actions{
+    display:flex;gap:14px;flex-wrap:wrap;align-items:center;
+    margin-top:6px;
+    padding-top:8px;
+    border-top:1px dashed rgba(138,106,58,0.35);
+    position:relative;z-index:1;
+  }
+  .act{
+    display:inline-flex;align-items:center;gap:5px;
+    font-family:'Special Elite',monospace;
+    font-size:9.5px;font-weight:400;
+    letter-spacing:0.10em;
+    text-transform:uppercase;
+    text-decoration:none;
+    padding:3px 8px;
+    border-radius:999px;
+    border:1px solid rgba(138,106,58,0.45);
+    color:#5a3e1a;
+    background:rgba(255,248,220,0.45);
+    cursor:pointer;
+    transition:color 140ms ease, border-color 140ms ease, background 140ms ease;
+  }
+  .act:hover{
+    color:#2a1a08;
+    border-color:rgba(138,106,58,0.85);
+    background:rgba(255,248,220,0.85);
+  }
+  /* primary variant — the "open this folder" call-to-action.
+     Slightly warmer ink, no fill change; reads as an underline-link
+     more than a button. */
+  .act.primary{
+    color:#3E5A1E;
+    border-color:rgba(62,90,30,0.55);
+  }
+  .act.primary:hover{
+    color:#2A4014;
+    border-color:rgba(62,90,30,0.85);
+    background:rgba(220,235,190,0.55);
+  }
+  /* ghost variant — borderless, just a label */
+  .act.ghost{
+    border-color:transparent;
+    background:transparent;
+    padding-left:4px;padding-right:4px;
+  }
+  .act.ghost:hover{
+    background:transparent;
+    color:#2a1a08;
+    text-decoration:underline;
+    text-underline-offset:3px;
+    text-decoration-thickness:1px;
+  }
+
+  /* — Stamp — appears on the verified folder — */
+  .stamp{
+    position:absolute;
+    right:14px;top:14px;
+    font-family:'Special Elite',monospace;
+    font-size:9px;letter-spacing:0.18em;
+    color:#8a3a2a;
+    border:1.5px solid #8a3a2a;
+    padding:3px 7px;
+    border-radius:2px;
+    transform:rotate(7deg);
+    opacity:0.75;
+    text-transform:uppercase;
+    z-index:2;
+  }
+</style></head><body>
+
+  <div class="folder">
+    <div class="tab">@I0042@ · Sokolov</div>
+    <div class="stamp">Verified</div>
+    <div class="head">
+      <div class="avatar av-male">AS</div>
+      <div class="head-text">
+        <div class="name">Aron Sokolov</div>
+        <div class="relation"><span class="you">You</span> · proband</div>
+        <div class="meta-row">
+          <span class="sex">♂</span>
+          <span class="years">1847 – 1912 · Vilnius</span>
+        </div>
+      </div>
+    </div>
+    <div class="row"><span class="hapchip hap-r1a">R1a-M198</span><span class="pill">PRIM @I0042@</span></div>
+    <div class="conf"><span>confidence 0.94</span><span class="meter"><i style="width:94%"></i></span></div>
+    <div class="src">Vilnius vital records · fond 728 · pp. 14–22</div>
+    <div class="actions">
+      <a class="act primary" href="#">Show in tree</a>
+      <a class="act ghost" href="#">Open record</a>
+      <a class="act ghost" href="#">Edit</a>
+    </div>
+  </div>
+
+  <div class="folder t2">
+    <div class="tab">@I0043@ · Sokolov</div>
+    <div class="head">
+      <div class="avatar av-female">RS</div>
+      <div class="head-text">
+        <div class="name">Rivka Sokolov</div>
+        <div class="relation">Wife of <span class="you">Aron Sokolov</span></div>
+        <div class="meta-row">
+          <span class="sex">♀</span>
+          <span class="years">1851 – 1923 · Vilnius</span>
+        </div>
+      </div>
+    </div>
+    <div class="row"><span class="hapchip hap-h1a">H1a-T16519C</span><span class="pill">m. 1869</span></div>
+    <div class="conf"><span>confidence 0.78</span><span class="meter"><i style="width:78%"></i></span></div>
+    <div class="src">Cross-referenced · 2 archives</div>
+    <div class="actions">
+      <a class="act primary" href="#">Show in tree</a>
+      <a class="act ghost" href="#">Open record</a>
+      <a class="act ghost" href="#">Edit</a>
+    </div>
+  </div>
+
+</body></html>

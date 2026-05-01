@@ -16,6 +16,8 @@ from shared_models.security import apply_security_middleware
 
 from parser_service.api import (
     ai_extraction,
+    audio_consent,
+    audio_sessions,
     clerk_webhooks,
     dedup,
     dedup_attempts,
@@ -124,6 +126,12 @@ app.include_router(hypotheses.router, tags=["hypotheses"], dependencies=_AUTH_DE
 # persons router включается ПОСЛЕ trees (тот владеет `GET /persons/{id}`),
 # но имена путей не пересекаются: тут `/persons/{id}/merge*`.
 app.include_router(persons.router, tags=["persons", "merge"], dependencies=_AUTH_DEPS)
+# Phase 10.9a — voice-to-tree (ADR-0064). Включён до sharing чтобы
+# /trees/{id}/audio-* пути не перехватывались sharing-router'ом или
+# trees-router'ом /trees/{id}/* generic'ами. Auth required; permission
+# gates (OWNER для consent, EDITOR/VIEWER для sessions) — внутри ручек.
+app.include_router(audio_consent.router, tags=["voice", "consent"], dependencies=_AUTH_DEPS)
+app.include_router(audio_sessions.router, tags=["voice", "sessions"], dependencies=_AUTH_DEPS)
 # Phase 11.0 — sharing endpoints (invitations, memberships). Auth required.
 # Включён после persons чтобы /trees/{id}/* пути в trees.router не
 # перехватывали /trees/{id}/invitations / /trees/{id}/members.

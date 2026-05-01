@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Haplogroup palette</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Edu+AU+VIC+WA+NT+Hand+Dots:wght@400..700&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;padding:24px;background:var(--color-bg);font-family:var(--font-sans)}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+
+  /* — VISA-style 3D card shell — */
+  .h{
+    position:relative;
+    border-radius:14px;
+    overflow:hidden;
+    /* Diagonal three-stop gradient like a real bank card */
+    background:
+      linear-gradient(135deg, var(--top) 0%, var(--mid) 55%, var(--bot) 100%);
+    border:1px solid rgba(0,0,0,0.30);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.35),
+      inset 0 -1px 0 rgba(0,0,0,0.25),
+      0 1px 2px rgba(44,16,84,0.18),
+      0 10px 22px -8px rgba(44,16,84,0.32);
+    isolation:isolate;
+  }
+
+  /* DNA helix backdrop — subtle, like guilloché on a card */
+  .h .helix{
+    position:absolute;inset:0;width:100%;height:100%;
+    opacity:0.22;
+    z-index:0;pointer-events:none;
+  }
+
+  .ribbon{
+    position:relative;z-index:2;
+    height:96px;display:flex;align-items:center;justify-content:center;
+    padding:0 12px;
+  }
+
+  /* — VISA-style EMBOSSED name —
+     Real card embossing: a bright top-edge (light from above-left) and a dark
+     bottom-edge make the letter look pushed out of the plastic. No animation, no shine. */
+  .ribbon .nm-wrap{position:relative;display:inline-block}
+  .ribbon .emboss{
+    font-family:'Edu AU VIC WA NT Hand Dots', 'Comic Sans MS', cursive;
+    font-size:22px;
+    font-weight:700;
+    letter-spacing:0.01em;
+    /* Bright deep gold face — readable on any color, no dark backplate needed.
+       Slightly brighter than before for contrast against vivid card colors. */
+    color:#FFD566;
+    background:linear-gradient(180deg,#FFE899 0%, #FFCB3D 50%, #B8861F 100%);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
+    /* Crisp 2-step bevel + dark outline for legibility on light card colors */
+    filter:
+      drop-shadow(-1px -1px 0 rgba(255,250,220,0.95))
+      drop-shadow( 1px  1px 0 rgba(0,0,0,0.85))
+      drop-shadow( 0 0 1px rgba(0,0,0,0.7));
+    -webkit-font-smoothing:antialiased;
+    text-rendering:geometricPrecision;
+  }
+
+  /* Foot strip with name + hex */
+  .meta{
+    position:relative;z-index:2;
+    padding:8px 12px;display:flex;justify-content:space-between;align-items:center;
+    background:linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,255,255,0.88));
+    border-top:1px solid rgba(0,0,0,0.14);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.7);
+  }
+  .name{font-size:13px;font-weight:700;color:#1a0d2e}
+  .hex{font-family:var(--font-mono);font-size:10px;color:#6a587a}
+
+  /* Per-haplogroup gradient stops (top→mid→bot for 3D depth) */
+  .c-r1a {--top:#7AA8E0; --mid:#2E5DA5; --bot:#173770}
+  .c-j2  {--top:#E89AC0; --mid:#C04B7E; --bot:#7E2A52}
+  .c-h1a {--top:#7FD8C5; --mid:#4BB39E; --bot:#247868}
+  .c-t1  {--top:#E0B97A; --mid:#C0904B; --bot:#7A5820}
+  .c-e1b {--top:#B895DD; --mid:#7E4BC0; --bot:#4D2580}
+  .c-i1  {--top:#7DDFA8; --mid:#4BC07E; --bot:#23804D}
+  .c-g2  {--top:#E0807E; --mid:#C04B4B; --bot:#7A2424}
+  .c-n1c {--top:#80A8DD; --mid:#4B7EC0; --bot:#234D80}
+</style></head><body>
+
+<!-- Reusable DNA helix pattern (subtle, like guilloché) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <pattern id="dna" x="0" y="0" width="56" height="64" patternUnits="userSpaceOnUse">
+    <path d="M0 14 Q 14 0, 28 14 T 56 14" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M0 50 Q 14 64, 28 50 T 56 50" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M0 14 Q 14 28, 28 42 T 56 70" fill="none" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+    <path d="M0 50 Q 14 36, 28 22 T 56 -6" fill="none" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+    <line x1="7"  y1="16" x2="7"  y2="48" stroke="#fff" stroke-width="0.8" opacity="0.55"/>
+    <line x1="21" y1="22" x2="21" y2="42" stroke="#fff" stroke-width="0.8" opacity="0.55"/>
+    <line x1="35" y1="22" x2="35" y2="42" stroke="#fff" stroke-width="0.8" opacity="0.55"/>
+    <line x1="49" y1="16" x2="49" y2="48" stroke="#fff" stroke-width="0.8" opacity="0.55"/>
+    <circle cx="14" cy="3"  r="1.2" fill="#fff" opacity="0.7"/>
+    <circle cx="42" cy="3"  r="1.2" fill="#fff" opacity="0.7"/>
+    <circle cx="14" cy="61" r="1.2" fill="#fff" opacity="0.7"/>
+    <circle cx="42" cy="61" r="1.2" fill="#fff" opacity="0.7"/>
+  </pattern>
+</defs></svg>
+
+<div class="grid">
+  <div class="h c-r1a">
+    <svg class="helix"><rect width="100%" height="100%" fill="url(#dna)"/></svg>
+    <div class="ribbon"><span class="emboss">R1a-M198</span></div><div class="meta"><span class="name">R1a</span><span class="hex">#2E5DA5</span></div>
+  </div>
+
+  <div class="h c-j2">
+    <svg class="helix"><rect width="100%" height="100%" fill="url(#dna)"/></svg>
+    <div class="ribbon"><span class="emboss">J2a-M410</span></div><div class="meta"><span class="name">J2</span><span class="hex">#C04B7E</span></div>
+  </div>
+
+  <div class="h c-h1a">
+    <svg class="helix"><rect width="100%" height="100%" fill="url(#dna)"/></svg>
+    <div class="ribbon"><span class="emboss">H1a-T16519C</span></div><div class="meta"><span class="name">H1a</span><span class="hex">#4BB39E</span></div>
+  </div>
+
+  <div class="h c-t1">
+    <svg class="helix"><rect width="100%" height="100%" fill="url(#dna)"/></svg>
+    <div class="ribbon"><span class="emboss">T1-L162</span></div><div class="meta"><span class="name">T1</span><span class="hex">#C0904B</span></div>
+  </div>
+
+  <div class="h c-e1b">
+    <svg class="helix"><rect width="100%" height="100%" fill="url(#dna)"/></svg>
+    <div class="ribbon"><span class="emboss">E1b-M35</span></div><div class="meta"><span class="name">E1b</span><span class="hex">#7E4BC0</span></div>
+  </div>
+
+  <div class="h c-i1">
+    <svg class="helix"><rect width="100%" height="100%" fill="url(#dna)"/></svg>
+    <div class="ribbon"><span class="emboss">I1-M253</span></div><div class="meta"><span class="name">I1</span><span class="hex">#4BC07E</span></div>
+  </div>
+
+  <div class="h c-g2">
+    <svg class="helix"><rect width="100%" height="100%" fill="url(#dna)"/></svg>
+    <div class="ribbon"><span class="emboss">G2-P15</span></div><div class="meta"><span class="name">G2</span><span class="hex">#C04B4B</span></div>
+  </div>
+
+  <div class="h c-n1c">
+    <svg class="helix"><rect width="100%" height="100%" fill="url(#dna)"/></svg>
+    <div class="ribbon"><span class="emboss">N1c-Tat</span></div><div class="meta"><span class="name">N1c</span><span class="hex">#4B7EC0</span></div>
+  </div>
+</div>
+</body></html>

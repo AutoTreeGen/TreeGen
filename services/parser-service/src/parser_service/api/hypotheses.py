@@ -367,7 +367,7 @@ async def request_cancel_compute_job(
 
 
 # -----------------------------------------------------------------------------
-# Phase 7.5 — recompute composite_score with aggregation v2 (ADR-0057).
+# Phase 7.5 — recompute composite_score with aggregation v2 (ADR-0065).
 # -----------------------------------------------------------------------------
 
 
@@ -378,7 +378,7 @@ async def request_cancel_compute_job(
     tags=["hypotheses"],
     summary="Пересчитать composite_score у всех гипотез дерева через v2-aggregation.",
     description=(
-        "Phase 7.5 (ADR-0057). Используется когда algorithm aggregation "
+        "Phase 7.5 (ADR-0065). Используется когда algorithm aggregation "
         "сменился, а persisted hypotheses держат старые scores. Не запускает "
         "rules заново — пересчитывает только из persisted ``HypothesisEvidence``-"
         "rows через ``inference_engine.aggregate_confidence``. Идемпотентно. "

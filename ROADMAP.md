@@ -335,7 +335,7 @@ Split на 5.5a + 5.5b (мега-PR не пройдёт review):
 | **4.12** | Landing + onboarding flow + i18n foundation. Public `/` (hero, 4 value-props, screenshots-placeholders, pricing teaser, waitlist), `/demo` (read-only sample tree, синтетика), `/pricing` (Free / Pro + FAQ), `/onboarding` (3-step wizard: source → import → done на pure-function reducer). next-intl + cookie-based locale (`NEXT_LOCALE`) + middleware `Accept-Language` detection + `messages/{en,ru}.json`. Empty-state: `/dashboard` с 0 trees → redirect `/onboarding`. Lead capture: `WaitlistEntry` ORM + миграция 0014 + `POST /waitlist` в parser-service (idempotent, lower-case email, email НЕ логируется) + Next.js `/api/waitlist` proxy. SEO: per-route metadata, `app/sitemap.ts`, `app/robots.ts` (Disallow auth-protected). vitest: 4 теста landing/waitlist + 8 reducer-тестов onboarding-machine + 8 i18n-helpers. pytest: 6 кейсов /waitlist (idempotency, email lowercase, EmailStr 422, extra-fields 422, no-email-in-logs). См. ADR-0035, PR-Phase-4.12. | done (2026-04-28) |
 | **4.13a** | i18n full-rollout — foundation + smallest authenticated pages. Расширили `messages/{en,ru}.json` на namespaces `common.*` (loading/back/save/cancel/...), `header.*`, `errors.*` (generic/network/unauthorized/forbidden/notFound/validation/rateLimit + доменные `*LoadFailed`), `dashboard.*`, `notifications.*` (events.*). Конвертированы `app/dashboard/page.tsx` и `app/settings/notifications/page.tsx`. Shared `<SiteHeader>` теперь рендерит `<LocaleSwitcher>` (раньше был только на лендинге). Новый `<ErrorMessage code=...>` компонент — единая точка для localised error UI с опциональным retry. Custom Python pre-commit hook `scripts/check_i18n_strings.py` ловит raw English JSX text в `apps/web/src/app/{dashboard,persons,dna,sources,hypotheses,familysearch,settings,trees}/**.tsx` + 3 shared components. vitest `locale-rendering.test.tsx` (10 кейсов) проверяет рендер ErrorMessage в обеих локалях без missing-key fallback'ов + parity en.json ↔ ru.json. См. ADR-0037, PR-Phase-4.13a. | done (2026-04-28) |
 | **4.13b** | i18n full-rollout — большие authenticated pages: `trees/[id]/*` (4 pages, ~1300 LOC), `persons/[id]/*` (3 pages, ~1000 LOC), `familysearch/*` (3 pages, ~600 LOC), `dna/*` (3 pages, ~700 LOC), `hypotheses/[id]`, `sources/[id]`. Расширение messages namespace'ов (`trees.*`, `persons.*`, `dna.*`, `hypotheses.*`, `sources.*`, `familysearch.*`). Все strings через `useTranslations`/`getTranslations`, `<ErrorMessage>` всюду где было ad-hoc error UI. Lint-hook (4.13a) подхватывает по мере конвертации. Запланировано как отдельный PR, чтобы review surface оставался читаемым. | done (2026-04-30) |
-| **4.14a** | Mobile-responsive design system — Layout / Touch targets / Typography. Audit показал, что (а) site-header без nav-links → hamburger не нужен, (б) только одна страница содержит `<table>` (`dna/[kitId]/matches`) — добавлен mobile card-stack как альтернативный layout, (в) единственный modal в app (DeleteAccountModal в /settings) → bottom-sheet на <sm. Design-system изменения, каскадящие по всем 31 page'ам: `Button.{sm,md,lg}` получают `min-h-11` floor на mobile (WCAG 2.1 AA touch target ≥44×44px) с `sm:min-h-0 sm:h-{8,10,12}` для desktop; `Input` получает `min-h-11 text-base` на mobile (16px font-size предотвращает iOS Safari auto-zoom) с `sm:h-10 sm:text-sm` для desktop; `Checkbox` h-5/w-5 на mobile, h-4/w-4 на desktop. globals.css — defensive `font-size: 16px` на raw `<input>/<select>/<textarea>` через `@media (max-width: 639px)` для form-controls вне design-system, `touch-action: manipulation` на интерактивных элементах (отключает 300мс double-tap delay). Pedigree-tree получает `touch-action: none` чтобы pinch-zoom уходил в d3-zoom. settings + access tabs получают `min-h-11` на mobile + scroll-snap на overflow для длинных локализаций. Vitest: `mobile-responsive.test.tsx` фиксирует классы на Button/Input/Checkbox чтобы будущие правки Tailwind-strings не откатили mobile-first. См. ADR-0057. | done (2026-04-30) |
+| **4.14a** | Mobile-responsive design system — Layout / Touch targets / Typography. Audit показал, что (а) site-header без nav-links → hamburger не нужен, (б) только одна страница содержит `<table>` (`dna/[kitId]/matches`) — добавлен mobile card-stack как альтернативный layout, (в) единственный modal в app (DeleteAccountModal в /settings) → bottom-sheet на <sm. Design-system изменения, каскадящие по всем 31 page'ам: `Button.{sm,md,lg}` получают `min-h-11` floor на mobile (WCAG 2.1 AA touch target ≥44×44px) с `sm:min-h-0 sm:h-{8,10,12}` для desktop; `Input` получает `min-h-11 text-base` на mobile (16px font-size предотвращает iOS Safari auto-zoom) с `sm:h-10 sm:text-sm` для desktop; `Checkbox` h-5/w-5 на mobile, h-4/w-4 на desktop. globals.css — defensive `font-size: 16px` на raw `<input>/<select>/<textarea>` через `@media (max-width: 639px)` для form-controls вне design-system, `touch-action: manipulation` на интерактивных элементах (отключает 300мс double-tap delay). Pedigree-tree получает `touch-action: none` чтобы pinch-zoom уходил в d3-zoom. settings + access tabs получают `min-h-11` на mobile + scroll-snap на overflow для длинных локализаций. Vitest: `mobile-responsive.test.tsx` фиксирует классы на Button/Input/Checkbox чтобы будущие правки Tailwind-strings не откатили mobile-first. См. ADR-0066. | done (2026-04-30) |
 | **4.14b** | Mobile-responsive — Performance (next/image, next/dynamic для tree viz и chromosome painting), Playwright mobile viewport tests. | planned |
 
 ### 8.1 Страницы
@@ -435,6 +435,9 @@ Split на 5.5a + 5.5b (мега-PR не пройдёт review):
 | **6.3** | **Match list/detail UI + chromosome painting + link-to-person — ADR-0033** | ✅ **Done (2026-04-28)** |
 | 6.4 | Triangulation engine (compute-only) + Bayes-prior heuristic — ADR-0054 | ✅ Done |
 | 6.5 | Imputation + IBD2 + dedicated `dna_match_segments` table | 🔜 Planned |
+| **6.7a** | **DNA AutoClusters: data model + Leiden clustering (NetworkX fallback) + endogamy heuristic — ADR-0063** | 🚧 In progress |
+| 6.7b | Pile-up region detection (segment_overlap_analysis по популяциям) | ⏳ Blocked on 6.7a |
+| 6.7c | AI cluster labels (opt-in) + frontend (`/dna/clusters` + components) + e2e | ⏳ Blocked on 6.7b |
 
 ---
 
@@ -767,6 +770,7 @@ Phase 15 поверх готового backend (sources, citations, hypotheses, 
 | 15.3 | Hypothesis sandbox UI (rule playground + what-if) | 🔜 Planned |
 | 15.4 | Per-relationship audit log (kind/source/who/when) | 🔜 Planned |
 | 15.5 | Archive search integration (FamilySearch / Wikimedia) | 🔜 Planned |
+| **15.10** | **Multilingual Name Engine — ADR-0068** | 🔜 Planned (PR open) |
 
 ### 18A.1 Phase 15.1 — Relationship Evidence Panel ✅ (см. ADR-0058)
 
@@ -794,6 +798,54 @@ provenance / citations / hypothesis_evidences:
 - Hypothesis sandbox — Phase 15.3.
 - Schema changes на FamilyChild/relationship — Phase 15.x при сильном
   signal.
+
+### 18A.10 Phase 15.10 — Multilingual Name Engine (ADR-0068)
+
+**Цель:** archive search и fuzzy person matching должны работать одинаково
+для не-Anglo lineages. Без этого слоя «Levitin» / «Левитин» / «לויטין» /
+«Lewitin» воспринимаются как четыре разных имени, и для AJ / Slavic
+исследователя platform теряет ICP-ценность.
+
+**Pure-compute, без schema changes** — расширяет
+``packages/entity-resolution/`` шестью модулями в
+``entity_resolution/names/``:
+
+- ``patronymic.py`` — :class:`PatronymicParser` (ru / uk / by / pl) →
+  :class:`ParsedName`(given, patronymic, surname).
+- ``transliterate.py`` — :class:`Transliterator`: Cyrillic ↔ Latin (BGN /
+  ISO 9 / LoC), Hebrew ↔ Latin (BGN / LoC), Latin → Hebrew best-guess для
+  AJ-фамилий, Polish / German / Czech diacritic fold + restore.
+- ``daitch_mokotoff.py`` — thin re-export ``daitch_mokotoff`` из
+  существующего ``entity_resolution.phonetic`` под именем ``dm_soundex``
+  (canonical impl остаётся в phonetic.py per ADR-0015).
+- ``synonyms.py`` + ``data/icp_anchor_synonyms.json`` — curated reverse-
+  index ICP-anchor surnames (≥30 anchor groups V1: Levitin, Cohen, Katz,
+  Friedman, Baron, Rabinowitz, Davidov, Goldberg, Schwartz, Weiss, …).
+- ``variants.py`` — :func:`generate_archive_variants` объединяет всё выше
+  в ``set[str]`` для archive lookup'а; DM-keys префиксованы ``__DM__``
+  чтобы caller мог отделить spelling vs phonetic.
+- ``match.py`` — :class:`NameMatcher` ранжирует candidates с
+  reason-attribution (``exact`` / ``variant_diacritic`` /
+  ``variant_synonym`` / ``variant_transliteration`` / ``dm_phonetic`` /
+  ``fuzzy``).
+
+**Backward-compat:** existing ``entity_resolution.phonetic`` /
+``string_matching`` / ``persons.person_match_score`` — не трогаются.
+``persons.py`` опционально мигрирует на ``NameMatcher`` отдельным PR
+вне 15.10 scope.
+
+**Foundation для:** 5.7 GEDCOM Safe Merge (fuzzy person matching across
+files), 10.7 AI Tree Context Pack Identity Resolver, 10.9c-append
+Voice-to-Tree (append-mode fuzzy match).
+
+**Deferred** (не входит в первый PR):
+
+- ``services/inference-service`` endpoints ``POST /api/v1/names/expand`` и
+  ``POST /api/v1/names/match`` — отдельный follow-up PR против стабилизи-
+  рованного ``names`` API.
+- Yiddish lexicon / multi-output homophone candidates — Phase 10.9.x.
+- Auto-migration ``persons.person_match_score`` на ``NameMatcher`` —
+  follow-up PR.
 
 ---
 

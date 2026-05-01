@@ -223,6 +223,72 @@ Phase 10.1 (hypothesis suggester production: persistence + cost-gate)
 - Если PDF-text-extraction quality плохая — добавить vision-fallback
   и/или OCR-pre-processing.
 
+## Phase 10.2b deltas (2026-05-01)
+
+Этот раздел дополняет ADR без изменения принципиальных решений. Что
+сделано в Phase 10.2b сверх 10.2a baseline'а:
+
+1. **HTTP-уровень для vision.** `extract_from_image()` use-case был в
+   10.2a, но без endpoint'а. 10.2b добавляет:
+   - `POST /sources/{id}/ai-extract-vision` — multipart upload
+     (image bytes + опциональный `ocr_text_hint`).
+   - `GET /sources/{id}/ai-extract-status` — последний run + remaining
+     budget. Sync-mode пока выдаёт `COMPLETED/FAILED` сразу; endpoint
+     закладывает форму, в которой `PENDING` станет осмысленным после
+     async-arq в 10.2c.
+2. **Image preprocessing.**
+   `parser_service.services.image_preprocessing.preprocess_image()`:
+   - Pillow `ImageOps.exif_transpose` — авто-rotate по EXIF orientation.
+   - Downscale > 2048 px (большая сторона) через LANCZOS — Anthropic
+     vision не выигрывает recall от > 2048 px на типичных метриках,
+     при ~ 4× меньшей стоимости.
+   - Whitelist media-types (jpeg / png / gif / webp); прочее → 415.
+   - JPEG-конверт для RGBA/P mode'ов (alpha теряется — JPEG её не
+     поддерживает; UI должен warn'ить если grey важен).
+   - Re-encode в исходный формат (JPEG q=90, PNG/WEBP optimize).
+3. **PDF → vision fallback orchestration.**
+   `extract_first_image_from_scanned_pdf()` тянет первое embedded
+   image из scanned PDF через `pypdf` (без PyMuPDF / poppler — лишние
+   30 МБ wheel или system-deps). Caller (frontend / batch worker)
+   вызывает после `PoorPdfQualityError` от `extract_text_from_pdf()`.
+   - Не покрывает: vector-PDF без embedded images
+     (теоретически невозможно — для них pypdf-text работает),
+     multi-image страницы (берём первый).
+   - Phase 10.4 рассмотрит PyMuPDF rendering, если потребуется.
+4. **Per-source $ cost cap.** В дополнение к per-user 24h/30d guard'ам
+   из 10.2a:
+   - `PARSER_SERVICE_EXTRACT_BUDGET_USD` (default `0.50`) — pre-flight
+     cap на стоимость одного extraction'а.
+   - Оценка через `ai_layer.pricing.estimate_extraction_cost_usd`:
+     ~3 chars/token для смешанной кириллицы/латиницы + ~2200 image
+     tokens ceiling (vision) + 1200 prompt overhead, output = `max_tokens`.
+   - Превышение — `BudgetExceededError(limit_kind="cost_per_source_usd_x10000")`
+     → 429. Защищает от одного разорительного документа (200k symbols),
+     который один в день съест 10× обычного бюджета.
+   - `0.0` отключает cap (dev / test).
+5. **Pillow добавлен в `parser-service` deps** (>= 11.0). Wheel ~3 МБ;
+   используется только в `image_preprocessing.py`.
+
+**Что осталось деферрено (без изменений против Phase 10.2a решений):**
+
+- Multi-pass extraction — всё ещё «откладываем до 10.4 если понадобится»
+  (вариант B из основного блока). 10.2b явно НЕ переходит на multi-pass —
+  не было precision-evaluation, который ADR требует как trigger'а
+  (см. «Когда пересмотреть»).
+- Async-mode (arq + status polling) — на 10.2c.
+- User-level AI opt-out — пока kill-switch + DNA-source filter
+  достаточны.
+- PyMuPDF / poppler / OCR — пока pypdf-only path работает.
+
+**Когда пересмотреть Phase 10.2b solutions:**
+
+- Если > 5 % пользователей упираются в per-source cap на легитимных
+  документах — поднять default до $1.0 или сделать per-user override.
+- Если pypdf не справляется с типичными scanned PDF (нет embedded
+  images, текст < 50 chars) — добавить PyMuPDF rendering.
+- Если jpeg-конверт для RGBA теряет нужный alpha (e.g. partial-fade
+  scan'ы) — автодетект и preserve PNG для таких случаев.
+
 ## Ссылки
 
 - ADR-0043 — AI layer architecture (Phase 10.0).
@@ -232,3 +298,5 @@ Phase 10.1 (hypothesis suggester production: persistence + cost-gate)
 - Anthropic vision API:
   <https://docs.anthropic.com/en/docs/build-with-claude/vision>.
 - pypdf docs: <https://pypdf.readthedocs.io/>.
+- Pillow EXIF transpose:
+  <https://pillow.readthedocs.io/en/stable/reference/ImageOps.html#PIL.ImageOps.exif_transpose>.

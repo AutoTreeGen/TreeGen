@@ -6,12 +6,15 @@
 
 from __future__ import annotations
 
+from shared_models.orm.audio_session import AudioSession, AudioSessionStatus
 from shared_models.orm.audit_log import AuditLog
 from shared_models.orm.citation import Citation
+from shared_models.orm.dna_cluster import DnaCluster, DnaClusterMember
 from shared_models.orm.dna_consent import DnaConsent
 from shared_models.orm.dna_import import DnaImport
 from shared_models.orm.dna_kit import DnaKit
 from shared_models.orm.dna_match import DnaMatch
+from shared_models.orm.dna_pile_up_region import DnaPileUpRegion
 from shared_models.orm.dna_test_record import DnaTestRecord
 from shared_models.orm.email_send_log import EmailSendLog
 from shared_models.orm.event import Event, EventParticipant
@@ -45,12 +48,17 @@ from shared_models.orm.version import Version
 from shared_models.orm.waitlist_entry import WaitlistEntry
 
 __all__ = [
+    "AudioSession",
+    "AudioSessionStatus",
     "AuditLog",
     "Citation",
+    "DnaCluster",
+    "DnaClusterMember",
     "DnaConsent",
     "DnaImport",
     "DnaKit",
     "DnaMatch",
+    "DnaPileUpRegion",
     "DnaTestRecord",
     "EmailSendLog",
     "EntityMultimedia",
