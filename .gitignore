@@ -212,15 +212,8 @@ install-and-dev.bat
 just-install.bat
 rebuild-step1-restore.bat
 scripts/auto-merge.ps1
-# Backup-копии скриптов, оставленные редактором.
+# Backup-копии скриптов, оставленные редактором (ADR-0069: precondition
+# для безопасного `git add -A` через wrapper `save`).
 *.bak
-
-# ---- Личные дизайн-материалы владельца (личные WIP, не коммитить) ----
-# Дизайн-итерации владельца лежат в корне репо: нужны локально, в репо — нет.
-# См. memory/project_owner_design_materials_private. `git add -A` (через
-# wrapper `save`, ADR-0068) их не подхватит благодаря этим правилам.
-/AutoTreeGen Design System.zip
-/design-prompt.md
-/design-tokens/
-/logo-brief/
+# Локальная папка с патч-файлами от агентов.
 /saved-patches/
