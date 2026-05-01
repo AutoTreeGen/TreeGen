@@ -809,7 +809,7 @@ class HypothesisRecomputeScoresResponse(BaseModel):
     """
 
     tree_id: uuid.UUID
-    algorithm: str = Field(description="Версия aggregation algorithm (ADR-0057, Phase 7.5).")
+    algorithm: str = Field(description="Версия aggregation algorithm (ADR-0065, Phase 7.5).")
     recomputed_count: int = Field(ge=0)
     mean_absolute_delta: float = Field(ge=0.0, le=1.0)
     max_absolute_delta: float = Field(ge=0.0, le=1.0)
