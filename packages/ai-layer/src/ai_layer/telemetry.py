@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import logging
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any, Protocol
 from uuid import UUID, uuid4
 
@@ -49,9 +50,10 @@ async def log_ai_usage(
     model: str,
     input_tokens: int,
     output_tokens: int,
-    cost_usd: float,
+    cost_usd: float | Decimal,
     user_id: UUID | None = None,
     request_id: UUID | None = None,
+    audio_duration_sec: float | None = None,
     extra: dict[str, Any] | None = None,
 ) -> str:
     """Записать одну запись об AI-вызове в Redis-список.
@@ -64,11 +66,21 @@ async def log_ai_usage(
             по моделям).
         input_tokens: Сумма prompt-токенов.
         output_tokens: Сумма generated-токенов.
-        cost_usd: Расчётная стоимость в USD (см. ``pricing.estimate_cost_usd``).
+        cost_usd: Расчётная стоимость в USD (см. ``pricing.estimate_cost_usd``
+            или ``pricing.estimate_whisper_cost_usd``). Принимаем ``float``
+            и :class:`Decimal` (Whisper-флоу — ADR-0064 §3.4 — использует
+            Decimal). При сериализации приводим к ``float``: точность
+            до 6 знаков допустима для Redis-аналитики (Phase 10.5
+            переедет на ORM с native NUMERIC).
         user_id: Опциональный UUID пользователя, инициировавшего вызов.
             ``None`` для системных background-job'ов.
         request_id: Опциональный correlation-ID. Если не передан —
             генерируем новый UUID4.
+        audio_duration_sec: Длительность транскрибируемого аудио (Phase
+            10.9a). Опциональный — заполняется только для
+            ``use_case='transcribe_audio'``. Backward-compatible:
+            существующие callsite'ы (Anthropic / Voyage) не передают
+            и поле в record просто отсутствует.
         extra: Произвольный JSON-словарь (например, ``{"locale": "ru"}``)
             для use-case-специфичных метрик. Не должен содержать PII —
             проверка ответственности caller'а.
@@ -77,7 +89,7 @@ async def log_ai_usage(
         Сериализованный request_id (для логов / трассировки).
     """
     rid = request_id or uuid4()
-    record = {
+    record: dict[str, Any] = {
         "request_id": str(rid),
         "use_case": use_case,
         "model": model,
@@ -88,6 +100,11 @@ async def log_ai_usage(
         "ts": datetime.now(UTC).isoformat(),
         "extra": extra or {},
     }
+    if audio_duration_sec is not None:
+        # Поле добавляется только когда задано — старые consumer'ы Redis-list'а
+        # (если читают весь record) не должны видеть `audio_duration_sec: null`
+        # на каждой записи. Backward-compatible через optional-key, не optional-value.
+        record["audio_duration_sec"] = float(audio_duration_sec)
     payload = json.dumps(record, ensure_ascii=False, separators=(",", ":"))
     try:
         await redis.lpush(LOG_KEY, payload)
