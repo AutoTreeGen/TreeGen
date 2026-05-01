@@ -51,6 +51,14 @@ packages/dna-analysis/test_data/real/
 # Test fixture (одна хромосома) живёт в tests/fixtures/genetic_map/ и НЕ под этим правилом.
 packages/dna-analysis/data/genetic_maps/
 
+# Личные дизайн-материалы владельца (брифы, токены, логотип, source-zip).
+# Часть из них была интегрирована в код через PR #167; исходники остаются
+# локальными и не предназначены для публичного репо.
+/AutoTreeGen Design System.zip
+/design-prompt.md
+/design-tokens/
+/logo-brief/
+
 # ---- Python ----
 __pycache__/
 *.py[cod]
