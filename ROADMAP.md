@@ -602,6 +602,10 @@ licensing, EE-Jewish coverage, partnership effort). Краткая сводка:
 4. **Hypothesis explainer:** «Почему система считает, что A и B — братья?» — генерация rationale на естественном языке.
 5. **Document summarizer:** длинное письмо XIX века → структурированные факты.
 6. **Vector search:** «найди в моих документах упоминания всех персон по фамилии Х» — semantic search.
+7. **Voice-to-tree (Phase 10.9):** owner записывает голосом семейные истории →
+   Whisper-транскрипт → LLM-extraction person/event candidates → review queue →
+   коммит в дерево. Demo MVP 06.05.2026. См. ADR-0064 +
+   `docs/feature_voice_to_tree.md`.
 
 ### 14.2 Архитектура
 
@@ -770,6 +774,7 @@ Phase 15 поверх готового backend (sources, citations, hypotheses, 
 | 15.3 | Hypothesis sandbox UI (rule playground + what-if) | 🔜 Planned |
 | 15.4 | Per-relationship audit log (kind/source/who/when) | 🔜 Planned |
 | 15.5 | Archive search integration (FamilySearch / Wikimedia) | 🔜 Planned |
+| **15.10** | **Multilingual Name Engine — ADR-0068** | 🔜 Planned (PR open) |
 
 ### 18A.1 Phase 15.1 — Relationship Evidence Panel ✅ (см. ADR-0058)
 
@@ -797,6 +802,54 @@ provenance / citations / hypothesis_evidences:
 - Hypothesis sandbox — Phase 15.3.
 - Schema changes на FamilyChild/relationship — Phase 15.x при сильном
   signal.
+
+### 18A.10 Phase 15.10 — Multilingual Name Engine (ADR-0068)
+
+**Цель:** archive search и fuzzy person matching должны работать одинаково
+для не-Anglo lineages. Без этого слоя «Levitin» / «Левитин» / «לויטין» /
+«Lewitin» воспринимаются как четыре разных имени, и для AJ / Slavic
+исследователя platform теряет ICP-ценность.
+
+**Pure-compute, без schema changes** — расширяет
+``packages/entity-resolution/`` шестью модулями в
+``entity_resolution/names/``:
+
+- ``patronymic.py`` — :class:`PatronymicParser` (ru / uk / by / pl) →
+  :class:`ParsedName`(given, patronymic, surname).
+- ``transliterate.py`` — :class:`Transliterator`: Cyrillic ↔ Latin (BGN /
+  ISO 9 / LoC), Hebrew ↔ Latin (BGN / LoC), Latin → Hebrew best-guess для
+  AJ-фамилий, Polish / German / Czech diacritic fold + restore.
+- ``daitch_mokotoff.py`` — thin re-export ``daitch_mokotoff`` из
+  существующего ``entity_resolution.phonetic`` под именем ``dm_soundex``
+  (canonical impl остаётся в phonetic.py per ADR-0015).
+- ``synonyms.py`` + ``data/icp_anchor_synonyms.json`` — curated reverse-
+  index ICP-anchor surnames (≥30 anchor groups V1: Levitin, Cohen, Katz,
+  Friedman, Baron, Rabinowitz, Davidov, Goldberg, Schwartz, Weiss, …).
+- ``variants.py`` — :func:`generate_archive_variants` объединяет всё выше
+  в ``set[str]`` для archive lookup'а; DM-keys префиксованы ``__DM__``
+  чтобы caller мог отделить spelling vs phonetic.
+- ``match.py`` — :class:`NameMatcher` ранжирует candidates с
+  reason-attribution (``exact`` / ``variant_diacritic`` /
+  ``variant_synonym`` / ``variant_transliteration`` / ``dm_phonetic`` /
+  ``fuzzy``).
+
+**Backward-compat:** existing ``entity_resolution.phonetic`` /
+``string_matching`` / ``persons.person_match_score`` — не трогаются.
+``persons.py`` опционально мигрирует на ``NameMatcher`` отдельным PR
+вне 15.10 scope.
+
+**Foundation для:** 5.7 GEDCOM Safe Merge (fuzzy person matching across
+files), 10.7 AI Tree Context Pack Identity Resolver, 10.9c-append
+Voice-to-Tree (append-mode fuzzy match).
+
+**Deferred** (не входит в первый PR):
+
+- ``services/inference-service`` endpoints ``POST /api/v1/names/expand`` и
+  ``POST /api/v1/names/match`` — отдельный follow-up PR против стабилизи-
+  рованного ``names`` API.
+- Yiddish lexicon / multi-output homophone candidates — Phase 10.9.x.
+- Auto-migration ``persons.person_match_score`` на ``NameMatcher`` —
+  follow-up PR.
 
 ---
 

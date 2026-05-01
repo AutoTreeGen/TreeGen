@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
+import { JewishGenSearchButton } from "@/components/jewishgen-search-button";
 import { QuayBadge } from "@/components/quay-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -171,7 +172,34 @@ function PersonDetailView({
         </h2>
         <PersonSources citations={citations} loading={citationsLoading} hasError={citationsError} />
       </section>
+
+      <Separator />
+
+      <PersonExternalSearches person={person} />
     </article>
+  );
+}
+
+function PersonExternalSearches({ person }: { person: PersonDetail }) {
+  const t = useTranslations("persons.detail.externalSearch");
+  const primary = person.names.find((name) => name.sort_order === 0) ?? person.names[0] ?? null;
+  // place_id на event'ах — это внутренний UUID, а не текст места;
+  // имя места в API ещё не отдаётся (TODO в ADR-0058). Поэтому пока
+  // только surname + given_name.
+  const query = {
+    surname: primary?.surname ?? null,
+    givenName: primary?.given_name ?? null,
+  };
+  return (
+    <section aria-labelledby="external-search-heading">
+      <h2 id="external-search-heading" className="text-lg font-semibold">
+        {t("heading")}
+      </h2>
+      <p className="mt-2 text-sm text-[color:var(--color-ink-500)]">{t("intro")}</p>
+      <div className="mt-3">
+        <JewishGenSearchButton query={query} />
+      </div>
+    </section>
   );
 }
 
