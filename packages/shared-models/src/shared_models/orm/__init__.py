@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from shared_models.orm.audio_session import AudioSession, AudioSessionStatus
 from shared_models.orm.audit_log import AuditLog
+from shared_models.orm.chat import ChatMessage, ChatMessageRole, ChatSession
 from shared_models.orm.citation import Citation
 from shared_models.orm.dna_cluster import DnaCluster, DnaClusterMember
 from shared_models.orm.dna_consent import DnaConsent
@@ -51,6 +52,9 @@ __all__ = [
     "AudioSession",
     "AudioSessionStatus",
     "AuditLog",
+    "ChatMessage",
+    "ChatMessageRole",
+    "ChatSession",
     "Citation",
     "DnaCluster",
     "DnaClusterMember",

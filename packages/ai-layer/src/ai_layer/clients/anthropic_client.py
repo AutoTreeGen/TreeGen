@@ -23,6 +23,7 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -167,6 +168,60 @@ class AnthropicClient:
             output_tokens=_usage_field(response, "output_tokens"),
             stop_reason=getattr(response, "stop_reason", None),
         )
+
+    async def stream_completion(
+        self,
+        *,
+        system: str,
+        messages: Sequence[dict[str, str]],
+        model: str | None = None,
+        max_tokens: int = 1024,
+        temperature: float = 0.0,
+    ) -> AsyncIterator[str]:
+        """Стримить ответ Claude turn-by-turn для chat-режима (Phase 10.7c).
+
+        В отличие от ``complete_structured`` (один JSON-вызов с Pydantic-
+        валидацией), здесь мы yield'им text-deltas по мере их поступления —
+        UI показывает «typing animation», как в ChatGPT/Claude.ai.
+
+        Args:
+            system: System-промпт (содержит tree-context из 10.7a/10.7b).
+            messages: Conversation history — список ``{"role": "user"|"assistant",
+                "content": "..."}``. Caller отвечает за порядок и за то, чтобы
+                roles чередовались (Anthropic SDK иначе кинет 400).
+            model: Override модели; ``None`` → ``config.anthropic_model``.
+            max_tokens: Лимит на ассистент-ответ.
+            temperature: ``0.0`` для детерминированного chat — но caller
+                может поднять до ~0.5 для разговорной живости.
+
+        Yields:
+            Куски текстового ответа (не токены — text-deltas SDK уже сшивает
+            токенайзер-границы). Caller аккумулирует их в полный текст для
+            persist'инга и для post-hoc reference resolution.
+
+        Raises:
+            AILayerDisabledError: Если ``config.enabled is False``.
+            AILayerConfigError: Если API-ключ не настроен.
+            anthropic.APIError: Любая SDK-ошибка (rate limit, network, …).
+                Caller отвечает за обработку (SSE-стрим закрывается с
+                error-frame'ом).
+        """
+        if not self._config.enabled:
+            msg = "AI_LAYER_ENABLED is false; refusing to call Anthropic API"
+            raise AILayerDisabledError(msg)
+
+        client = self._get_client()
+        chosen_model = model or self._config.anthropic_model
+
+        async with client.messages.stream(
+            model=chosen_model,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            system=system,
+            messages=list(messages),
+        ) as stream:
+            async for text in stream.text_stream:
+                yield text
 
     def _get_client(self) -> AsyncAnthropic:
         """Лениво создать ``AsyncAnthropic`` или вернуть ранее переданный.

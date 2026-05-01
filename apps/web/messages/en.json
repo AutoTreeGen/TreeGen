@@ -634,5 +634,21 @@
     "addEvidence": "Add evidence",
     "addEvidenceHint": "Available in Phase 15.2",
     "error": "Failed to load evidence: {message}"
+  },
+  "chat": {
+    "heading": "Chat with your tree",
+    "subtitle": "Ask questions about people, dates, places. References are resolved against your self-anchor.",
+    "noAnchor": "No self-anchor set for this tree. Open Settings → Anchor to pick yourself before chatting.",
+    "emptyHint": "Try: 'Who is my paternal grandmother?' or 'Tell me about Dvora.'",
+    "inputPlaceholder": "Ask about your tree…",
+    "inputPlaceholderNoAnchor": "Set anchor first…",
+    "send": "Send",
+    "sending": "Sending…",
+    "context": {
+      "anchor": "Anchor",
+      "anchorMissing": "No self-anchor set. Set yourself in tree settings to enable relative references like \"my wife\".",
+      "people": "People referenced",
+      "peopleEmpty": "No references yet."
+    }
   }
 }

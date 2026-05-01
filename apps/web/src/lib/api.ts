@@ -159,6 +159,14 @@ async function authHeaders(): Promise<Record<string, string>> {
   return { Authorization: `Bearer ${token}` };
 }
 
+/**
+ * Phase 10.7c: chat-streaming клиент использует raw fetch (POST + SSE),
+ * не наш `getJson`-wrapper, и нуждается в тех же auth-headers'ах.
+ * Экспортируем единственную точку их сборки, чтобы chat-client не
+ * дублировал token-provider-плумбинг.
+ */
+export const getAuthHeaders = authHeaders;
+
 async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
   // Phase 4.6: retry применяется ко всем GET'ам и body-less запросам;
   // POST/PATCH/DELETE caller'ы оборачивают сами (через ``fetchOnceJson``).
