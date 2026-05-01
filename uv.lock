@@ -1206,6 +1206,7 @@ version = "0.1.0"
 source = { editable = "packages/gedcom-parser" }
 dependencies = [
     { name = "convertdate" },
+    { name = "entity-resolution" },
     { name = "pydantic" },
     { name = "python-dateutil" },
     { name = "rich" },
@@ -1215,6 +1216,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "convertdate", specifier = ">=2.4.1" },
+    { name = "entity-resolution", editable = "packages/entity-resolution" },
     { name = "pydantic", specifier = ">=2.10.0" },
     { name = "python-dateutil", specifier = ">=2.9.0" },
     { name = "rich", specifier = ">=13.9.0" },

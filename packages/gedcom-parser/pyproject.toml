@@ -16,6 +16,10 @@ dependencies = [
     "rich>=13.9.0",                # подтянется через typer; используется для красивого вывода
     "python-dateutil>=2.9.0",      # понадобится при разборе дат GEDCOM
     "convertdate>=2.4.1",
+    # Phase 5.7a: GEDCOM diff engine использует канонический person matcher
+    # (`person_match_score`, ADR-0015) для матчинга персон между двумя файлами.
+    # Workspace-resolve через корневой [tool.uv.sources] (см. /pyproject.toml).
+    "entity-resolution",
 ]
 
 [project.scripts]

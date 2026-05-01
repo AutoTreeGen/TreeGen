@@ -1,0 +1,72 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.5
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SOUR AutoTreeGen
+2 VERS 0.1.0
+0 @P1@ INDI
+1 NAME John /Smith/
+2 GIVN John
+2 SURN Smith
+1 SEX M
+1 BIRT
+2 DATE 1 JAN 1850
+2 PLAC Slonim, Russian Empire
+1 FAMS @FAM1@
+0 @P2@ INDI
+1 NAME Mary /Jones/
+2 GIVN Mary
+2 SURN Jones
+1 SEX F
+1 BIRT
+2 DATE 5 MAR 1852
+2 PLAC Slonim, Russian Empire
+1 FAMS @FAM1@
+0 @P3@ INDI
+1 NAME Jakob /Smith/
+2 GIVN Jakob
+2 SURN Smith
+1 SEX M
+1 BIRT
+2 DATE 10 JUN 1880
+2 PLAC Pinsk
+1 FAMC @FAM1@
+1 FAMS @FAM2@
+1 _PRIM Y
+0 @P4@ INDI
+1 NAME Sara /Goldberg/
+2 GIVN Sara
+2 SURN Goldberg
+1 SEX F
+1 FAMS @FAM2@
+0 @P5@ INDI
+1 NAME Anna /Smith/
+2 GIVN Anna
+2 SURN Smith
+1 SEX F
+1 BIRT
+2 DATE 12 AUG 1905
+1 FAMC @FAM2@
+0 @P6@ INDI
+1 NAME Boris /Levin/
+2 GIVN Boris
+2 SURN Levin
+1 SEX M
+1 BIRT
+2 DATE 1 JAN 1900
+0 @FAM1@ FAM
+1 HUSB @P1@
+1 WIFE @P2@
+1 CHIL @P3@
+0 @FAM2@ FAM
+1 HUSB @P3@
+1 WIFE @P4@
+1 CHIL @P5@
+0 @FAM3@ FAM
+1 HUSB @P6@
+0 @S2@ SOUR
+1 TITL Slonim parish records 1850
+1 AUTH Russian Orthodox Church
+1 ABBR Slonim1850
+0 TRLR
