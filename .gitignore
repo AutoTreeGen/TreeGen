@@ -153,6 +153,11 @@ desktop.ini
 docker-compose.override.yml
 volumes/
 data/
+# Phase 15.10 / ADR-0068: ICP-anchor synonyms shipped как package-data.
+# Глобальный ``data/`` ignore выше иначе drop'ает этот JSON, и tests
+# падают с FileNotFoundError на CI (см. PR #170 first run).
+!packages/entity-resolution/src/entity_resolution/names/data/
+!packages/entity-resolution/src/entity_resolution/names/data/**
 
 # ---- Логи и временные файлы ----
 *.log
