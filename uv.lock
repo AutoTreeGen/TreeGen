@@ -32,6 +32,8 @@ version = "0.1.0"
 source = { editable = "packages/ai-layer" }
 dependencies = [
     { name = "anthropic" },
+    { name = "entity-resolution" },
+    { name = "inference-engine" },
     { name = "jinja2" },
     { name = "mutagen" },
     { name = "openai" },
@@ -50,7 +52,9 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "anthropic", specifier = ">=0.40" },
+    { name = "entity-resolution", editable = "packages/entity-resolution" },
     { name = "fakeredis", marker = "extra == 'test'", specifier = ">=2.26" },
+    { name = "inference-engine", editable = "packages/inference-engine" },
     { name = "jinja2", specifier = ">=3.1" },
     { name = "mutagen", specifier = ">=1.47" },
     { name = "openai", specifier = ">=1.0" },
