@@ -9,9 +9,9 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from shared_models.schemas import ImportJobProgress
 
 
@@ -1956,33 +1956,80 @@ class ChatTurnRequest(BaseModel):
 
 
 class ChatReferencedPerson(BaseModel):
-    """Один резолвленный reference из user-message'а.
+    """Person-reference в user/assistant-message'е (резолвится через 10.7b ego_resolver).
 
-    Поля копируют ``ResolvedPerson`` из ``ai_layer.ego_resolver.types``,
-    но без ``alternatives`` — Phase 10.7c UI пока не показывает
-    disambiguation prompt; future-work для 10.7d.
+    Поля копируют ``ResolvedPerson`` из ``ai_layer.ego_resolver.types``, но
+    без ``alternatives`` — disambiguation prompt не входит в Phase 10.7d
+    (UI получает top-1; future-work).
+
+    ``kind`` по умолчанию ``"person"`` — backward-compat с 10.7c-row'ами
+    в ``chat_messages.references_jsonb``, которые писались без discriminator'а.
     """
 
+    kind: Literal["person"] = "person"
     person_id: uuid.UUID
-    mention_text: str = Field(description="Исходная фраза в user-input'е, которая резолвилась.")
+    mention_text: str = Field(description="Исходная фраза в input-тексте, которая резолвилась.")
     confidence: float = Field(ge=0.0, le=1.0)
 
 
+class ChatReferencedSource(BaseModel):
+    """Source-citation reference (Phase 10.7d).
+
+    Резолвится substring-match'ем по ``Source.title`` / ``abbreviation`` /
+    ``author`` в скоупе дерева. Confidence 1.0 для exact-substring; future-
+    work добавит fuzzy + LLM tool-use.
+    """
+
+    kind: Literal["source"] = "source"
+    source_id: uuid.UUID
+    mention_text: str = Field(description="Substring из текста, совпавший с source label.")
+    confidence: float = Field(ge=0.0, le=1.0)
+
+
+# Discriminated union: persists в chat_messages.references_jsonb, отдаётся в
+# read-моделях. ``kind``-дискриминатор позволяет UI рендерить badges по-разному
+# (person → person-card link, source → source-card link). Pydantic v2
+# discriminated-union'ы дают O(1) parsing без try/except каждой ветки.
+ChatReference = Annotated[
+    ChatReferencedPerson | ChatReferencedSource,
+    Field(discriminator="kind"),
+]
+
+
 class ChatMessageResponse(BaseModel):
-    """Read-модель одного сообщения для history-эндпоинта (future-work)."""
+    """Read-модель одного сообщения (history-эндпоинт)."""
 
     id: uuid.UUID
     session_id: uuid.UUID
     role: Literal["user", "assistant", "system"]
     content: str
-    references: list[ChatReferencedPerson] = Field(default_factory=list)
+    references: list[ChatReference] = Field(default_factory=list)
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
+    @field_validator("references", mode="before")
+    @classmethod
+    def _inject_legacy_kind(cls, v: Any) -> Any:
+        """Backward-compat: 10.7c-row'ы писали refs без ``kind``-дискриминатора.
+
+        Discriminated-union в Pydantic v2 требует ``kind`` в input'е чтобы
+        диспатчить между ``ChatReferencedPerson`` и ``ChatReferencedSource``.
+        Старые rows без поля → дефолт «person» (ровно одна форма ref'а
+        существовала в 10.7c).
+        """
+        if isinstance(v, list):
+            return [
+                {**item, "kind": item.get("kind", "person")}
+                if isinstance(item, dict) and "kind" not in item
+                else item
+                for item in v
+            ]
+        return v
+
 
 class ChatSessionResponse(BaseModel):
-    """Read-модель сессии (future-work — list/get endpoints)."""
+    """Read-модель сессии (single-get + element list-эндпоинта)."""
 
     id: uuid.UUID
     tree_id: uuid.UUID
@@ -1992,3 +2039,38 @@ class ChatSessionResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ChatSessionListItem(ChatSessionResponse):
+    """Сессия в list-эндпоинте — extends ``ChatSessionResponse`` агрегатами.
+
+    ``message_count`` / ``last_message_at`` денормализованы из chat_messages
+    через JOIN-aggregate (см. ``list_chat_sessions``); UI'ю не нужно делать
+    отдельный per-session запрос для отображения превью.
+    """
+
+    message_count: int = Field(ge=0, description="Кол-во сообщений (user+assistant+system).")
+    last_message_at: datetime | None = Field(
+        default=None,
+        description="MAX(messages.created_at). NULL — сессия без сообщений.",
+    )
+
+
+class ChatSessionListResponse(BaseModel):
+    """Пагинированный список чат-сессий пользователя в дереве."""
+
+    tree_id: uuid.UUID
+    total: int = Field(ge=0)
+    limit: int
+    offset: int
+    items: list[ChatSessionListItem]
+
+
+class ChatMessageListResponse(BaseModel):
+    """Пагинированная история сообщений сессии."""
+
+    session_id: uuid.UUID
+    total: int = Field(ge=0)
+    limit: int
+    offset: int
+    items: list[ChatMessageResponse]

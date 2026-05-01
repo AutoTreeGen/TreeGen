@@ -28,6 +28,9 @@ import ChatPage from "./page";
 
 vi.mock("next/navigation", () => ({
   useParams: () => ({ id: "tree-1" }),
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  usePathname: () => "/trees/tree-1/chat",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 function wrap(ui: ReactNode) {
@@ -46,6 +49,22 @@ function wrap(ui: ReactNode) {
 
 beforeEach(() => {
   vi.restoreAllMocks();
+
+  // Phase 10.7d — sessions sidebar fetches list; default mock = empty.
+  vi.spyOn(chatApi, "listChatSessions").mockResolvedValue({
+    tree_id: "tree-1",
+    total: 0,
+    limit: 30,
+    offset: 0,
+    items: [],
+  });
+  vi.spyOn(chatApi, "loadChatMessages").mockResolvedValue({
+    session_id: "sess-1",
+    total: 0,
+    limit: 200,
+    offset: 0,
+    items: [],
+  });
 
   vi.spyOn(api, "fetchTreeOwnerPerson").mockResolvedValue({
     tree_id: "tree-1",
