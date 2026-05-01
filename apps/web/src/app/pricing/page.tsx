@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
+import { CheckMark } from "@/components/icons/check-mark";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -111,9 +112,7 @@ function PlanCard({
         <ul className="space-y-2 text-sm">
           {features.map((f) => (
             <li key={f} className="flex items-start gap-2">
-              <span aria-hidden className="text-[color:var(--color-accent)]">
-                ✓
-              </span>
+              <CheckMark className="mt-1 h-3.5 w-3.5 shrink-0 text-[color:var(--color-accent)]" />
               <span>{f}</span>
             </li>
           ))}

@@ -111,6 +111,35 @@ repos:
         files: ^apps/web/src/(app/(dashboard|persons|dna|sources|hypotheses|familysearch|settings|trees)/.+|components/(site-header|notification-bell|error-message))\.tsx$
         types: [file]
 
+  # ---- design-system: lucide allowlist (DS-2 / ADR-0067 §«Enforcement» A) ----
+  # Per-name import restriction для `lucide-react`. Biome 1.9.x не умеет
+  # `importNames`-allowlist, ESLint introduction отвергнут (см. addendum
+  # Decision B). Hook — Python regex, паттерн ``check_i18n_strings.py``.
+  - repo: local
+    hooks:
+      - id: check-lucide-allowlist
+        name: check-lucide-allowlist (DS-2)
+        entry: python scripts/check_lucide_allowlist.py
+        language: system
+        files: ^apps/(web|landing)/src/.+\.(ts|tsx)$
+        exclude: '__tests__/|__fixtures__/'
+        types: [file]
+
+  # ---- design-system: anti-patterns (DS-2 / ADR-0067 §«Enforcement» C) ----
+  # Mechanical detection: emoji в copy, exclamation marks в JSX/i18n,
+  # marketing fluff terms, heavy shadow utilities, dark-mode artifacts.
+  # Judgment-grade нарушения (medallion frames в кастомных SVG, drop-shadow
+  # как emphasis в taken stylesheet) — design-debt issues.
+  - repo: local
+    hooks:
+      - id: check-design-anti-patterns
+        name: check-design-anti-patterns (DS-2)
+        entry: python scripts/check_design_anti_patterns.py
+        language: system
+        files: ^apps/(web|landing)/(src/.+\.(ts|tsx|css)|messages/.+\.json)$
+        exclude: '__tests__/|__fixtures__/'
+        types: [file]
+
   # ---- pnpm lockfile freshness guard ----
   # Срабатывает только когда staged один из (apps/*/package.json, pnpm-lock.yaml,
   # pnpm-workspace.yaml). Запускает `pnpm install --frozen-lockfile` — если

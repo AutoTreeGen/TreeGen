@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
+import { CheckMark } from "@/components/icons/check-mark";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { Button } from "@/components/ui/button";
 import { WaitlistForm } from "@/components/waitlist-form";
@@ -227,9 +228,7 @@ function PricingTeaserCard({
       <ul className="mt-6 space-y-2 text-sm">
         {features.map((f) => (
           <li key={f} className="flex items-start gap-2">
-            <span aria-hidden className="text-[color:var(--color-accent)]">
-              ✓
-            </span>
+            <CheckMark className="mt-1 h-3.5 w-3.5 shrink-0 text-[color:var(--color-accent)]" />
             <span>{f}</span>
           </li>
         ))}

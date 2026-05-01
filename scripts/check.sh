@@ -11,6 +11,8 @@ set -euo pipefail
 
 uv run ruff check .
 uv run ruff format --check .
+uv run python scripts/check_lucide_allowlist.py --all
+uv run python scripts/check_design_anti_patterns.py --all
 uv run pytest --cov --cov-report=xml --cov-report=term
 
 # ---- Frontend (Phase 4.1+) — пока локально, не в CI ------------------------

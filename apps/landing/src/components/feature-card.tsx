@@ -1,17 +1,36 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
 import * as motion from "motion/react-client";
+import type { ReactNode } from "react";
 
-/** Reusable карточка для problem/solution-секций с иконкой и stagger reveal. */
+/**
+ * Reusable карточка для problem/solution-секций. Иконка передаётся как
+ * `ReactNode`, не как lucide-component — DS-1 (ADR-0067) форсит brand-facing
+ * iconography в 3D-modern SVG язык; lucide-allowlist (addendum, Decision A)
+ * не включает feature-card glyphs.
+ *
+ * Usage:
+ * ```tsx
+ * import { TreeIcon } from "@/components/icons/tree";
+ *
+ * <FeatureCard
+ *   icon={<TreeIcon className="h-7 w-7" />}
+ *   title="Evidence-based tree"
+ *   description="Every fact carries a citation."
+ * />
+ * ```
+ *
+ * (До тех пор пока конкретные brand-icon компоненты не добавлены, callsite
+ * может передать любой `ReactNode` — компонент рендерит его как есть.)
+ */
 export function FeatureCard({
-  icon: Icon,
+  icon,
   title,
   description,
   index = 0,
   tone = "violet",
 }: {
-  icon: LucideIcon;
+  icon: ReactNode;
   title: string;
   description: string;
   index?: number;
@@ -43,7 +62,7 @@ export function FeatureCard({
         className={`mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl
           ring-1 ${tones[tone]}`}
       >
-        <Icon className="h-6 w-6" strokeWidth={2} />
+        {icon}
       </div>
 
       <h3 className="font-display text-xl font-semibold text-[var(--color-ink-900)]">{title}</h3>

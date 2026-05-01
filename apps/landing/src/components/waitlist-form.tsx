@@ -1,9 +1,14 @@
 "use client";
 
+import { CheckSuccessIcon } from "@/components/icons/check-success";
+import { LetterIcon } from "@/components/icons/letter";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2, Loader2, Mail } from "lucide-react";
+// `Loader2` остаётся из lucide — он на allowlist'е (ADR-0067 §«Enforcement»
+// Decision A): используется только как inline-spinner для async indicator,
+// что классифицируется как UI affordance, а не content-iconography.
+import { Loader2 } from "lucide-react";
 import * as motion from "motion/react-client";
 import { type FormEvent, useState } from "react";
 
@@ -97,7 +102,7 @@ export function WaitlistForm() {
           className="mx-auto mb-5 flex h-14 w-14 items-center justify-center
             rounded-full bg-[var(--color-brand-50)]"
         >
-          <CheckCircle2 className="h-7 w-7 text-[var(--color-brand-600)]" strokeWidth={2.2} />
+          <CheckSuccessIcon className="h-10 w-10" />
         </div>
         <h3 className="font-display text-2xl font-semibold text-[var(--color-ink-900)]">
           You&apos;re on the list
@@ -207,7 +212,7 @@ export function WaitlistForm() {
 
       <div className="mt-7 flex flex-col-reverse items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-[var(--color-ink-500)]">
-          <Mail className="mr-1 inline h-3.5 w-3.5" />
+          <LetterIcon className="mr-1 inline h-4 w-4 align-text-bottom" />
           We send fewer than 1 email per month. Promise.
         </p>
         <Button type="submit" size="lg" disabled={state.status === "submitting"}>

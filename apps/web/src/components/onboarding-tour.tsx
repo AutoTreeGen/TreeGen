@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
+import { XMark } from "@/components/icons/x-mark";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -217,9 +218,9 @@ function TourOverlay({
             onClick={onClose}
             aria-label={t("close")}
             data-testid="onboarding-tour-close"
-            className="text-sm text-[color:var(--color-ink-500)] hover:text-[color:var(--color-ink-900)]"
+            className="text-[color:var(--color-ink-500)] hover:text-[color:var(--color-ink-900)]"
           >
-            ✕
+            <XMark className="h-4 w-4" />
           </button>
         </div>
         <h2

@@ -1,5 +1,5 @@
+import { LetterIcon } from "@/components/icons/letter";
 import { Logo } from "@/components/logo";
-import { Mail } from "lucide-react";
 
 /** Footer с лого, контактами и privacy link. */
 export function Footer() {
@@ -29,7 +29,7 @@ export function Footer() {
               className="inline-flex items-center gap-2 text-[var(--color-ink-700)]
                 hover:text-[var(--color-brand-700)]"
             >
-              <Mail className="h-4 w-4" />
+              <LetterIcon className="h-5 w-5" />
               hello@autotreegen.com
             </a>
           </nav>

@@ -1,0 +1,16 @@
+// Plant fixture для tests/test_design_system_enforcement.py — НЕ tsx,
+// чтобы pre-commit / CI глобы (^apps/(web|landing)/src/...\.tsx$) не
+// подхватили этот файл. Переименовывается в .tsx внутри тестового
+// tmp-dir перед прогоном hook'а.
+
+import { Tree, Loader2, Mail } from "lucide-react";
+
+export function PlantedViolation() {
+  return (
+    <>
+      <Tree />
+      <Loader2 />
+      <Mail />
+    </>
+  );
+}

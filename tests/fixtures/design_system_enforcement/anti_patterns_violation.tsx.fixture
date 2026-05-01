@@ -1,0 +1,11 @@
+// Plant fixture для tests/test_design_system_enforcement.py.
+// См. lucide_violation.tsx.fixture для обоснования суффикса.
+
+export function PlantedAntiPatterns() {
+  return (
+    <div className="shadow-2xl dark:bg-slate-900">
+      <p>Discover your story! It's amazing.</p>
+      <span>✅ done</span>
+    </div>
+  );
+}

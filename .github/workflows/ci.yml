@@ -44,6 +44,12 @@ jobs:
       - name: Прогнать ruff (format check)
         run: uv run ruff format --check .
 
+      - name: Прогнать lucide allowlist (DS-2)
+        run: uv run python scripts/check_lucide_allowlist.py --all
+
+      - name: Прогнать design anti-patterns (DS-2)
+        run: uv run python scripts/check_design_anti_patterns.py --all
+
       - name: Прогнать тесты с coverage
         run: uv run pytest --cov --cov-report=xml --cov-report=term
 

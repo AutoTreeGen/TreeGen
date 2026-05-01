@@ -215,3 +215,94 @@ ICP-fit для AJ-аудитории: archival-toned light surfaces читают
   - V2 (TBD) — `packages-js/design-system/` workspace migration; DS-3
     lucide-enforcement ESLint rule.
 - **DS-1 brief:** см. PR-описание для full owner directives + 7 fix list.
+
+## Enforcement (DS-2 addendum, 2026-05-01)
+
+DS-1 зафиксировал визуальный язык; DS-2 добавляет lint-уровень enforcement
+поверх него, чтобы новые коммиты не уносили codebase обратно к
+generic-SaaS паттернам без явного override'а.
+
+### Decision A — lucide-react import allowlist
+
+`lucide-react` импорты ограничены exhaustive per-name allowlist'ом:
+
+```text
+ChevronDown · ChevronUp · ChevronLeft · ChevronRight
+X
+GripVertical · GripHorizontal
+MoreHorizontal · MoreVertical
+Loader2  (only for inline button spinners and async indicators —
+          UI affordance per SKILL.md §iconography, not content)
+```
+
+Все остальные lucide иконки = **content-iconography**, и должны идти через
+3D-modern brand SVG (canonical: `preview/brand-iconography.html`; рецепт +
+inline defs: `preview/brand-icon-style-spec.html`).
+
+Tiny stroke-glyphs внутри tightly-scoped UI элементов (checkbox tick,
+list-bullet check) реализуются как inline `<svg>` со stroke-path
+(SKILL.md §iconography: «white interior strokes for chevrons / checks
+are fine»).
+
+### Decision B — Python pre-commit hook over ESLint
+
+Биome 1.9.4 `noRestrictedImports` поддерживает только path-level
+restriction; per-name `importNames`/`allowImportNames` пришли в biome 2.x.
+Введение ESLint ради одного правила = parallel-linter overhead (две
+конфигурации, два ignore-list'а, конфликты formatter'ов). Поэтому
+enforcement написан как Python regex-hook, по прецеденту
+`scripts/check_i18n_strings.py` (Phase 4.13 / ADR-0037).
+
+Файл: `scripts/check_lucide_allowlist.py`. Зарегистрирован в:
+
+- `.pre-commit-config.yaml` под id `check-lucide-allowlist (DS-2)`
+- `.github/workflows/ci.yml` job `lint-and-test` (CI parity guard
+  `tests/test_ci_parity.py` ловит расхождение с `scripts/check.{sh,ps1}`)
+
+### Decision C — mechanical anti-patterns as lint rules
+
+`scripts/check_design_anti_patterns.py` ловит механически-детектируемые
+нарушения DS-1 voice + visual rules:
+
+| Cat | Pattern | Scope |
+|---|---|---|
+| A | Emoji в user-facing copy (с carve-out для `♂ / ♀ / ⚧` per README §iconography) | `apps/{web,landing}/{src/**.tsx,src/**.ts,messages/**.json}` |
+| B | `!` в JSX text node'ах + i18n value strings | same |
+| C | Marketing fluff: `amazing` / `powerful` / `unlock` / `transform your` / `discover your` / `incredible` (case-insensitive) | same |
+| D | Heavy shadow utilities `shadow-2xl` / `shadow-inner` (DS-1 ограничивает sm / md / lg) | `apps/{web,landing}/src/**.{ts,tsx,css}` |
+| E | Dark-mode artifacts: `prefers-color-scheme: dark`, Tailwind `dark:*` variants, `[data-theme="dark"]`, `next-themes` import | same |
+
+Judgment-grade нарушения (medallion frames в кастомных SVG, glow auras,
+sepia photo-treatments, hand-authored drop-shadow-as-emphasis в
+stylesheet) не fit под mechanical regex и идут как `[design-debt]`
+GitHub-issues при ручном ревью.
+
+### Decision D — Mail / content-iconography swap path
+
+`Mail`-class lucide imports (envelope, mailbox, inbox) reject'ятся
+allowlist'ом потому что это content-iconography, не UI affordance. Swap
+target: brand letter glyph (icon #4 «letter» из
+`preview/brand-iconography.html`).
+
+В DS-1 нет shipped React `<BrandIcon>` компонента (icon set живёт как
+standalone HTML preview). DS-2 поэтому swap'ает через **localized
+inline-SVG components** в `apps/landing/src/components/icons/` (и
+аналогично `apps/web/src/components/icons/` если потребуется),
+скопировав `<defs>` верхних gradient'ов verbatim из preview-HTML.
+Promotion в `packages-js/design-system/` workspace member — V2.
+
+### DS-2 audit results (2026-05-01)
+
+Запущены оба hook'а на main pre-fix:
+
+| Cat | Hits | Action |
+|---|---|---|
+| Lucide non-allowlist | 5 imports / 4 files | Fixed in-PR (LetterIcon × 2, CheckSuccessIcon × 1, CheckMark inline × 1, X re-imported × 1) |
+| A (emoji) | 3 (`✓`, `✓`, `✕`); 3 carved-out (`♂`, `♀`, `⚧`) | Fixed in-PR (CheckMark × 2, X × 1) |
+| B (exclamations) | 4 (3 i18n + 1 hardcoded JSX) | Fixed in-PR (period swaps) |
+| C (fluff) | 0 | — |
+| D (heavy shadow) | 0 | — |
+| E (dark-mode src/) | 0 | DS-1 уже зачистил `theme-toggle.tsx` / `providers.tsx` / `next-themes`. DS-2 ловит регрессию. |
+
+Cap «3 hours of fixes in this PR» соблюдён; design-debt issues не открыты
+(всё уложилось в-PR).

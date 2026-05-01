@@ -131,7 +131,7 @@
       "emailLabel": "Email",
       "emailPlaceholder": "you@example.com",
       "submit": "Join waitlist",
-      "success": "Thanks! We'll be in touch.",
+      "success": "Thanks. We'll be in touch.",
       "errorGeneric": "Something went wrong. Try again in a moment.",
       "errorInvalidEmail": "Please enter a valid email address."
     }
@@ -516,7 +516,7 @@
       "roleViewer": "Viewer — read-only access",
       "roleEditor": "Editor — can add and change data",
       "messageLabel": "Personal message (optional)",
-      "messagePlaceholder": "Hi! I'd love to share my family research with you.",
+      "messagePlaceholder": "Hi. I'd love to share my family research with you.",
       "submit": "Send invitation",
       "submitting": "Sending…",
       "successToast": "Invitation sent",
@@ -552,7 +552,7 @@
       "emailMismatchAction": "I'll sign in as {invitedEmail}",
       "acceptButton": "Accept invitation",
       "accepting": "Joining the tree…",
-      "successTitle": "Welcome aboard!",
+      "successTitle": "Welcome aboard.",
       "successBody": "Redirecting you to the tree…",
       "errorGeneric": "Couldn't accept invitation."
     },

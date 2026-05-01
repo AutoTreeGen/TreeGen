@@ -75,7 +75,7 @@ function InviteAcceptContent() {
           ) : accept.isError ? (
             <AcceptError error={accept.error} onRetry={() => accept.mutate()} />
           ) : accept.isSuccess ? (
-            <p className="text-sm text-emerald-800">Welcome aboard! Redirecting you to the tree…</p>
+            <p className="text-sm text-emerald-800">Welcome aboard. Redirecting you to the tree…</p>
           ) : null}
         </CardContent>
       </Card>

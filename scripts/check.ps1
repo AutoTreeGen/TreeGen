@@ -15,6 +15,12 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 uv run ruff format --check .
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+uv run python scripts/check_lucide_allowlist.py --all
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+uv run python scripts/check_design_anti_patterns.py --all
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 uv run pytest --cov --cov-report=xml --cov-report=term
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
