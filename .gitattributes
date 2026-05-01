@@ -17,7 +17,11 @@
 # GEDCOM — текст, но потенциально с разными кодировками
 *.ged text working-tree-encoding=UTF-8 eol=lf
 
-# Скрипты Windows — CRLF
+# Скрипты Windows.
+# .bat / .cmd запускаются cmd.exe — он строго требует CRLF.
+# .ps1 запускается PowerShell ≥ 5, который LF-tolerant; используем LF, чтобы
+# pre-commit hook `mixed-line-ending --fix=lf` не конфликтовал с git checkout
+# на Windows-машинах разработчиков.
 *.bat text eol=crlf
 *.cmd text eol=crlf
-*.ps1 text eol=crlf
+*.ps1 text eol=lf

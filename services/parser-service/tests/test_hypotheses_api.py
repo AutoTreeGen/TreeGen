@@ -60,7 +60,7 @@ async def test_post_create_hypothesis_returns_201(app_client) -> None:
     assert response.status_code == 201, response.text
     body = response.json()
     assert body["hypothesis_type"] == "same_person"
-    # Phase 7.5 (ADR-0057): Bayesian fusion threshold снижен с 0.85 до 0.75.
+    # Phase 7.5 (ADR-0065): Bayesian fusion threshold снижен с 0.85 до 0.75.
     assert body["composite_score"] >= 0.75
     assert body["reviewed_status"] == "pending"
     assert body["evidences"], "expected at least one evidence"
