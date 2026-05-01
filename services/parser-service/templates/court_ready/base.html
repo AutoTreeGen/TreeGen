@@ -184,7 +184,9 @@
 
 {# === Signature page === #}
 <section class="signature-page">
-  <h2>{{ t("signature_page", ctx.locale) }}</h2>
+  {# `| safe` нужен только тут: locale-строка содержит литеральный «&»
+     («Signature & methodology»), Jinja autoescape иначе рендерит «&amp;». #}
+  <h2>{{ t("signature_page", ctx.locale) | safe }}</h2>
   <h3>{{ t("methodology", ctx.locale) }}</h3>
   <p>{{ ctx.methodology_statement }}</p>
 
