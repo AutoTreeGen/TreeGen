@@ -22,9 +22,10 @@ output "database_url_template" {
 output "buckets" {
   description = "Map of bucket purpose → bucket name."
   value = {
-    ged_uploads = module.storage.ged_uploads_bucket
-    dna_data    = module.storage.dna_data_bucket
-    multimedia  = module.storage.multimedia_bucket
+    ged_uploads    = module.storage.ged_uploads_bucket
+    dna_data       = module.storage.dna_data_bucket
+    multimedia     = module.storage.multimedia_bucket
+    audio_sessions = google_storage_bucket.audio_sessions.name
   }
 }
 
