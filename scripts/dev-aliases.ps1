@@ -1,7 +1,7 @@
 # AutoTreeGen / SmarTreeDNA — invisible-git wrapper.
 #
 # Команды: save <msg> / sync / oops.
-# Реализация и обоснование — см. docs/adr/0068-invisible-git-ux-wrapper.md.
+# Реализация и обоснование — см. docs/adr/0069-invisible-git-ux-wrapper.md.
 # Этот wrapper НЕ нарушает CLAUDE.md §5 и ADR-0008: каждое сохранение проходит
 # через PR/CI, прямого пуша в main нет.
 
@@ -13,7 +13,7 @@ function save {
   git add -A
   git commit -m $msg
   git push -u origin $branch
-  $pr = gh pr create --base main --head $branch --title $msg --body "auto-PR via save command (см. ADR-0068)" 2>&1
+  $pr = gh pr create --base main --head $branch --title $msg --body "auto-PR via save command (см. ADR-0069)" 2>&1
   Write-Host "PR opened: $pr" -ForegroundColor Green
   git checkout main
   git pull --ff-only

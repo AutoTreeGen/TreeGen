@@ -1,4 +1,4 @@
-# ADR-0068: Invisible-git UX wrapper (save / sync / oops)
+# ADR-0069: Invisible-git UX wrapper (save / sync / oops)
 
 - **Status:** Accepted
 - **Date:** 2026-05-02
@@ -71,9 +71,9 @@ Force-push, `--no-verify`, `--admin merge`, изменения CI / branch prote
   - Списки PR в GitHub Activity забиваются `feat/auto-*` ветками.
   - `git add -A` стейджит всё untracked. Это требует, чтобы untracked-debris
     (личные дизайн-материалы, `*.bak`, локальные скрипты) был покрыт
-    `.gitignore`. В этом же изменении расширяем `.gitignore`: design-* папки,
-    `*.bak`, "AutoTreeGen Design System.zip" — чтобы первый `save` не утёк
-    личные WIP-материалы (см. memory `project_owner_design_materials_private`).
+    `.gitignore`. Большинство дизайн-паттернов уже добавлены через PR #167;
+    эта PR дополняет недостающие: `*.bak` (бэкап-копии редактора) и
+    `/saved-patches/` (локальная папка с патчами от агентов).
 - Риски:
   - Если auto-merger выключен или зависнет — PR-очередь забьётся. Owner
     может вмешаться через `gh pr list --author @me` и закрыть/смерджить вручную.
