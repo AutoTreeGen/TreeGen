@@ -43,6 +43,8 @@ from parser_service.fs_oauth import (
     get_token_storage,
     is_fs_token_storage_configured,
 )
+from parser_service.jobs.erase_audio_session import erase_audio_session
+from parser_service.jobs.transcribe_audio import transcribe_audio_session
 from parser_service.services.auto_transfer import run_ownership_transfer
 from parser_service.services.bulk_hypothesis_runner import (
     STAGE_FAILED,
@@ -608,6 +610,9 @@ class WorkerSettings:
         run_user_export_job,
         run_user_erasure_job,
         run_ownership_transfer_job,
+        # Phase 10.9a — voice-to-tree.
+        transcribe_audio_session,
+        erase_audio_session,
     ]
     on_startup = startup
     on_shutdown = shutdown

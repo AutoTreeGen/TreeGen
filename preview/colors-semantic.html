@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Semantic colors</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:24px;background:var(--color-bg);font-family:var(--font-sans)}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+
+  /* — 3D card — */
+  .card{
+    border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px;
+    background:linear-gradient(180deg,#FFFFFF 0%, #F8F4FB 100%);
+    border:1px solid #D1C4DA;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.9),
+      inset 0 -1px 0 rgba(44,16,84,0.04),
+      0 1px 2px rgba(44,16,84,0.06),
+      0 8px 18px -6px rgba(44,16,84,0.18);
+  }
+  .head{display:flex;align-items:center;gap:8px}
+  .swatch-dot{
+    width:14px;height:14px;border-radius:999px;
+    background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.7), transparent 55%), var(--mid);
+    box-shadow:
+      inset 0 -1px 2px rgba(0,0,0,0.30),
+      inset 0 1px 1px rgba(255,255,255,0.5),
+      0 1px 2px rgba(0,0,0,0.18);
+  }
+  .name{font-size:14px;font-weight:600;color:var(--color-fg-strong)}
+  .hex{font-family:var(--font-mono);font-size:11px;color:var(--color-fg-muted);margin-left:auto}
+
+  /* — 3D solid bar (raised, glossy) — */
+  .bar{
+    height:36px;border-radius:8px;display:flex;align-items:center;padding:0 10px;
+    font-size:11px;font-weight:600;color:#fff;letter-spacing:-0.01em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:geometricPrecision;
+    text-shadow:0 1px 1px rgba(0,0,0,0.35);
+    background:linear-gradient(180deg, var(--top) 0%, var(--mid) 50%, var(--bot) 100%);
+    border:1px solid rgba(0,0,0,0.20);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.40),
+      inset 0 -1px 0 rgba(0,0,0,0.18),
+      0 2px 3px rgba(0,0,0,0.14),
+      0 6px 14px -4px rgba(0,0,0,0.20);
+  }
+
+  /* — 3D soft bar (recessed/inset feel) — */
+  .bar-soft{
+    height:36px;border-radius:8px;display:flex;align-items:center;padding:0 10px;
+    font-size:11px;font-weight:600;color:var(--fg-soft);letter-spacing:-0.01em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:geometricPrecision;
+    background:linear-gradient(180deg, var(--soft-top) 0%, var(--soft-bot) 100%);
+    border:1px solid var(--soft-bd);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.85),
+      0 1px 2px rgba(0,0,0,0.06);
+  }
+
+  .meta{display:flex;justify-content:space-between;align-items:center;font-family:var(--font-mono);font-size:10px;color:var(--color-fg-muted);text-transform:uppercase;letter-spacing:0.06em}
+
+  /* Standard developer-recognizable semantic palette
+     (Tailwind-aligned: emerald-500, amber-500, red-500, sky-500) */
+
+  /* SUCCESS — emerald 500 #10B981 */
+  .c-success{
+    --top:#34D399; --mid:#10B981; --bot:#047857;
+    --soft-top:#ECFDF5; --soft-bot:#D1FAE5; --soft-bd:#A7F3D0; --fg-soft:#065F46;
+  }
+  /* WARNING — amber 500 #F59E0B */
+  .c-warning{
+    --top:#FBBF24; --mid:#F59E0B; --bot:#B45309;
+    --soft-top:#FFFBEB; --soft-bot:#FEF3C7; --soft-bd:#FDE68A; --fg-soft:#92400E;
+  }
+  /* DANGER — red 500 #EF4444 */
+  .c-danger{
+    --top:#F87171; --mid:#EF4444; --bot:#B91C1C;
+    --soft-top:#FEF2F2; --soft-bot:#FEE2E2; --soft-bd:#FECACA; --fg-soft:#991B1B;
+  }
+  /* INFO — sky 500 #0EA5E9 */
+  .c-info{
+    --top:#38BDF8; --mid:#0EA5E9; --bot:#0369A1;
+    --soft-top:#F0F9FF; --soft-bot:#E0F2FE; --soft-bd:#BAE6FD; --fg-soft:#075985;
+  }
+</style></head><body>
+  <div class="grid">
+
+    <div class="card c-success">
+      <div class="head">
+        <span class="swatch-dot"></span>
+        <span class="name">Success</span>
+        <span class="hex">#10B981</span>
+      </div>
+      <div class="bar">Verified · 1850 census</div>
+      <div class="bar-soft">Soft surface</div>
+      <div class="meta"><span>emerald-500</span><span>AA · #fff</span></div>
+    </div>
+
+    <div class="card c-warning">
+      <div class="head">
+        <span class="swatch-dot"></span>
+        <span class="name">Warning</span>
+        <span class="hex">#F59E0B</span>
+      </div>
+      <div class="bar" style="color:#3A2810;text-shadow:0 1px 1px rgba(255,255,255,0.4)">Conflict · 2 sources</div>
+      <div class="bar-soft">Soft surface</div>
+      <div class="meta"><span>amber-500</span><span>AA · #3A2810</span></div>
+    </div>
+
+    <div class="card c-danger">
+      <div class="head">
+        <span class="swatch-dot"></span>
+        <span class="name">Danger</span>
+        <span class="hex">#EF4444</span>
+      </div>
+      <div class="bar">Parse failed</div>
+      <div class="bar-soft">Soft surface</div>
+      <div class="meta"><span>red-500</span><span>AA · #fff</span></div>
+    </div>
+
+    <div class="card c-info">
+      <div class="head">
+        <span class="swatch-dot"></span>
+        <span class="name">Info</span>
+        <span class="hex">#0EA5E9</span>
+      </div>
+      <div class="bar">12 hypotheses</div>
+      <div class="bar-soft">Soft surface</div>
+      <div class="meta"><span>sky-500</span><span>AA · #fff</span></div>
+    </div>
+
+  </div>
+</body></html>

@@ -8,7 +8,7 @@
 ## Контекст
 
 Phase 6.x доставила DNA matches, Phase 7.x — hypothesis engine с
-Bayesian fusion (Phase 7.5 / ADR-0057), Phase 10.x — AI source extraction.
+Bayesian fusion (Phase 7.5 / ADR-0065), Phase 10.x — AI source extraction.
 Backend знает, какие sources подтверждают каждую гипотезу о связи между
 двумя сущностями. Но в UI пользователь видит **дерево**, не список гипотез.
 Когда профессиональный генеалог щёлкает по линии «отец → сын» в дереве,
@@ -329,5 +329,5 @@ follow-up wiring PR. Сейчас компонент полностью controll
 - ADR-0014 — DNA matching, source of confidence-thresholds intuition.
 - ADR-0021 — Hypothesis persistence (FK Hypothesis ↔ HypothesisEvidence).
 - ADR-0036 — Sharing & permissions model (`require_tree_role` semantics).
-- ADR-0057 — inference-engine v2 aggregation (Bayesian fusion source).
+- ADR-0065 — inference-engine v2 aggregation (Bayesian fusion source).
 - ROADMAP §15 (этот PR добавляет секцию).

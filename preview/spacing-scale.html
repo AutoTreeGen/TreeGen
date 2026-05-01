@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Spacing scale</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:24px;background:var(--color-bg);font-family:var(--font-sans)}
+  .stack{display:flex;flex-direction:column;gap:14px;max-width:720px}
+  .row{display:flex;align-items:center;gap:16px}
+  .lab{
+    font-family:var(--font-mono);font-size:11px;color:var(--color-fg-strong);
+    min-width:88px;font-weight:600;letter-spacing:0.02em;text-transform:uppercase;
+  }
+  .px{
+    font-family:var(--font-mono);font-size:11px;color:var(--color-fg-muted);
+    margin-left:14px;font-variant-numeric:tabular-nums;
+  }
+  /* SVG bars use overflow:visible so the top/right extrusion isn't clipped */
+  svg.bar{display:block;overflow:visible}
+</style>
+<defs>
+</defs></head><body>
+
+<!-- Shared gradient defs — referenced by every bar via xlink -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- Front face: top→middle→bottom for vertical depth -->
+    <linearGradient id="bar-front" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#5C8DD6"/>
+      <stop offset="55%" stop-color="#2E5DA5"/>
+      <stop offset="100%" stop-color="#1F4380"/>
+    </linearGradient>
+    <!-- Top face: lighter (catches light from above) -->
+    <linearGradient id="bar-top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#9FBEE6"/>
+      <stop offset="100%" stop-color="#7AA5D6"/>
+    </linearGradient>
+    <!-- Right face: darker (in shadow) -->
+    <linearGradient id="bar-right" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"  stop-color="#264E89"/>
+      <stop offset="100%" stop-color="#16315A"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="stack">
+  <!-- Each bar: front rect + top parallelogram (skewed via points) + right parallelogram.
+       Polygon points are explicit so corners ALWAYS meet cleanly,
+       regardless of bar width. SVG height = bar height (18) + extrusion depth (6). -->
+
+  <div class="row"><span class="lab">space-1</span>
+    <svg class="bar" width="4" height="24" viewBox="0 0 10 24">
+      <!-- Right face (drawn first, behind) -->
+      <polygon points="4,0 10,-6 10,18 4,24" fill="url(#bar-right)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+      <!-- Top face -->
+      <polygon points="0,0 4,0 10,-6 6,-6" fill="url(#bar-top)" stroke="rgba(0,0,0,0.25)" stroke-width="0.5"/>
+      <!-- Front face -->
+      <rect x="0" y="0" width="4" height="24" rx="1" fill="url(#bar-front)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+    </svg>
+    <span class="px">4</span>
+  </div>
+
+  <div class="row"><span class="lab">space-2</span>
+    <svg class="bar" width="8" height="24" viewBox="0 0 14 24">
+      <polygon points="8,0 14,-6 14,18 8,24" fill="url(#bar-right)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+      <polygon points="0,0 8,0 14,-6 6,-6" fill="url(#bar-top)" stroke="rgba(0,0,0,0.25)" stroke-width="0.5"/>
+      <rect x="0" y="0" width="8" height="24" rx="1.5" fill="url(#bar-front)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+    </svg>
+    <span class="px">8</span>
+  </div>
+
+  <div class="row"><span class="lab">space-3</span>
+    <svg class="bar" width="12" height="24" viewBox="0 0 18 24">
+      <polygon points="12,0 18,-6 18,18 12,24" fill="url(#bar-right)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+      <polygon points="0,0 12,0 18,-6 6,-6" fill="url(#bar-top)" stroke="rgba(0,0,0,0.25)" stroke-width="0.5"/>
+      <rect x="0" y="0" width="12" height="24" rx="2" fill="url(#bar-front)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+    </svg>
+    <span class="px">12</span>
+  </div>
+
+  <div class="row"><span class="lab">space-4</span>
+    <svg class="bar" width="16" height="24" viewBox="0 0 22 24">
+      <polygon points="16,0 22,-6 22,18 16,24" fill="url(#bar-right)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+      <polygon points="0,0 16,0 22,-6 6,-6" fill="url(#bar-top)" stroke="rgba(0,0,0,0.25)" stroke-width="0.5"/>
+      <rect x="0" y="0" width="16" height="24" rx="2.5" fill="url(#bar-front)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+    </svg>
+    <span class="px">16</span>
+  </div>
+
+  <div class="row"><span class="lab">space-5</span>
+    <svg class="bar" width="20" height="24" viewBox="0 0 26 24">
+      <polygon points="20,0 26,-6 26,18 20,24" fill="url(#bar-right)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+      <polygon points="0,0 20,0 26,-6 6,-6" fill="url(#bar-top)" stroke="rgba(0,0,0,0.25)" stroke-width="0.5"/>
+      <rect x="0" y="0" width="20" height="24" rx="3" fill="url(#bar-front)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+    </svg>
+    <span class="px">20</span>
+  </div>
+
+  <div class="row"><span class="lab">space-6</span>
+    <svg class="bar" width="24" height="24" viewBox="0 0 30 24">
+      <polygon points="24,0 30,-6 30,18 24,24" fill="url(#bar-right)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+      <polygon points="0,0 24,0 30,-6 6,-6" fill="url(#bar-top)" stroke="rgba(0,0,0,0.25)" stroke-width="0.5"/>
+      <rect x="0" y="0" width="24" height="24" rx="3" fill="url(#bar-front)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+    </svg>
+    <span class="px">24</span>
+  </div>
+
+  <div class="row"><span class="lab">space-8</span>
+    <svg class="bar" width="32" height="24" viewBox="0 0 38 24">
+      <polygon points="32,0 38,-6 38,18 32,24" fill="url(#bar-right)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+      <polygon points="0,0 32,0 38,-6 6,-6" fill="url(#bar-top)" stroke="rgba(0,0,0,0.25)" stroke-width="0.5"/>
+      <rect x="0" y="0" width="32" height="24" rx="3" fill="url(#bar-front)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+    </svg>
+    <span class="px">32</span>
+  </div>
+
+  <div class="row"><span class="lab">space-12</span>
+    <svg class="bar" width="48" height="24" viewBox="0 0 54 24">
+      <polygon points="48,0 54,-6 54,18 48,24" fill="url(#bar-right)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+      <polygon points="0,0 48,0 54,-6 6,-6" fill="url(#bar-top)" stroke="rgba(0,0,0,0.25)" stroke-width="0.5"/>
+      <rect x="0" y="0" width="48" height="24" rx="3" fill="url(#bar-front)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+    </svg>
+    <span class="px">48</span>
+  </div>
+
+  <div class="row"><span class="lab">space-16</span>
+    <svg class="bar" width="64" height="24" viewBox="0 0 70 24">
+      <polygon points="64,0 70,-6 70,18 64,24" fill="url(#bar-right)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+      <polygon points="0,0 64,0 70,-6 6,-6" fill="url(#bar-top)" stroke="rgba(0,0,0,0.25)" stroke-width="0.5"/>
+      <rect x="0" y="0" width="64" height="24" rx="3" fill="url(#bar-front)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+    </svg>
+    <span class="px">64</span>
+  </div>
+
+  <div class="row"><span class="lab">space-24</span>
+    <svg class="bar" width="96" height="24" viewBox="0 0 102 24">
+      <polygon points="96,0 102,-6 102,18 96,24" fill="url(#bar-right)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+      <polygon points="0,0 96,0 102,-6 6,-6" fill="url(#bar-top)" stroke="rgba(0,0,0,0.25)" stroke-width="0.5"/>
+      <rect x="0" y="0" width="96" height="24" rx="3" fill="url(#bar-front)" stroke="rgba(0,0,0,0.30)" stroke-width="0.5"/>
+    </svg>
+    <span class="px">96</span>
+  </div>
+</div>
+</body></html>

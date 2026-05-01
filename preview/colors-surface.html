@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Surfaces & text</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:20px;background:var(--color-bg);font-family:var(--font-sans)}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface)}
+  .sw{width:40px;height:28px;border-radius:var(--radius-sm);border:1px solid var(--color-border)}
+  .lab{font-size:13px;font-weight:500;color:var(--color-fg-strong)}
+  .hex{font-family:var(--font-mono);font-size:11px;color:var(--color-fg-muted);margin-left:auto}
+</style></head><body>
+  <div class="grid">
+    <div class="row"><div class="sw" style="background:#FAF6FC"></div><span class="lab">bg · page wash</span><span class="hex">#FAF6FC</span></div>
+    <div class="row"><div class="sw" style="background:#F2E9F6"></div><span class="lab">bg-muted</span><span class="hex">#F2E9F6</span></div>
+    <div class="row"><div class="sw" style="background:#FFFFFF"></div><span class="lab">surface</span><span class="hex">#FFFFFF</span></div>
+    <div class="row"><div class="sw" style="background:#F8F4FA"></div><span class="lab">surface-muted</span><span class="hex">#F8F4FA</span></div>
+    <div class="row"><div class="sw" style="background:#F2EBF5"></div><span class="lab">surface-sunk</span><span class="hex">#F2EBF5</span></div>
+    <div class="row"><div class="sw" style="background:#E5DDEB"></div><span class="lab">border</span><span class="hex">#E5DDEB</span></div>
+    <div class="row"><div class="sw" style="background:#1A1024"></div><span class="lab">fg · ink</span><span class="hex">#1A1024</span></div>
+    <div class="row"><div class="sw" style="background:#5C4D6B"></div><span class="lab">fg-muted</span><span class="hex">#5C4D6B</span></div>
+  </div>
+</body></html>

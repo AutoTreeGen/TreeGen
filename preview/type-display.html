@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Display type</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:24px;background:var(--color-bg);font-family:var(--font-sans);color:var(--color-fg)}
+  .stack{display:flex;flex-direction:column;gap:18px;max-width:880px}
+  .row{display:grid;grid-template-columns:160px 1fr;gap:18px;align-items:baseline;padding:14px 0;border-bottom:1px dashed var(--color-divider)}
+  .row:last-child{border:0}
+  .lab{font-family:var(--font-mono);font-size:12px;color:var(--color-fg-muted);line-height:1.45}
+  .lab b{display:block;color:var(--color-fg-strong);font-weight:500;margin-bottom:2px}
+  h1,h2,h3{margin:0}
+  .lede{font-family:var(--font-display);font-size:1.375rem;line-height:1.55;color:var(--color-fg-strong);max-width:62ch;font-style:italic}
+  .read{font-size:1.125rem;line-height:1.65;color:var(--color-fg);max-width:62ch}
+  .small{font-size:0.9375rem;line-height:1.6;color:var(--color-fg-muted);max-width:62ch}
+  .note{font-family:var(--font-mono);font-size:11px;color:var(--color-fg-subtle);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:18px}
+</style></head><body>
+  <div class="note">scale bumped one step \u00b7 base reading 18px \u00b7 line-height 1.65 \u00b7 designed for 8 to 88</div>
+  <div class="stack">
+    <div class="row"><span class="lab"><b>display-1</b>72/PT Serif 700<br>line 1.2</span><span class="display-1">From DNA to truth.</span></div>
+    <div class="row"><span class="lab"><b>h1</b>56/PT Serif 700<br>line 1.2</span><h1>Evidence-based genealogy</h1></div>
+    <div class="row"><span class="lab"><b>h2</b>36/PT Serif 700<br>line 1.4</span><h2>Hypothesis explorer</h2></div>
+    <div class="row"><span class="lab"><b>h3</b>28/PT Serif 700<br>line 1.4</span><h3>DNA matches \u00b7 47 cM shared</h3></div>
+    <div class="row"><span class="lab"><b>lede</b>22/PT Serif italic<br>line 1.55</span>
+      <p class="lede">From the archive: <em>fond 728, opis 12, delo 414</em> \u2014 the parish register that ties three generations together.</p></div>
+    <div class="row"><span class="lab"><b>body</b>18/Inter 400<br>line 1.65</span>
+      <p class="read">A century-old census record can be hard to read at any age. We set the default reading size to 18 pixels with generous line-height so a grandchild and a grandparent can sit at the same screen and read the same paragraph without anyone squinting. Long-form notes flow at the same size; nothing in the product reads smaller than fifteen.</p></div>
+    <div class="row"><span class="lab"><b>body-sm</b>15/Inter 400<br>line 1.6</span>
+      <p class="small">Secondary information \u2014 captions, metadata, helper text \u2014 stays at fifteen pixels with the same loose leading. This is the floor; we never go below it for anything a reader needs to parse.</p></div>
+  </div>
+</body></html>

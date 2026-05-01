@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from shared_models.orm.audio_session import AudioSession, AudioSessionStatus
 from shared_models.orm.audit_log import AuditLog
 from shared_models.orm.citation import Citation
 from shared_models.orm.dna_cluster import DnaCluster, DnaClusterMember
@@ -47,6 +48,8 @@ from shared_models.orm.version import Version
 from shared_models.orm.waitlist_entry import WaitlistEntry
 
 __all__ = [
+    "AudioSession",
+    "AudioSessionStatus",
     "AuditLog",
     "Citation",
     "DnaCluster",

@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Logo system</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:28px;background:#FAF6FC;font-family:var(--font-sans)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .section{grid-column:1/-1;margin:6px 0 -2px;display:flex;align-items:baseline;gap:12px}
+  .section h3{margin:0;font-family:var(--font-display);font-weight:700;font-size:20px;color:var(--color-fg-strong)}
+  .section .hint{color:var(--color-fg-muted);font-size:12px}
+  .tile{
+    position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+    border:1px solid var(--color-border);border-radius:10px;padding:36px 24px 22px;min-height:280px;
+    background:var(--color-surface);
+    box-shadow:var(--shadow-sm);
+  }
+  .tile.hero{grid-column:1/-1;min-height:520px;background:radial-gradient(120% 80% at 50% 0%,#FFFFFF 0%,#F2E9F6 100%)}
+  .tile.dark{background:linear-gradient(180deg,#1B0D26 0%,#15081E 100%);border-color:#0F0716;color:#EFE5F5}
+  .tile.checker{
+    background:#FFFFFF;
+    background-image:
+      linear-gradient(45deg,#F2EBF5 25%,transparent 25%),
+      linear-gradient(-45deg,#F2EBF5 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#F2EBF5 75%),
+      linear-gradient(-45deg,transparent 75%,#F2EBF5 75%);
+    background-size:20px 20px;
+    background-position:0 0, 0 10px, 10px -10px, 10px 0;
+  }
+  .tile .lab{position:absolute;top:12px;left:16px;font-family:var(--font-mono);font-size:9px;letter-spacing:0.10em;text-transform:uppercase;color:var(--color-fg-subtle);font-weight:600}
+  .tile.dark .lab{color:rgba(239,229,245,0.55)}
+  .tile .name{font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--color-fg-strong)}
+  .tile.dark .name{color:#FBF7FE}
+  .tile .desc{font-size:11px;color:var(--color-fg-muted);text-align:center;line-height:1.5;max-width:280px}
+  .tile.dark .desc{color:rgba(239,229,245,0.65)}
+  .scale{display:flex;align-items:end;gap:28px;justify-content:center}
+  .scale span{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--color-fg-muted);font-size:10px;font-family:var(--font-mono)}
+
+  .lock-banner{
+    grid-column:1/-1;
+    display:flex;align-items:center;gap:14px;
+    background:#FFFFFF;border:1px solid var(--color-border);border-left:3px solid var(--color-deep-purple);
+    border-radius:8px;padding:12px 16px;
+    font-size:12px;color:var(--color-fg-muted);
+  }
+  .lock-banner b{color:var(--color-fg-strong);font-weight:600}
+  .lock-banner svg{flex:none}
+</style></head>
+<body>
+  <div class="grid">
+
+    <div class="lock-banner">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-deep-purple)"><rect x="4" y="11" width="16" height="10" rx="1.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <div>
+        <b>Locked asset.</b> The brand mark is the supplied illustration. Only auxiliary versions (favicon crop, dark-mode placement, mono) are derived from it.
+      </div>
+    </div>
+
+    <div class="section"><h3>Brand mark</h3><span class="hint">Roundel — primary application across all surfaces.</span></div>
+
+    <div class="tile hero">
+      <span class="lab">primary · roundel</span>
+      <img src="../assets/logo/mark.png" height="420" alt="AutoTreeGen mark">
+    </div>
+
+    <div class="section"><h3>Horizontal lockup</h3><span class="hint">Mark + wordmark — for headers, footers, signatures.</span></div>
+
+    <div class="tile" style="grid-column:1/-1;min-height:280px">
+      <span class="lab">horizontal · light</span>
+      <img src="../assets/logo/horizontal.png" style="max-width:760px;width:100%;height:auto" alt="AutoTreeGen">
+    </div>
+
+    <div class="tile dark" style="grid-column:1/-1;min-height:280px">
+      <span class="lab">horizontal · dark</span>
+      <img src="../assets/logo/horizontal.png" style="max-width:760px;width:100%;height:auto;filter:brightness(1.05)" alt="AutoTreeGen">
+    </div>
+
+    <div class="section"><h3>Auxiliary</h3><span class="hint">Favicon crop, scale ladder, dark surface placement.</span></div>
+
+    <div class="tile" style="grid-column:span 2">
+      <span class="lab">mark · scale</span>
+      <div class="scale">
+        <span><img src="../assets/logo/mark.png" height="24" alt="">24</span>
+        <span><img src="../assets/logo/mark.png" height="40" alt="">40</span>
+        <span><img src="../assets/logo/mark.png" height="64" alt="">64</span>
+        <span><img src="../assets/logo/mark.png" height="96" alt="">96</span>
+        <span><img src="../assets/logo/mark.png" height="160" alt="">160</span>
+      </div>
+    </div>
+    <div class="tile">
+      <span class="lab">favicon · 32px crop</span>
+      <img src="../assets/logo/favicon.png" width="96" height="96" alt="" style="image-rendering:auto;border-radius:8px">
+      <div class="desc">Tight crop of the roundel for browser tabs and app icons.</div>
+    </div>
+
+    <div class="tile dark">
+      <span class="lab">on dark surface</span>
+      <img src="../assets/logo/mark.png" height="180" alt="">
+    </div>
+    <div class="tile checker">
+      <span class="lab">on checker</span>
+      <img src="../assets/logo/mark.png" height="180" alt="">
+      <div class="desc">Verifies the roundel reads cleanly without a dedicated background panel.</div>
+    </div>
+    <div class="tile" style="background:var(--color-deep-purple);color:#fff">
+      <span class="lab" style="color:rgba(255,255,255,0.55)">on brand purple</span>
+      <img src="../assets/logo/mark.png" height="180" alt="">
+    </div>
+
+    <div class="section">
+      <h3>Alternate executions · same Tree+DNA</h3>
+      <span class="hint">Companion versions for surfaces the full-color medallion can't go — single-colour print, foil, embroidery, tiny favicons. The mark itself is unchanged.</span>
+    </div>
+
+    <!-- Mono purple knockout -->
+    <div class="tile" style="background:#FFFFFF">
+      <span class="lab">mono · brand purple</span>
+      <div style="width:200px;height:200px;border-radius:999px;background:var(--color-deep-purple);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+        <img src="../assets/logo/mark.png" height="200" style="filter:grayscale(1) contrast(1.4) brightness(1.05);mix-blend-mode:luminosity;opacity:0.95" alt="">
+      </div>
+      <div class="name">Solid purple medallion</div>
+      <div class="desc">For 1-colour print, embossing, foil stamping, anywhere process colour is unavailable.</div>
+    </div>
+
+    <!-- Mono dark on light -->
+    <div class="tile">
+      <span class="lab">mono · ink on cream</span>
+      <div style="width:200px;height:200px;border-radius:999px;background:#1A1024;display:flex;align-items:center;justify-content:center;overflow:hidden">
+        <img src="../assets/logo/mark.png" height="200" style="filter:grayscale(1) contrast(1.5) brightness(1.1);mix-blend-mode:luminosity;opacity:0.92" alt="">
+      </div>
+      <div class="name">Ink medallion</div>
+      <div class="desc">For sober contexts: legal documents, citation footers, archival certificates.</div>
+    </div>
+
+    <!-- Reverse knockout (white on purple) -->
+    <div class="tile dark">
+      <span class="lab">reverse · knockout white</span>
+      <div style="width:200px;height:200px;border-radius:999px;background:#FFFFFF;display:flex;align-items:center;justify-content:center;overflow:hidden">
+        <img src="../assets/logo/mark.png" height="200" style="filter:grayscale(1) contrast(1.6) brightness(1.05) invert(1);mix-blend-mode:luminosity" alt="">
+      </div>
+      <div class="name">White medallion</div>
+      <div class="desc">For dark surfaces — app splash, video opens, dark email headers.</div>
+    </div>
+
+    <!-- Tonal lilac (system theme tint) -->
+    <div class="tile" style="background:linear-gradient(180deg,#F8F4FA 0%,#E8D5F0 100%)">
+      <span class="lab">tonal · lilac wash</span>
+      <img src="../assets/logo/mark.png" height="200" alt="" style="filter:saturate(0.6) hue-rotate(-10deg) brightness(1.05)">
+      <div class="name">Tonal wash</div>
+      <div class="desc">Quieter placement for marketing pages where the full medallion would dominate.</div>
+    </div>
+
+    <!-- Foil / metallic treatment -->
+    <div class="tile" style="background:#0F0716">
+      <span class="lab">foil · gilt edge</span>
+      <div style="position:relative;width:220px;height:220px">
+        <div style="position:absolute;inset:0;border-radius:999px;background:radial-gradient(circle at 30% 25%,#F4D78A 0%,#C9A24B 35%,#7A5318 70%,#3A2208 100%);box-shadow:0 0 0 3px #2C1054, 0 0 0 4px #C9A24B, 0 24px 48px -12px rgba(201,162,75,0.45)"></div>
+        <img src="../assets/logo/mark.png" style="position:absolute;inset:8px;width:204px;height:204px;border-radius:999px;mix-blend-mode:multiply;opacity:0.85" alt="">
+      </div>
+      <div class="name">Gilt foil edition</div>
+      <div class="desc">Premium use: Pro-tier certificates, printed family-history books, anniversary editions.</div>
+    </div>
+
+    <!-- Tiny favicon ladder showing the medallion holds up -->
+    <div class="tile">
+      <span class="lab">favicon ladder</span>
+      <div style="display:flex;align-items:flex-end;gap:18px">
+        <span style="display:flex;flex-direction:column;align-items:center;gap:6px;font-family:var(--font-mono);font-size:9px;color:var(--color-fg-subtle)"><img src="../assets/logo/favicon.png" width="16" height="16" alt="">16</span>
+        <span style="display:flex;flex-direction:column;align-items:center;gap:6px;font-family:var(--font-mono);font-size:9px;color:var(--color-fg-subtle)"><img src="../assets/logo/favicon.png" width="24" height="24" alt="">24</span>
+        <span style="display:flex;flex-direction:column;align-items:center;gap:6px;font-family:var(--font-mono);font-size:9px;color:var(--color-fg-subtle)"><img src="../assets/logo/favicon.png" width="32" height="32" alt="">32</span>
+        <span style="display:flex;flex-direction:column;align-items:center;gap:6px;font-family:var(--font-mono);font-size:9px;color:var(--color-fg-subtle)"><img src="../assets/logo/favicon.png" width="48" height="48" alt="">48</span>
+        <span style="display:flex;flex-direction:column;align-items:center;gap:6px;font-family:var(--font-mono);font-size:9px;color:var(--color-fg-subtle)"><img src="../assets/logo/favicon.png" width="64" height="64" alt="">64</span>
+      </div>
+      <div class="name">Browser tab readability</div>
+      <div class="desc">Same crop, every common favicon size. Tree silhouette + helix still legible at 16px.</div>
+    </div>
+
+  </div>
+</body></html>

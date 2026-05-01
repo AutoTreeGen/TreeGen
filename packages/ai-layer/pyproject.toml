@@ -9,6 +9,9 @@
 # Зависимости:
 #   - anthropic: официальный SDK Claude API (см. ADR-0043 §«Anthropic vs ...»).
 #   - voyageai: embedding-провайдер выбран Voyage AI (1024-dim, multilingual).
+#   - openai: официальный SDK Whisper API (Phase 10.9a, ADR-0064 §A1).
+#   - mutagen: pure-python метаданные аудио — оценка длительности до egress'а
+#     для duration cap'а в WhisperClient (Phase 10.9a, ADR-0064 §G + §«Cost»).
 #   - jinja2: рендеринг prompt-шаблонов (см. registry.py).
 #   - pydantic: structured-output модели + конфиг.
 # Никаких sqlalchemy / fastapi / httpx прямой — обёртки оставляют HTTP клиенту
@@ -25,9 +28,11 @@ license = { text = "Proprietary" }
 authors = [{ name = "AutoTreeGen" }]
 dependencies = [
     "anthropic>=0.40",
-    "voyageai>=0.3",
     "jinja2>=3.1",
+    "mutagen>=1.47",
+    "openai>=1.0",
     "pydantic>=2.10",
+    "voyageai>=0.3",
 ]
 
 [project.optional-dependencies]

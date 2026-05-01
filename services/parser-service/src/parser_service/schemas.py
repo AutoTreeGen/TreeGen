@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -809,7 +810,7 @@ class HypothesisRecomputeScoresResponse(BaseModel):
     """
 
     tree_id: uuid.UUID
-    algorithm: str = Field(description="Версия aggregation algorithm (ADR-0057, Phase 7.5).")
+    algorithm: str = Field(description="Версия aggregation algorithm (ADR-0065, Phase 7.5).")
     recomputed_count: int = Field(ge=0)
     mean_absolute_delta: float = Field(ge=0.0, le=1.0)
     max_absolute_delta: float = Field(ge=0.0, le=1.0)
@@ -1747,3 +1748,118 @@ class AIExtractStatusResponse(BaseModel):
             "Текущий per-source $-cap (``PARSER_SERVICE_EXTRACT_BUDGET_USD``). 0 = cap отключён."
         ),
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 10.9a — voice-to-tree (ADR-0064).
+# ---------------------------------------------------------------------------
+
+
+AudioConsentProvider = Literal["openai", "self-hosted-whisper"]
+"""Допустимые значения ``Tree.audio_consent_egress_provider`` на app-слое.
+
+DB-уровень — VARCHAR(32) без CHECK (см. ORM ``Tree``), чтобы Phase 10.9.x
+мог добавить ``self-hosted-whisper`` без миграции; Pydantic-уровень
+ограничивает ввод до известных значений.
+"""
+
+
+AudioSessionStatusEnum = Literal["uploaded", "transcribing", "ready", "failed"]
+"""Статусы из ``shared_models.orm.AudioSessionStatus`` как Literal для API."""
+
+
+class AudioConsentRequest(BaseModel):
+    """Тело ``POST /trees/{id}/audio-consent``.
+
+    Owner явно выбирает провайдера, согласие на egress даётся под этот
+    конкретный backend. Изменение провайдера = revoke (DELETE) + новый POST.
+    """
+
+    provider: AudioConsentProvider = Field(
+        default="openai",
+        description="STT-провайдер, на который owner соглашается отправлять аудио.",
+    )
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class AudioConsentResponse(BaseModel):
+    """Ответ ``GET /trees/{id}/audio-consent`` и ``POST`` (после set'а).
+
+    Оба поля nullable: на trees без consent'а возвращаются ``null``.
+    """
+
+    tree_id: uuid.UUID
+    audio_consent_egress_at: datetime | None = Field(
+        default=None,
+        description=(
+            "Когда owner подтвердил согласие на egress. ``None`` — consent "
+            "не дан (POST /audio-sessions вернёт 403 consent_required)."
+        ),
+    )
+    audio_consent_egress_provider: AudioConsentProvider | None = Field(
+        default=None,
+        description="Провайдер, на который дано согласие. ``None`` парно с ``audio_consent_egress_at``.",
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AudioConsentRevokeResponse(BaseModel):
+    """Ответ ``DELETE /trees/{id}/audio-consent``.
+
+    202 Accepted: erasure-job'ы уже в очереди, но ещё не завершены. UI
+    показывает спиннер и опрашивает ``GET /trees/{id}/audio-sessions``
+    пока список не опустеет.
+    """
+
+    tree_id: uuid.UUID
+    revoked_at: datetime
+    enqueued_session_ids: list[uuid.UUID] = Field(
+        default_factory=list,
+        description="Сессии, для которых поставлен erasure-job. Пустой список = ничего не удаляли.",
+    )
+
+
+class AudioSessionResponse(BaseModel):
+    """Полная сессия — ответ ``POST /trees/{id}/audio-sessions``,
+    ``GET /audio-sessions/{id}`` и элемент ``GET /trees/{id}/audio-sessions``.
+
+    Поля повторяют ``AudioSession`` ORM 1:1, кроме ``owner_user_id``
+    (privacy: не показываем UUID владельца в ответе списка) и
+    ``consent_egress_at`` snapshot (внутренняя проверка, UI'ю не нужна).
+    """
+
+    id: uuid.UUID
+    tree_id: uuid.UUID
+    status: AudioSessionStatusEnum
+    storage_uri: str
+    mime_type: str
+    duration_sec: float | None = None
+    size_bytes: int
+    language: str | None = None
+    transcript_text: str | None = None
+    transcript_provider: str | None = None
+    transcript_model_version: str | None = None
+    transcript_cost_usd: Decimal | None = None
+    error_message: str | None = None
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AudioSessionListResponse(BaseModel):
+    """Пагинированный ответ ``GET /trees/{id}/audio-sessions``.
+
+    Soft-deleted сессии (``deleted_at IS NOT NULL``) включены — UI
+    показывает их с tombstone-стилем для аудита; чтобы скрыть,
+    фронт фильтрует по ``deleted_at`` сам.
+    """
+
+    tree_id: uuid.UUID
+    total: int
+    page: int
+    per_page: int
+    items: list[AudioSessionResponse]
