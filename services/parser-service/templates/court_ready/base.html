@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="{{ ctx.locale }}">
+<head>
+<meta charset="utf-8">
+<title>{{ t("report_title", ctx.locale) }} — {{ ctx.subject.primary_name }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 24mm 18mm;
+    @bottom-right {
+      content: counter(page) " / " counter(pages);
+      font-size: 9pt;
+      color: #555;
+    }
+  }
+  body {
+    font-family: "Times New Roman", Georgia, serif;
+    font-size: 11pt;
+    color: #111;
+    line-height: 1.45;
+  }
+  h1 { font-size: 22pt; margin: 0 0 4mm 0; font-weight: normal; letter-spacing: 0.02em; }
+  h2 { font-size: 14pt; margin: 8mm 0 2mm 0; border-bottom: 1px solid #888; padding-bottom: 1mm; font-weight: normal; }
+  h3 { font-size: 11pt; margin: 4mm 0 1mm 0; font-weight: bold; }
+  p, li { margin: 1mm 0; }
+  table { border-collapse: collapse; width: 100%; margin: 2mm 0 4mm 0; font-size: 10pt; }
+  th, td { border: 1px solid #888; padding: 1.5mm 2mm; text-align: left; vertical-align: top; }
+  th { background: #eee; font-weight: bold; }
+  .title-page { page-break-after: always; padding-top: 30mm; }
+  .title-page .meta { margin-top: 18mm; font-size: 11pt; color: #333; }
+  .title-page .meta dt { font-weight: bold; margin-top: 2mm; }
+  .title-page .meta dd { margin: 0 0 0 0; }
+  .signature-page { page-break-before: always; }
+  .signature-block { margin-top: 18mm; padding: 6mm; border: 1px solid #000; }
+  .signature-block .line { border-bottom: 1px solid #000; height: 6mm; margin-top: 8mm; }
+  .footnotes { font-size: 9pt; color: #222; margin-top: 6mm; border-top: 1px solid #ccc; padding-top: 3mm; }
+  .footnote-list { padding-left: 6mm; }
+  sup { font-size: 0.75em; vertical-align: super; line-height: 0; }
+  .badge {
+    display: inline-block;
+    padding: 0.4mm 1.5mm;
+    font-size: 9pt;
+    border: 1px solid #555;
+    border-radius: 1mm;
+    margin-left: 1.5mm;
+  }
+  .conf-bayesian { background: #e8f0fe; }
+  .conf-naive    { background: #fff7d6; }
+  .conf-asserted { background: #fde2e2; }
+  .negative      { color: #7a1d1d; }
+</style>
+</head>
+{% from "_macros.html" import vital_event, event_rows, footnote_sup with context %}
+<body>
+
+{# === Title page === #}
+<section class="title-page">
+  <h1>{{ t("report_title", ctx.locale) }}</h1>
+  <p style="font-size: 13pt;">{{ ctx.subject.primary_name }}</p>
+  <dl class="meta">
+    <dt>{{ t("subject", ctx.locale) }}:</dt>
+    <dd>{{ ctx.subject.primary_name }} ({{ ctx.subject.person_id }})</dd>
+    <dt>{{ t("tree", ctx.locale) }}:</dt>
+    <dd>{{ ctx.tree_name }}</dd>
+    <dt>{{ t("scope", ctx.locale) }}:</dt>
+    <dd>{{ scope_label(ctx.scope, ctx.target_gen, ctx.locale) }}</dd>
+    <dt>{{ t("generated_at", ctx.locale) }}:</dt>
+    <dd>{{ ctx.generated_at | fmt_date }}</dd>
+    <dt>{{ t("generated_by", ctx.locale) }}:</dt>
+    <dd>AutoTreeGen / SmarTreeDNA — Court-Ready Report v1</dd>
+  </dl>
+</section>
+
+{# === Subject summary === #}
+<section>
+  <h2>{{ t("subject_summary", ctx.locale) }}</h2>
+  <p><strong>{{ t("primary_name", ctx.locale) }}:</strong> {{ ctx.subject.primary_name }}</p>
+  {% if ctx.subject.aka_names %}
+  <p><strong>{{ t("also_known_as", ctx.locale) }}:</strong> {{ ctx.subject.aka_names | join("; ") }}</p>
+  {% endif %}
+  <p><strong>{{ t("sex", ctx.locale) }}:</strong> {{ sex_label(ctx.subject.sex, ctx.locale) }}</p>
+
+  {{ vital_event(ctx.subject.birth, "birth") }}
+  {{ vital_event(ctx.subject.death, "death") }}
+</section>
+
+{% block scope_specific %}{% endblock %}
+
+{# === Family relationships === #}
+<section>
+  <h2>{{ t("family_relationships", ctx.locale) }}</h2>
+  {% if ctx.relationships %}
+  <table>
+    <thead>
+      <tr>
+        <th>{{ t("primary_name", ctx.locale) }}</th>
+        <th>{{ t("evidence_type", ctx.locale) }}</th>
+        <th>{{ t("confidence", ctx.locale) }}</th>
+        <th>{{ t("source", ctx.locale) }}</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for rel in ctx.relationships %}
+      <tr>
+        <td>{{ relation_label(rel.relation_kind, ctx.locale) }}: {{ rel.other_person_name }}</td>
+        <td>{{ evidence_kind_label(rel.evidence_type, ctx.locale) }}</td>
+        <td>
+          {{ "%.2f" | format(rel.confidence_score) }}
+          <span class="badge conf-{{ 'bayesian' if rel.confidence_method == 'bayesian_fusion_v2' else ('naive' if rel.confidence_method == 'naive_count' else 'asserted') }}">
+            {{ confidence_method_label(rel.confidence_method, ctx.locale) }}
+          </span>
+        </td>
+        <td>
+          {% for c in rel.citations %}{{ footnote_sup(c) }}{% if not loop.last %}, {% endif %}{% endfor %}
+          {% if not rel.citations %}—{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>{{ t("no_relationships", ctx.locale) }}</p>
+  {% endif %}
+</section>
+
+{# === Evidence trail === #}
+<section>
+  <h2>{{ t("evidence_trail", ctx.locale) }}</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>{{ t("claim", ctx.locale) }}</th>
+        <th>{{ t("source", ctx.locale) }}</th>
+        <th>{{ t("confidence", ctx.locale) }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ event_rows(ctx.subject.birth) }}
+      {{ event_rows(ctx.subject.death) }}
+      {% for ev in ctx.other_events %}{{ event_rows(ev) }}{% endfor %}
+      {% for rel in ctx.relationships %}
+        {% for c in rel.citations %}
+          <tr>
+            <td>{{ relation_label(rel.relation_kind, ctx.locale) }}: {{ rel.other_person_name }}</td>
+            <td>
+              {{ format_chicago(c) }}
+              {{ footnote_sup(c) }}
+            </td>
+            <td>{{ "%.2f" | format(c.quality) }}</td>
+          </tr>
+        {% endfor %}
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+{# === Negative findings === #}
+<section>
+  <h2 class="{% if ctx.negative_findings %}negative{% endif %}">{{ t("negative_findings", ctx.locale) }}</h2>
+  {% if ctx.negative_findings %}
+  <ul>
+  {% for nf in ctx.negative_findings %}
+    <li class="negative">
+      <strong>{{ negative_kind_label(nf.kind, ctx.locale) }}:</strong> {{ nf.description }}
+    </li>
+  {% endfor %}
+  </ul>
+  {% else %}
+  <p>{{ t("no_negative_findings", ctx.locale) }}</p>
+  {% endif %}
+</section>
+
+{# === Footnotes === #}
+{% if footnotes %}
+<section class="footnotes">
+  <h3>{{ t("footnotes", ctx.locale) }}</h3>
+  <ol class="footnote-list">
+  {% for fn in footnotes %}
+    <li>{{ format_chicago(fn) }}</li>
+  {% endfor %}
+  </ol>
+</section>
+{% endif %}
+
+{# === Signature page === #}
+<section class="signature-page">
+  <h2>{{ t("signature_page", ctx.locale) }}</h2>
+  <h3>{{ t("methodology", ctx.locale) }}</h3>
+  <p>{{ ctx.methodology_statement }}</p>
+
+  <div class="signature-block">
+    <p><strong>{{ t("researcher", ctx.locale) }}:</strong>
+      {{ ctx.researcher_name if ctx.researcher_name else "_______________________" }}
+    </p>
+    <div class="line"></div>
+    <p style="margin-top: 4mm;"><strong>{{ t("generated_at", ctx.locale) }}:</strong>
+      {{ ctx.generated_at | fmt_date }}
+    </p>
+    <p><strong>Report ID:</strong> {{ ctx.report_id }}</p>
+  </div>
+</section>
+
+</body>
+</html>

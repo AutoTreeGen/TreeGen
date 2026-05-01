@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block scope_specific %}
+{# Family-scope — relationships уже в base; здесь подсветка spouses + children. #}
+<section>
+  <h2>{{ scope_label(ctx.scope, ctx.target_gen, ctx.locale) }}</h2>
+  {% set spouses = ctx.relationships | selectattr("relation_kind", "equalto", "spouse") | list %}
+  {% set children = ctx.relationships | selectattr("relation_kind", "equalto", "child") | list %}
+  {% if spouses %}
+  <h3>{{ relation_label("spouse", ctx.locale) }}</h3>
+  <ul>
+    {% for r in spouses %}
+    <li>
+      {{ r.other_person_name }}
+      <span class="badge conf-{{ 'bayesian' if r.confidence_method == 'bayesian_fusion_v2' else ('naive' if r.confidence_method == 'naive_count' else 'asserted') }}">
+        {{ "%.2f" | format(r.confidence_score) }} · {{ confidence_method_label(r.confidence_method, ctx.locale) }}
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% if children %}
+  <h3>{{ relation_label("child", ctx.locale) }}</h3>
+  <ul>
+    {% for r in children %}
+    <li>
+      {{ r.other_person_name }}
+      <span class="badge conf-{{ 'bayesian' if r.confidence_method == 'bayesian_fusion_v2' else ('naive' if r.confidence_method == 'naive_count' else 'asserted') }}">
+        {{ "%.2f" | format(r.confidence_score) }} · {{ confidence_method_label(r.confidence_method, ctx.locale) }}
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endblock %}

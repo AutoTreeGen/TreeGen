@@ -43,6 +43,7 @@ from parser_service.api import (
 )
 from parser_service.auth import get_current_claims
 from parser_service.config import get_settings
+from parser_service.court_ready import router as court_ready_router
 from parser_service.database import dispose_engine, init_engine
 from parser_service.queue import close_arq_pool
 
@@ -174,6 +175,11 @@ app.include_router(waitlist.router, tags=["waitlist"])
 # Clerk webhooks — отдельный путь /webhooks/clerk (Phase 4.10, ADR-0033).
 # Аутентификация — Svix HMAC внутри ручки, не Bearer.
 app.include_router(clerk_webhooks.router, tags=["auth", "webhooks"])
+# Phase 15.6 — Court-Ready Report. POST /api/v1/reports/court-ready.
+# Auth required — VIEWER+ роль на tree персоны проверяется внутри ручки
+# (resolve Person → Tree). Supersedes-note к ADR-0058: report endpoints
+# живут здесь, не в отдельном report-service.
+app.include_router(court_ready_router, tags=["reports", "court-ready"], dependencies=_AUTH_DEPS)
 # Phase 14.2 — internal digest-summary endpoint. Auth — service-token
 # через ``X-Internal-Service-Token`` header (зеркало telegram-bot /notify).
 # БЕЗ ``_AUTH_DEPS``: caller — telegram-bot worker, не end-user.

@@ -1,0 +1,39 @@
+{# Shared Jinja-макросы для Court-Ready Report шаблонов. #}
+
+{% macro footnote_sup(c) -%}
+<sup>{{ footnote_index[c.source_id|string ~ '|' ~ c.citation_id|string] }}</sup>
+{%- endmacro %}
+
+{% macro vital_event(ev, kind) %}
+  {% if ev %}
+  <p><strong>{{ event_label(ev.event_type, ctx.locale) }}:</strong>
+    {{ ev.date_raw or (ev.date_start | fmt_date) or t("no_birth", ctx.locale) }}
+    {% if ev.place_name %}, {{ ev.place_name }}{% endif %}
+    {% for c in ev.citations %}{{ footnote_sup(c) }}{% if not loop.last %}, {% endif %}{% endfor %}
+  </p>
+  {% else %}
+  <p><strong>{{ t("birth", ctx.locale) if kind == "birth" else t("death", ctx.locale) }}:</strong>
+    <em class="negative">{{ t("no_birth", ctx.locale) if kind == "birth" else t("no_death", ctx.locale) }}</em>
+  </p>
+  {% endif %}
+{% endmacro %}
+
+{% macro event_rows(ev) %}
+  {% if ev %}
+    {% if ev.citations %}
+      {% for c in ev.citations %}
+        <tr>
+          <td>{{ event_label(ev.event_type, ctx.locale, custom_type=ev.custom_type) }}{% if ev.date_raw or ev.date_start %} ({{ ev.date_raw or (ev.date_start | fmt_date) }}){% endif %}{% if ev.place_name %}, {{ ev.place_name }}{% endif %}</td>
+          <td>{{ format_chicago(c) }}{{ footnote_sup(c) }}</td>
+          <td>{{ "%.2f" | format(c.quality) }}</td>
+        </tr>
+      {% endfor %}
+    {% else %}
+      <tr>
+        <td>{{ event_label(ev.event_type, ctx.locale, custom_type=ev.custom_type) }}{% if ev.date_raw or ev.date_start %} ({{ ev.date_raw or (ev.date_start | fmt_date) }}){% endif %}{% if ev.place_name %}, {{ ev.place_name }}{% endif %}</td>
+        <td class="negative">— ({{ negative_kind_label("event_without_source", ctx.locale) }})</td>
+        <td>0.00</td>
+      </tr>
+    {% endif %}
+  {% endif %}
+{% endmacro %}
