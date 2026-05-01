@@ -1,0 +1,252 @@
+[
+  {
+    "archive_id": "pl-aplodz-vital",
+    "name": "State Archive in Łódź — Vital Records",
+    "location_country": "PL",
+    "location_city": "Łódź",
+    "time_range_start": 1808,
+    "time_range_end": 1939,
+    "languages": ["pl", "ru", "de"],
+    "digitization_level": "partial"
+  },
+  {
+    "archive_id": "pl-agad-warsaw",
+    "name": "Central Archives of Historical Records (AGAD), Warsaw",
+    "location_country": "PL",
+    "location_city": "Warsaw",
+    "time_range_start": 1500,
+    "time_range_end": 1944,
+    "languages": ["pl", "ru", "la", "de"],
+    "digitization_level": "partial"
+  },
+  {
+    "archive_id": "pl-aplublin",
+    "name": "State Archive in Lublin",
+    "location_country": "PL",
+    "location_city": "Lublin",
+    "time_range_start": 1700,
+    "time_range_end": 1944,
+    "languages": ["pl", "ru", "de"],
+    "digitization_level": "partial"
+  },
+  {
+    "archive_id": "pl-apkrakow",
+    "name": "State Archive in Kraków",
+    "location_country": "PL",
+    "location_city": "Kraków",
+    "time_range_start": 1500,
+    "time_range_end": 1939,
+    "languages": ["pl", "de", "la"],
+    "digitization_level": "partial"
+  },
+  {
+    "archive_id": "ru-rgada-moscow",
+    "name": "Russian State Archive of Ancient Acts (RGADA), Moscow",
+    "location_country": "RU",
+    "location_city": "Moscow",
+    "time_range_start": 1100,
+    "time_range_end": 1800,
+    "languages": ["ru"],
+    "digitization_level": "none"
+  },
+  {
+    "archive_id": "ru-rgia-spb",
+    "name": "Russian State Historical Archive (RGIA), St. Petersburg",
+    "location_country": "RU",
+    "location_city": "Saint Petersburg",
+    "time_range_start": 1700,
+    "time_range_end": 1917,
+    "languages": ["ru"],
+    "digitization_level": "partial"
+  },
+  {
+    "archive_id": "ru-garf-moscow",
+    "name": "State Archive of the Russian Federation (GARF), Moscow",
+    "location_country": "RU",
+    "location_city": "Moscow",
+    "time_range_start": 1800,
+    "time_range_end": 2000,
+    "languages": ["ru"],
+    "digitization_level": "partial"
+  },
+  {
+    "archive_id": "ua-tsdiak-kyiv",
+    "name": "Central State Historical Archive of Ukraine, Kyiv (TsDIAK)",
+    "location_country": "UA",
+    "location_city": "Kyiv",
+    "time_range_start": 1500,
+    "time_range_end": 1917,
+    "languages": ["uk", "ru", "pl", "la"],
+    "digitization_level": "partial"
+  },
+  {
+    "archive_id": "ua-tsdial-lviv",
+    "name": "Central State Historical Archive of Ukraine, Lviv (TsDIAL)",
+    "location_country": "UA",
+    "location_city": "Lviv",
+    "time_range_start": 1300,
+    "time_range_end": 1939,
+    "languages": ["uk", "pl", "de", "la"],
+    "digitization_level": "partial"
+  },
+  {
+    "archive_id": "ua-daoo-odesa",
+    "name": "State Archive of Odesa Oblast (DAOO)",
+    "location_country": "UA",
+    "location_city": "Odesa",
+    "time_range_start": 1795,
+    "time_range_end": 1944,
+    "languages": ["uk", "ru"],
+    "digitization_level": "none"
+  },
+  {
+    "archive_id": "by-niab-minsk",
+    "name": "National Historical Archives of Belarus, Minsk (NIAB)",
+    "location_country": "BY",
+    "location_city": "Minsk",
+    "time_range_start": 1500,
+    "time_range_end": 1917,
+    "languages": ["be", "ru", "pl", "la"],
+    "digitization_level": "none"
+  },
+  {
+    "archive_id": "by-niab-hrodna",
+    "name": "National Historical Archives of Belarus, Hrodna (NIAB Grodno)",
+    "location_country": "BY",
+    "location_city": "Hrodna",
+    "time_range_start": 1500,
+    "time_range_end": 1917,
+    "languages": ["be", "ru", "pl", "la"],
+    "digitization_level": "none"
+  },
+  {
+    "archive_id": "lt-lvia-vilnius",
+    "name": "Lithuanian State Historical Archives (LVIA), Vilnius",
+    "location_country": "LT",
+    "location_city": "Vilnius",
+    "time_range_start": 1500,
+    "time_range_end": 1940,
+    "languages": ["lt", "pl", "ru", "yi", "de"],
+    "digitization_level": "partial"
+  },
+  {
+    "archive_id": "il-isa-jerusalem",
+    "name": "Israel State Archives, Jerusalem",
+    "location_country": "IL",
+    "location_city": "Jerusalem",
+    "time_range_start": 1850,
+    "time_range_end": 2000,
+    "languages": ["he", "en", "ar"],
+    "digitization_level": "partial"
+  },
+  {
+    "archive_id": "il-yadvashem",
+    "name": "Yad Vashem — Holocaust Names Database, Jerusalem",
+    "location_country": "IL",
+    "location_city": "Jerusalem",
+    "time_range_start": 1939,
+    "time_range_end": 1945,
+    "languages": ["he", "en", "yi", "ru", "pl", "de"],
+    "digitization_level": "full"
+  },
+  {
+    "archive_id": "us-fhl-saltlake",
+    "name": "Family History Library (FamilySearch), Salt Lake City",
+    "location_country": "US",
+    "location_city": "Salt Lake City",
+    "time_range_start": 1500,
+    "time_range_end": 2000,
+    "languages": ["en", "es", "de", "fr", "pl", "ru", "yi", "he", "it"],
+    "digitization_level": "full"
+  },
+  {
+    "archive_id": "us-ushmm-washington",
+    "name": "US Holocaust Memorial Museum (USHMM) Archives, Washington",
+    "location_country": "US",
+    "location_city": "Washington",
+    "time_range_start": 1933,
+    "time_range_end": 1950,
+    "languages": ["en", "yi", "de", "pl", "ru", "he"],
+    "digitization_level": "partial"
+  },
+  {
+    "archive_id": "us-nara-washington",
+    "name": "National Archives and Records Administration (NARA), Washington",
+    "location_country": "US",
+    "location_city": "Washington",
+    "time_range_start": 1700,
+    "time_range_end": 2000,
+    "languages": ["en"],
+    "digitization_level": "partial"
+  },
+  {
+    "archive_id": "us-jewishgen-online",
+    "name": "JewishGen — Online Jewish Genealogy",
+    "location_country": "US",
+    "location_city": "New York",
+    "time_range_start": 1500,
+    "time_range_end": 2000,
+    "languages": ["en", "yi", "he", "pl", "ru", "de", "lt"],
+    "digitization_level": "full"
+  },
+  {
+    "archive_id": "uk-tna-kew",
+    "name": "The National Archives (TNA), Kew",
+    "location_country": "GB",
+    "location_city": "London",
+    "time_range_start": 1086,
+    "time_range_end": 2000,
+    "languages": ["en", "la", "fr"],
+    "digitization_level": "partial"
+  },
+  {
+    "archive_id": "uk-sog-london",
+    "name": "Society of Genealogists, London",
+    "location_country": "GB",
+    "location_city": "London",
+    "time_range_start": 1500,
+    "time_range_end": 2000,
+    "languages": ["en"],
+    "digitization_level": "partial"
+  },
+  {
+    "archive_id": "de-bundesarchiv-koblenz",
+    "name": "German Federal Archives (Bundesarchiv), Koblenz",
+    "location_country": "DE",
+    "location_city": "Koblenz",
+    "time_range_start": 1800,
+    "time_range_end": 2000,
+    "languages": ["de"],
+    "digitization_level": "partial"
+  },
+  {
+    "archive_id": "cz-narodni-praha",
+    "name": "Czech National Archives (Národní archiv), Prague",
+    "location_country": "CZ",
+    "location_city": "Prague",
+    "time_range_start": 1300,
+    "time_range_end": 2000,
+    "languages": ["cs", "de", "la"],
+    "digitization_level": "partial"
+  },
+  {
+    "archive_id": "lv-lva-riga",
+    "name": "Latvian State Historical Archives, Riga",
+    "location_country": "LV",
+    "location_city": "Riga",
+    "time_range_start": 1500,
+    "time_range_end": 1944,
+    "languages": ["lv", "ru", "de", "yi"],
+    "digitization_level": "partial"
+  },
+  {
+    "archive_id": "ro-anr-bucharest",
+    "name": "Romanian National Archives (ANR), Bucharest",
+    "location_country": "RO",
+    "location_city": "Bucharest",
+    "time_range_start": 1700,
+    "time_range_end": 2000,
+    "languages": ["ro", "ru", "de", "hu"],
+    "digitization_level": "none"
+  }
+]

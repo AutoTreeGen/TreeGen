@@ -26,6 +26,10 @@ dependencies = [
     "cryptography>=42",
     "shared-models[security]",
     "familysearch-client",
+    # Phase 15.5 — Archive Search Planner делает read-only-запросы к
+    # events/citations/places напрямую через AsyncSession (см. database.py).
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.30",
 ]
 
 [project.optional-dependencies]
