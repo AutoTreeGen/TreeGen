@@ -44,6 +44,13 @@ dependencies = [
     "ai-layer",
     "pypdf>=5.0",
     "Pillow>=11.0",
+    # Phase 15.6 — Court-Ready Report. Jinja2 рендерит HTML-шаблоны,
+    # WeasyPrint конвертирует HTML→PDF. WeasyPrint требует системных
+    # libpango/libgdk-pixbuf на Linux (есть на ubuntu-latest GHA-раннере).
+    # На Windows-dev native-libs могут отсутствовать; PDF-генерация тогда
+    # raise'нет в runtime — caller'ы (тесты + endpoint) graceful'ят.
+    "Jinja2>=3.1",
+    "weasyprint>=63",
 ]
 
 [project.optional-dependencies]

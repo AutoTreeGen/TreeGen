@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_macros.html" import footnote_sup with context %}
+
+{% block scope_specific %}
+<section>
+  <h2>{{ t("ancestry", ctx.locale) }}</h2>
+  {% if ctx.ancestry %}
+  <table>
+    <thead>
+      <tr>
+        <th>{{ t("primary_name", ctx.locale) }}</th>
+        <th>{{ t("birth", ctx.locale) }}</th>
+        <th>{{ t("death", ctx.locale) }}</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for anc in ctx.ancestry %}
+      <tr>
+        <td>{{ anc.primary_name }}</td>
+        <td>
+          {% if anc.birth %}
+            {{ anc.birth.date_raw or (anc.birth.date_start | fmt_date) or "—" }}
+            {% if anc.birth.place_name %}, {{ anc.birth.place_name }}{% endif %}
+            {% for c in anc.birth.citations %}{{ footnote_sup(c) }}{% if not loop.last %}, {% endif %}{% endfor %}
+          {% else %}
+            <em class="negative">{{ t("no_birth", ctx.locale) }}</em>
+          {% endif %}
+        </td>
+        <td>
+          {% if anc.death %}
+            {{ anc.death.date_raw or (anc.death.date_start | fmt_date) or "—" }}
+            {% if anc.death.place_name %}, {{ anc.death.place_name }}{% endif %}
+            {% for c in anc.death.citations %}{{ footnote_sup(c) }}{% if not loop.last %}, {% endif %}{% endfor %}
+          {% else %}
+            <em class="negative">{{ t("no_death", ctx.locale) }}</em>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>{{ t("no_records_found", ctx.locale) }}</p>
+  {% endif %}
+</section>
+{% endblock %}
