@@ -1,14 +1,18 @@
-"""Тесты ``pricing.*`` helpers (Phase 10.1 + 10.2b)."""
+"""Тесты ``pricing.*`` helpers (Phase 10.1 + 10.2b + 10.9a)."""
 
 from __future__ import annotations
+
+from decimal import Decimal
 
 import pytest
 from ai_layer.pricing import (
     PRICING,
+    WHISPER_PRICING_PER_MIN_USD,
     estimate_cost_usd,
     estimate_extraction_cost_usd,
     estimate_input_tokens_from_image,
     estimate_input_tokens_from_text,
+    estimate_whisper_cost_usd,
 )
 
 
@@ -93,3 +97,49 @@ def test_estimate_extraction_cost_below_default_05_for_typical_text() -> None:
         max_output_tokens=4096,
     )
     assert cost < 0.50
+
+
+# Phase 10.9a — Whisper STT pricing helpers.
+
+
+def test_whisper_pricing_table_contains_whisper_1() -> None:
+    assert WHISPER_PRICING_PER_MIN_USD["whisper-1"] == Decimal("0.006")
+
+
+def test_estimate_whisper_cost_full_minute() -> None:
+    """60 сек × $0.006/min = $0.006 ровно."""
+    assert estimate_whisper_cost_usd(60) == Decimal("0.006000")
+
+
+def test_estimate_whisper_cost_half_minute() -> None:
+    """30 сек × $0.006/min = $0.003."""
+    assert estimate_whisper_cost_usd(30) == Decimal("0.003000")
+
+
+def test_estimate_whisper_cost_zero_duration() -> None:
+    assert estimate_whisper_cost_usd(0) == Decimal("0.000000")
+
+
+def test_estimate_whisper_cost_negative_clamped_to_zero() -> None:
+    """Повреждённое аудио с отрицательной длительностью не должно билиться."""
+    assert estimate_whisper_cost_usd(-5.0) == Decimal("0.000000")
+
+
+def test_estimate_whisper_cost_returns_decimal() -> None:
+    """Тип возвращаемого значения — :class:`Decimal`, не float (precision)."""
+    assert isinstance(estimate_whisper_cost_usd(45.5), Decimal)
+
+
+def test_estimate_whisper_cost_unknown_model_raises() -> None:
+    """Неизвестная модель → KeyError (silent fallback здесь запрещён —
+    биллить по неизвестному тарифу нельзя)."""
+    with pytest.raises(KeyError):
+        estimate_whisper_cost_usd(60, model="whisper-future-x")
+
+
+def test_estimate_whisper_cost_quantum_six_places() -> None:
+    """Округление — 6 знаков после запятой (совпадает с estimate_cost_usd)."""
+    cost = estimate_whisper_cost_usd(7)  # 7/60 * 0.006 = 0.0007 ровно
+    assert cost == Decimal("0.000700")
+    # 1 секунда: 0.006 / 60 = 0.0001 — точно 4 знака, но quantize до 6.
+    assert estimate_whisper_cost_usd(1) == Decimal("0.000100")
