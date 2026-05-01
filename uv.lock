@@ -259,6 +259,7 @@ name = "archive-service"
 version = "0.1.0"
 source = { editable = "services/archive-service" }
 dependencies = [
+    { name = "asyncpg" },
     { name = "cryptography" },
     { name = "familysearch-client" },
     { name = "fastapi" },
@@ -267,6 +268,7 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "redis", extra = ["hiredis"] },
     { name = "shared-models", extra = ["security"] },
+    { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -280,6 +282,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
+    { name = "asyncpg", specifier = ">=0.30" },
     { name = "cryptography", specifier = ">=42" },
     { name = "fakeredis", marker = "extra == 'test'", specifier = ">=2.20" },
     { name = "familysearch-client", editable = "packages/familysearch-client" },
@@ -292,6 +295,7 @@ requires-dist = [
     { name = "pytest-httpx", marker = "extra == 'test'", specifier = ">=0.30" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
     { name = "shared-models", extras = ["security"], editable = "packages/shared-models" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.32" },
 ]
 provides-extras = ["test"]

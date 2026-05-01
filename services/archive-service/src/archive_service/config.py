@@ -74,6 +74,18 @@ class Settings(BaseSettings):
     clerk_jwks_url: str = Field(default="", description="Override JWKS URL.")
     clerk_audience: str = Field(default="", description="Optional ``aud``.")
 
+    # -- Database (Phase 15.5) -------------------------------------------------
+    # Используется планировщиком архивов для read-only-запросов к
+    # events/citations/places (см. ``planner.repo``). Пусто → lifespan
+    # пропускает init_engine, /archive-planner/* возвращает 503.
+    database_url: str = Field(
+        default="",
+        description=(
+            "Async DSN, например ``postgresql+asyncpg://user:pass@host:5432/db``. "
+            "Пусто → planner-роутер недоступен."
+        ),
+    )
+
     debug: bool = Field(default=False)
 
     model_config = SettingsConfigDict(
