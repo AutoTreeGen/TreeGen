@@ -49,6 +49,22 @@ class Tree(TreeOwnedMixins, Base):
         server_default=text("'{}'::jsonb"),
     )
 
+    # Voice-to-tree privacy gate (Phase 10.9a / ADR-0064 §B1).
+    # Нужно отдельно от ``settings`` jsonb, потому что privacy-инвариант
+    # должен быть инспектируем schema-tooling'ом и query-able по индексу
+    # для админ-аудитов («у скольких деревьев consent дан»).
+    audio_consent_egress_at: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    # String, *не* enum: Phase 10.9.x добавит ``self-hosted-whisper`` —
+    # не хочется миграции ради нового допустимого значения. Pydantic
+    # на app-слое применяет ``Literal[...]``.
+    audio_consent_egress_provider: Mapped[str | None] = mapped_column(
+        String(32),
+        nullable=True,
+    )
+
     # relationships
     owner: Mapped[User] = relationship(
         "User",

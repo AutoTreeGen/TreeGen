@@ -190,3 +190,12 @@ crash.log
 
 # ---- pre-commit ----
 .pre-commit-cache/
+
+# ---- Локальные dev-скрипты (не для коммита) ----
+# Личные batch/PowerShell-обёртки для install/dev/restore цикла на машине
+# владельца. Содержат hardcoded пути и не предполагают переиспользования.
+*.log.cd
+install-and-dev.bat
+just-install.bat
+rebuild-step1-restore.bat
+scripts/auto-merge.ps1

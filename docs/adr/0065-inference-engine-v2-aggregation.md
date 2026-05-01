@@ -1,9 +1,16 @@
-# ADR-0057: Inference engine v2 — confidence aggregation (Bayesian fusion + contradictions)
+# ADR-0065: Inference engine v2 — confidence aggregation (Bayesian fusion + contradictions)
 
 - **Status:** Accepted
 - **Date:** 2026-04-30
 - **Authors:** @autotreegen
 - **Tags:** `inference-engine`, `phase-7`, `algorithm`, `migration`
+
+> **Note:** изначально опубликован как ADR-0057, перенумерован 2026-05-01
+> для разрешения коллизии трёх параллельных ADR-0057 (см. также
+> ADR-0057 ai-hypothesis-explanation, ADR-0066 mobile-responsive-design-system).
+> Внутренние ссылки в коде/доках обновлены на ADR-0065. Внешние upstream-ссылки
+> на старое имя файла (`0057-inference-engine-v2-aggregation.md`) станут битыми —
+> приемлемо, ADR ещё не публиковался вне репо.
 
 ## Контекст
 

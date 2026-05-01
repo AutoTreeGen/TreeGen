@@ -133,7 +133,7 @@ async def recompute_all_hypothesis_scores(
             actor_user_id=actor_user_id,
             actor_kind=ActorKind.USER.value if actor_user_id else ActorKind.SYSTEM.value,
             import_job_id=None,
-            reason="Phase 7.5 confidence aggregation v2 (ADR-0057)",
+            reason="Phase 7.5 confidence aggregation v2 (ADR-0065)",
             diff={
                 "algorithm": RECOMPUTE_ALGORITHM_VERSION,
                 "recomputed_count": len(rows),
