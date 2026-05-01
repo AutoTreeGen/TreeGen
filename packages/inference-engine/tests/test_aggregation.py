@@ -1,4 +1,4 @@
-"""Тесты для confidence aggregation v2 (Phase 7.5, ADR-0057).
+"""Тесты для confidence aggregation v2 (Phase 7.5, ADR-0065).
 
 Покрытие:
 

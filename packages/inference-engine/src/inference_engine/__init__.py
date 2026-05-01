@@ -12,10 +12,10 @@ Public API:
   compute composite score.
 - ``aggregate_confidence`` / ``AggregatedConfidence`` / ``SourceContribution``
   — Phase 7.5 confidence aggregation v2 (Bayesian fusion + contradictions),
-  см. ADR-0057. Доступно отдельно для caller'ов, которые хотят пересчитать
+  см. ADR-0065. Доступно отдельно для caller'ов, которые хотят пересчитать
   score из persisted evidences без re-running rules.
 
-См. README.md и docs/adr/0016-inference-engine-architecture.md, ADR-0057.
+См. README.md и docs/adr/0016-inference-engine-architecture.md, ADR-0065.
 """
 
 from inference_engine.aggregation import (

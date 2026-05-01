@@ -30,7 +30,7 @@ floor не применяется — нет данных вообще).
 ``defaultdict``. На бенчмарках < 50 µs для 10 evidence (target из
 spec — < 1 ms per hypothesis).
 
-См. ADR-0057.
+См. ADR-0065.
 """
 
 from __future__ import annotations

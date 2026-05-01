@@ -156,8 +156,9 @@ export function WaitlistForm() {
       </div>
 
       <div className="mt-6 space-y-4">
-        <label className="flex cursor-pointer items-start gap-3">
+        <label htmlFor="waitlist-wants-upload" className="flex cursor-pointer items-start gap-3">
           <Checkbox
+            id="waitlist-wants-upload"
             checked={wantsUpload}
             onCheckedChange={(v) => setWantsUpload(v === true)}
             disabled={state.status === "submitting"}
@@ -171,8 +172,9 @@ export function WaitlistForm() {
           </span>
         </label>
 
-        <label className="flex cursor-pointer items-start gap-3">
+        <label htmlFor="waitlist-consent" className="flex cursor-pointer items-start gap-3">
           <Checkbox
+            id="waitlist-consent"
             checked={consent}
             onCheckedChange={(v) => setConsent(v === true)}
             disabled={state.status === "submitting"}
