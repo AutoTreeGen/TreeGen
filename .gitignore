@@ -6,9 +6,29 @@
 .env
 .env.*
 !.env.example
+# TLS / сертификаты / приватные ключи (все распространённые форматы)
 *.pem
 *.key
 *.crt
+*.cer
+*.p8
+*.p12
+*.pfx
+*.jks
+*.keystore
+# SSH-ключи
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+*.ppk
+# Package-manager registry credentials
+.npmrc
+!.npmrc.example
+# Cloud-provider credential files
+gcp-key.json
+service-account*.json
+aws-credentials
 secrets/
 .secrets.baseline.local
 
