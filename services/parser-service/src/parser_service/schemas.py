@@ -1863,3 +1863,69 @@ class AudioSessionListResponse(BaseModel):
     page: int
     per_page: int
     items: list[AudioSessionResponse]
+
+
+# -----------------------------------------------------------------------------
+# Phase 10.7a — Self-anchor (trees.owner_person_id) + ego-relationship
+# resolver (ADR-0068).
+# -----------------------------------------------------------------------------
+
+
+class TreeOwnerPersonRequest(BaseModel):
+    """Body ``PATCH /trees/{tree_id}/owner-person``.
+
+    ``person_id=null`` сбрасывает якорь (переход в «not anchored»).
+    """
+
+    person_id: uuid.UUID | None = Field(
+        default=None,
+        description=(
+            "ID персоны, которая представляет владельца внутри дерева. ``null`` снимает якорь."
+        ),
+    )
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class TreeOwnerPersonResponse(BaseModel):
+    """Ответ ``PATCH /trees/{tree_id}/owner-person`` — состояние якоря."""
+
+    tree_id: uuid.UUID
+    owner_person_id: uuid.UUID | None
+
+
+class RelationshipPathPayload(BaseModel):
+    """Сериализованный ``RelationshipPath`` из inference-engine.
+
+    Прямая 1-к-1 mirror dataclass'а (см. ``inference_engine.ego_relations``):
+    каждое поле имеет одинаковую семантику. Структура стабильна для
+    Phase 10.7b Context Pack serializer + 10.7d Chat UI badge.
+    """
+
+    kind: str = Field(
+        description=(
+            "Точечная нотация родства sex-aware: ``self``, ``wife``, ``husband``, "
+            "``mother``, ``father``, ``son``, ``daughter``, ``brother``, ``sister``, "
+            "и chained — ``wife.brother``, ``wife.mother.brother``."
+        )
+    )
+    degree: int = Field(description="Длина пути в рёбрах (0 для self).")
+    via: list[uuid.UUID] = Field(description="Промежуточные person id'ы (без endpoint'ов).")
+    is_twin: bool = Field(description="Sibling-ребро в пути соединяет близнецов.")
+    blood_relation: bool = Field(description="Нет ни одного ``spouse``-ребра в пути.")
+
+
+class RelationshipResponse(BaseModel):
+    """Ответ ``GET /trees/{tree_id}/relationships/{person_id}``.
+
+    ``label`` — language-localised humanized строка (см. ``humanize()``
+    в inference-engine). Если пути нет — ручка возвращает 404 (вместо
+    payload с ``null``-полями), см. ADR-0068 §«no-path semantics».
+    """
+
+    tree_id: uuid.UUID
+    from_person_id: uuid.UUID
+    to_person_id: uuid.UUID
+    language: str
+    path: RelationshipPathPayload
+    label: str

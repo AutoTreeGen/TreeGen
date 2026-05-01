@@ -22,6 +22,7 @@ from parser_service.api import (
     dedup,
     dedup_attempts,
     digest,
+    ego_anchor,
     familysearch,
     hypotheses,
     hypotheses_sse,
@@ -103,6 +104,11 @@ app.include_router(imports_sse.router, prefix="/imports", tags=["imports", "sse"
 app.include_router(imports.router, prefix="/imports", tags=["imports"], dependencies=_AUTH_DEPS)
 app.include_router(trees.router, tags=["trees"], dependencies=_AUTH_DEPS)
 app.include_router(sources.router, tags=["sources"], dependencies=_AUTH_DEPS)
+# Phase 10.7a (ADR-0068): self-anchor + ego-relationship endpoint.
+# Включён до 15.1 relationships.router чтобы 4-сегментный
+# ``/trees/{id}/relationships/{person_id}`` не маскировался —
+# хотя FastAPI и так разрешает по числу сегментов, явный порядок надёжнее.
+app.include_router(ego_anchor.router, tags=["trees", "ego-anchor"], dependencies=_AUTH_DEPS)
 # Phase 15.1 (ADR-0058): relationship-level evidence aggregation. Включён
 # до sharing-router'а, чтобы /trees/{id}/relationships/... маршрут не
 # перехватывался /trees/{id}/* generic'ами.

@@ -448,6 +448,33 @@
       "noPendingInvitations": "No pending invitations.",
       "transferOwnership": "Transfer ownership"
     },
+    "settings": {
+      "title": "Tree settings",
+      "subtitle": "Tree-level configuration. Self-anchor lets AI features compute relationships from your perspective.",
+      "backToTree": "Back to tree",
+      "loadError": "Couldn't load tree settings"
+    },
+    "egoAnchor": {
+      "title": "Yourself in this tree",
+      "description": "Pick the person that represents you. AI features (chat, suggestions) will then describe relationships from your perspective — \"wife's brother\" instead of just \"brother of person X\".",
+      "emptyState": "You haven't set yourself in this tree yet. Pick the person that represents you so AI features can compute relationships from your perspective.",
+      "currentLabel": "You are:",
+      "notAnchored": "Self-anchor not set.",
+      "nonOwnerHint": "Only the tree owner can set the self-anchor.",
+      "pickPerson": "Pick a person",
+      "change": "Change",
+      "clear": "Clear",
+      "cancel": "Cancel",
+      "searchLabel": "Search persons by name",
+      "searchPlaceholder": "Type a name…",
+      "searchMinLength": "Type at least 2 characters",
+      "searching": "Searching…",
+      "searchFailed": "Search failed",
+      "noResults": "No matching persons",
+      "unnamedPerson": "(unnamed)",
+      "loadingPerson": "Loading…",
+      "saveFailed": "Couldn't save anchor"
+    },
     "duplicates": {
       "title": "Duplicate suggestions"
     }
