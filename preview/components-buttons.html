@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Buttons</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:24px;background:var(--color-bg);font-family:var(--font-sans);display:flex;flex-direction:column;gap:16px}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .lab{font-family:var(--font-mono);font-size:11px;color:var(--color-fg-muted);min-width:96px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase}
+
+  /* — 3D button base —
+     A real raised key cap: gradient body + top highlight + bottom shadow rim
+     + layered drop shadow. Hover lifts; active presses down. */
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--font-sans);font-weight:600;font-size:13px;letter-spacing:-0.005em;
+    padding:9px 18px;
+    border-radius:8px;
+    border:1px solid var(--bd, rgba(0,0,0,0.25));
+    cursor:pointer;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:geometricPrecision;
+    background:linear-gradient(180deg, var(--top) 0%, var(--mid) 50%, var(--bot) 100%);
+    color:var(--fg, #fff);
+    text-shadow:var(--ts, 0 1px 1px rgba(0,0,0,0.30));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.40),
+      inset 0 -1px 0 rgba(0,0,0,0.18),
+      0 1px 2px rgba(0,0,0,0.12),
+      0 4px 10px -2px rgba(0,0,0,0.18);
+    transform:translateY(0);
+    transition:transform 80ms var(--ease-house), box-shadow 80ms var(--ease-house), filter 80ms var(--ease-house);
+  }
+  .btn:hover{
+    filter:brightness(1.06);
+    transform:translateY(-1px);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.50),
+      inset 0 -1px 0 rgba(0,0,0,0.18),
+      0 2px 3px rgba(0,0,0,0.14),
+      0 8px 16px -3px rgba(0,0,0,0.22);
+  }
+  .btn:active{
+    transform:translateY(1px);
+    filter:brightness(0.96);
+    box-shadow:
+      inset 0 1px 2px rgba(0,0,0,0.20),
+      inset 0 -1px 0 rgba(255,255,255,0.20),
+      0 1px 1px rgba(0,0,0,0.10);
+  }
+
+  /* PRIMARY — brand blue */
+  .btn-primary{
+    --top:#5C8DD6; --mid:#2E5DA5; --bot:#1F4380;
+    --bd:rgba(0,0,0,0.30);
+    --fg:#fff; --ts:0 1px 1px rgba(0,0,0,0.35);
+  }
+
+  /* SECONDARY — Ukrainian flag yellow */
+  .btn-secondary{
+    --top:#FFE45C; --mid:#FFD500; --bot:#C9A500;
+    --bd:#9A7E00;
+    --fg:#1F1700; --ts:0 1px 0 rgba(255,255,255,0.55);
+  }
+
+  /* DANGER — red 500 */
+  .btn-danger{
+    --top:#F87171; --mid:#EF4444; --bot:#B91C1C;
+    --bd:rgba(0,0,0,0.28);
+    --fg:#fff; --ts:0 1px 1px rgba(0,0,0,0.40);
+  }
+
+  /* GHOST — flat by default, only lifts to 3D on hover */
+  .btn-ghost{
+    background:transparent;
+    color:var(--color-fg-strong);
+    border-color:transparent;
+    box-shadow:none;
+    text-shadow:none;
+  }
+  .btn-ghost:hover{
+    background:linear-gradient(180deg,#F4ECF8,#E5DDEB);
+    border-color:#C7B9D2;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.6),
+      0 1px 2px rgba(0,0,0,0.08),
+      0 4px 8px -2px rgba(0,0,0,0.10);
+  }
+
+  /* LINK — stays text, not a 3D button */
+  .btn-link{
+    color:var(--color-brand-blue);background:transparent;padding:0;border:0;
+    text-decoration:none;font-weight:600;font-size:13px;cursor:pointer;
+  }
+  .btn-link:hover{text-decoration:underline;text-underline-offset:4px}
+
+  /* Sizes — preserve 3D, just scale */
+  .btn-sm{padding:6px 12px;font-size:12px;border-radius:6px}
+  .btn-lg{padding:12px 22px;font-size:14px;border-radius:9px}
+</style></head><body>
+  <div class="row"><span class="lab">primary</span>
+    <button class="btn btn-primary btn-sm">Sign up</button>
+    <button class="btn btn-primary">Upload GEDCOM</button>
+    <button class="btn btn-primary btn-lg">Add citation</button>
+  </div>
+  <div class="row"><span class="lab">secondary</span>
+    <button class="btn btn-secondary btn-sm">Cancel</button>
+    <button class="btn btn-secondary">Open demo</button>
+    <button class="btn btn-secondary btn-lg">Browse archives</button>
+  </div>
+  <div class="row"><span class="lab">ghost · danger</span>
+    <button class="btn btn-ghost">Filter</button>
+    <button class="btn btn-ghost">Sort</button>
+    <button class="btn btn-danger">Delete kit</button>
+    <a class="btn-link" href="#">View all matches →</a>
+  </div>
+</body></html>

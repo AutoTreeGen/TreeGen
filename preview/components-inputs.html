@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Form inputs</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  :root{
+    /* lift base palette into a 3D-friendly tinted ground */
+    --bg-3d-top:#F4ECFA;
+    --bg-3d-bot:#E6D9F0;
+    --surface-3d:#FBF7FE;
+    --surface-3d-edge:#D7C7E3;
+    --shadow-deep: 0 18px 40px -12px rgba(44,16,84,0.28), 0 6px 14px -4px rgba(44,16,84,0.18);
+    --shadow-pop:  0 10px 22px -8px rgba(44,16,84,0.30), 0 3px 6px -2px rgba(44,16,84,0.18);
+    /* "pressed in" — concave well for inputs */
+    --inset-well:
+      inset 0 2px 4px rgba(44,16,84,0.18),
+      inset 0 1px 0 rgba(44,16,84,0.10),
+      inset 0 -1px 0 rgba(255,255,255,0.85);
+  }
+
+  body{
+    margin:0;padding:48px 36px;
+    background:
+      radial-gradient(ellipse 120% 70% at 50% -10%, rgba(176,112,192,0.30), transparent 60%),
+      radial-gradient(ellipse 80% 60% at 90% 100%, rgba(46,93,165,0.18), transparent 60%),
+      linear-gradient(180deg, var(--bg-3d-top) 0%, var(--bg-3d-bot) 100%);
+    min-height:100vh;
+    font-family:var(--font-sans);
+    display:grid;grid-template-columns:1fr 1fr;gap:24px;
+    align-content:start;
+  }
+
+  .field{display:flex;flex-direction:column;gap:8px;position:relative}
+
+  label{
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.02em;
+    color:var(--color-fg-strong);
+    padding-left:4px;
+  }
+  .hint{
+    font-size:12px;
+    color:var(--color-fg-muted);
+    padding-left:4px;
+    line-height:1.5;
+  }
+
+  /* — Inputs as recessed wells inside the lifted surface — */
+  input,select,textarea{
+    font-family:var(--font-sans);
+    font-size:15px;
+    color:var(--color-fg-strong);
+    padding:14px 16px;
+    border-radius:14px;
+    border:1px solid var(--surface-3d-edge);
+    background:linear-gradient(180deg, #ECE0F4 0%, #F5ECFA 60%);
+    outline:none;
+    box-shadow: var(--inset-well);
+    transition:
+      box-shadow 180ms var(--ease-house),
+      border-color 180ms var(--ease-house),
+      transform 180ms var(--ease-house);
+  }
+  textarea{resize:vertical;line-height:1.55}
+
+  /* select chevron */
+  select{
+    appearance:none;
+    background-image:
+      linear-gradient(135deg, transparent 50%, var(--color-fg-muted) 50%),
+      linear-gradient(45deg, var(--color-fg-muted) 50%, transparent 50%),
+      linear-gradient(180deg, #ECE0F4 0%, #F5ECFA 60%);
+    background-position:
+      calc(100% - 18px) 22px,
+      calc(100% - 13px) 22px,
+      0 0;
+    background-size: 5px 5px, 5px 5px, 100% 100%;
+    background-repeat:no-repeat;
+    padding-right:38px;
+  }
+
+  input:focus,select:focus,textarea:focus{
+    border-color:transparent;
+    box-shadow:
+      var(--inset-well),
+      0 0 0 3px rgba(46,93,165,0.35),
+      0 0 0 5px rgba(46,93,165,0.12);
+  }
+  input:hover:not(:focus),select:hover:not(:focus),textarea:hover:not(:focus){
+    border-color:#C0AFD0;
+  }
+
+  /* — Custom 3D checkbox — */
+  .check{
+    display:flex;align-items:center;gap:12px;
+    font-size:14px;font-weight:500;color:var(--color-fg-strong);
+    cursor:pointer;
+    user-select:none;
+  }
+  .check input{ position:absolute; opacity:0; pointer-events:none }
+  .check .box{
+    width:24px;height:24px;flex:none;
+    border-radius:8px;
+    background:linear-gradient(180deg, #FBF7FE 0%, #ECE0F4 100%);
+    border:1px solid var(--surface-3d-edge);
+    box-shadow:
+      0 2px 4px rgba(44,16,84,0.12),
+      0 1px 0 rgba(255,255,255,0.9) inset,
+      0 -1px 0 rgba(44,16,84,0.06) inset;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform 160ms var(--ease-house), box-shadow 160ms var(--ease-house);
+  }
+  .check .box svg{width:14px;height:14px;opacity:0;transform:scale(0.5);transition:all 160ms var(--ease-house)}
+  .check input:checked + .box{
+    background:linear-gradient(180deg, #4A78BD 0%, #25508F 100%);
+    border-color:#1E4576;
+    box-shadow:
+      0 4px 8px rgba(46,93,165,0.40),
+      0 1px 0 rgba(255,255,255,0.30) inset,
+      0 -2px 4px rgba(0,0,0,0.18) inset;
+  }
+  .check input:checked + .box svg{opacity:1;transform:scale(1)}
+  .check:hover .box{transform:translateY(-1px)}
+
+  /* — Warning state: warm 3D well + tilted message card — */
+  .field.warn input{
+    background:linear-gradient(180deg, #FCEBC9 0%, #FEF3D7 100%);
+    border-color:#E8B86A;
+    box-shadow:
+      inset 0 2px 4px rgba(150,80,0,0.20),
+      inset 0 1px 0 rgba(255,255,255,0.85),
+      0 0 0 3px rgba(217,119,6,0.18);
+  }
+  .err-msg{
+    display:flex;align-items:center;gap:10px;
+    font-size:11px;font-weight:500;color:#7A4400;
+    padding:12px 14px;
+    margin-top:4px;
+    border-radius:14px;
+    background:linear-gradient(180deg, #FFF6DD 0%, #FCEBC9 100%);
+    border:1px solid #F0C97A;
+    box-shadow:
+      0 8px 18px -6px rgba(180,100,0,0.30),
+      0 2px 4px -1px rgba(180,100,0,0.16),
+      inset 0 1px 0 rgba(255,255,255,0.85);
+  }
+  /* Genealogist's memo: a tilted handwritten note pinned with a brass
+     clip instead of the generic warning badge. Reads as "your
+     researcher left you a note", which is the product's voice. */
+  .err-msg .icon{
+    width:36px;height:38px;flex:none;
+    position:relative;
+    transform:rotate(-3deg);
+    transition:transform 200ms ease;
+  }
+  .err-msg:hover .icon{transform:rotate(-1deg) translateY(-1px)}
+  .err-msg .icon::before{
+    /* paper card with horizontal ruling */
+    content:"";position:absolute;inset:0;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 5.5px, rgba(122,68,0,0.10) 5.5px 6px),
+      linear-gradient(180deg, #FBEFCD 0%, #F4E1A6 100%);
+    border:1px solid #C9A24B;
+    border-radius:1px 3px 5px 1px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.85),
+      0 1px 0 rgba(122,68,0,0.10),
+      0 4px 8px -2px rgba(120,80,20,0.30),
+      0 8px 14px -6px rgba(120,80,20,0.40);
+  }
+  .err-msg .icon::after{
+    /* brass paper-clip silhouette top-right */
+    content:"";position:absolute;top:-3px;right:3px;width:10px;height:14px;
+    background:linear-gradient(180deg,#E5C06A 0%, #C9A24B 50%, #8E6918 100%);
+    border-radius:3px 3px 1px 1px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.7),
+      inset 0 -1px 0 rgba(80,50,10,0.4),
+      0 1px 1px rgba(80,50,10,0.4);
+    transform:rotate(8deg);
+  }
+  .err-msg .icon svg{
+    position:absolute;inset:0;width:100%;height:100%;
+    color:#5A3F18;
+    filter:drop-shadow(0 1px 0 rgba(255,255,255,0.55));
+  }
+
+  /* layout */
+  .span-2{grid-column:1/-1}
+  .checks{
+    grid-column:1/-1;
+    display:flex;gap:24px;flex-wrap:wrap;
+    padding:14px 18px;
+    border-radius:16px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.25) 100%);
+    border:1px solid rgba(255,255,255,0.6);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.8) inset,
+      0 -1px 0 rgba(44,16,84,0.06) inset;
+    backdrop-filter: blur(6px);
+  }
+
+  /* mono variant for DNA code field */
+  .mono{font-family:var(--font-mono);font-size:14px;letter-spacing:-0.01em}
+</style></head><body>
+
+  <div class="field">
+    <label>Email</label>
+    <input value="vladimir@example.org">
+    <span class="hint">Used for waitlist notifications.</span>
+  </div>
+
+  <div class="field">
+    <label>Haplogroup (Y-DNA)</label>
+    <input class="mono" value="R1a-M198">
+  </div>
+
+  <div class="field">
+    <label>GEDCOM file</label>
+    <select>
+      <option>autotreegen-2024-03.ged</option>
+      <option>vilnius-records.ged</option>
+    </select>
+  </div>
+
+  <div class="field warn">
+    <label>Confidence</label>
+    <input value="1.5">
+    <span class="err-msg">
+      <span class="icon" aria-label="note from your genealogist">
+        <svg viewBox="0 0 36 38" fill="none" aria-hidden="true">
+          <!-- handwritten correction: scratched-out value with a circled fix above -->
+          <!-- top line: "1.5" struck through -->
+          <text x="9" y="14" font-family="ui-serif, Georgia, serif" font-style="italic" font-size="9" fill="currentColor" opacity="0.75">1.5</text>
+          <line x1="7.5" y1="11.5" x2="20" y2="14.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity="0.85"/>
+          <!-- caret marking the spot for the correction -->
+          <path d="M19 14 l2 -2 l2 2" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- circled correction below, in the same ink -->
+          <ellipse cx="18" cy="26" rx="9" ry="5.2" stroke="currentColor" stroke-width="1.1" fill="none"/>
+          <text x="11.5" y="29" font-family="ui-serif, Georgia, serif" font-style="italic" font-size="8.5" fill="currentColor">0–1</text>
+          <!-- tiny initials in the corner, like a margin signature -->
+          <text x="26" y="35" font-family="ui-serif, Georgia, serif" font-style="italic" font-size="5.5" fill="currentColor" opacity="0.7">г.</text>
+        </svg>
+      </span>
+      <span>Please enter a number between 0 and 1.</span>
+    </span>
+  </div>
+
+  <div class="field span-2">
+    <label>Citation note</label>
+    <textarea rows="3">Vilnius vital records, fond 728, pages 14–22 — birth entry for Sokolov, Aron.</textarea>
+  </div>
+
+  <div class="checks">
+    <label class="check"><input type="checkbox" checked><span class="box"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7 L6 11 L12 3" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Y-DNA tested</label>
+    <label class="check"><input type="checkbox"><span class="box"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7 L6 11 L12 3" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>mtDNA tested</label>
+    <label class="check"><input type="checkbox" checked><span class="box"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7 L6 11 L12 3" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Autosomal</label>
+  </div>
+
+</body></html>

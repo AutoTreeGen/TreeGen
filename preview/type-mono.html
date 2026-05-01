@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Mono type · DNA codes</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:24px;background:var(--color-bg);font-family:var(--font-sans);color:var(--color-fg-strong)}
+  .stack{display:flex;flex-direction:column;gap:18px;max-width:880px}
+  .row{display:flex;flex-direction:column;gap:8px;padding:14px 0;border-bottom:1px dashed var(--color-divider)}
+  .row:last-child{border:0}
+  .lab{font-family:var(--font-mono);font-size:11px;color:var(--color-fg-muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:600}
+  .examples{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+  /* Haplogroup chips — each haplogroup has a permanent color from the palette. Used everywhere. */
+  .hap{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:2px 9px;border-radius:5px;
+    font-family:var(--font-mono);font-size:12px;font-weight:600;
+    color:#fff;text-shadow:0 1px 1px rgba(0,0,0,0.25);
+    border:1px solid rgba(0,0,0,0.18);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.35), 0 1px 2px rgba(0,0,0,0.12);
+  }
+  .h-r1a{background:linear-gradient(180deg,#5C8DD6,#2E5DA5)}
+  .h-j2 {background:linear-gradient(180deg,#E07AA8,#C04B7E)}
+  .h-h1a{background:linear-gradient(180deg,#7BD8C5,#4BB39E)}
+  .h-t1 {background:linear-gradient(180deg,#E0B97A,#C0904B)}
+  .h-e1b{background:linear-gradient(180deg,#B07ADD,#7E4BC0)}
+  .h-i1 {background:linear-gradient(180deg,#7AE0AC,#4BC07E)}
+  .h-g2 {background:linear-gradient(180deg,#E07A78,#C04B4B)}
+  .h-n1c{background:linear-gradient(180deg,#7AABDD,#4B7EC0)}
+
+  /* Kit codes — each kit gets a distinct hue (deterministic from kit prefix letter). Soft pastel fill, dark text. */
+  .kit{
+    display:inline-block;font-family:var(--font-mono);font-size:12px;font-weight:600;
+    padding:2px 9px;border-radius:5px;
+    background:var(--bg);color:var(--fg);
+    border:1px solid var(--bd);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.6), 0 1px 1px rgba(44,16,84,0.08);
+  }
+  .kit-a{--bg:#E0EAF8;--bd:#9FB6D4;--fg:#1B3D6F}  /* blue */
+  .kit-b{--bg:#F4DCE6;--bd:#D89AB6;--fg:#7A2A4F}  /* magenta */
+  .kit-c{--bg:#D8EFE7;--bd:#8FC9B5;--fg:#1F6E5E}  /* teal */
+  .kit-d{--bg:#F2E2C4;--bd:#D6B47A;--fg:#7A5A1F}  /* amber */
+  .kit-e{--bg:#E5DAF0;--bd:#B59CD0;--fg:#4F2C7A}  /* violet */
+  .kit-f{--bg:#DCEFD9;--bd:#90C68E;--fg:#1F7A4D}  /* green */
+  .kit-g{--bg:#F2D7D5;--bd:#D69995;--fg:#7A2C2A}  /* red */
+  .kit-h{--bg:#D9E3F2;--bd:#8FA8C9;--fg:#2C4F7A}  /* slate-blue */
+
+  /* Inline code in prose */
+  code.tag{font-family:var(--font-mono);font-size:13px;background:#F4ECF8;color:#3A1568;padding:1px 6px;border-radius:4px;border:1px solid #D1C4DA}
+
+  /* Tabular table */
+  table{border-collapse:collapse;font-family:var(--font-mono);font-size:13px;width:100%}
+  th{text-align:left;padding:6px 14px 6px 0;color:var(--color-fg-muted);font-weight:600;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1px solid var(--color-divider)}
+  td{padding:6px 14px 6px 0;color:var(--color-fg-strong);border-bottom:1px solid var(--color-divider)}
+  td.cm{font-variant-numeric:tabular-nums;font-weight:600;color:#1B3D6F}
+  td.seg{font-variant-numeric:tabular-nums;color:var(--color-fg-muted)}
+  .cm-cell{display:inline-flex;align-items:center;gap:8px}
+  .cm-bar{display:inline-block;width:54px;height:6px;border-radius:999px;background:#E5DDEB;overflow:hidden;border:1px solid #D1C4DA}
+  .cm-bar i{display:block;height:100%;background:linear-gradient(90deg,#5C8DD6,#2E5DA5)}
+
+  /* Lede note */
+  .note{font-size:13px;color:var(--color-fg-muted);line-height:1.6;font-family:var(--font-sans)}
+  .note b{color:var(--color-fg-strong);font-weight:600}
+</style></head><body>
+  <div class="stack">
+
+    <div class="row">
+      <span class="lab">Haplogroups · permanent palette</span>
+      <div class="examples">
+        <span class="hap h-r1a">R1a-M198</span>
+        <span class="hap h-j2">J2a-M410</span>
+        <span class="hap h-h1a">H1a-T16519C</span>
+        <span class="hap h-t1">T1-L162</span>
+        <span class="hap h-e1b">E1b-M35</span>
+        <span class="hap h-i1">I1-M253</span>
+        <span class="hap h-g2">G2-P15</span>
+        <span class="hap h-n1c">N1c-Tat</span>
+      </div>
+      <p class="note">Each haplogroup keeps the same color across the whole product — table, tree, badge, ribbon. The colors are tokens (<code class="tag">--hap-r1a</code>, etc.) so a single source of truth feeds every surface.</p>
+    </div>
+
+    <div class="row">
+      <span class="lab">Kit codes · per-kit hue</span>
+      <div class="examples">
+        <span class="kit kit-a">kit-A12F</span>
+        <span class="kit kit-b">kit-B907</span>
+        <span class="kit kit-c">kit-C233</span>
+        <span class="kit kit-d">kit-D118</span>
+        <span class="kit kit-e">kit-E044</span>
+        <span class="kit kit-f">kit-F291</span>
+        <span class="kit kit-g">kit-G557</span>
+        <span class="kit kit-h">kit-H082</span>
+      </div>
+      <p class="note">A kit's color is derived from its prefix letter and stays consistent everywhere the kit is mentioned. So <span class="kit kit-a">kit-A12F</span> in a tree node, an evidence row, and a match table all share the same blue — the eye tracks the same person across views without re-reading.</p>
+    </div>
+
+    <div class="row">
+      <span class="lab">Inline code · GEDCOM tags</span>
+      <p class="note">Resolved tag <code class="tag">2 SOUR @S0042@</code> at line 1,284 \u2014 the citation now points at <code class="tag">@S0042@</code> instead of the orphaned <code class="tag">@S0017@</code>.</p>
+    </div>
+
+    <div class="row">
+      <span class="lab">Tabular · matches</span>
+      <table>
+        <thead><tr><th>kit</th><th>cM</th><th>seg</th><th>haplogroup</th></tr></thead>
+        <tbody>
+          <tr><td><span class="kit kit-a">kit-A12F</span></td><td class="cm"><span class="cm-cell">312.4<span class="cm-bar"><i style="width:100%"></i></span></span></td><td class="seg">14</td><td><span class="hap h-r1a">R1a-M198</span></td></tr>
+          <tr><td><span class="kit kit-b">kit-B907</span></td><td class="cm"><span class="cm-cell">187.0<span class="cm-bar"><i style="width:60%"></i></span></span></td><td class="seg">9</td><td><span class="hap h-h1a">H1a-T16519C</span></td></tr>
+          <tr><td><span class="kit kit-c">kit-C233</span></td><td class="cm"><span class="cm-cell">94.1<span class="cm-bar"><i style="width:30%"></i></span></span></td><td class="seg">6</td><td><span class="hap h-j2">J2a-M410</span></td></tr>
+          <tr><td><span class="kit kit-d">kit-D118</span></td><td class="cm"><span class="cm-cell">56.4<span class="cm-bar"><i style="width:18%"></i></span></span></td><td class="seg">3</td><td><span class="hap h-r1a">R1a-M198</span></td></tr>
+          <tr><td><span class="kit kit-e">kit-E044</span></td><td class="cm"><span class="cm-cell">32.1<span class="cm-bar"><i style="width:10%"></i></span></span></td><td class="seg">2</td><td><span class="hap h-e1b">E1b-M35</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</body></html>
