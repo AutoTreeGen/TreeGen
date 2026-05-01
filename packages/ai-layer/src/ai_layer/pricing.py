@@ -1,19 +1,25 @@
-"""Pricing-таблица Anthropic Claude (Phase 10.1).
+"""Pricing-таблица Anthropic Claude (Phase 10.1) + Whisper STT (Phase 10.9a).
 
-Цены — из публичной страницы Anthropic <https://www.anthropic.com/pricing>
-на 2026-04-30, USD за 1M tokens (input / output, без cache discount).
-Захардкожено намеренно: вычисление стоимости должно быть
-детерминированным и audit-able через git history. При смене pricing
-владелец проекта обновляет этот файл в отдельном PR.
+Цены — из публичных страниц провайдеров на 2026-04-30, USD за 1M tokens
+(Anthropic) или USD за минуту аудио (OpenAI Whisper). Захардкожено
+намеренно: вычисление стоимости должно быть детерминированным и
+audit-able через git history. При смене pricing владелец проекта
+обновляет этот файл в отдельном PR.
 
 Не покрываем здесь: prompt caching discount (5-min TTL), batch API
 discount (-50%), Voyage embeddings (Phase 10.2). Если callsite использует
 кеш — он применяет коэффициент сверху.
+
+Whisper-цены — Decimal (а не float как Anthropic-helpers): транскрипция
+билется по минутам, и накапливаемая ошибка float'а на длинных аудио
+неприемлема для cost-cap'ов (ADR-0064 §«Cost»). При смешении Anthropic
+helper'ов и Whisper helper'ов caller сам конвертирует к нужному типу.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import ROUND_HALF_UP, Decimal
 
 
 @dataclass(frozen=True, slots=True)
@@ -121,3 +127,49 @@ def estimate_extraction_cost_usd(
         input_tokens=estimated_input_tokens,
         output_tokens=max_output_tokens,
     )
+
+
+# Phase 10.9a — Whisper STT pricing.
+#
+# OpenAI Whisper API биллится по минутам аудио, не по токенам. Snapshot
+# 2026-04-30 (см. ADR-0064 §«Cost» + ссылку на openai.com/api/pricing).
+# Округление — до 6 знаков после запятой; такая же гранулярность, как у
+# `estimate_cost_usd`, чтобы агрегаты в Redis-телеметрии складывались
+# единообразно.
+WHISPER_PRICING_PER_MIN_USD: dict[str, Decimal] = {
+    "whisper-1": Decimal("0.006"),
+}
+
+_WHISPER_COST_QUANTUM = Decimal("0.000001")  # 6 знаков после запятой
+
+
+def estimate_whisper_cost_usd(
+    duration_sec: float,
+    model: str = "whisper-1",
+) -> Decimal:
+    """Оценить стоимость одной транскрипции в USD.
+
+    Args:
+        duration_sec: Длительность аудио (из ответа Whisper API).
+            ``< 0`` приводится к нулю — отрицательная длительность
+            означает повреждённое аудио и не должна выставлять
+            отрицательный счёт.
+        model: Имя Whisper-модели; должен быть ключом из
+            :data:`WHISPER_PRICING_PER_MIN_USD`. Неизвестная модель —
+            ``KeyError`` (caller выберет: упасть громко или захардкодить
+            fallback). Это намеренное отличие от ``estimate_cost_usd``,
+            у которого silent-fallback на Sonnet — здесь fallback'а нет,
+            потому что список Whisper-моделей короткий и мы не хотим
+            билить пользователя по неизвестному тарифу.
+
+    Returns:
+        Стоимость в USD как :class:`Decimal`, округлённая
+        ``ROUND_HALF_UP`` до 6 знаков (``Decimal("0.000001")`` quantum).
+
+    Raises:
+        KeyError: ``model`` отсутствует в pricing-таблице.
+    """
+    rate_per_min = WHISPER_PRICING_PER_MIN_USD[model]
+    duration = max(Decimal(str(duration_sec)), Decimal("0"))
+    cost = (duration / Decimal("60")) * rate_per_min
+    return cost.quantize(_WHISPER_COST_QUANTUM, rounding=ROUND_HALF_UP)

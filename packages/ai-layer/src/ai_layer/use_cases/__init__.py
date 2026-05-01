@@ -1,4 +1,4 @@
-"""AI use-cases (Phase 10.0 skeleton + Phase 10.1 explainer + Phase 10.2 source extraction + Phase 10.3 normalization)."""
+"""AI use-cases (Phases 10.0–10.3 + 10.9a transcribe_audio)."""
 
 from ai_layer.use_cases.explain_hypothesis import HypothesisExplainer
 from ai_layer.use_cases.hypothesis_suggestion import (
@@ -13,8 +13,14 @@ from ai_layer.use_cases.normalize import (
     PlaceNormalizer,
     RawInputTooLargeError,
 )
+from ai_layer.use_cases.transcribe_audio import (
+    AudioTranscriber,
+    TranscribeAudioInput,
+    TranscribeAudioOutput,
+)
 
 __all__ = [
+    "AudioTranscriber",
     "CandidateRecord",
     "EmptyInputError",
     "HypothesisExplainer",
@@ -24,4 +30,6 @@ __all__ = [
     "PersonFact",
     "PlaceNormalizer",
     "RawInputTooLargeError",
+    "TranscribeAudioInput",
+    "TranscribeAudioOutput",
 ]

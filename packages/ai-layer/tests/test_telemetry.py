@@ -1,4 +1,4 @@
-"""Тесты ``log_ai_usage`` (Phase 10.1).
+"""Тесты ``log_ai_usage`` (Phase 10.1 + 10.9a).
 
 Использует ``fakeredis.aioredis.FakeRedis`` (in-memory Redis-stub) —
 сетевые вызовы не нужны. Сценарии:
@@ -7,12 +7,16 @@
   expire выставлен;
 - ``user_id=None``: сериализуется как ``"user_id": null``;
 - request_id auto-generation: при отсутствии параметра генерируется UUID4;
-- failing redis: write-error не валит вызов use-case'а (telemetry — fire-and-forget).
+- failing redis: write-error не валит вызов use-case'а (telemetry — fire-and-forget);
+- ``audio_duration_sec`` kwarg: Phase 10.9a — backward-compatible
+  optional-key для transcribe_audio use case;
+- ``cost_usd`` принимает Decimal (Whisper-флоу).
 """
 
 from __future__ import annotations
 
 import json
+from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -159,3 +163,65 @@ async def test_log_ai_usage_appends_multiple_records(
     # LPUSH → новейшая запись первой.
     parsed = [json.loads(item) for item in items]
     assert [r["input_tokens"] for r in parsed] == [30, 20, 10]
+
+
+# Phase 10.9a — Whisper / transcribe_audio additions.
+
+
+@pytest.mark.asyncio
+async def test_log_ai_usage_with_audio_duration_sec(
+    fake_redis: fakeredis.aioredis.FakeRedis,
+) -> None:
+    """transcribe_audio передаёт длительность; поле появляется в record."""
+    await log_ai_usage(
+        redis=fake_redis,
+        use_case="transcribe_audio",
+        model="whisper-1",
+        input_tokens=0,
+        output_tokens=0,
+        cost_usd=Decimal("0.003000"),
+        audio_duration_sec=30.5,
+    )
+    items = await fake_redis.lrange(LOG_KEY, 0, -1)
+    record = json.loads(items[0])
+    assert record["use_case"] == "transcribe_audio"
+    assert record["model"] == "whisper-1"
+    assert record["audio_duration_sec"] == 30.5
+    assert record["cost_usd"] == 0.003
+
+
+@pytest.mark.asyncio
+async def test_log_ai_usage_omits_audio_duration_when_not_set(
+    fake_redis: fakeredis.aioredis.FakeRedis,
+) -> None:
+    """Backward-compat: existing callsite'ы (Anthropic) не получают новое поле."""
+    await log_ai_usage(
+        redis=fake_redis,
+        use_case="explain_hypothesis",
+        model="claude-sonnet-4-6",
+        input_tokens=100,
+        output_tokens=20,
+        cost_usd=0.001,
+    )
+    items = await fake_redis.lrange(LOG_KEY, 0, -1)
+    record = json.loads(items[0])
+    assert "audio_duration_sec" not in record
+
+
+@pytest.mark.asyncio
+async def test_log_ai_usage_accepts_decimal_cost(
+    fake_redis: fakeredis.aioredis.FakeRedis,
+) -> None:
+    """cost_usd принимает Decimal без TypeError; serializуется как float."""
+    await log_ai_usage(
+        redis=fake_redis,
+        use_case="transcribe_audio",
+        model="whisper-1",
+        input_tokens=0,
+        output_tokens=0,
+        cost_usd=Decimal("0.012345"),
+    )
+    items = await fake_redis.lrange(LOG_KEY, 0, -1)
+    record = json.loads(items[0])
+    assert isinstance(record["cost_usd"], float)
+    assert record["cost_usd"] == pytest.approx(0.012345, abs=1e-9)
