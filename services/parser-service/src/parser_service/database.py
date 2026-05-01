@@ -54,6 +54,20 @@ def get_engine() -> AsyncEngine:
     return _engine
 
 
+def get_session_factory() -> async_sessionmaker[AsyncSession]:
+    """Session factory для фоновых задач (e.g. SSE-генераторы).
+
+    SSE-генераторы живут за пределами request scope; FastAPI ``Depends(get_session)``
+    yield'ит сессию, привязанную к request lifecycle, что несовместимо со
+    streamed responses (после того как первый кадр улетел, request closes).
+    Caller'ы из SSE-генераторов открывают свою session явно через эту factory.
+    """
+    if _session_factory is None:
+        msg = "Session factory not initialized; call init_engine() first."
+        raise RuntimeError(msg)
+    return _session_factory
+
+
 async def get_session() -> AsyncIterator[AsyncSession]:
     """FastAPI dependency: даёт async-сессию на запрос с auto-commit/rollback."""
     if _session_factory is None:

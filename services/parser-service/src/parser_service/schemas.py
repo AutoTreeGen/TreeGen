@@ -1929,3 +1929,66 @@ class RelationshipResponse(BaseModel):
     language: str
     path: RelationshipPathPayload
     label: str
+
+
+# -----------------------------------------------------------------------------
+# Phase 10.7c — AI tree-chat (контекстный диалог об индивидуальном дереве).
+# -----------------------------------------------------------------------------
+
+
+class ChatTurnRequest(BaseModel):
+    """Тело запроса ``POST /trees/{tree_id}/chat/turn``.
+
+    ``session_id``: UUID существующей сессии или ``None`` (новая). Если
+    указан, но сессия не принадлежит ``(tree_id, user_id)`` — 404. Anchor
+    провайдится только при создании; для существующей сессии игнорируется.
+
+    ``anchor_person_id``: Snapshot self-anchor'а на момент создания сессии.
+    Если ``None`` — fallback на ``trees.owner_person_id`` (если тоже null —
+    409, нужно сначала set'нуть anchor через ego_anchor endpoint'ы).
+    """
+
+    session_id: uuid.UUID | None = None
+    message: str = Field(min_length=1, max_length=8000)
+    anchor_person_id: uuid.UUID | None = None
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class ChatReferencedPerson(BaseModel):
+    """Один резолвленный reference из user-message'а.
+
+    Поля копируют ``ResolvedPerson`` из ``ai_layer.ego_resolver.types``,
+    но без ``alternatives`` — Phase 10.7c UI пока не показывает
+    disambiguation prompt; future-work для 10.7d.
+    """
+
+    person_id: uuid.UUID
+    mention_text: str = Field(description="Исходная фраза в user-input'е, которая резолвилась.")
+    confidence: float = Field(ge=0.0, le=1.0)
+
+
+class ChatMessageResponse(BaseModel):
+    """Read-модель одного сообщения для history-эндпоинта (future-work)."""
+
+    id: uuid.UUID
+    session_id: uuid.UUID
+    role: Literal["user", "assistant", "system"]
+    content: str
+    references: list[ChatReferencedPerson] = Field(default_factory=list)
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ChatSessionResponse(BaseModel):
+    """Read-модель сессии (future-work — list/get endpoints)."""
+
+    id: uuid.UUID
+    tree_id: uuid.UUID
+    anchor_person_id: uuid.UUID | None
+    title: str | None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

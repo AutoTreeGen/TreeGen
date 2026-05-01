@@ -18,6 +18,7 @@ from parser_service.api import (
     ai_extraction,
     audio_consent,
     audio_sessions,
+    chat,
     clerk_webhooks,
     dedup,
     dedup_attempts,
@@ -143,6 +144,10 @@ app.include_router(safe_merge.router, tags=["trees", "merge"], dependencies=_AUT
 # gates (OWNER для consent, EDITOR/VIEWER для sessions) — внутри ручек.
 app.include_router(audio_consent.router, tags=["voice", "consent"], dependencies=_AUTH_DEPS)
 app.include_router(audio_sessions.router, tags=["voice", "sessions"], dependencies=_AUTH_DEPS)
+# Phase 10.7c — AI tree-chat (SSE-streamed). Включён до sharing/users/etc
+# чтобы /trees/{id}/chat/* пути не перехватывались generic'ами. Permission
+# gate (VIEWER+) на router-level через require_tree_role внутри ручки.
+app.include_router(chat.router, tags=["chat", "ai", "sse"], dependencies=_AUTH_DEPS)
 # Phase 11.0 — sharing endpoints (invitations, memberships). Auth required.
 # Включён после persons чтобы /trees/{id}/* пути в trees.router не
 # перехватывали /trees/{id}/invitations / /trees/{id}/members.

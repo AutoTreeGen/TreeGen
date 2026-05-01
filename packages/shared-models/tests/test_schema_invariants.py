@@ -131,6 +131,12 @@ SERVICE_TABLES = {
     # нет ``confidence_score`` (нечего считать), нет ``version_id`` (worker
     # мутирует row один раз).
     "audio_sessions",
+    # AI tree-chat sessions and messages (Phase 10.7c): артефакт AI-вызова,
+    # не genealogy-факт. Hard delete по дереву (FK CASCADE); messages CASCADE
+    # по сессии. Без provenance/version_id/confidence_score/soft-delete:
+    # это conversation log, не доменная сущность дерева.
+    "chat_sessions",
+    "chat_messages",
 }
 
 TREE_ENTITY_TABLES = {
