@@ -33,6 +33,7 @@ from parser_service.api import (
     persons,
     public_share,
     relationships,
+    safe_merge,
     sharing,
     sources,
     trees,
@@ -132,6 +133,10 @@ app.include_router(hypotheses.router, tags=["hypotheses"], dependencies=_AUTH_DE
 # persons router включается ПОСЛЕ trees (тот владеет `GET /persons/{id}`),
 # но имена путей не пересекаются: тут `/persons/{id}/merge*`.
 app.include_router(persons.router, tags=["persons", "merge"], dependencies=_AUTH_DEPS)
+# Phase 5.7b — Safe Merge applier. Path /api/v1/trees/{tree_id}/merge —
+# единственный 5-сегментный путь под /api/v1/, никаких маршрут-collision'ов
+# с другими /trees/{id}/* (4 сегмента) роутерами.
+app.include_router(safe_merge.router, tags=["trees", "merge"], dependencies=_AUTH_DEPS)
 # Phase 10.9a — voice-to-tree (ADR-0064). Включён до sharing чтобы
 # /trees/{id}/audio-* пути не перехватывались sharing-router'ом или
 # trees-router'ом /trees/{id}/* generic'ами. Auth required; permission
