@@ -185,6 +185,9 @@ export default function PersonsListPage() {
           <Button variant="secondary" size="md" asChild>
             <Link href={`/trees/${treeId}/duplicates`}>Review duplicates →</Link>
           </Button>
+          <Button variant="secondary" size="md" asChild>
+            <Link href={`/trees/${treeId}/voice`}>Voice →</Link>
+          </Button>
         </div>
       </header>
 
