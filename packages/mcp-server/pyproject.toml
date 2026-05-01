@@ -1,0 +1,39 @@
+# =====================================================================
+# treegen-mcp — Model Context Protocol server for AutoTreeGen (Phase 10.8).
+# Exposes read-only tools (tree context, person search/lookup, ego-resolver)
+# over MCP stdio so Claude Desktop / ChatGPT / any MCP host can ask
+# AutoTreeGen about the user's tree.
+# Backend: thin httpx client that calls the AutoTreeGen API gateway with
+# the user's API key. No DB access, no business logic — wire shapes only.
+# =====================================================================
+
+[project]
+name = "treegen-mcp"
+version = "0.1.0"
+description = "Model Context Protocol server exposing AutoTreeGen tree data (read-only)"
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "Proprietary" }
+
+dependencies = [
+    "mcp>=1.0",
+    "httpx>=0.27",
+    "pydantic>=2.5",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "pytest-httpx>=0.30",
+]
+
+[project.scripts]
+treegen-mcp = "treegen_mcp.server:main"
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/treegen_mcp"]
