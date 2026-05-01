@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+/* AutoTreeGen Design System v1 — общие токены (color/type/spacing/radii/
+   shadow/motion). Дублируется в apps/web/src/styles/design-system.css —
+   ADR-0067 (light-mode only V1) фиксирует DRY-violation; v2 промоутит
+   единый источник в packages-js/design-system/. */
+@import "../styles/design-system.css";

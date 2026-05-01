@@ -90,7 +90,7 @@ class VersionedMixin:        # version_id BIGINT (incremented on update via SQLA
 
 ### Таблица `audit_log`
 
-```
+```text
 id              uuid PK
 tree_id         uuid FK NOT NULL  (партиционирование по tree_id в проде)
 entity_type     text  NOT NULL    ('person'|'family'|...)
@@ -115,7 +115,7 @@ INDEX (entity_type, entity_id, created_at DESC)
 - По расписанию: ежедневный rolling snapshot последних N изменений.
 - Вручную через API: «сделать чекпоинт перед merge-операцией».
 
-```
+```text
 id              uuid PK
 tree_id         uuid FK
 entity_type     text

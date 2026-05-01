@@ -22,6 +22,10 @@ dependencies = [
     "entity-resolution",
     "familysearch-client",
     "inference-engine",
+    # Phase 12.0 — entitlement-gating через billing-service. Импортируем
+    # только assert_feature / get_user_plan; webhook-handlers и stripe SDK
+    # в parser-service не нужны.
+    "billing-service",
     # Phase 3.5 — async imports через arq + Redis pubsub для SSE.
     "arq>=0.26",
     "redis[hiredis]>=5.0",
@@ -36,8 +40,10 @@ dependencies = [
     # Phase 10.2 (ADR-0059) — AI source extraction.
     # ai-layer: prompt registry + Anthropic/Voyage клиенты + use cases.
     # pypdf: text-extraction для PDF-источников до vision-fallback'а.
+    # Pillow (Phase 10.2b): EXIF auto-rotate + resize >2048px перед vision-вызовом.
     "ai-layer",
     "pypdf>=5.0",
+    "Pillow>=11.0",
 ]
 
 [project.optional-dependencies]

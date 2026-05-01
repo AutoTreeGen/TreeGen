@@ -135,3 +135,44 @@ class GedcomRecord(BaseModel):
         yield self
         for child in self.children:
             yield from child.walk()
+
+
+class RawTagBlock(BaseModel):
+    """Quarantined unknown / proprietary tag (Phase 5.5a).
+
+    Когда семантический слой (:mod:`gedcom_parser.entities`) собирает
+    типизированные сущности из AST, он по whitelist'у consumes только
+    ожидаемые подтеги. Всё остальное — проприетарные расширения
+    (``_FSFTID`` / ``_UID`` / ``_PRIM`` / ``_TYPE``), новые GEDCOM 7.0
+    теги без 5.5.5-аналога, witnesses / godparents в нестандартной
+    позиции — раньше дропалось при export'е из БД.
+
+    ``RawTagBlock`` сохраняет такой подтег **вместе со всем поддеревом**
+    в ``GedcomDocument.unknown_tags``. На export builder возвращает блок
+    в нужное место, гарантируя a→DB→a' round-trip без потерь.
+
+    Attributes:
+        owner_xref_id: xref верхнеуровневой записи, в которой нашли тег
+            (``"I1"`` / ``"F2"`` / ``"S3"`` / ``"HEAD"``). Без обрамляющих
+            ``@``.
+        owner_kind: Тип записи-владельца (``"individual"`` / ``"family"``
+            / ``"source"`` / ``"note"`` / ``"object"`` / ``"repository"``
+            / ``"submitter"`` / ``"header"``).
+        path: Dotted-путь parent-тегов внутри owner. Пустая строка =
+            прямой потомок owner (``"INDI._FSFTID"`` → path=""); ``"BIRT"``
+            = подтег внутри ``BIRT`` (``"BIRT._FOO"`` → path="BIRT");
+            ``"BIRT.SOUR"`` = вложен ещё глубже. Path позволяет export
+            builder'у вернуть блок ровно туда, откуда он пришёл, без
+            наблюдения порядка children.
+        record: Полное поддерево квaрантиненного тега (с тегом, value
+            и всеми вложенными children). Уровень внутри ``record``
+            начинается с того же значения, что был в исходном файле —
+            export builder адаптирует уровень при re-injection.
+    """
+
+    owner_xref_id: str = Field(min_length=1)
+    owner_kind: str = Field(min_length=1)
+    path: str = Field(default="")
+    record: GedcomRecord
+
+    model_config = ConfigDict(frozen=True)

@@ -22,6 +22,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, Upl
 from shared_models.orm import DnaConsent, DnaTestRecord
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dna_service.billing import require_feature
 from dna_service.config import Settings, get_settings
 from dna_service.database import get_session
 from dna_service.schemas import TestRecordResponse
@@ -49,6 +50,9 @@ async def upload_dna(
     session: Annotated[AsyncSession, Depends(get_session)],
     settings: Annotated[Settings, Depends(get_settings)],
     response: Response,
+    # Phase 12.0: DNA-фичи доступны только на Pro/Premium. При
+    # billing_enabled=false dependency пропускает (no-op).
+    _entitlement: Annotated[None, require_feature("dna_enabled")] = None,
 ) -> TestRecordResponse:
     """Принять загрузку DNA blob и привязать к активному consent."""
     # 1. Consent должен существовать и быть активным.

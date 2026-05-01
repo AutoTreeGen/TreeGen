@@ -16,10 +16,49 @@ from jinja2 import UndefinedError
 def test_all_registered_templates_load() -> None:
     """Каждый шаблон в реестре существует на диске и парсится."""
     templates = PromptRegistry.all_templates()
-    # hypothesis_suggester_v1 + hypothesis_explanation_v1 + person_normalizer_v1
-    assert len(templates) >= 3
+    # hypothesis_suggester + explanation + person_normalizer + source_extractor
+    # + place_normalizer + name_normalizer.
+    assert len(templates) >= 6
     for tpl in templates:
         assert tpl.path.exists(), f"missing prompt file: {tpl.path}"
+
+
+def test_place_normalizer_v1_renders() -> None:
+    tpl = PromptRegistry.PLACE_NORMALIZER_V1
+    rendered = tpl.render(
+        raw="Юзерин, Гомельская обл",
+        locale_hint="ru",
+        context="Family lived there until 1905.",
+    )
+    assert "Юзерин" in rendered.user
+    assert "ru" in rendered.user
+    assert "1905" in rendered.user
+    assert "senior" not in rendered.system.lower(), (
+        "place prompt should not invoke the genealogist persona"
+    )
+    assert "pale of settlement" in rendered.system.lower()
+
+
+def test_place_normalizer_v1_renders_without_optional_fields() -> None:
+    tpl = PromptRegistry.PLACE_NORMALIZER_V1
+    rendered = tpl.render(raw="Brody", locale_hint=None, context=None)
+    assert "Brody" in rendered.user
+    # locale_hint conditional не сработал → нет "Locale hint:".
+    assert "locale hint" not in rendered.user.lower()
+
+
+def test_name_normalizer_v1_renders() -> None:
+    tpl = PromptRegistry.NAME_NORMALIZER_V1
+    rendered = tpl.render(
+        raw="מאיר בן אברהם הכהן",
+        script_hint="hebrew",
+        locale_hint="he",
+        context=None,
+    )
+    assert "מאיר" in rendered.user
+    assert "hebrew" in rendered.user.lower()
+    assert "kohen" in rendered.system.lower()
+    assert "infer from a surname" in rendered.system.lower()
 
 
 def test_hypothesis_explanation_v1_renders_en() -> None:

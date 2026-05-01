@@ -1,9 +1,16 @@
-# ADR-0057: Mobile-responsive design system + breakpoint strategy (Phase 4.14a)
+# ADR-0066: Mobile-responsive design system + breakpoint strategy (Phase 4.14a)
 
 - **Status:** Accepted
 - **Date:** 2026-04-30
 - **Authors:** @autotreegen
 - **Tags:** `frontend`, `accessibility`, `phase-4`, `design-system`
+
+> **Note:** изначально опубликован как ADR-0057, перенумерован 2026-05-01
+> для разрешения коллизии трёх параллельных ADR-0057 (см. также
+> ADR-0057 ai-hypothesis-explanation, ADR-0065 inference-engine-v2-aggregation).
+> Внутренние ссылки в коде/доках обновлены на ADR-0066. Внешние upstream-ссылки
+> на старое имя файла (`0057-mobile-responsive-design-system.md`) станут битыми —
+> приемлемо, ADR ещё не публиковался вне репо.
 
 ## Контекст
 
@@ -207,7 +214,7 @@ JIT-доступность для overrides.
 ## Когда пересмотреть
 
 - **Phase 4.14b shipped** (Performance: next/image, dynamic import
-  для tree-viz, Playwright mobile tests) — обновить ADR-0057
+  для tree-viz, Playwright mobile tests) — обновить ADR-0066
   §«Решение» добавив п.5.
 - **iOS Safari font-size threshold меняется** (Apple релизит iOS 19+
   без auto-zoom, или меняет порог) — снять globals.css `font-size: 16px`

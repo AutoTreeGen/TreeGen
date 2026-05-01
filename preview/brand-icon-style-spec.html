@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Iconography style — 3D modern (recipe)</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:28px;background:#FAF6FC;font-family:var(--font-sans);color:var(--color-fg-strong);line-height:1.55;max-width:980px}
+  h2{font-family:var(--font-display);font-weight:700;font-size:22px;margin:0 0 6px}
+  h3{font-family:var(--font-display);font-weight:700;font-size:14px;margin:24px 0 8px;letter-spacing:0.02em;text-transform:uppercase;color:var(--color-fg-muted)}
+  p,li{font-size:13px;color:var(--color-fg)}
+  code, pre{font-family:var(--font-mono);font-size:11.5px}
+  pre{background:#FFFFFF;border:1px solid var(--color-border);padding:12px 14px;border-radius:8px;overflow-x:auto;color:#2A1545}
+  .row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:12px 0 4px}
+  .cell{position:relative;aspect-ratio:1/1;border-radius:18px;overflow:hidden;isolation:isolate;
+    box-shadow:0 1px 0 rgba(255,255,255,0.7) inset, 0 -1px 0 rgba(44,16,84,0.05) inset, 0 10px 18px -8px rgba(44,16,84,0.18)}
+  .cell::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(120% 90% at 30% 20%, var(--bg1), var(--bg2) 55%, var(--bg3) 100%)}
+  .cell svg{width:100%;height:100%;display:block}
+  .lab{position:absolute;left:10px;bottom:8px;font-family:var(--font-mono);font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:rgba(26,8,56,0.55)}
+  .t1{--bg1:#FFE9F4;--bg2:#F4D3F0;--bg3:#D9B4E8}
+  .t2{--bg1:#E1F8FF;--bg2:#C3E5F2;--bg3:#A6CCE6}
+  .t3{--bg1:#FFF4D9;--bg2:#F4DCAE;--bg3:#E0BC78}
+  .t4{--bg1:#E2FBE9;--bg2:#BFEDC9;--bg3:#88D2A4}
+  .t5{--bg1:#F0E6FF;--bg2:#D6C0F2;--bg3:#B596E2}
+  .t6{--bg1:#FFE0D8;--bg2:#F4BCAE;--bg3:#E1907E}
+  ul{padding-left:20px}
+  li{margin-bottom:4px}
+  .swatches{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin:10px 0}
+  .swatch{height:46px;border-radius:8px;display:flex;align-items:flex-end;padding:6px;font-family:var(--font-mono);font-size:9px;color:#fff;text-shadow:0 1px 1px rgba(0,0,0,0.5)}
+</style></head><body>
+
+<h2>Iconography — 3D modern</h2>
+<p>The brand's icon language: each glyph is a chunky soft-body 3D object
+floating on a tinted backdrop, lit by a warm key from the upper left.
+No outlines, no medallion frame, no flat fills — shading carries the form.</p>
+
+<h3>Anatomy of one icon</h3>
+<ul>
+  <li><b>Backdrop.</b> A 1:1 rounded card (radius 18–24px) with a radial gradient: light tint at top-left → mid → deeper tone bottom-right. Six tints rotate per row (pink / cyan / gold / mint / plum / coral).</li>
+  <li><b>Body.</b> One or more solid shapes filled with a multi-stop radial gradient (key 0.32, 0.22). Five stops: highlight → light → midtone → terminator → shadow. Never flat fill.</li>
+  <li><b>Specular.</b> A small white ellipse at upper-left of each body, fill <code>url(#b3Spec)</code>, ~30% of the body width.</li>
+  <li><b>Ambient bounce.</b> A cool blue ellipse near bottom-right, <code>url(#b3Ambient)</code>, mix-blend-mode screen, opacity 0.55. Optional but adds depth.</li>
+  <li><b>Hole / opening.</b> Use the dark <code>url(#b3Hole)</code> radial (deep purple inset) for keyholes, doorframes, lens centers — never solid black.</li>
+  <li><b>Cast shadow.</b> A blurred black ellipse on the ground plane (<code>cy=85</code>, unified across all 24 icons), opacity 0.16, blurred 4px.</li>
+  <li><b>Soft drop-shadow filter</b> on the whole glyph group: <code>filter:url(#b3Shadow)</code> — adds a 6px contact shadow behind the object.</li>
+</ul>
+
+<h3>Anti-patterns</h3>
+<ul>
+  <li>No medallion / coin container behind the icon. The glyph itself carries the brand.</li>
+  <li>No outlines or strokes on the body shapes (white interior strokes for chevrons / checks are fine).</li>
+  <li>No flat fills, no helix gradients, no chromatic palette on the glyph.</li>
+  <li>No emoji. No drop-shadow as emphasis.</li>
+</ul>
+
+<h3>Palette (per-object radial gradients)</h3>
+<div class="swatches">
+  <div class="swatch" style="background:radial-gradient(circle at 30% 22%,#FFF3F8,#FFC7DC 18%,#F47AAA 55%,#A82E66 85%,#3E0820)">b3Pink</div>
+  <div class="swatch" style="background:radial-gradient(circle at 30% 22%,#F2FCFF,#BFEFF7 18%,#5BC4D6 55%,#1A6276 85%,#04222C)">b3Cyan</div>
+  <div class="swatch" style="background:radial-gradient(circle at 30% 22%,#F0FCEF,#C0F0CC 18%,#5DC586 55%,#1F6840 85%,#06281A)">b3Mint</div>
+  <div class="swatch" style="background:radial-gradient(circle at 30% 22%,#FFFCEC,#FFE39C 18%,#E8B038 55%,#7A4A06 85%,#2C1700)">b3Gold</div>
+  <div class="swatch" style="background:radial-gradient(circle at 30% 22%,#FFEDE5,#FFB69E 18%,#F26B48 55%,#7A1A06 85%,#2A0500)">b3Coral</div>
+  <div class="swatch" style="background:radial-gradient(circle at 30% 22%,#F5E8FF,#D6B4F2 18%,#9A5FE0 55%,#3E1A78 85%,#120432)">b3Plum</div>
+  <div class="swatch" style="background:radial-gradient(circle at 30% 22%,#FFFCEC,#FFEFC4 20%,#D9A968 60%,#5C3712 88%,#1F0E02)">b3Cream</div>
+  <div class="swatch" style="background:radial-gradient(circle at 30% 22%,#F0C892,#A86A2C 40%,#3E2208 85%,#1A0E02)">b3Wood</div>
+  <div class="swatch" style="background:radial-gradient(circle at 30% 22%,#FFFFFF,#F0E5F8 40%,#7E5F94 85%,#1A0838)">b3Paper</div>
+</div>
+
+<h3>Reference grid</h3>
+<p>One example per backdrop tint. Each cell labels its category alongside the icon name.</p>
+<div class="row" style="grid-template-columns:repeat(6,1fr)">
+  <div class="cell t1"><svg viewBox="0 0 100 100">
+    <ellipse cx="50" cy="85" rx="9" ry="2.6" fill="#000" opacity="0.16" filter="blur(4px)"/>
+    <path d="M50 14 C 30 14, 20 28, 20 42 C 20 60, 50 86, 50 86 C 50 86, 80 60, 80 42 C 80 28, 70 14, 50 14 Z" fill="url(#b3Pink)"/>
+    <circle cx="50" cy="40" r="9" fill="url(#b3Hole)"/>
+    <ellipse cx="40" cy="26" rx="11" ry="5" fill="url(#b3Spec)"/>
+  </svg><span class="lab">t1 · place</span></div>
+  <div class="cell t2"><svg viewBox="0 0 100 100">
+    <ellipse cx="50" cy="85" rx="22" ry="3.5" fill="#000" opacity="0.16" filter="blur(4px)"/>
+    <rect x="58" y="56" width="32" height="13" rx="6.5" fill="url(#b3Wood)" transform="rotate(45 58 56)"/>
+    <circle cx="42" cy="42" r="26" fill="url(#b3Cyan)"/>
+    <circle cx="42" cy="42" r="19" fill="#E5FBFF" opacity="0.92"/>
+    <ellipse cx="35" cy="34" rx="11" ry="5" fill="#FFFFFF" opacity="0.85"/>
+  </svg><span class="lab">t2 · search</span></div>
+  <div class="cell t3"><svg viewBox="0 0 100 100">
+    <ellipse cx="50" cy="85" rx="26" ry="3.5" fill="#000" opacity="0.16" filter="blur(4px)"/>
+    <circle cx="50" cy="50" r="32" fill="url(#b3Cream)"/>
+    <circle cx="50" cy="50" r="24" fill="#FFFAEA"/>
+    <rect x="48.4" y="30" width="3.2" height="22" rx="1.6" fill="#3A1F0A"/>
+    <g transform="rotate(50 50 50)"><rect x="50" y="48.4" width="20" height="3.2" rx="1.6" fill="#3A1F0A"/></g>
+    <circle cx="50" cy="50" r="4" fill="url(#b3Gold)"/>
+    <ellipse cx="38" cy="32" rx="14" ry="5" fill="url(#b3Spec)"/>
+  </svg><span class="lab">t3 · clock</span></div>
+  <div class="cell t4"><svg viewBox="0 0 100 100">
+    <ellipse cx="50" cy="85" rx="22" ry="3.5" fill="#000" opacity="0.16" filter="blur(4px)"/>
+    <g>
+      <path d="M44 64 Q44 78 47 84 L53 84 Q56 78 56 64 Z" fill="url(#b3Wood)"/>
+      <circle cx="34" cy="44" r="18" fill="url(#b3Mint)"/>
+      <circle cx="66" cy="46" r="17" fill="url(#b3Mint)"/>
+      <circle cx="50" cy="32" r="19" fill="url(#b3Mint)"/>
+      <ellipse cx="44" cy="22" rx="11" ry="5" fill="url(#b3Spec)"/>
+    </g>
+  </svg><span class="lab">t4 · family tree</span></div>
+  <div class="cell t5"><svg viewBox="0 0 100 100">
+    <ellipse cx="50" cy="85" rx="22" ry="3.5" fill="#000" opacity="0.16" filter="blur(4px)"/>
+    <circle cx="50" cy="50" r="28" fill="url(#b3Plum)"/>
+    <circle cx="50" cy="50" r="14" fill="url(#b3Hole)"/>
+    <g fill="#3E1A78">
+      <rect x="48" y="14" width="4" height="8" rx="2"/>
+      <rect x="48" y="78" width="4" height="8" rx="2"/>
+      <rect x="14" y="48" width="8" height="4" rx="2"/>
+      <rect x="78" y="48" width="8" height="4" rx="2"/>
+    </g>
+    <ellipse cx="42" cy="32" rx="12" ry="5" fill="url(#b3Spec)"/>
+  </svg><span class="lab">t5 · gear</span></div>
+  <div class="cell t6"><svg viewBox="0 0 100 100">
+    <ellipse cx="50" cy="85" rx="22" ry="3.5" fill="#000" opacity="0.16" filter="blur(4px)"/>
+    <path d="M50 30 C 40 18, 22 22, 22 40 C 22 56, 50 78, 50 78 C 50 78, 78 56, 78 40 C 78 22, 60 18, 50 30 Z" fill="url(#b3Coral)"/>
+    <ellipse cx="38" cy="36" rx="11" ry="5" fill="url(#b3Spec)"/>
+  </svg><span class="lab">t6 · heart</span></div>
+</div>
+
+<h3>Backdrop tint mapping</h3>
+<p>Each icon's backdrop tint is chosen by category — never random. New icons inherit tint by category; if ambiguous, pick the warmest tint that contrasts with the body color.</p>
+<ul>
+  <li><b>t1 pink</b> — human / family / personal (person, book, place, magnifier-results).</li>
+  <li><b>t2 cyan</b> — tools / search / data (magnifier, refresh, link).</li>
+  <li><b>t3 gold</b> — temporal / records (clock, calendar, envelope, key, suitcase).</li>
+  <li><b>t4 mint</b> — growth / tree / heritage (family tree, pedigree, house).</li>
+  <li><b>t5 plum</b> — meta / system (gear, question, note).</li>
+  <li><b>t6 coral</b> — affection / family bonds (heart).</li>
+</ul>
+
+<h3>SVG defs to copy into any new icon page</h3>
+<p><b>These defs MUST be inlined into any new icon page</b> — they are not loaded from CSS, they live in an off-screen <code>&lt;svg&gt;</code> at the top of the document. Paste this block verbatim:</p>
+<pre>&lt;svg width="0" height="0" style="position:absolute" aria-hidden="true"&gt;
+  &lt;defs&gt;
+    &lt;!-- Multi-stop radial gradients with key light, midtone, terminator, shadow.
+         Top-left highlight at (~0.32, 0.22), shadow rolling toward bottom-right. --&gt;
+    &lt;radialGradient id="b3Pink" cx="0.32" cy="0.22" r="1"&gt;
+      &lt;stop offset="0"    stop-color="#FFF3F8"/&gt;
+      &lt;stop offset="0.18" stop-color="#FFC7DC"/&gt;
+      &lt;stop offset="0.55" stop-color="#F47AAA"/&gt;
+      &lt;stop offset="0.85" stop-color="#A82E66"/&gt;
+      &lt;stop offset="1"    stop-color="#3E0820"/&gt;
+    &lt;/radialGradient&gt;
+    &lt;radialGradient id="b3Cyan" cx="0.32" cy="0.22" r="1"&gt;
+      &lt;stop offset="0"    stop-color="#F2FCFF"/&gt;
+      &lt;stop offset="0.18" stop-color="#BFEFF7"/&gt;
+      &lt;stop offset="0.55" stop-color="#5BC4D6"/&gt;
+      &lt;stop offset="0.85" stop-color="#1A6276"/&gt;
+      &lt;stop offset="1"    stop-color="#04222C"/&gt;
+    &lt;/radialGradient&gt;
+    &lt;radialGradient id="b3Mint" cx="0.32" cy="0.22" r="1"&gt;
+      &lt;stop offset="0"    stop-color="#F0FCEF"/&gt;
+      &lt;stop offset="0.18" stop-color="#C0F0CC"/&gt;
+      &lt;stop offset="0.55" stop-color="#5DC586"/&gt;
+      &lt;stop offset="0.85" stop-color="#1F6840"/&gt;
+      &lt;stop offset="1"    stop-color="#06281A"/&gt;
+    &lt;/radialGradient&gt;
+    &lt;radialGradient id="b3Gold" cx="0.32" cy="0.22" r="1"&gt;
+      &lt;stop offset="0"    stop-color="#FFFCEC"/&gt;
+      &lt;stop offset="0.18" stop-color="#FFE39C"/&gt;
+      &lt;stop offset="0.55" stop-color="#E8B038"/&gt;
+      &lt;stop offset="0.85" stop-color="#7A4A06"/&gt;
+      &lt;stop offset="1"    stop-color="#2C1700"/&gt;
+    &lt;/radialGradient&gt;
+    &lt;radialGradient id="b3Coral" cx="0.32" cy="0.22" r="1"&gt;
+      &lt;stop offset="0"    stop-color="#FFEDE5"/&gt;
+      &lt;stop offset="0.18" stop-color="#FFB69E"/&gt;
+      &lt;stop offset="0.55" stop-color="#F26B48"/&gt;
+      &lt;stop offset="0.85" stop-color="#7A1A06"/&gt;
+      &lt;stop offset="1"    stop-color="#2A0500"/&gt;
+    &lt;/radialGradient&gt;
+    &lt;radialGradient id="b3Plum" cx="0.32" cy="0.22" r="1"&gt;
+      &lt;stop offset="0"    stop-color="#F5E8FF"/&gt;
+      &lt;stop offset="0.18" stop-color="#D6B4F2"/&gt;
+      &lt;stop offset="0.55" stop-color="#9A5FE0"/&gt;
+      &lt;stop offset="0.85" stop-color="#3E1A78"/&gt;
+      &lt;stop offset="1"    stop-color="#120432"/&gt;
+    &lt;/radialGradient&gt;
+    &lt;radialGradient id="b3Cream" cx="0.32" cy="0.22" r="1"&gt;
+      &lt;stop offset="0"    stop-color="#FFFCEC"/&gt;
+      &lt;stop offset="0.2"  stop-color="#FFEFC4"/&gt;
+      &lt;stop offset="0.6"  stop-color="#D9A968"/&gt;
+      &lt;stop offset="0.88" stop-color="#5C3712"/&gt;
+      &lt;stop offset="1"    stop-color="#1F0E02"/&gt;
+    &lt;/radialGradient&gt;
+    &lt;radialGradient id="b3Wood" cx="0.32" cy="0.22" r="1"&gt;
+      &lt;stop offset="0"    stop-color="#F0C892"/&gt;
+      &lt;stop offset="0.4"  stop-color="#A86A2C"/&gt;
+      &lt;stop offset="0.85" stop-color="#3E2208"/&gt;
+      &lt;stop offset="1"    stop-color="#1A0E02"/&gt;
+    &lt;/radialGradient&gt;
+    &lt;radialGradient id="b3Paper" cx="0.32" cy="0.22" r="1"&gt;
+      &lt;stop offset="0"    stop-color="#FFFFFF"/&gt;
+      &lt;stop offset="0.4"  stop-color="#F0E5F8"/&gt;
+      &lt;stop offset="0.85" stop-color="#7E5F94"/&gt;
+      &lt;stop offset="1"    stop-color="#1A0838"/&gt;
+    &lt;/radialGradient&gt;
+
+    &lt;!-- glassy specular --&gt;
+    &lt;radialGradient id="b3Spec" cx="0.3" cy="0.2" r="0.5"&gt;
+      &lt;stop offset="0"    stop-color="#FFFFFF" stop-opacity="0.95"/&gt;
+      &lt;stop offset="0.55" stop-color="#FFFFFF" stop-opacity="0.25"/&gt;
+      &lt;stop offset="1"    stop-color="#FFFFFF" stop-opacity="0"/&gt;
+    &lt;/radialGradient&gt;
+    &lt;!-- soft cool ambient bounce on the underside --&gt;
+    &lt;radialGradient id="b3Ambient" cx="0.7" cy="0.85" r="0.5"&gt;
+      &lt;stop offset="0" stop-color="#7DB3F2" stop-opacity="0.55"/&gt;
+      &lt;stop offset="1" stop-color="#7DB3F2" stop-opacity="0"/&gt;
+    &lt;/radialGradient&gt;
+    &lt;!-- inset hole gradient for openings --&gt;
+    &lt;radialGradient id="b3Hole" cx="0.5" cy="0.4" r="0.7"&gt;
+      &lt;stop offset="0"   stop-color="#0A0118"/&gt;
+      &lt;stop offset="0.7" stop-color="#1A0838"/&gt;
+      &lt;stop offset="1"   stop-color="#3E1A78"/&gt;
+    &lt;/radialGradient&gt;
+
+    &lt;!-- soft cast shadow filter --&gt;
+    &lt;filter id="b3Shadow" x="-50%" y="-50%" width="200%" height="200%"&gt;
+      &lt;feGaussianBlur in="SourceAlpha" stdDeviation="3"/&gt;
+      &lt;feOffset dx="0.6" dy="6" result="o"/&gt;
+      &lt;feComponentTransfer&gt;&lt;feFuncA type="linear" slope="0.55"/&gt;&lt;/feComponentTransfer&gt;
+      &lt;feMerge&gt;&lt;feMergeNode/&gt;&lt;feMergeNode in="SourceGraphic"/&gt;&lt;/feMerge&gt;
+    &lt;/filter&gt;
+  &lt;/defs&gt;
+&lt;/svg&gt;</pre>
+
+<p>The full set of 24 icons in this language lives in
+<code>preview/brand-iconography.html</code>. Reuse those defs verbatim when
+adding new icons; ground ellipses use unified <code>cy=85</code>.</p>
+
+</body></html>

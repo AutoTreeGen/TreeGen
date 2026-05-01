@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>DNA match list</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{
+    margin:0;padding:24px;font-family:var(--font-sans);
+    background-color:#1A0838;
+    background-image:
+      radial-gradient(ellipse 60% 40% at 50% 0%, rgba(176,112,192,0.18), transparent 70%),
+      radial-gradient(ellipse 60% 40% at 50% 100%, rgba(46,93,165,0.16), transparent 70%);
+    min-height:100vh;
+    position:relative;
+  }
+  /* DNA helix backdrop */
+  .helix{
+    position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.42;
+  }
+
+  .card{
+    position:relative;z-index:1;
+    border-radius:14px;overflow:hidden;
+    background:linear-gradient(180deg,#FFFFFF 0%, #F4ECF8 100%);
+    border:1px solid rgba(44,16,84,0.4);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.9) inset,
+      0 -1px 0 rgba(44,16,84,0.06) inset,
+      0 4px 8px rgba(0,0,0,0.20),
+      0 24px 48px -12px rgba(0,0,0,0.45);
+  }
+  .card-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:14px 18px;
+    border-bottom:1px solid var(--color-divider);
+    background:linear-gradient(180deg,#FAF6FC 0%, #EFE5F4 100%);
+  }
+  .card-head h3{margin:0;font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--color-fg-strong);letter-spacing:-0.01em}
+  .card-head .meta{font-family:var(--font-mono);font-size:11px;color:var(--color-fg-muted);letter-spacing:0.04em;text-transform:uppercase}
+
+  table{width:100%;border-collapse:separate;border-spacing:0}
+  th,td{padding:11px 16px;text-align:left;font-size:13px;vertical-align:middle}
+  thead th{
+    font-size:11px;font-weight:700;color:var(--color-fg-muted);
+    letter-spacing:0.07em;text-transform:uppercase;
+    background:linear-gradient(180deg,#F0E8F4 0%, #E5DBEC 100%);
+    border-bottom:1px solid #C9B8D6;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.7);
+  }
+  tbody tr{transition:transform 0.15s}
+  tbody tr:nth-child(even) td{background:rgba(232,217,240,0.3)}
+  tbody tr:hover td{background:rgba(176,112,192,0.12)}
+  tbody td{border-bottom:1px solid var(--color-divider)}
+  tbody tr:last-child td{border-bottom:none}
+
+  /* — 3D kit chip (recessed/inset) — */
+  .kit-3d{
+    display:inline-block;padding:3px 9px;border-radius:5px;
+    font-family:var(--font-mono);font-size:12px;font-weight:600;
+    color:#3A1568;
+    background:linear-gradient(180deg,#E5DBEC 0%, #F4ECF8 100%);
+    border:1px solid #C9B8D6;
+    box-shadow:
+      inset 0 1px 2px rgba(44,16,84,0.18),
+      inset 0 -1px 0 rgba(255,255,255,0.7),
+      0 1px 0 rgba(255,255,255,0.6);
+  }
+
+  .name{font-weight:600;color:var(--color-fg-strong)}
+
+  /* — 3D cM pill (raised) — */
+  .cm-3d{
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .cm-3d .num{
+    font-family:var(--font-mono);font-size:12px;font-weight:700;
+    padding:3px 10px;border-radius:5px;
+    color:#1B3D6F;
+    background:linear-gradient(180deg,#FFFFFF 0%, #D6E4F4 100%);
+    border:1px solid #9FB6D4;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.8),
+      inset 0 -1px 0 rgba(27,61,111,0.15),
+      0 1px 2px rgba(27,61,111,0.18),
+      0 4px 8px -2px rgba(27,61,111,0.20);
+    min-width:54px;text-align:right;
+  }
+  .cm-3d .bar{
+    width:60px;height:8px;border-radius:999px;
+    background:linear-gradient(180deg,#E0DAE8 0%, #F4ECF8 100%);
+    border:1px solid #C9B8D6;
+    box-shadow:inset 0 1px 2px rgba(44,16,84,0.18);
+    overflow:hidden;
+  }
+  .cm-3d .fill{
+    display:block;height:100%;
+    background:linear-gradient(180deg,#5C8DD6 0%, #2E5DA5 50%, #1B3D6F 100%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 0 rgba(0,0,0,0.18);
+  }
+
+  .seg{
+    display:inline-block;
+    font-family:var(--font-mono);font-size:11px;font-weight:600;
+    color:#3A1568;
+    padding:2px 8px;border-radius:4px;
+    background:linear-gradient(180deg,#FFFFFF 0%, #ECE2F2 100%);
+    border:1px solid #C9B8D6;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 2px rgba(44,16,84,0.10);
+    min-width:22px;text-align:center;
+  }
+
+  /* — 3D haplogroup chip (saturated, glossy) — */
+  .hap-3d{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:3px 10px;border-radius:6px;
+    font-family:var(--font-mono);font-size:12px;font-weight:600;
+    color:#fff;
+    text-shadow:0 1px 1px rgba(0,0,0,0.30);
+    background:linear-gradient(180deg, var(--top) 0%, var(--mid) 50%, var(--bot) 100%);
+    border:1px solid rgba(0,0,0,0.22);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.40),
+      inset 0 -1px 0 rgba(0,0,0,0.18),
+      0 1px 2px rgba(0,0,0,0.15),
+      0 4px 8px -2px rgba(0,0,0,0.18);
+  }
+  .hap-3d .helix-mini{display:inline-block;width:10px;height:10px;opacity:0.85}
+
+  /* relation pill */
+  .rel-3d{
+    display:inline-block;
+    font-family:var(--font-sans);font-size:12px;font-weight:500;
+    color:#3A1568;
+    padding:3px 10px;border-radius:999px;
+    background:linear-gradient(180deg,#FFFFFF 0%, #F0E8F4 100%);
+    border:1px solid #D1C4DA;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.7), 0 1px 2px rgba(44,16,84,0.10);
+  }
+</style></head><body>
+
+<!-- DNA helix backdrop, fixed behind card -->
+<svg class="helix" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="dnaBg" x="0" y="0" width="220" height="220" patternUnits="userSpaceOnUse">
+      <!-- two strands -->
+      <path d="M0 60 Q 55 0, 110 60 T 220 60" fill="none" stroke="#B070C0" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
+      <path d="M0 160 Q 55 220, 110 160 T 220 160" fill="none" stroke="#5C8DD6" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
+      <path d="M0 60 Q 55 110, 110 160 T 220 260" fill="none" stroke="#B070C0" stroke-width="2" stroke-linecap="round" opacity="0.45"/>
+      <path d="M0 160 Q 55 110, 110 60 T 220 -40" fill="none" stroke="#5C8DD6" stroke-width="2" stroke-linecap="round" opacity="0.45"/>
+      <!-- rungs -->
+      <line x1="28"  y1="65"  x2="28"  y2="155" stroke="#FFFFFF" stroke-width="1.4" opacity="0.4"/>
+      <line x1="82"  y1="92"  x2="82"  y2="128" stroke="#FFFFFF" stroke-width="1.4" opacity="0.4"/>
+      <line x1="138" y1="92"  x2="138" y2="128" stroke="#FFFFFF" stroke-width="1.4" opacity="0.4"/>
+      <line x1="192" y1="65"  x2="192" y2="155" stroke="#FFFFFF" stroke-width="1.4" opacity="0.4"/>
+      <!-- nucleotide dots -->
+      <circle cx="55"  cy="14" r="2.5" fill="#E5DBEC" opacity="0.7"/>
+      <circle cx="165" cy="14" r="2.5" fill="#E5DBEC" opacity="0.7"/>
+      <circle cx="55"  cy="206" r="2.5" fill="#E5DBEC" opacity="0.7"/>
+      <circle cx="165" cy="206" r="2.5" fill="#E5DBEC" opacity="0.7"/>
+    </pattern>
+    <!-- mini helix used inside haplogroup chips -->
+    <symbol id="miniHelix" viewBox="0 0 12 12">
+      <path d="M0 3 Q 3 0, 6 3 T 12 3" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M0 9 Q 3 12, 6 9 T 12 9" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="3" y1="4" x2="3" y2="8" stroke="#fff" stroke-width="0.8" opacity="0.7"/>
+      <line x1="9" y1="4" x2="9" y2="8" stroke="#fff" stroke-width="0.8" opacity="0.7"/>
+    </symbol>
+  </defs>
+  <rect width="1200" height="800" fill="url(#dnaBg)"/>
+</svg>
+
+<div class="card">
+  <div class="card-head">
+    <h3>DNA matches · Aron Sokolov</h3>
+    <span class="meta">5 of 47 · sorted by cM</span>
+  </div>
+  <table>
+    <thead>
+      <tr><th>kit</th><th>name</th><th>cM</th><th style="text-align:center">seg</th><th>haplogroup</th><th>predicted relation</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="kit-3d">A12F</span></td>
+        <td><span class="name">Eli Goldin</span></td>
+        <td><span class="cm-3d"><span class="num">312.4</span><span class="bar"><i class="fill" style="width:100%"></i></span></span></td>
+        <td style="text-align:center"><span class="seg">14</span></td>
+        <td><span class="hap-3d" style="--top:#5C8DD6;--mid:#2E5DA5;--bot:#1B3D6F"><svg class="helix-mini"><use href="#miniHelix"/></svg>R1a-M198</span></td>
+        <td><span class="rel-3d">2nd cousin</span></td>
+      </tr>
+      <tr>
+        <td><span class="kit-3d">B907</span></td>
+        <td><span class="name">Rachel Levin</span></td>
+        <td><span class="cm-3d"><span class="num">187.0</span><span class="bar"><i class="fill" style="width:60%"></i></span></span></td>
+        <td style="text-align:center"><span class="seg">9</span></td>
+        <td><span class="hap-3d" style="--top:#7BD8C5;--mid:#4BB39E;--bot:#1F6E5E"><svg class="helix-mini"><use href="#miniHelix"/></svg>H1a</span></td>
+        <td><span class="rel-3d">2C – 3C</span></td>
+      </tr>
+      <tr>
+        <td><span class="kit-3d">C233</span></td>
+        <td><span class="name">Mara Korsky</span></td>
+        <td><span class="cm-3d"><span class="num">94.1</span><span class="bar"><i class="fill" style="width:30%"></i></span></span></td>
+        <td style="text-align:center"><span class="seg">6</span></td>
+        <td><span class="hap-3d" style="--top:#E07AA8;--mid:#C04B7E;--bot:#7A2A4F"><svg class="helix-mini"><use href="#miniHelix"/></svg>J2a-M410</span></td>
+        <td><span class="rel-3d">3rd cousin</span></td>
+      </tr>
+      <tr>
+        <td><span class="kit-3d">D118</span></td>
+        <td><span class="name">Jakob Berg</span></td>
+        <td><span class="cm-3d"><span class="num">56.4</span><span class="bar"><i class="fill" style="width:18%"></i></span></span></td>
+        <td style="text-align:center"><span class="seg">3</span></td>
+        <td><span class="hap-3d" style="--top:#5C8DD6;--mid:#2E5DA5;--bot:#1B3D6F"><svg class="helix-mini"><use href="#miniHelix"/></svg>R1a-M198</span></td>
+        <td><span class="rel-3d">3C – 4C</span></td>
+      </tr>
+      <tr>
+        <td><span class="kit-3d">E044</span></td>
+        <td><span class="name">Hanna Vais</span></td>
+        <td><span class="cm-3d"><span class="num">32.1</span><span class="bar"><i class="fill" style="width:10%"></i></span></span></td>
+        <td style="text-align:center"><span class="seg">2</span></td>
+        <td><span class="hap-3d" style="--top:#B07ADD;--mid:#7E4BC0;--bot:#4F2C7A"><svg class="helix-mini"><use href="#miniHelix"/></svg>E1b-M35</span></td>
+        <td><span class="rel-3d">4C +</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+</body></html>

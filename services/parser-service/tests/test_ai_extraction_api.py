@@ -143,6 +143,9 @@ def override_extractor(app):
     fake_extractor = AsyncMock()
     # extract_from_text — async-метод на extractor instance.
     fake_extractor.extract_from_text = AsyncMock(return_value=_make_completion())
+    # Phase 10.2b: pre-flight cost-cap читает .max_tokens — без явного
+    # int'а AsyncMock вернёт MagicMock и cap-проверка упадёт TypeError'ом.
+    fake_extractor.max_tokens = 4096
 
     app.dependency_overrides[get_source_extractor] = lambda: fake_extractor
     yield fake_extractor

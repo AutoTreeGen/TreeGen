@@ -16,6 +16,8 @@ from shared_models.security import apply_security_middleware
 
 from parser_service.api import (
     ai_extraction,
+    audio_consent,
+    audio_sessions,
     clerk_webhooks,
     dedup,
     dedup_attempts,
@@ -26,8 +28,10 @@ from parser_service.api import (
     imports,
     imports_sse,
     metrics,
+    normalize,
     persons,
     public_share,
+    relationships,
     sharing,
     sources,
     trees,
@@ -99,10 +103,19 @@ app.include_router(imports_sse.router, prefix="/imports", tags=["imports", "sse"
 app.include_router(imports.router, prefix="/imports", tags=["imports"], dependencies=_AUTH_DEPS)
 app.include_router(trees.router, tags=["trees"], dependencies=_AUTH_DEPS)
 app.include_router(sources.router, tags=["sources"], dependencies=_AUTH_DEPS)
+# Phase 15.1 (ADR-0058): relationship-level evidence aggregation. Включён
+# до sharing-router'а, чтобы /trees/{id}/relationships/... маршрут не
+# перехватывался /trees/{id}/* generic'ами.
+app.include_router(relationships.router, tags=["relationships"], dependencies=_AUTH_DEPS)
 # Phase 10.2 (ADR-0059) — AI source extraction. Auth required;
 # permission gate (EDITOR) проверяется внутри ручек через resolve
 # source → tree.
 app.include_router(ai_extraction.router, tags=["sources", "ai"], dependencies=_AUTH_DEPS)
+# Phase 10.3 (ADR-0060) — AI normalization for places + names.
+# Auth required; нет tree-scoped permission'а (вход — личная raw-строка).
+# Cost-guards (kill switch + per-user-day rate limit + per-month tokens budget)
+# ставятся внутри ручек, выровнено с 10.2.
+app.include_router(normalize.router, tags=["ai", "normalization"], dependencies=_AUTH_DEPS)
 app.include_router(dedup.router, tags=["dedup"], dependencies=_AUTH_DEPS)
 app.include_router(dedup_attempts.router, tags=["dedup-attempts"], dependencies=_AUTH_DEPS)
 # SSE роутер до основного hypotheses — у него специализированный путь
@@ -113,6 +126,12 @@ app.include_router(hypotheses.router, tags=["hypotheses"], dependencies=_AUTH_DE
 # persons router включается ПОСЛЕ trees (тот владеет `GET /persons/{id}`),
 # но имена путей не пересекаются: тут `/persons/{id}/merge*`.
 app.include_router(persons.router, tags=["persons", "merge"], dependencies=_AUTH_DEPS)
+# Phase 10.9a — voice-to-tree (ADR-0064). Включён до sharing чтобы
+# /trees/{id}/audio-* пути не перехватывались sharing-router'ом или
+# trees-router'ом /trees/{id}/* generic'ами. Auth required; permission
+# gates (OWNER для consent, EDITOR/VIEWER для sessions) — внутри ручек.
+app.include_router(audio_consent.router, tags=["voice", "consent"], dependencies=_AUTH_DEPS)
+app.include_router(audio_sessions.router, tags=["voice", "sessions"], dependencies=_AUTH_DEPS)
 # Phase 11.0 — sharing endpoints (invitations, memberships). Auth required.
 # Включён после persons чтобы /trees/{id}/* пути в trees.router не
 # перехватывали /trees/{id}/invitations / /trees/{id}/members.

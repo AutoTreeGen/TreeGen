@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* AutoTreeGen Design System v1 — токены цвета/типографики/spacing/radii/
+   shadow/motion из общего файла. См. ADR-0067 (light-mode only V1).
+   v2 промоутит копии apps/web и apps/landing в packages-js/design-system/. */
+@import "../styles/design-system.css";
+
 /* Базовые brand-токены. Tailwind 4 @theme — переменные становятся
    utility-классами (bg-surface, text-ink-900, ...). */
 @theme {

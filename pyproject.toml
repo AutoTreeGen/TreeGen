@@ -42,6 +42,7 @@ members = [
     "services/archive-service",
     "services/notification-service",
     "services/email-service",
+    "services/billing-service",
     "services/telegram-bot",
 ]
 
@@ -59,6 +60,7 @@ dna-service = { workspace = true }
 archive-service = { workspace = true }
 notification-service = { workspace = true }
 email-service = { workspace = true }
+billing-service = { workspace = true }
 telegram-bot = { workspace = true }
 
 [tool.uv]
@@ -213,6 +215,7 @@ mypy_path = [
     "packages/inference-engine/src",
     "packages/shared-models/src",
     "services/archive-service/src",
+    "services/billing-service/src",
     "services/dna-service/src",
     "services/email-service/src",
     "services/notification-service/src",

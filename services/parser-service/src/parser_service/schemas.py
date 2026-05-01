@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -809,7 +810,7 @@ class HypothesisRecomputeScoresResponse(BaseModel):
     """
 
     tree_id: uuid.UUID
-    algorithm: str = Field(description="Версия aggregation algorithm (ADR-0057, Phase 7.5).")
+    algorithm: str = Field(description="Версия aggregation algorithm (ADR-0065, Phase 7.5).")
     recomputed_count: int = Field(ge=0)
     mean_absolute_delta: float = Field(ge=0.0, le=1.0)
     max_absolute_delta: float = Field(ge=0.0, le=1.0)
@@ -1427,3 +1428,438 @@ class AIFactReviewRequest(BaseModel):
     )
 
     model_config = ConfigDict(extra="forbid")
+
+
+# -----------------------------------------------------------------------------
+# Phase 10.3 — AI normalization (см. ADR-0060).
+# -----------------------------------------------------------------------------
+
+
+class NormalizationCandidateInput(BaseModel):
+    """Один кандидат, передаваемый в endpoint для Voyage-ranking.
+
+    Caller-уровень (UI / inference-pipeline) сам выбирает что подавать —
+    обычно ``places.canonical_name`` для tree'а пользователя, либо
+    ``names.surname`` для дедупa person'ов.
+    """
+
+    id: str = Field(min_length=1, max_length=128)
+    text: str = Field(min_length=1, max_length=512)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class PlaceNormalizeRequest(BaseModel):
+    """Тело ``POST /places/normalize``.
+
+    Attributes:
+        raw: Исходная строка места («Юзерин, Гомельская обл»). Один вход —
+            одна нормализация. Чтобы нормализовать список — слать N запросов.
+        locale_hint: Подсказка для LLM (BCP-47-like). Не обязательно.
+        context: Surrounding context (например, family-card excerpt) для
+            LLM-disambig'а. Не PII-чувствительная — но caller отвечает.
+        candidates: Опциональный список существующих canonical-форм для
+            Voyage-ranked match'а (top-K возвращается в ответе).
+        top_k: Сколько candidate'ов оставить в ответе после Voyage-ranking.
+    """
+
+    raw: str = Field(min_length=1, max_length=1024)
+    locale_hint: str | None = Field(default=None, max_length=16)
+    context: str | None = Field(default=None, max_length=2048)
+    candidates: list[NormalizationCandidateInput] = Field(default_factory=list, max_length=50)
+    top_k: int = Field(default=5, ge=1, le=20)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class NameNormalizeRequest(BaseModel):
+    """Тело ``POST /names/normalize``.
+
+    Attributes:
+        raw: Исходная строка имени.
+        script_hint: Скрипт raw-input'а (``cyrillic`` / ``hebrew`` / ...).
+        locale_hint: BCP-47-like локаль.
+        context: Surrounding context.
+        candidates: Опциональный список существующих имён (для дедупa).
+        top_k: Сколько candidate'ов оставить.
+    """
+
+    raw: str = Field(min_length=1, max_length=1024)
+    script_hint: str | None = Field(default=None, max_length=16)
+    locale_hint: str | None = Field(default=None, max_length=16)
+    context: str | None = Field(default=None, max_length=2048)
+    candidates: list[NormalizationCandidateInput] = Field(default_factory=list, max_length=50)
+    top_k: int = Field(default=5, ge=1, le=20)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class CandidateMatchResponse(BaseModel):
+    """Один Voyage-ranked match для UI-рендера."""
+
+    candidate_id: str
+    candidate_text: str
+    score: float
+    rank: int
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class PlaceNormalizationDetail(BaseModel):
+    """Структурированное представление места для ответа endpoint'а."""
+
+    canonical_name: str
+    country_modern: str | None
+    country_historical: str | None
+    admin1: str | None
+    admin2: str | None
+    settlement: str
+    latitude: float | None
+    longitude: float | None
+    confidence: float
+    ethnicity_hint: str
+    alternative_forms: list[str]
+    notes: str | None
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class NameNormalizationDetail(BaseModel):
+    """Структурированное представление имени для ответа endpoint'а."""
+
+    given: str | None
+    surname: str | None
+    patronymic: str | None
+    maiden_surname: str | None
+    prefix: str | None
+    suffix: str | None
+    nickname: str | None
+    given_alts: list[str]
+    surname_alts: list[str]
+    script_detected: str
+    transliteration_scheme: str
+    ethnicity_hint: str
+    tribe_marker: str
+    confidence: float
+    notes: str | None
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class PlaceNormalizeResponse(BaseModel):
+    """Ответ ``POST /places/normalize``.
+
+    Поле ``budget_remaining_runs`` помогает UI рендерить «осталось N
+    из лимита M» без дополнительного round-trip.
+    """
+
+    place: PlaceNormalizationDetail
+    candidates: list[CandidateMatchResponse] = Field(default_factory=list)
+    input_tokens: int
+    output_tokens: int
+    cost_usd: float
+    model: str
+    dry_run: bool
+    budget_remaining_runs: int = Field(
+        description="Сколько ещё normalize-вызовов осталось сегодня (-1 = unlimited)."
+    )
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class NameNormalizeResponse(BaseModel):
+    """Ответ ``POST /names/normalize``."""
+
+    name: NameNormalizationDetail
+    candidates: list[CandidateMatchResponse] = Field(default_factory=list)
+    input_tokens: int
+    output_tokens: int
+    cost_usd: float
+    model: str
+    dry_run: bool
+    budget_remaining_runs: int = Field(
+        description="Сколько ещё normalize-вызовов осталось сегодня (-1 = unlimited)."
+    )
+
+    model_config = ConfigDict(extra="forbid")
+
+
+# =============================================================================
+# Phase 15.1 — relationship-level evidence panel (ADR-0058)
+# =============================================================================
+
+
+class RelationshipReference(BaseModel):
+    """Описание relationship в ответе evidence-endpoint'а.
+
+    ``kind`` — string-копия :class:`RelationshipKind` (parent_child / spouse /
+    sibling). Для PARENT_CHILD subject = родитель, object = ребёнок;
+    SPOUSE / SIBLING — симметричны.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    kind: str
+    subject_person_id: uuid.UUID
+    object_person_id: uuid.UUID
+
+
+class RelationshipEvidenceSource(BaseModel):
+    """Один пункт supporting/contradicting в ответе.
+
+    ``kind`` отделяет настоящие Source/Citation pair от inference-rule
+    evidences (synthesized DTO). UI может раскрашивать их по-разному
+    (см. ADR-0058).
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    source_id: uuid.UUID | None = None
+    citation_id: uuid.UUID | None = None
+    title: str
+    repository: str | None = None
+    reliability: float | None = Field(
+        default=None,
+        description="Quality / weight 0..1. Citation — derived QUAY; rule — Evidence.weight.",
+    )
+    citation: str | None = Field(
+        default=None,
+        description="Page / section / volume reference (Citation.page_or_section).",
+    )
+    snippet: str | None = Field(
+        default=None,
+        description="Quoted text fragment или rule observation.",
+    )
+    url: str | None = None
+    added_at: datetime
+    kind: Literal["citation", "inference_rule"] = "citation"
+    rule_id: str | None = Field(
+        default=None,
+        description="Заполняется только когда kind='inference_rule'.",
+    )
+
+
+class RelationshipEvidenceConfidence(BaseModel):
+    """Confidence rollup для relationship.
+
+    ``method``:
+
+    * ``bayesian_fusion_v2`` — score from existing Hypothesis.composite_score.
+    * ``naive_count`` — fallback supporting / (supporting + contradicting).
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    score: float = Field(ge=0.0, le=1.0)
+    method: Literal["bayesian_fusion_v2", "naive_count"]
+    computed_at: datetime
+    hypothesis_id: uuid.UUID | None = None
+
+
+class RelationshipEvidenceProvenance(BaseModel):
+    """Aggregated provenance из вошедших Family-rows.
+
+    Структура совместима с ADR-0003 §«provenance jsonb»: ``source_files``
+    (union), последний ``import_job_id``, ``manual_edits`` (concat).
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    source_files: list[str] = Field(default_factory=list)
+    import_job_id: uuid.UUID | None = None
+    manual_edits: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class RelationshipEvidenceResponse(BaseModel):
+    """Ответ ``GET /trees/{id}/relationships/{kind}/{a}/{b}/evidence``."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    relationship: RelationshipReference
+    supporting: list[RelationshipEvidenceSource]
+    contradicting: list[RelationshipEvidenceSource]
+    confidence: RelationshipEvidenceConfidence
+    provenance: RelationshipEvidenceProvenance
+
+
+# =============================================================================
+# Phase 10.2b — vision endpoint + extraction status.
+# =============================================================================
+
+
+class AIExtractVisionResponse(BaseModel):
+    """Ответ на ``POST /sources/{id}/ai-extract-vision``.
+
+    Аналог :class:`AIExtractTriggerResponse` для vision-режима плюс поля
+    о preprocessing'е изображения (для UI «оптимизировано с 5.2 МБ → 0.8 МБ»).
+    """
+
+    extraction: AIExtractionDetail
+    fact_count: int
+    budget_remaining_runs: int
+    budget_remaining_tokens: int
+    estimated_cost_usd: float = Field(
+        ge=0.0,
+        description=(
+            "Pre-flight cost estimate (worst-case input + max_output). "
+            "Реальный cost — в ``extraction.input_tokens`` × pricing после "
+            "ответа Claude'а."
+        ),
+    )
+    image_was_resized: bool
+    image_was_rotated: bool
+    image_original_bytes: int
+    image_processed_bytes: int
+
+
+class AIExtractStatusResponse(BaseModel):
+    """Ответ на ``GET /sources/{id}/ai-extract-status``.
+
+    Возвращает последний (по ``created_at``) extraction-run для source'а.
+    Phase 10.2b sync-mode: значение либо ``COMPLETED`` либо ``FAILED``
+    почти сразу. 10.2c добавит async-arq, и тогда ``PENDING`` будет
+    реальным переходным состоянием — endpoint и shape останутся теми же.
+    """
+
+    source_id: uuid.UUID
+    has_extraction: bool = Field(
+        description=(
+            "False если у source'а никогда не было AI-extraction'а — "
+            "frontend рисует «AI extraction not started» вместо "
+            "progress-spinner'а."
+        ),
+    )
+    extraction: AIExtractionDetail | None = None
+    fact_count: int = 0
+    cost_usd: float = Field(
+        default=0.0,
+        ge=0.0,
+        description="Реальный cost для последнего run'а (input+output × pricing).",
+    )
+    budget_remaining_runs: int = Field(
+        description="Сколько ещё AI-вызовов сегодня. ``-1`` = unlimited.",
+    )
+    budget_remaining_tokens: int = Field(
+        description="Сколько ещё tokens за месяц. ``-1`` = unlimited."
+    )
+    extract_budget_usd: float = Field(
+        ge=0.0,
+        description=(
+            "Текущий per-source $-cap (``PARSER_SERVICE_EXTRACT_BUDGET_USD``). 0 = cap отключён."
+        ),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 10.9a — voice-to-tree (ADR-0064).
+# ---------------------------------------------------------------------------
+
+
+AudioConsentProvider = Literal["openai", "self-hosted-whisper"]
+"""Допустимые значения ``Tree.audio_consent_egress_provider`` на app-слое.
+
+DB-уровень — VARCHAR(32) без CHECK (см. ORM ``Tree``), чтобы Phase 10.9.x
+мог добавить ``self-hosted-whisper`` без миграции; Pydantic-уровень
+ограничивает ввод до известных значений.
+"""
+
+
+AudioSessionStatusEnum = Literal["uploaded", "transcribing", "ready", "failed"]
+"""Статусы из ``shared_models.orm.AudioSessionStatus`` как Literal для API."""
+
+
+class AudioConsentRequest(BaseModel):
+    """Тело ``POST /trees/{id}/audio-consent``.
+
+    Owner явно выбирает провайдера, согласие на egress даётся под этот
+    конкретный backend. Изменение провайдера = revoke (DELETE) + новый POST.
+    """
+
+    provider: AudioConsentProvider = Field(
+        default="openai",
+        description="STT-провайдер, на который owner соглашается отправлять аудио.",
+    )
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class AudioConsentResponse(BaseModel):
+    """Ответ ``GET /trees/{id}/audio-consent`` и ``POST`` (после set'а).
+
+    Оба поля nullable: на trees без consent'а возвращаются ``null``.
+    """
+
+    tree_id: uuid.UUID
+    audio_consent_egress_at: datetime | None = Field(
+        default=None,
+        description=(
+            "Когда owner подтвердил согласие на egress. ``None`` — consent "
+            "не дан (POST /audio-sessions вернёт 403 consent_required)."
+        ),
+    )
+    audio_consent_egress_provider: AudioConsentProvider | None = Field(
+        default=None,
+        description="Провайдер, на который дано согласие. ``None`` парно с ``audio_consent_egress_at``.",
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AudioConsentRevokeResponse(BaseModel):
+    """Ответ ``DELETE /trees/{id}/audio-consent``.
+
+    202 Accepted: erasure-job'ы уже в очереди, но ещё не завершены. UI
+    показывает спиннер и опрашивает ``GET /trees/{id}/audio-sessions``
+    пока список не опустеет.
+    """
+
+    tree_id: uuid.UUID
+    revoked_at: datetime
+    enqueued_session_ids: list[uuid.UUID] = Field(
+        default_factory=list,
+        description="Сессии, для которых поставлен erasure-job. Пустой список = ничего не удаляли.",
+    )
+
+
+class AudioSessionResponse(BaseModel):
+    """Полная сессия — ответ ``POST /trees/{id}/audio-sessions``,
+    ``GET /audio-sessions/{id}`` и элемент ``GET /trees/{id}/audio-sessions``.
+
+    Поля повторяют ``AudioSession`` ORM 1:1, кроме ``owner_user_id``
+    (privacy: не показываем UUID владельца в ответе списка) и
+    ``consent_egress_at`` snapshot (внутренняя проверка, UI'ю не нужна).
+    """
+
+    id: uuid.UUID
+    tree_id: uuid.UUID
+    status: AudioSessionStatusEnum
+    storage_uri: str
+    mime_type: str
+    duration_sec: float | None = None
+    size_bytes: int
+    language: str | None = None
+    transcript_text: str | None = None
+    transcript_provider: str | None = None
+    transcript_model_version: str | None = None
+    transcript_cost_usd: Decimal | None = None
+    error_message: str | None = None
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AudioSessionListResponse(BaseModel):
+    """Пагинированный ответ ``GET /trees/{id}/audio-sessions``.
+
+    Soft-deleted сессии (``deleted_at IS NOT NULL``) включены — UI
+    показывает их с tombstone-стилем для аудита; чтобы скрыть,
+    фронт фильтрует по ``deleted_at`` сам.
+    """
+
+    tree_id: uuid.UUID
+    total: int
+    page: int
+    per_page: int
+    items: list[AudioSessionResponse]

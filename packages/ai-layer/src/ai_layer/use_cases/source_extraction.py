@@ -116,6 +116,11 @@ class SourceExtractor:
         self._registry = registry
         self._max_tokens = max_tokens
 
+    @property
+    def max_tokens(self) -> int:
+        """Phase 10.2b: caller'у нужно знать ``max_tokens`` для pre-flight cost-cap'а."""
+        return self._max_tokens
+
     async def extract_from_text(
         self,
         document_text: str,

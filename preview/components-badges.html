@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Badges</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:24px;background:var(--color-bg);font-family:var(--font-sans);display:flex;flex-direction:column;gap:16px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .lab{font-family:var(--font-mono);font-size:11px;color:var(--color-fg-muted);min-width:96px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600}
+
+  /* — 3D pill base — gradient body + inner highlight + drop shadow + tiny lift on the top edge — */
+  .badge{
+    display:inline-flex;align-items:center;gap:7px;
+    padding:4px 12px;border-radius:999px;
+    font-size:13px;font-weight:500;letter-spacing:-0.005em;
+    position:relative;
+    background:linear-gradient(180deg, var(--lo) 0%, var(--hi) 50%, var(--lo) 100%);
+    color:var(--fg);
+    border:1px solid var(--bd);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.7),
+      inset 0 -1px 0 rgba(0,0,0,0.05),
+      0 1px 0 rgba(255,255,255,0.5),
+      0 2px 3px rgba(44,16,84,0.10),
+      0 4px 8px -2px rgba(44,16,84,0.12);
+  }
+  .badge .dot{
+    width:8px;height:8px;border-radius:999px;background:var(--accent);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,0.6),
+      inset 0 -1px 1px rgba(0,0,0,0.25),
+      0 1px 1px rgba(0,0,0,0.18);
+  }
+
+  .b-neutral { --hi:#FFFFFF; --lo:#F0EAF4; --bd:#D1C4DA; --fg:#1A1024; }
+  .b-accent  { --hi:#E8EFF8; --lo:#C9D8EC; --bd:#9FB6D4; --fg:#1B3F6E; }
+  .b-success { --hi:#EFF8F2; --lo:#CFE6D8; --bd:#A5CDB4; --fg:#1E5C3D; }
+  .b-warning { --hi:#FAF1DA; --lo:#EFD9A2; --bd:#D9BC78; --fg:#5C3F12; }
+  .b-danger  { --hi:#FBEAE5; --lo:#F2C9C0; --bd:#D9A095; --fg:#7A2A20; }
+
+  /* Solid colored pills (haplogroup) keep the 3D treatment too, on top of the saturated fill */
+  .badge.solid{
+    background:linear-gradient(180deg, var(--top) 0%, var(--mid) 50%, var(--bot) 100%);
+    color:#fff;font-family:var(--font-mono);
+    text-shadow:0 1px 1px rgba(0,0,0,0.22);
+    border-color:rgba(0,0,0,0.18);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.4),
+      inset 0 -1px 0 rgba(0,0,0,0.18),
+      0 1px 0 rgba(255,255,255,0.3),
+      0 2px 4px rgba(44,16,84,0.16),
+      0 6px 12px -3px rgba(44,16,84,0.18);
+  }
+
+  /* — QUAY: heavier "wax-seal" stamps — */
+  .quay{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:5px 14px;border-radius:6px;
+    font-size:12px;font-weight:600;letter-spacing:0.02em;
+    font-family:var(--font-mono);
+    position:relative;
+    background:linear-gradient(180deg, var(--top) 0%, var(--mid) 45%, var(--bot) 100%);
+    color:var(--fg);
+    border:1px solid var(--bd);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.6),
+      inset 0 -2px 4px rgba(0,0,0,0.10),
+      0 2px 3px rgba(44,16,84,0.14),
+      0 6px 14px -4px rgba(44,16,84,0.20);
+  }
+  .quay::before{
+    content:"";display:inline-block;width:8px;height:8px;border-radius:999px;
+    background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.7), transparent 60%), var(--mark);
+    box-shadow:inset 0 -1px 1px rgba(0,0,0,0.25);
+  }
+  .q3{ --top:#EFF8F2; --mid:#D5E9DC; --bot:#B7D2C0; --bd:#8FB89E; --fg:#16472E; --mark:#5BA47E }
+  .q2{ --top:#EAF1FA; --mid:#CCDCED; --bot:#A8C0D7; --bd:#7E9BB8; --fg:#1B3F6E; --mark:#4F86C2 }
+  .q1{ --top:#F8EFD4; --mid:#E5CB91; --bot:#CDA862; --bd:#A8853E; --fg:#4D3308; --mark:#D4A55A }
+  .q0{ --top:#F4D8D1; --mid:#DFA89E; --bot:#C58275; --bd:#9F584A; --fg:#591A12; --mark:#A84838 }
+</style></head><body>
+  <div class="row"><span class="lab">tone</span>
+    <span class="badge b-neutral">Draft</span>
+    <span class="badge b-accent"><span class="dot" style="--accent:#2E5DA5"></span>Verified by DNA</span>
+    <span class="badge b-success"><span class="dot" style="--accent:#5BA47E"></span>Cited · 1850 census</span>
+    <span class="badge b-warning"><span class="dot" style="--accent:#D4A55A"></span>Conflict · 2 sources</span>
+    <span class="badge b-danger"><span class="dot" style="--accent:#D17A6E"></span>Parse failed</span>
+  </div>
+  <div class="row"><span class="lab">QUAY</span>
+    <span class="quay q3">QUAY 3 · primary</span>
+    <span class="quay q2">QUAY 2 · good</span>
+    <span class="quay q1">QUAY 1 · weak</span>
+    <span class="quay q0">QUAY 0 · unreliable</span>
+  </div>
+  <div class="row"><span class="lab">haplogroup</span>
+    <span class="badge solid" style="--top:#5C8DD6;--mid:#2E5DA5;--bot:#1B3D6F">R1a-M198</span>
+    <span class="badge solid" style="--top:#E07AA8;--mid:#C04B7E;--bot:#7A2A4F">J2a-M410</span>
+    <span class="badge solid" style="--top:#7BD8C5;--mid:#4BB39E;--bot:#1F6E5E">H1a</span>
+    <span class="badge solid" style="--top:#B07ADD;--mid:#7E4BC0;--bot:#4F2C7A">E1b-M35</span>
+  </div>
+</body></html>

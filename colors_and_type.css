@@ -1,0 +1,329 @@
+/* AutoTreeGen — design tokens
+ * Single source of truth for color, type, spacing, radii, shadow, motion.
+ * Pair with Tailwind 4's @theme block in the actual product (apps/web).
+ *
+ * Loaded by every preview HTML in this design system, plus the UI kit
+ * indexes. Tokens are :root only.
+ *
+ * Light theme only — V1 (owner decision 2026-05-01). A dark variant is
+ * deferred to v2; no alternate-theme selectors, no system-theme media queries.
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+/* PT Serif — brand display face (vendored locally in /fonts). */
+@font-face {
+  font-family: "PT Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/PTSerif-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "PT Serif";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/PTSerif-Italic.ttf") format("truetype");
+}
+@font-face {
+  font-family: "PT Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./fonts/PTSerif-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "PT Serif";
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./fonts/PTSerif-BoldItalic.ttf") format("truetype");
+}
+
+:root {
+  /* — Brand palette ————————————————————————— */
+  --color-deep-purple: #2c1054;
+  --color-brand-blue: #2e5da5;
+  --color-ink: #1a1024;
+  --color-lilac: #b070c0;
+  --color-light-lilac: #e8d5f0;
+  --color-snow: #ffffff;
+
+  /* — Lilac tints (10/15/20% only — Lilac is never a fill) — */
+  --color-lilac-10: rgba(176, 112, 192, 0.1);
+  --color-lilac-15: rgba(176, 112, 192, 0.15);
+  --color-lilac-20: rgba(176, 112, 192, 0.2);
+
+  /* — Semantic ————————————————————————————— */
+  --color-success: #5ba47e;
+  --color-warning: #d4a55a;
+  --color-danger: #d17a6e;
+  --color-success-soft: #e8f2ec;
+  --color-warning-soft: #f7edd8;
+  --color-danger-soft: #f5e1dc;
+
+  /* — Surface system (light) ————————————————— */
+  --color-bg: #faf6fc; /* page wash — light lilac at 30% */
+  --color-bg-muted: #f2e9f6; /* page wash on marketing hero */
+  --color-surface: var(--color-snow);
+  --color-surface-muted: #f8f4fa; /* row hover, secondary cards */
+  --color-surface-sunk: #f2ebf5; /* code blocks, kbd */
+
+  /* — Text ————————————————————————————————— */
+  --color-fg: var(--color-ink);
+  --color-fg-strong: #0f0716;
+  --color-fg-muted: #5c4d6b;
+  --color-fg-subtle: #897a95;
+  --color-fg-on-dark: var(--color-snow);
+  --color-fg-on-accent: var(--color-snow);
+
+  /* — Borders, dividers ————————————————————— */
+  --color-border: #e5ddeb;
+  --color-border-strong: #d1c4da;
+  --color-divider: #efe8f2;
+
+  /* — Action ————————————————————————————————— */
+  --color-accent: var(--color-brand-blue);
+  --color-accent-hover: #25508f;
+  --color-accent-press: #1e4576;
+  --color-accent-soft: #e2eaf3;
+  --color-link: var(--color-brand-blue);
+  --color-focus-ring: var(--color-brand-blue);
+
+  /* — Haplogroup palette (tree visualization only) ——— */
+  --hap-r1a: #2e5da5;
+  --hap-j2: #c04b7e;
+  --hap-h1a: #4bb39e;
+  --hap-t1: #c0904b;
+  --hap-e1b: #7e4bc0;
+  --hap-i1: #4bc07e;
+  --hap-g2: #c04b4b;
+  --hap-n1c: #4b7ec0;
+
+  /* — Type system ——————————————————————————— */
+  --font-display: "PT Serif", "Iowan Old Style", "Source Serif Pro", Georgia, "Times New Roman",
+    serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* size scale (4-based; rems for accessibility) */
+  /* Bumped one step across the board for cross-generational legibility:
+     base body 16→18, captions/UI 12→13, small body 14→15, h3 24→28, h2 32→36, h1 48→56. */
+  --fs-12: 0.8125rem; /* captions, micro labels (was 12) */
+  --fs-13: 0.875rem; /* table cells dense, badge text */
+  --fs-14: 0.9375rem; /* secondary body, UI default */
+  --fs-16: 1.125rem; /* body — default reading size */
+  --fs-18: 1.25rem; /* large body, h4 */
+  --fs-20: 1.375rem; /* h3 product */
+  --fs-24: 1.75rem; /* h2 product */
+  --fs-32: 2.25rem; /* h1 product, h2 marketing */
+  --fs-48: 3.5rem; /* h1 marketing */
+  --fs-64: 4.5rem; /* hero display */
+
+  --lh-tight: 1.2;
+  --lh-snug: 1.4;
+  --lh-base: 1.65;
+  --lh-loose: 1.8;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-mono: -0.005em;
+
+  /* — Spacing (4-based) ——————————————————————— */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  /* — Radii ————————————————————————————————— */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* — Shadows (archival, restrained) ———————————— */
+  --shadow-sm: 0 1px 2px rgba(26, 16, 36, 0.06);
+  --shadow-md: 0 4px 12px rgba(26, 16, 36, 0.08), 0 1px 2px rgba(26, 16, 36, 0.04);
+  --shadow-lg: 0 12px 32px rgba(26, 16, 36, 0.14), 0 2px 6px rgba(26, 16, 36, 0.06);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --ring-focus: 0 0 0 2px var(--color-snow), 0 0 0 4px var(--color-focus-ring);
+
+  /* — Motion ————————————————————————————————— */
+  --ease-house: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --duration-micro: 120ms;
+  --duration-standard: 200ms;
+  --duration-deliberate: 320ms;
+
+  /* — Layout ——————————————————————————————— */
+  --max-content-product: 1280px;
+  --max-content-marketing: 1120px;
+  --sidebar-width: 240px;
+  --sidebar-collapsed: 64px;
+  --topbar-height: 56px;
+  --inspector-width: 360px;
+}
+
+/* — Base reset + semantic type styles ——————————————————————— */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-16);
+  line-height: var(--lh-base);
+  color: var(--color-fg);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Display — marketing hero only */
+.display-1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-64);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-fg-strong);
+}
+
+h1,
+.h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-48);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-fg-strong);
+  margin: 0;
+}
+
+h2,
+.h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-32);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-fg-strong);
+  margin: 0;
+}
+
+h3,
+.h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-24);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-fg-strong);
+  margin: 0;
+}
+
+h4,
+.h4 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--fs-18);
+  line-height: var(--lh-snug);
+  color: var(--color-fg-strong);
+  margin: 0;
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--fs-12);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+}
+
+p,
+.p {
+  font-size: var(--fs-16);
+  line-height: var(--lh-base);
+  color: var(--color-fg);
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.body-sm {
+  font-size: var(--fs-14);
+  line-height: var(--lh-base);
+  color: var(--color-fg);
+}
+
+.body-muted {
+  font-size: var(--fs-14);
+  line-height: var(--lh-base);
+  color: var(--color-fg-muted);
+}
+
+.caption {
+  font-size: var(--fs-12);
+  line-height: var(--lh-snug);
+  color: var(--color-fg-muted);
+}
+
+code,
+.code,
+kbd {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  letter-spacing: var(--tracking-mono);
+  color: var(--color-fg-strong);
+  background: var(--color-surface-sunk);
+  padding: 0.1em 0.35em;
+  border-radius: var(--radius-sm);
+}
+
+.dna-code {
+  font-family: var(--font-mono);
+  font-size: var(--fs-13);
+  font-weight: 500;
+  letter-spacing: var(--tracking-mono);
+  color: var(--color-fg-strong);
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: none;
+  text-underline-offset: 4px;
+}
+a:hover {
+  text-decoration: underline;
+}
+a:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus);
+  border-radius: var(--radius-sm);
+}
+
+/* Selection — Lilac at 20% (the one place lilac ever fills) */
+::selection {
+  background: var(--color-lilac-20);
+  color: var(--color-fg-strong);
+}

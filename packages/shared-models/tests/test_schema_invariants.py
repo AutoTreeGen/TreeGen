@@ -96,6 +96,41 @@ SERVICE_TABLES = {
     # с status pending|accepted|rejected. Audit-trail review-decisions,
     # не доменная сущность.
     "extracted_facts",
+    # Stripe customer mapping (Phase 12.0 / ADR-0042): user → stripe_customer_id
+    # one-to-one. Service-level mapping, без soft-delete — revocation = hard delete
+    # после account deletion.
+    "stripe_customers",
+    # Subscription state (Phase 12.0 / ADR-0042): canonical billing state per user.
+    # Мутируется ТОЛЬКО webhook'ами (никогда не application-side). Без soft-delete —
+    # canceled — это status, не tombstone.
+    "subscriptions",
+    # Stripe webhook idempotency log (Phase 12.0 / ADR-0042): stripe_event_id UNIQUE
+    # для idempotent dispatch. Audit trail, без soft-delete.
+    "stripe_event_log",
+    # DNA AutoClusters run (Phase 6.7a / ADR-0063): один cluster — результат
+    # одного auto-clustering запуска. Service-level audit/history; повторный
+    # run = новая row. Без tree_id (привязка по user_id, Clerk text id), без
+    # soft-delete (immutable history), без provenance/version_id (compute
+    # output, не пользовательский факт).
+    "dna_clusters",
+    # DNA AutoCluster membership (Phase 6.7a / ADR-0063): композитная PK
+    # (cluster_id, match_id), CASCADE при удалении любой стороны. Чистая
+    # m2m, без mixin'ов.
+    "dna_cluster_members",
+    # DNA pile-up regions (Phase 6.7a schema / 6.7b detector / ADR-0063):
+    # population-aggregate observations (HLA-локус, AJ founder regions,
+    # …). Read-mostly reference data, regenerируется detector'ом; нет
+    # tree_id и soft-delete.
+    "dna_pile_up_regions",
+    # Voice-to-tree audio sessions (Phase 10.9a / ADR-0064): артефакт AI-
+    # вызова (audio + Whisper transcript). Имеет ``tree_id`` + ``provenance``
+    # и колонку ``deleted_at`` (объявлена напрямую, без ``SoftDeleteMixin`` —
+    # иначе попадает под audit-listener, который аудитит как domain-факт;
+    # mirror SourceExtraction / DnaConsent pattern). Не TreeEntity:
+    # ``status`` свой узкий lifecycle (uploaded|transcribing|ready|failed),
+    # нет ``confidence_score`` (нечего считать), нет ``version_id`` (worker
+    # мутирует row один раз).
+    "audio_sessions",
 }
 
 TREE_ENTITY_TABLES = {
@@ -169,3 +204,40 @@ def test_no_unexpected_tables() -> None:
     actual = set(Base.metadata.tables.keys())
     extra = actual - expected
     assert not extra, f"unexpected tables in metadata: {extra}"
+
+
+def test_audio_sessions_table_present() -> None:
+    """Phase 10.9a обязана зарегистрировать audio_sessions (ADR-0064)."""
+    assert "audio_sessions" in Base.metadata.tables
+
+
+def test_audio_sessions_consent_egress_at_not_null() -> None:
+    """Privacy-gate: ``consent_egress_at`` NOT NULL.
+
+    Это последняя линия privacy-defence-in-depth поверх UI и API
+    (см. ADR-0064 §Риски). Insert без consent должен падать на DB-уровне.
+    """
+    table = Base.metadata.tables["audio_sessions"]
+    column = table.c.consent_egress_at
+    assert column.nullable is False, (
+        "audio_sessions.consent_egress_at must be NOT NULL — privacy-gate "
+        "(ADR-0064 §Риски). Меняя это, обновите ADR и подумайте о backfill'е."
+    )
+
+
+def test_audio_sessions_consent_egress_provider_not_null() -> None:
+    """``consent_egress_provider`` NOT NULL — пара к ``consent_egress_at``."""
+    table = Base.metadata.tables["audio_sessions"]
+    assert table.c.consent_egress_provider.nullable is False
+
+
+def test_audio_sessions_tree_id_fk_cascade() -> None:
+    """``audio_sessions.tree_id → trees.id ON DELETE CASCADE``.
+
+    GDPR-erasure (ADR-0049) удаляет дерево через application-level worker;
+    DB-CASCADE — safety net на случай прямого DELETE FROM trees.
+    """
+    table = Base.metadata.tables["audio_sessions"]
+    fks = [fk for fk in table.c.tree_id.foreign_keys if fk.column.table.name == "trees"]
+    assert len(fks) == 1, "audio_sessions.tree_id must FK to trees.id"
+    assert fks[0].ondelete == "CASCADE", f"expected ON DELETE CASCADE, got {fks[0].ondelete!r}"

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 64" width="340" height="64" role="img" aria-label="AutoTreeGen">
+
+  <g transform="translate(0,0)" fill="#FFFFFF">
+    <circle cx="32" cy="22" r="20" opacity="0.22"></circle>
+    <g fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M32 56 L32 42"></path>
+      <path d="M18 36 L46 36"></path>
+      <path d="M32 36 L32 42"></path>
+      <path d="M18 36 L18 26"></path>
+      <path d="M46 36 L46 26"></path>
+      <path d="M10 26 L26 26"></path>
+      <path d="M38 26 L54 26"></path>
+      <path d="M10 26 L10 18"></path>
+      <path d="M26 26 L26 18"></path>
+      <path d="M38 26 L38 18"></path>
+      <path d="M54 26 L54 18"></path>
+    </g>
+    <g stroke="#FFFFFF" stroke-width="1.4" fill="none" stroke-linecap="round" opacity="0.75">
+      <path d="M30 56 C28 53, 36 51, 34 48 C32 45, 28 43, 32 42"></path>
+      <path d="M34 56 C36 53, 28 51, 30 48 C32 45, 36 43, 32 42"></path>
+    </g>
+    <rect x="6" y="14" width="8" height="8" rx="1.5"></rect>
+    <circle cx="26" cy="18" r="4"></circle>
+    <rect x="34" y="14" width="8" height="8" rx="1.5"></rect>
+    <circle cx="54" cy="18" r="4"></circle>
+    <rect x="14" y="32" width="8" height="8" rx="1.5"></rect>
+    <circle cx="46" cy="36" r="4"></circle>
+    <rect x="28" y="54" width="8" height="8" rx="1.5"></rect>
+  </g>
+
+  <text x="80" y="40" font-family="PT Serif, Georgia, serif" font-weight="700" font-size="26" letter-spacing="-0.3" fill="#FFFFFF"><tspan opacity="1">Auto</tspan><tspan opacity="0.92">Tree</tspan><tspan opacity="0.82">Gen</tspan></text>
+</svg>

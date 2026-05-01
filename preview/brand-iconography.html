@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Iconography · 3D modern blow-up</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:24px;background:#FAF6FC;font-family:var(--font-sans)}
+  .header{margin-bottom:18px}
+  .header h2{font-family:var(--font-display);font-weight:700;font-size:20px;margin:0 0 4px;color:var(--color-fg-strong)}
+  .header p{margin:0;font-size:12px;color:var(--color-fg-muted);max-width:740px;line-height:1.55}
+  .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:18px}
+  .icon{
+    position:relative;
+    aspect-ratio:1/1;
+    border-radius:24px;
+    overflow:hidden;
+    isolation:isolate;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.7) inset,
+      0 -1px 0 rgba(44,16,84,0.05) inset,
+      0 12px 24px -10px rgba(44,16,84,0.18);
+  }
+  .icon::before{
+    /* tinted gradient backdrop, slightly different per cell */
+    content:"";position:absolute;inset:0;z-index:-1;
+    background:radial-gradient(120% 90% at 30% 20%, var(--bg1), var(--bg2) 55%, var(--bg3) 100%);
+  }
+  .icon svg{width:100%;height:100%;display:block}
+  .lab{
+    position:absolute;left:12px;bottom:10px;
+    font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.06em;text-transform:uppercase;
+    color:rgba(26,8,56,0.55);
+  }
+  /* unique tint per row */
+  .t1{--bg1:#FFE9F4;--bg2:#F4D3F0;--bg3:#D9B4E8}
+  .t2{--bg1:#E1F8FF;--bg2:#C3E5F2;--bg3:#A6CCE6}
+  .t3{--bg1:#FFF4D9;--bg2:#F4DCAE;--bg3:#E0BC78}
+  .t4{--bg1:#E2FBE9;--bg2:#BFEDC9;--bg3:#88D2A4}
+  .t5{--bg1:#F0E6FF;--bg2:#D6C0F2;--bg3:#B596E2}
+  .t6{--bg1:#FFE0D8;--bg2:#F4BCAE;--bg3:#E1907E}
+</style></head><body>
+
+<div class="header">
+  <h2>Iconography · 3D modern, blown up</h2>
+  <p>Each icon is a soft-body 3D object on a tinted backdrop — strong key-light from the upper left, glossy specular highlights, an ambient bounce on the underside, and a soft cast shadow on the ground plane. The medallion is gone; the glyphs themselves carry the brand.</p>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- Multi-stop radial gradients with a clear key light, midtone, terminator, and shadow.
+         Top-left highlight at (~0.32, 0.22), shadow rolling toward bottom-right. -->
+    <radialGradient id="b3Pink" cx="0.32" cy="0.22" r="1">
+      <stop offset="0"    stop-color="#FFF3F8"/>
+      <stop offset="0.18" stop-color="#FFC7DC"/>
+      <stop offset="0.55" stop-color="#F47AAA"/>
+      <stop offset="0.85" stop-color="#A82E66"/>
+      <stop offset="1"    stop-color="#3E0820"/>
+    </radialGradient>
+    <radialGradient id="b3Cyan" cx="0.32" cy="0.22" r="1">
+      <stop offset="0"    stop-color="#F2FCFF"/>
+      <stop offset="0.18" stop-color="#BFEFF7"/>
+      <stop offset="0.55" stop-color="#5BC4D6"/>
+      <stop offset="0.85" stop-color="#1A6276"/>
+      <stop offset="1"    stop-color="#04222C"/>
+    </radialGradient>
+    <radialGradient id="b3Mint" cx="0.32" cy="0.22" r="1">
+      <stop offset="0"    stop-color="#F0FCEF"/>
+      <stop offset="0.18" stop-color="#C0F0CC"/>
+      <stop offset="0.55" stop-color="#5DC586"/>
+      <stop offset="0.85" stop-color="#1F6840"/>
+      <stop offset="1"    stop-color="#06281A"/>
+    </radialGradient>
+    <radialGradient id="b3Gold" cx="0.32" cy="0.22" r="1">
+      <stop offset="0"    stop-color="#FFFCEC"/>
+      <stop offset="0.18" stop-color="#FFE39C"/>
+      <stop offset="0.55" stop-color="#E8B038"/>
+      <stop offset="0.85" stop-color="#7A4A06"/>
+      <stop offset="1"    stop-color="#2C1700"/>
+    </radialGradient>
+    <radialGradient id="b3Coral" cx="0.32" cy="0.22" r="1">
+      <stop offset="0"    stop-color="#FFEDE5"/>
+      <stop offset="0.18" stop-color="#FFB69E"/>
+      <stop offset="0.55" stop-color="#F26B48"/>
+      <stop offset="0.85" stop-color="#7A1A06"/>
+      <stop offset="1"    stop-color="#2A0500"/>
+    </radialGradient>
+    <radialGradient id="b3Plum" cx="0.32" cy="0.22" r="1">
+      <stop offset="0"    stop-color="#F5E8FF"/>
+      <stop offset="0.18" stop-color="#D6B4F2"/>
+      <stop offset="0.55" stop-color="#9A5FE0"/>
+      <stop offset="0.85" stop-color="#3E1A78"/>
+      <stop offset="1"    stop-color="#120432"/>
+    </radialGradient>
+    <radialGradient id="b3Cream" cx="0.32" cy="0.22" r="1">
+      <stop offset="0"    stop-color="#FFFCEC"/>
+      <stop offset="0.2"  stop-color="#FFEFC4"/>
+      <stop offset="0.6"  stop-color="#D9A968"/>
+      <stop offset="0.88" stop-color="#5C3712"/>
+      <stop offset="1"    stop-color="#1F0E02"/>
+    </radialGradient>
+    <radialGradient id="b3Wood" cx="0.32" cy="0.22" r="1">
+      <stop offset="0"    stop-color="#F0C892"/>
+      <stop offset="0.4"  stop-color="#A86A2C"/>
+      <stop offset="0.85" stop-color="#3E2208"/>
+      <stop offset="1"    stop-color="#1A0E02"/>
+    </radialGradient>
+    <radialGradient id="b3Paper" cx="0.32" cy="0.22" r="1">
+      <stop offset="0"    stop-color="#FFFFFF"/>
+      <stop offset="0.4"  stop-color="#F0E5F8"/>
+      <stop offset="0.85" stop-color="#7E5F94"/>
+      <stop offset="1"    stop-color="#1A0838"/>
+    </radialGradient>
+
+    <!-- glassy specular -->
+    <radialGradient id="b3Spec" cx="0.3" cy="0.2" r="0.5">
+      <stop offset="0"   stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="0.55" stop-color="#FFFFFF" stop-opacity="0.25"/>
+      <stop offset="1"   stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <!-- soft cool ambient bounce on the underside -->
+    <radialGradient id="b3Ambient" cx="0.7" cy="0.85" r="0.5">
+      <stop offset="0" stop-color="#7DB3F2" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#7DB3F2" stop-opacity="0"/>
+    </radialGradient>
+    <!-- inset hole gradient for openings -->
+    <radialGradient id="b3Hole" cx="0.5" cy="0.4" r="0.7">
+      <stop offset="0"  stop-color="#0A0118"/>
+      <stop offset="0.7" stop-color="#1A0838"/>
+      <stop offset="1"  stop-color="#3E1A78"/>
+    </radialGradient>
+
+    <!-- soft cast shadow on the ground -->
+    <filter id="b3Shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0.6" dy="6" result="o"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.55"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+</svg>
+
+<style>
+  .ground{ fill:#000; opacity:0.16; filter:blur(4px); }
+  .spec  { fill:url(#b3Spec); }
+  .amb   { fill:url(#b3Ambient); mix-blend-mode:screen; opacity:0.55; }
+  .hole  { fill:url(#b3Hole); }
+  .glyph { filter:url(#b3Shadow); }
+</style>
+
+<div class="grid">
+
+<!-- 1 · TREE -->
+<div class="icon t4"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="22" ry="3.5"/>
+  <g class="glyph">
+    <path d="M44 64 Q44 78 47 84 L53 84 Q56 78 56 64 Z" fill="url(#b3Wood)"/>
+    <circle cx="34" cy="44" r="18" fill="url(#b3Mint)"/>
+    <circle cx="66" cy="46" r="17" fill="url(#b3Mint)"/>
+    <circle cx="50" cy="32" r="19" fill="url(#b3Mint)"/>
+    <ellipse cx="44" cy="22" rx="11" ry="5" class="spec"/>
+    <ellipse cx="28" cy="38" rx="6" ry="2.4" class="spec" opacity="0.7"/>
+    <ellipse cx="60" cy="40" rx="7" ry="2.6" class="spec" opacity="0.7"/>
+    <ellipse cx="56" cy="58" rx="22" ry="6" class="amb"/>
+  </g>
+  <span></span>
+</svg><span class="lab">family tree</span></div>
+
+<!-- 2 · BOOK -->
+<div class="icon t1"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="32" ry="3.5"/>
+  <g class="glyph">
+    <path d="M14 32 Q50 24 86 32 V76 Q50 68 14 76 Z" fill="url(#b3Paper)"/>
+    <path d="M14 26 Q50 18 86 26 L86 38 Q50 30 14 38 Z" fill="url(#b3Pink)"/>
+    <line x1="50" y1="20" x2="50" y2="74" stroke="#1A0838" stroke-width="1.4" opacity="0.4"/>
+    <ellipse cx="32" cy="30" rx="14" ry="4" class="spec"/>
+    <ellipse cx="68" cy="62" rx="22" ry="6" class="amb"/>
+  </g>
+</svg><span class="lab">book</span></div>
+
+<!-- 3 · CLOCK -->
+<div class="icon t3"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="26" ry="3.5"/>
+  <g class="glyph">
+    <circle cx="50" cy="50" r="32" fill="url(#b3Cream)"/>
+    <circle cx="50" cy="50" r="24" fill="#FFFAEA"/>
+    <g fill="#3A1F0A">
+      <rect x="48.7" y="22" width="2.6" height="6" rx="0.8"/>
+      <rect x="48.7" y="72" width="2.6" height="6" rx="0.8"/>
+      <rect x="22" y="48.7" width="6" height="2.6" rx="0.8"/>
+      <rect x="72" y="48.7" width="6" height="2.6" rx="0.8"/>
+    </g>
+    <rect x="48.4" y="30" width="3.2" height="22" rx="1.6" fill="#3A1F0A"/>
+    <g transform="rotate(50 50 50)"><rect x="50" y="48.4" width="20" height="3.2" rx="1.6" fill="#3A1F0A"/></g>
+    <circle cx="50" cy="50" r="4" fill="url(#b3Gold)"/>
+    <ellipse cx="38" cy="32" rx="14" ry="5" class="spec"/>
+    <ellipse cx="62" cy="68" rx="22" ry="7" class="amb"/>
+  </g>
+</svg><span class="lab">date · time</span></div>
+
+<!-- 4 · ENVELOPE -->
+<div class="icon t3"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="32" ry="3.5"/>
+  <g class="glyph">
+    <rect x="14" y="30" width="72" height="44" rx="6" fill="url(#b3Cream)"/>
+    <path d="M14 30 L50 60 L86 30 L86 38 L50 68 L14 38 Z" fill="#3A1F0A" opacity="0.32"/>
+    <path d="M14 30 Q50 56 86 30 L50 60 Z" fill="url(#b3Gold)"/>
+    <ellipse cx="32" cy="40" rx="16" ry="4.5" class="spec"/>
+    <ellipse cx="68" cy="62" rx="22" ry="7" class="amb"/>
+  </g>
+</svg><span class="lab">letter</span></div>
+
+<!-- 5 · MAGNIFIER -->
+<div class="icon t2"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="22" ry="3.5"/>
+  <g class="glyph">
+    <rect x="58" y="56" width="32" height="13" rx="6.5" fill="url(#b3Wood)" transform="rotate(45 58 56)"/>
+    <circle cx="42" cy="42" r="26" fill="url(#b3Cyan)"/>
+    <circle cx="42" cy="42" r="19" fill="#E5FBFF" opacity="0.92"/>
+    <ellipse cx="35" cy="34" rx="11" ry="5" fill="#FFFFFF" opacity="0.85"/>
+    <ellipse cx="48" cy="48" rx="3.5" ry="1.6" fill="#FFFFFF" opacity="0.55"/>
+  </g>
+</svg><span class="lab">search</span></div>
+
+<!-- 6 · PERSON -->
+<div class="icon t1"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="28" ry="3.5"/>
+  <g class="glyph">
+    <path d="M18 84 Q18 60 50 60 Q82 60 82 84 Z" fill="url(#b3Plum)"/>
+    <circle cx="50" cy="36" r="18" fill="url(#b3Pink)"/>
+    <ellipse cx="44" cy="26" rx="7" ry="3.4" class="spec"/>
+    <ellipse cx="32" cy="74" rx="11" ry="3" class="spec" opacity="0.45"/>
+    <ellipse cx="64" cy="78" rx="20" ry="6" class="amb"/>
+  </g>
+</svg><span class="lab">person</span></div>
+
+<!-- 7 · HEART -->
+<div class="icon t6"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="22" ry="3.5"/>
+  <g class="glyph">
+    <path d="M50 86 C 14 64, 14 36, 30 28 C 40 24, 47 30, 50 38 C 53 30, 60 24, 70 28 C 86 36, 86 64, 50 86 Z" fill="url(#b3Coral)"/>
+    <ellipse cx="34" cy="38" rx="11" ry="5.5" class="spec"/>
+    <ellipse cx="64" cy="72" rx="20" ry="6" class="amb"/>
+  </g>
+</svg><span class="lab">family</span></div>
+
+<!-- 8 · KEY -->
+<div class="icon t3"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="32" ry="3.5"/>
+  <g class="glyph">
+    <rect x="38" y="46" width="50" height="11" rx="5.5" fill="url(#b3Gold)"/>
+    <rect x="74" y="54" width="5" height="13" rx="1.5" fill="url(#b3Gold)"/>
+    <rect x="83" y="54" width="5" height="16" rx="1.5" fill="url(#b3Gold)"/>
+    <circle cx="38" cy="52" r="18" fill="url(#b3Gold)"/>
+    <circle cx="38" cy="52" r="6" fill="url(#b3Hole)"/>
+    <ellipse cx="34" cy="44" rx="7" ry="3" class="spec"/>
+    <rect x="44" y="48" width="30" height="2" rx="1" fill="#FFFFFF" opacity="0.55"/>
+  </g>
+</svg><span class="lab">access</span></div>
+
+<!-- 9 · NOTE -->
+<div class="icon t5"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="26" ry="3.5"/>
+  <g class="glyph">
+    <path d="M22 18 L82 18 L82 82 L34 82 Q22 82 22 70 Z" fill="url(#b3Cream)"/>
+    <path d="M22 70 Q36 70 34 82 Z" fill="#A77818"/>
+    <rect x="32" y="32" width="36" height="3.2" rx="1.6" fill="#7C5512"/>
+    <rect x="32" y="42" width="36" height="3.2" rx="1.6" fill="#7C5512"/>
+    <rect x="32" y="52" width="22" height="3.2" rx="1.6" fill="#7C5512"/>
+    <ellipse cx="34" cy="26" rx="13" ry="3.4" class="spec"/>
+  </g>
+</svg><span class="lab">note</span></div>
+
+<!-- 10 · ADD -->
+<div class="icon t2"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="26" ry="3.5"/>
+  <g class="glyph">
+    <circle cx="50" cy="50" r="32" fill="url(#b3Cyan)"/>
+    <rect x="46" y="32" width="8" height="36" rx="4" fill="#FFFFFF"/>
+    <rect x="32" y="46" width="36" height="8" rx="4" fill="#FFFFFF"/>
+    <ellipse cx="40" cy="32" rx="14" ry="5.5" class="spec"/>
+    <ellipse cx="64" cy="72" rx="22" ry="7" class="amb"/>
+  </g>
+</svg><span class="lab">add</span></div>
+
+<!-- 11 · CHECK -->
+<div class="icon t4"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="26" ry="3.5"/>
+  <g class="glyph">
+    <circle cx="50" cy="50" r="32" fill="url(#b3Mint)"/>
+    <path d="M32 52 L44 64 L68 38" stroke="#FFFFFF" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <ellipse cx="40" cy="32" rx="14" ry="5.5" class="spec"/>
+    <ellipse cx="64" cy="72" rx="22" ry="7" class="amb"/>
+  </g>
+</svg><span class="lab">verified</span></div>
+
+<!-- 12 · WRONG -->
+<div class="icon t6"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="26" ry="3.5"/>
+  <g class="glyph">
+    <circle cx="50" cy="50" r="32" fill="url(#b3Coral)"/>
+    <path d="M36 36 L64 64 M64 36 L36 64" stroke="#FFFFFF" stroke-width="7.5" stroke-linecap="round"/>
+    <ellipse cx="40" cy="32" rx="14" ry="5.5" class="spec"/>
+    <ellipse cx="64" cy="72" rx="22" ry="7" class="amb"/>
+  </g>
+</svg><span class="lab">wrong</span></div>
+
+<!-- 13 · QUESTION -->
+<div class="icon t5"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="26" ry="3.5"/>
+  <g class="glyph">
+    <circle cx="50" cy="50" r="32" fill="url(#b3Gold)"/>
+    <path d="M40 42 C 40 32, 60 32, 60 44 C 60 52, 50 53, 50 60" stroke="#3A1F0A" stroke-width="6.5" fill="none" stroke-linecap="round"/>
+    <circle cx="50" cy="68" r="3.6" fill="#3A1F0A"/>
+    <ellipse cx="40" cy="32" rx="14" ry="5.5" class="spec"/>
+    <ellipse cx="64" cy="72" rx="22" ry="7" class="amb"/>
+  </g>
+</svg><span class="lab">unknown</span></div>
+
+<!-- 14 · REFRESH -->
+<div class="icon t2"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="26" ry="3.5"/>
+  <g class="glyph">
+    <circle cx="50" cy="50" r="32" fill="url(#b3Plum)"/>
+    <path d="M72 50 A 22 22 0 1 0 60 70" stroke="#FFFFFF" stroke-width="6.5" fill="none" stroke-linecap="round"/>
+    <path d="M72 36 L72 50 L58 50" stroke="#FFFFFF" stroke-width="6.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="40" cy="32" rx="14" ry="5.5" class="spec"/>
+    <ellipse cx="64" cy="72" rx="22" ry="7" class="amb"/>
+  </g>
+</svg><span class="lab">refresh</span></div>
+
+<!-- 15 · CHEST -->
+<div class="icon t3"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="32" ry="3.5"/>
+  <g class="glyph">
+    <path d="M14 30 Q50 18 86 30 L86 42 L14 42 Z" fill="url(#b3Wood)"/>
+    <rect x="14" y="42" width="72" height="36" rx="3" fill="url(#b3Wood)"/>
+    <rect x="14" y="48" width="72" height="6" fill="url(#b3Gold)"/>
+    <rect x="44" y="52" width="12" height="12" rx="2" fill="url(#b3Gold)"/>
+    <circle cx="50" cy="58" r="1.8" fill="#3A1F0A"/>
+    <ellipse cx="32" cy="28" rx="18" ry="4.4" class="spec"/>
+    <ellipse cx="64" cy="68" rx="22" ry="7" class="amb"/>
+  </g>
+</svg><span class="lab">archive</span></div>
+
+<!-- 16 · PEDIGREE -->
+<div class="icon t4"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="26" ry="3.5"/>
+  <g class="glyph">
+    <line x1="32" y1="30" x2="68" y2="30" stroke="#1A0838" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <line x1="50" y1="30" x2="50" y2="72" stroke="#1A0838" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <circle cx="32" cy="30" r="13" fill="url(#b3Cyan)"/>
+    <circle cx="68" cy="30" r="13" fill="url(#b3Pink)"/>
+    <circle cx="50" cy="74" r="14" fill="url(#b3Gold)"/>
+    <ellipse cx="28" cy="24" rx="6" ry="2.6" class="spec"/>
+    <ellipse cx="64" cy="24" rx="6" ry="2.6" class="spec"/>
+    <ellipse cx="46" cy="68" rx="6.5" ry="2.8" class="spec"/>
+  </g>
+</svg><span class="lab">pedigree</span></div>
+
+<!-- 17 · BRICKWALL -->
+<div class="icon t6"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="32" ry="3.5"/>
+  <g class="glyph">
+    <g>
+      <rect x="14" y="22" width="22" height="12" rx="2.5" fill="url(#b3Coral)"/>
+      <rect x="38" y="22" width="22" height="12" rx="2.5" fill="url(#b3Coral)"/>
+      <rect x="62" y="22" width="22" height="12" rx="2.5" fill="url(#b3Coral)"/>
+      <rect x="14" y="36" width="12" height="12" rx="2.5" fill="url(#b3Coral)"/>
+      <rect x="28" y="36" width="22" height="12" rx="2.5" fill="url(#b3Coral)"/>
+      <rect x="52" y="36" width="22" height="12" rx="2.5" fill="url(#b3Coral)"/>
+      <rect x="76" y="36" width="8" height="12" rx="2.5" fill="url(#b3Coral)"/>
+      <rect x="14" y="50" width="22" height="12" rx="2.5" fill="url(#b3Coral)"/>
+      <rect x="38" y="50" width="22" height="12" rx="2.5" fill="url(#b3Coral)"/>
+      <rect x="62" y="50" width="22" height="12" rx="2.5" fill="url(#b3Coral)"/>
+      <rect x="14" y="64" width="12" height="12" rx="2.5" fill="url(#b3Coral)"/>
+      <rect x="28" y="64" width="22" height="12" rx="2.5" fill="url(#b3Coral)"/>
+      <rect x="52" y="64" width="22" height="12" rx="2.5" fill="url(#b3Coral)"/>
+      <rect x="76" y="64" width="8" height="12" rx="2.5" fill="url(#b3Coral)"/>
+    </g>
+  </g>
+</svg><span class="lab">brickwall</span></div>
+
+<!-- 18 · HOUSE -->
+<div class="icon t4"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="30" ry="3.5"/>
+  <g class="glyph">
+    <rect x="22" y="46" width="56" height="34" rx="3" fill="url(#b3Cream)"/>
+    <path d="M16 50 L50 18 L84 50 Z" fill="url(#b3Coral)"/>
+    <rect x="44" y="56" width="12" height="24" rx="1.5" fill="url(#b3Hole)"/>
+    <rect x="28" y="56" width="10" height="10" rx="1.5" fill="url(#b3Cyan)"/>
+    <rect x="62" y="56" width="10" height="10" rx="1.5" fill="url(#b3Cyan)"/>
+    <ellipse cx="32" cy="52" rx="8" ry="2.4" class="spec"/>
+  </g>
+</svg><span class="lab">home</span></div>
+
+<!-- 19 · SUITCASE -->
+<div class="icon t3"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="32" ry="3.5"/>
+  <g class="glyph">
+    <path d="M40 32 L40 22 Q40 18 44 18 L56 18 Q60 18 60 22 L60 32" stroke="#1A0838" stroke-width="4" fill="none" stroke-linejoin="round"/>
+    <rect x="14" y="32" width="72" height="44" rx="5" fill="url(#b3Cyan)"/>
+    <rect x="14" y="46" width="72" height="6" fill="#0A4658" opacity="0.7"/>
+    <rect x="44" y="48" width="12" height="6" rx="1.5" fill="url(#b3Gold)"/>
+    <ellipse cx="34" cy="40" rx="16" ry="4" class="spec"/>
+    <ellipse cx="64" cy="68" rx="22" ry="7" class="amb"/>
+  </g>
+</svg><span class="lab">migration</span></div>
+
+<!-- 20 · QUILL -->
+<div class="icon t5"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="30" cy="85" rx="10" ry="3"/>
+  <g class="glyph">
+    <path d="M82 16 C 50 20, 32 40, 24 78 L 44 76 C 50 60, 60 44, 86 36 Z" fill="url(#b3Paper)"/>
+    <path d="M82 16 L24 78" stroke="#7B6087" stroke-width="2" fill="none"/>
+    <line x1="24" y1="78" x2="16" y2="86" stroke="#1A0838" stroke-width="4.5" stroke-linecap="round"/>
+    <ellipse cx="56" cy="28" rx="14" ry="5" class="spec"/>
+  </g>
+</svg><span class="lab">writing</span></div>
+
+<!-- 21 · MAP PIN -->
+<div class="icon t1"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="9" ry="2.6"/>
+  <g class="glyph">
+    <path d="M50 14 C 30 14, 20 28, 20 42 C 20 60, 50 86, 50 86 C 50 86, 80 60, 80 42 C 80 28, 70 14, 50 14 Z" fill="url(#b3Pink)"/>
+    <circle cx="50" cy="40" r="9" fill="url(#b3Hole)"/>
+    <ellipse cx="40" cy="26" rx="11" ry="5" class="spec"/>
+  </g>
+</svg><span class="lab">place</span></div>
+
+<!-- 22 · CALENDAR -->
+<div class="icon t3"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="32" ry="3.5"/>
+  <g class="glyph">
+    <rect x="14" y="26" width="72" height="52" rx="5" fill="url(#b3Cream)"/>
+    <rect x="14" y="26" width="72" height="16" fill="url(#b3Coral)"/>
+    <path d="M14 26 H 86 V 32 H 14 Z" fill="#FFFFFF" opacity="0.3"/>
+    <rect x="26" y="18" width="6" height="20" rx="2" fill="#3A1F0A"/>
+    <rect x="68" y="18" width="6" height="20" rx="2" fill="#3A1F0A"/>
+    <rect x="42" y="50" width="16" height="16" rx="2" fill="url(#b3Gold)"/>
+    <ellipse cx="34" cy="32" rx="18" ry="4" class="spec" opacity="0.7"/>
+  </g>
+</svg><span class="lab">date</span></div>
+
+<!-- 23 · LINK -->
+<div class="icon t2"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="30" ry="3.5"/>
+  <g class="glyph" transform="rotate(-25 50 50)">
+    <rect x="6" y="40" width="50" height="22" rx="11" fill="url(#b3Cyan)"/>
+    <rect x="14" y="44" width="34" height="3.5" rx="1.5" fill="#FFFFFF" opacity="0.5"/>
+  </g>
+  <g class="glyph" transform="rotate(-25 50 50) translate(36 0)">
+    <rect x="14" y="40" width="50" height="22" rx="11" fill="url(#b3Pink)"/>
+    <rect x="22" y="44" width="34" height="3.5" rx="1.5" fill="#FFFFFF" opacity="0.5"/>
+  </g>
+</svg><span class="lab">link</span></div>
+
+<!-- 24 · GEAR -->
+<div class="icon t5"><svg viewBox="0 0 100 100">
+  <ellipse class="ground" cx="50" cy="85" rx="26" ry="3.5"/>
+  <g class="glyph">
+    <path d="M50 14 L57 24 L69 22 L71 34 L82 39 L78 50 L82 61 L71 66 L69 78 L57 76 L50 86 L43 76 L31 78 L29 66 L18 61 L22 50 L18 39 L29 34 L31 22 L43 24 Z" fill="url(#b3Plum)"/>
+    <circle cx="50" cy="50" r="11" fill="url(#b3Hole)"/>
+    <ellipse cx="40" cy="30" rx="12" ry="4.4" class="spec"/>
+    <ellipse cx="64" cy="68" rx="20" ry="6" class="amb"/>
+  </g>
+</svg><span class="lab">settings</span></div>
+
+</div>
+
+</body></html>

@@ -182,6 +182,50 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 ссылки, проприетарные теги Ancestry, иврит-даты).
 ```
 
+### 5.5 Safe Import/Export (round-trip + loss simulator)
+
+Cross-platform GEDCOM теряет sources, parent–child, witnesses, godparents
+и проприетарные теги при экспорте между Ancestry / MyHeritage / Geni /
+RootsMagic / Family Tree Maker. Phase 5.5 закрывает эту дыру:
+quarantine на import → preserve в DB → re-emit на export. Pre-export
+loss simulator + validator выдают report до того, как пользователь
+теряет данные.
+
+Split на 5.5a + 5.5b (мега-PR не пройдёт review):
+
+#### 5.5a — Quarantine import + AST round-trip
+
+- `RawTagBlock` Pydantic + `GedcomDocument.unknown_tags` populated
+  whitelist-driven walk над AST.
+- ORM `import_jobs.unknown_tags` jsonb (mirror of 10.2
+  `source_extractions.raw_response` pattern). Один additive column,
+  no new tables.
+- AST-level round-trip tests на synthetic + real corpus
+  (`gedcom_real` marker, `D:/Projects/GED`). Variant B — structural
+  diff после re-parse, не byte-diff (ANSEL → UTF-8 normalize).
+- Existing entity models (`Person`/`Family`/`Source`/`Event`/...)
+  остаются frozen; quarantine — отдельный модуль.
+- ADR documenting jsonb-on-import_jobs vs per-entity provenance vs
+  new table.
+
+#### 5.5b — Loss simulator + validators + endpoints
+
+Зависит от 5.5a merge.
+
+- `TargetDialect` enum (ANCESTRY, MYHERITAGE, GENI, ROOTSMAGIC, FTM,
+  GEDCOM_555, GEDCOM_551) + per-dialect support matrix
+  `dict[tag_path, SupportLevel]`.
+- `LossSimulator(dialect).simulate(doc) → LossReport`.
+- `StructuralValidator` (broken refs, orphaned records) +
+  `SemanticValidator` (impossible dates, child before mother).
+- Endpoints (versioned, первый `/api/v1/` namespace):
+  - `POST /api/v1/gedcom/simulate-export {tree_id, target_dialect}` →
+    counts + per-tag breakdown.
+  - `POST /api/v1/gedcom/validate {file or tree_id}` → warnings + stats.
+- UI selector — отдельный 5.5c PR после обоих back-end merge.
+
+Спека и handoff trace: `.agent-tasks/07-phase-5-5-gedcom-safe-io.md`.
+
 ---
 
 ## 6. Фаза 2 — Модель данных и БД
@@ -291,7 +335,7 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 | **4.12** | Landing + onboarding flow + i18n foundation. Public `/` (hero, 4 value-props, screenshots-placeholders, pricing teaser, waitlist), `/demo` (read-only sample tree, синтетика), `/pricing` (Free / Pro + FAQ), `/onboarding` (3-step wizard: source → import → done на pure-function reducer). next-intl + cookie-based locale (`NEXT_LOCALE`) + middleware `Accept-Language` detection + `messages/{en,ru}.json`. Empty-state: `/dashboard` с 0 trees → redirect `/onboarding`. Lead capture: `WaitlistEntry` ORM + миграция 0014 + `POST /waitlist` в parser-service (idempotent, lower-case email, email НЕ логируется) + Next.js `/api/waitlist` proxy. SEO: per-route metadata, `app/sitemap.ts`, `app/robots.ts` (Disallow auth-protected). vitest: 4 теста landing/waitlist + 8 reducer-тестов onboarding-machine + 8 i18n-helpers. pytest: 6 кейсов /waitlist (idempotency, email lowercase, EmailStr 422, extra-fields 422, no-email-in-logs). См. ADR-0035, PR-Phase-4.12. | done (2026-04-28) |
 | **4.13a** | i18n full-rollout — foundation + smallest authenticated pages. Расширили `messages/{en,ru}.json` на namespaces `common.*` (loading/back/save/cancel/...), `header.*`, `errors.*` (generic/network/unauthorized/forbidden/notFound/validation/rateLimit + доменные `*LoadFailed`), `dashboard.*`, `notifications.*` (events.*). Конвертированы `app/dashboard/page.tsx` и `app/settings/notifications/page.tsx`. Shared `<SiteHeader>` теперь рендерит `<LocaleSwitcher>` (раньше был только на лендинге). Новый `<ErrorMessage code=...>` компонент — единая точка для localised error UI с опциональным retry. Custom Python pre-commit hook `scripts/check_i18n_strings.py` ловит raw English JSX text в `apps/web/src/app/{dashboard,persons,dna,sources,hypotheses,familysearch,settings,trees}/**.tsx` + 3 shared components. vitest `locale-rendering.test.tsx` (10 кейсов) проверяет рендер ErrorMessage в обеих локалях без missing-key fallback'ов + parity en.json ↔ ru.json. См. ADR-0037, PR-Phase-4.13a. | done (2026-04-28) |
 | **4.13b** | i18n full-rollout — большие authenticated pages: `trees/[id]/*` (4 pages, ~1300 LOC), `persons/[id]/*` (3 pages, ~1000 LOC), `familysearch/*` (3 pages, ~600 LOC), `dna/*` (3 pages, ~700 LOC), `hypotheses/[id]`, `sources/[id]`. Расширение messages namespace'ов (`trees.*`, `persons.*`, `dna.*`, `hypotheses.*`, `sources.*`, `familysearch.*`). Все strings через `useTranslations`/`getTranslations`, `<ErrorMessage>` всюду где было ad-hoc error UI. Lint-hook (4.13a) подхватывает по мере конвертации. Запланировано как отдельный PR, чтобы review surface оставался читаемым. | done (2026-04-30) |
-| **4.14a** | Mobile-responsive design system — Layout / Touch targets / Typography. Audit показал, что (а) site-header без nav-links → hamburger не нужен, (б) только одна страница содержит `<table>` (`dna/[kitId]/matches`) — добавлен mobile card-stack как альтернативный layout, (в) единственный modal в app (DeleteAccountModal в /settings) → bottom-sheet на <sm. Design-system изменения, каскадящие по всем 31 page'ам: `Button.{sm,md,lg}` получают `min-h-11` floor на mobile (WCAG 2.1 AA touch target ≥44×44px) с `sm:min-h-0 sm:h-{8,10,12}` для desktop; `Input` получает `min-h-11 text-base` на mobile (16px font-size предотвращает iOS Safari auto-zoom) с `sm:h-10 sm:text-sm` для desktop; `Checkbox` h-5/w-5 на mobile, h-4/w-4 на desktop. globals.css — defensive `font-size: 16px` на raw `<input>/<select>/<textarea>` через `@media (max-width: 639px)` для form-controls вне design-system, `touch-action: manipulation` на интерактивных элементах (отключает 300мс double-tap delay). Pedigree-tree получает `touch-action: none` чтобы pinch-zoom уходил в d3-zoom. settings + access tabs получают `min-h-11` на mobile + scroll-snap на overflow для длинных локализаций. Vitest: `mobile-responsive.test.tsx` фиксирует классы на Button/Input/Checkbox чтобы будущие правки Tailwind-strings не откатили mobile-first. См. ADR-0057. | done (2026-04-30) |
+| **4.14a** | Mobile-responsive design system — Layout / Touch targets / Typography. Audit показал, что (а) site-header без nav-links → hamburger не нужен, (б) только одна страница содержит `<table>` (`dna/[kitId]/matches`) — добавлен mobile card-stack как альтернативный layout, (в) единственный modal в app (DeleteAccountModal в /settings) → bottom-sheet на <sm. Design-system изменения, каскадящие по всем 31 page'ам: `Button.{sm,md,lg}` получают `min-h-11` floor на mobile (WCAG 2.1 AA touch target ≥44×44px) с `sm:min-h-0 sm:h-{8,10,12}` для desktop; `Input` получает `min-h-11 text-base` на mobile (16px font-size предотвращает iOS Safari auto-zoom) с `sm:h-10 sm:text-sm` для desktop; `Checkbox` h-5/w-5 на mobile, h-4/w-4 на desktop. globals.css — defensive `font-size: 16px` на raw `<input>/<select>/<textarea>` через `@media (max-width: 639px)` для form-controls вне design-system, `touch-action: manipulation` на интерактивных элементах (отключает 300мс double-tap delay). Pedigree-tree получает `touch-action: none` чтобы pinch-zoom уходил в d3-zoom. settings + access tabs получают `min-h-11` на mobile + scroll-snap на overflow для длинных локализаций. Vitest: `mobile-responsive.test.tsx` фиксирует классы на Button/Input/Checkbox чтобы будущие правки Tailwind-strings не откатили mobile-first. См. ADR-0066. | done (2026-04-30) |
 | **4.14b** | Mobile-responsive — Performance (next/image, next/dynamic для tree viz и chromosome painting), Playwright mobile viewport tests. | planned |
 
 ### 8.1 Страницы
@@ -391,6 +435,9 @@ CONT/CONC и автоопределением кодировок UTF-8/ANSEL/CP1
 | **6.3** | **Match list/detail UI + chromosome painting + link-to-person — ADR-0033** | ✅ **Done (2026-04-28)** |
 | 6.4 | Triangulation engine (compute-only) + Bayes-prior heuristic — ADR-0054 | ✅ Done |
 | 6.5 | Imputation + IBD2 + dedicated `dna_match_segments` table | 🔜 Planned |
+| **6.7a** | **DNA AutoClusters: data model + Leiden clustering (NetworkX fallback) + endogamy heuristic — ADR-0063** | 🚧 In progress |
+| 6.7b | Pile-up region detection (segment_overlap_analysis по популяциям) | ⏳ Blocked on 6.7a |
+| 6.7c | AI cluster labels (opt-in) + frontend (`/dna/clusters` + components) + e2e | ⏳ Blocked on 6.7b |
 
 ---
 
@@ -704,6 +751,52 @@ licensing, EE-Jewish coverage, partnership effort). Краткая сводка:
 - Команды `/digest` (еженедельный summary), `/search Иванов 1850 Минск`.
 - Bot announcements в Telegram-канал (только owned by owner — не
   user fan-out).
+
+---
+
+## 18A. Фаза 15 — Pro-tier evidence UI
+
+**Цель:** AutoTreeGen позиционируется как "evidence engine for genealogy".
+Phase 15 поверх готового backend (sources, citations, hypotheses, DNA)
+накатывает UI-слой, где пользователь **видит и работает с evidence**, а не
+с бесконечными списками персон.
+
+### 18A.0 Статус подфаз
+
+| Подфаза | Описание | Статус |
+|---|---|---|
+| **15.1** | **Relationship-level evidence panel — ADR-0058** | ✅ **Done (2026-05-01)** |
+| 15.2 | "Add evidence" flow (manual citation + source attach) | 🔜 Planned |
+| 15.3 | Hypothesis sandbox UI (rule playground + what-if) | 🔜 Planned |
+| 15.4 | Per-relationship audit log (kind/source/who/when) | 🔜 Planned |
+| 15.5 | Archive search integration (FamilySearch / Wikimedia) | 🔜 Planned |
+
+### 18A.1 Phase 15.1 — Relationship Evidence Panel ✅ (см. ADR-0058)
+
+`GET /trees/{tree_id}/relationships/{kind}/{subject_id}/{object_id}/evidence`
+плюс `<RelationshipEvidencePanel>` — read-only consumer над существующим
+provenance / citations / hypothesis_evidences:
+
+- `kind` ∈ `parent_child | spouse | sibling`. Composite-key URL —
+  компромисс на отсутствие single-relationship view в схеме.
+- Aggregation: `Citation` rows on family + (для spouse) on MARR/DIV
+  events + HypothesisEvidence rows.
+- Confidence rollup: `Hypothesis.composite_score` если есть hypothesis
+  → `method="bayesian_fusion_v2"`; иначе naive count.
+- UI: right-side drawer (Tailwind self-contained, без Sheet primitive),
+  3 tabs (Supporting / Contradicting / Provenance), color-coded
+  confidence badge (green ≥0.85 / amber 0.6-0.85 / red <0.6),
+  empty-state CTAs (disabled — wired в 15.2 / 15.5).
+- i18n en + ru через next-intl.
+
+### 18A.2 Что НЕ входит в 15.1 (anti-drift)
+
+- Tree rendering layer / D3 / canvas — не трогается.
+- Trigger (клик на edge / context menu) — отдельный wiring PR.
+- "Add evidence" / "Add archive search" — disabled placeholders.
+- Hypothesis sandbox — Phase 15.3.
+- Schema changes на FamilyChild/relationship — Phase 15.x при сильном
+  signal.
 
 ---
 

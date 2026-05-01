@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -202,6 +204,19 @@ class Settings(BaseSettings):
             "выключить budget. ADR-0059 default — 100000/month."
         ),
     )
+    extract_budget_usd: float = Field(
+        default=0.50,
+        ge=0.0,
+        description=(
+            "Phase 10.2b: per-source pre-flight cost cap в USD. До вызова "
+            "Claude мы оцениваем стоимость (input_tokens × pricing × safety "
+            "factor); если оценка > этого лимита — 429 ещё до запроса. "
+            "Дополнение к per-user 24h/30d guards (которые ловят cumulative "
+            "abuse) — этот предотвращает один разорительный документ. "
+            "``0.0`` отключает per-source cap. Override через "
+            "``PARSER_SERVICE_EXTRACT_BUDGET_USD``."
+        ),
+    )
 
     # ---- Phase 14.2 — internal service auth (digest worker → parser) -------
     internal_service_token: str = Field(
@@ -212,6 +227,73 @@ class Settings(BaseSettings):
             "/users/{id}/digest-summary). Пустая строка → endpoint'ы "
             "возвращают 503 (отказ обслуживания), потому что без секрета "
             "любой может дёргать internal data о произвольном user'е."
+        ),
+    )
+
+    # ---- Phase 10.9a — voice-to-tree (ADR-0064) ----------------------------
+    # OPENAI_API_KEY, AI_DRY_RUN, WHISPER_* — unprefixed env vars: ключ
+    # «глобальный» (не parser-service-specific), а Whisper-настройки
+    # шарятся между parser-service worker'ом и потенциальным dna-service
+    # voice-extension'ом в Phase 10.9.x. AUDIO_* — собственная зона
+    # parser-service, но тоже unprefixed для симметрии с STORAGE_BACKEND
+    # из shared_models.storage (см. ADR-0046 storage prefix-конвенцию).
+    openai_api_key: str | None = Field(
+        default=None,
+        alias="OPENAI_API_KEY",
+        description=(
+            "OpenAI API key для Whisper STT. ``None`` + AI_DRY_RUN=true → "
+            "mock-транскрипт без сетевых вызовов. ``None`` + AI_DRY_RUN=false → "
+            "POST /audio-sessions возвращает 503 stt_unavailable. См. ADR-0064 §A1."
+        ),
+    )
+    whisper_provider: Literal["openai", "self-hosted-whisper"] = Field(
+        default="openai",
+        alias="WHISPER_PROVIDER",
+        description=(
+            "Активный STT-провайдер. Phase 10.9a поддерживает только "
+            "``openai``. ``self-hosted-whisper`` — privacy-tier опция "
+            "Phase 10.9.x; пока не реализован. См. ADR-0064 §A2."
+        ),
+    )
+    whisper_max_duration_sec: int = Field(
+        default=600,
+        ge=10,
+        le=3600,
+        alias="WHISPER_MAX_DURATION_SEC",
+        description=(
+            "Cap на длительность одной сессии (секунды). Cost-control: "
+            "Whisper $0.006/мин × 10 мин = $0.06. См. ADR-0064 §«Cost runaway»."
+        ),
+    )
+    audio_storage_bucket: str = Field(
+        default="audio-sessions",
+        alias="AUDIO_STORAGE_BUCKET",
+        description=(
+            "Bucket / GCS namespace для аудио-блобов. Отдельно от "
+            "``STORAGE_BUCKET`` (gedcom/dna), чтобы lifecycle-policy для "
+            "voice могла быть короче (audio удаляется per ADR-0064 §F1 "
+            "сразу после успешной транскрипции; bucket-level retention — "
+            "safety net на случай worker-краша)."
+        ),
+    )
+    audio_max_size_bytes: int = Field(
+        default=50_000_000,
+        ge=1,
+        alias="AUDIO_MAX_SIZE_BYTES",
+        description=(
+            "Cap на размер одного upload'а в байтах (default 50 MB). "
+            "Валидируется в POST /audio-sessions; превышение → 413. "
+            "Минимальный sanity-check ``ge=1`` — тесты могут опускать "
+            "до 100 байт; production ставит ≥ 1 MB через env."
+        ),
+    )
+    ai_dry_run: bool = Field(
+        default=False,
+        alias="AI_DRY_RUN",
+        description=(
+            "Dev/CI флаг: WhisperClient возвращает mock-транскрипт без "
+            "OPENAI_API_KEY. ``true`` — endpoint принимает upload даже без "
+            "ключа; ``false`` (production default) — без ключа 503."
         ),
     )
 
