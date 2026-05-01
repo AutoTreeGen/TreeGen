@@ -1,22 +1,29 @@
-"""AI tree-chat endpoint (Phase 10.7c).
+"""AI tree-chat endpoints (Phase 10.7c + 10.7d).
 
-Эндпоинт ``POST /trees/{tree_id}/chat/turn`` — один turn разговора с AI о
-конкретном дереве. Контекст собирается из 10.7a self-anchor + 10.7b ego-
-resolver: ассистент знает «кто такой ты» в этом дереве и может разрешить
-relative references («моя жена», «брат тёщи», «Двора»).
+* ``POST /trees/{tree_id}/chat/turn`` — один turn разговора (SSE-стрим;
+  Phase 10.7c). Резолвит references c обоих сторон (user + assistant)
+  через 10.7b ego-resolver, persist'ит обе сообщения вместе с
+  source-citation линками в ``chat_messages.references_jsonb``.
+* ``GET /trees/{tree_id}/chat/sessions`` — пагинированный список
+  чат-сессий пользователя в дереве с агрегатами (message_count,
+  last_message_at). Phase 10.7d.
+* ``GET /trees/{tree_id}/chat/sessions/{session_id}`` — single-session
+  metadata (для resume-URL). Phase 10.7d.
+* ``GET /trees/{tree_id}/chat/sessions/{session_id}/messages`` —
+  пагинированная история сообщений (UI "load on mount"). Phase 10.7d.
 
-Response — Server-Sent Events стрим:
+SSE кадры (POST turn):
 
 * ``{"type": "session", "session_id": ..., "anchor_person_id": ...}`` —
-  первый кадр; даёт client'у только-что-созданный session UUID.
+  первый кадр.
 * ``{"type": "token", "delta": "..."}`` — text-deltas Claude'а.
-* ``{"type": "done", "message_id": ..., "referenced_persons": [...]}`` —
-  финальный кадр после persist'инга assistant-сообщения.
-* ``{"type": "error", "detail": "..."}`` — terminal error (LLM, БД, …).
+* ``{"type": "done", "message_id": ..., "referenced_persons": [...],
+  "assistant_references": [...]}`` — финальный кадр.
+* ``{"type": "error", "detail": "..."}`` — terminal error.
 
-Permission-gate: VIEWER+. Чат — read-only relative to tree (не модифицирует
-genealogy-данные); writes идут только в ``chat_sessions`` / ``chat_messages``,
-которые scoped per-user.
+Permission-gate: VIEWER+ на всех эндпоинтах. Чат scoped per-user — list
+возвращает только сессии current-user'а; get-эндпоинты 404'ят на чужие
+session_id (leak protection через timing).
 """
 
 from __future__ import annotations
@@ -32,7 +39,7 @@ from ai_layer import AILayerConfig, AILayerDisabledError
 from ai_layer.clients.anthropic_client import AnthropicClient
 from ai_layer.ego_resolver import resolve_reference
 from ai_layer.ego_resolver.types import PersonNames, TreeContext
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from shared_models import TreeRole
 from shared_models.orm import (
     ChatMessage,
@@ -40,16 +47,24 @@ from shared_models.orm import (
     ChatSession,
     Name,
     Person,
+    Source,
     Tree,
     User,
 )
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
 
 from parser_service.auth import get_current_user
 from parser_service.database import get_session, get_session_factory
-from parser_service.schemas import ChatTurnRequest
+from parser_service.schemas import (
+    ChatMessageListResponse,
+    ChatMessageResponse,
+    ChatSessionListItem,
+    ChatSessionListResponse,
+    ChatSessionResponse,
+    ChatTurnRequest,
+)
 from parser_service.services.ego_traversal import load_family_traversal
 from parser_service.services.permissions import require_tree_role
 
@@ -197,21 +212,25 @@ def _candidate_phrases(text: str) -> list[str]:
     return phrases
 
 
-def _resolve_user_references(
-    user_text: str,
+def _resolve_person_references(
+    text: str,
     *,
     tree: TreeContext,
     anchor_id: uuid.UUID,
 ) -> list[dict[str, Any]]:
-    """Прогоняет phrase-кандидаты через ego_resolver и собирает уникальные hit'ы.
+    """Прогоняет phrase-кандидаты через 10.7b ego_resolver и собирает hit'ы.
 
-    Возвращает list dict'ов в форме ``{"person_id": str, "mention_text":
-    str, "confidence": float}`` — формат, в котором они persist'ятся в
-    ``chat_messages.references_jsonb`` и улетают клиенту.
+    Phase 10.7d: переименовано из ``_resolve_user_references`` — функция
+    симметрично используется для user-input'а и assistant-output'а;
+    «user» в имени мешало.
+
+    Возвращает list dict'ов вида ``{"kind": "person", "person_id": str,
+    "mention_text": str, "confidence": float}`` — формат, в котором они
+    persist'ятся в ``chat_messages.references_jsonb`` и улетают клиенту.
     """
     refs: list[dict[str, Any]] = []
     seen_ids: set[uuid.UUID] = set()
-    for phrase in _candidate_phrases(user_text):
+    for phrase in _candidate_phrases(text):
         try:
             resolved = resolve_reference(tree, anchor_id, phrase)
         except Exception:
@@ -224,12 +243,98 @@ def _resolve_user_references(
         seen_ids.add(resolved.person_id)
         refs.append(
             {
+                "kind": "person",
                 "person_id": str(resolved.person_id),
                 "mention_text": phrase,
                 "confidence": float(resolved.confidence),
             }
         )
     return refs
+
+
+# Phase 10.7d source-citation extractor — substring-match по labels (title /
+# abbreviation / author) в скоупе дерева. V1: case-insensitive exact-substring
+# с пограничной проверкой word-boundary'я (избегаем матча «1900» внутри
+# «1900-е» когда title — «1900 census»). Future-work: fuzzy + LLM tool-use.
+_MIN_LABEL_LEN = 4  # отсекаем 1-2-символьные abbrev'ы (false-positive шум)
+_MAX_SOURCE_REFS = 5
+
+
+async def _load_source_labels(
+    session: AsyncSession,
+    *,
+    tree_id: uuid.UUID,
+) -> list[tuple[uuid.UUID, str]]:
+    """Загружает (source_id, label) пары для substring-citation'а.
+
+    Один источник может пройти под несколькими labels (title + abbreviation
+    + author) — возвращаем все, caller дедупит по source_id.
+    """
+    res = await session.execute(
+        select(Source.id, Source.title, Source.abbreviation, Source.author).where(
+            Source.tree_id == tree_id,
+            Source.deleted_at.is_(None),
+        )
+    )
+    out: list[tuple[uuid.UUID, str]] = []
+    for sid, title, abbreviation, author in res.all():
+        for label in (title, abbreviation, author):
+            if label and len(label.strip()) >= _MIN_LABEL_LEN:
+                out.append((sid, label.strip()))
+    return out
+
+
+def _resolve_source_citations(
+    text: str,
+    *,
+    source_labels: list[tuple[uuid.UUID, str]],
+) -> list[dict[str, Any]]:
+    """Substring-find source labels в тексте; возвращает source-references.
+
+    Дедупим по ``source_id`` (первый match выигрывает); cap на
+    ``_MAX_SOURCE_REFS`` чтобы JSONB-row не разрастался на длинных текстах
+    с множеством упоминаний.
+    """
+    refs: list[dict[str, Any]] = []
+    seen_ids: set[uuid.UUID] = set()
+    text_lower = text.lower()
+    for source_id, label in source_labels:
+        if source_id in seen_ids:
+            continue
+        # Word-boundary check: \b ловит «1900 census» в «based on 1900 census»
+        # но не в «in1900census». re.escape защищает от regex-метасимволов
+        # в title'е (точки в «U.S. Census»).
+        pattern = re.compile(rf"\b{re.escape(label.lower())}\b")
+        if pattern.search(text_lower):
+            seen_ids.add(source_id)
+            refs.append(
+                {
+                    "kind": "source",
+                    "source_id": str(source_id),
+                    "mention_text": label,
+                    "confidence": 1.0,
+                }
+            )
+            if len(refs) >= _MAX_SOURCE_REFS:
+                break
+    return refs
+
+
+# Auto-title из первого user-сообщения. Берём первые ~60 символов первой
+# непустой линии. UI отрисовывает в sessions list; полный текст сообщения
+# доступен через GET /messages.
+_TITLE_MAX_LEN = 60
+
+
+def _derive_session_title(message: str) -> str | None:
+    """First line trimmed to ``_TITLE_MAX_LEN`` chars; ``None`` для пустого ввода."""
+    for raw_line in message.splitlines():
+        line = raw_line.strip()
+        if line:
+            if len(line) > _TITLE_MAX_LEN:
+                return line[: _TITLE_MAX_LEN - 1].rstrip() + "…"
+            return line
+    return None
 
 
 def _build_system_prompt(
@@ -337,7 +442,9 @@ async def chat_turn(
     # Persist user message immediately — даже если LLM упадёт, history будет
     # консистентен (assistant-сообщение появится только при успехе).
     tree_ctx = await _load_tree_context(session, tree_id=tree_id)
-    user_refs = _resolve_user_references(body.message, tree=tree_ctx, anchor_id=anchor_id)
+    source_labels = await _load_source_labels(session, tree_id=tree_id)
+    user_refs = _resolve_person_references(body.message, tree=tree_ctx, anchor_id=anchor_id)
+    user_refs.extend(_resolve_source_citations(body.message, source_labels=source_labels))
     user_msg = ChatMessage(
         session_id=chat_session.id,
         role=ChatMessageRole.USER.value,
@@ -345,6 +452,11 @@ async def chat_turn(
         references=user_refs,
     )
     session.add(user_msg)
+    # Phase 10.7d: auto-derive title из первого user-сообщения. Только если
+    # title ещё пустой — повторные turn'ы не переписывают (UI хочет
+    # стабильный label в sessions list'е).
+    if chat_session.title is None:
+        chat_session.title = _derive_session_title(body.message)
     await session.flush()
 
     # Build system prompt + load prior turns (capped) for multi-turn coherence.
@@ -369,6 +481,8 @@ async def chat_turn(
             session_id=chat_session.id,
             anchor_person_id=anchor_id,
             user_refs=user_refs,
+            tree_ctx=tree_ctx,
+            source_labels=source_labels,
         ),
         ping=15,
     )
@@ -471,11 +585,17 @@ async def _stream_turn(
     session_id: uuid.UUID,
     anchor_person_id: uuid.UUID,
     user_refs: list[dict[str, Any]],
+    tree_ctx: TreeContext,
+    source_labels: list[tuple[uuid.UUID, str]],
 ) -> AsyncIterator[dict[str, str]]:
     """Async-генератор SSE-кадров: session → tokens → done | error.
 
-    Persists assistant-сообщение в свою transaction после полного ответа,
-    чтобы partial response не оставался в истории при разрыве connection'а.
+    Phase 10.7d: post-stream резолвит references в assistant-output'е (person
+    через ego_resolver, source через substring) и persist'ит в
+    ``ChatMessage.references_jsonb`` рядом с user-side references из
+    ``user_refs``. Persists assistant-сообщение в свою transaction после
+    полного ответа, чтобы partial response не оставался в истории при
+    разрыве connection'а.
     """
     yield {
         "data": json.dumps(
@@ -508,6 +628,13 @@ async def _stream_turn(
         yield {"data": json.dumps({"type": "error", "detail": "Empty assistant response"})}
         return
 
+    # Phase 10.7d: символично у assistant'а тоже резолвим references —
+    # tree_ctx + source_labels уже загружены в request-scope'е.
+    assistant_refs = _resolve_person_references(
+        full_text, tree=tree_ctx, anchor_id=anchor_person_id
+    )
+    assistant_refs.extend(_resolve_source_citations(full_text, source_labels=source_labels))
+
     # Persist assistant-сообщение в отдельной session — генератор живёт за
     # пределами request scope, нужно открыть новую DB session.
     factory = get_session_factory()
@@ -517,10 +644,7 @@ async def _stream_turn(
             session_id=session_id,
             role=ChatMessageRole.ASSISTANT.value,
             content=full_text,
-            # Phase 10.7c MVP: assistant-side references пустые. 10.7d
-            # добавит structured tool-use для grounding'а ассистента в
-            # конкретных person-id'ах из tree-context'а.
-            references=[],
+            references=assistant_refs,
         )
         persist_session.add(assistant_msg)
         await persist_session.flush()
@@ -533,9 +657,176 @@ async def _stream_turn(
                 "type": "done",
                 "message_id": str(assistant_msg_id),
                 "referenced_persons": user_refs,
+                "assistant_references": assistant_refs,
             }
         )
     }
+
+
+# -----------------------------------------------------------------------------
+# Phase 10.7d — history endpoints (sessions list, session get, messages list).
+# -----------------------------------------------------------------------------
+
+
+_DEFAULT_SESSIONS_LIMIT = 20
+_MAX_SESSIONS_LIMIT = 100
+_DEFAULT_MESSAGES_LIMIT = 50
+_MAX_MESSAGES_LIMIT = 200
+
+
+@router.get(
+    "/trees/{tree_id}/chat/sessions",
+    response_model=ChatSessionListResponse,
+    summary="Paginated list of current user's chat sessions in a tree (Phase 10.7d).",
+    dependencies=[Depends(require_tree_role(TreeRole.VIEWER))],
+)
+async def list_chat_sessions(
+    tree_id: uuid.UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    user: Annotated[User, Depends(get_current_user)],
+    limit: int = Query(_DEFAULT_SESSIONS_LIMIT, ge=1, le=_MAX_SESSIONS_LIMIT),
+    offset: int = Query(0, ge=0),
+) -> ChatSessionListResponse:
+    """Список чат-сессий пользователя в дереве c message_count + last_message_at.
+
+    Сортировка — по ``last_message_at DESC NULLS LAST, created_at DESC``,
+    чтобы активные диалоги были сверху и пустые-новые сессии не вытесняли
+    их в конец. Permission: VIEWER+.
+
+    Pagination: limit/offset (репо-конвенция, см. /trees/{id}/sources).
+    """
+    # Subquery: per-session aggregates (count + max created_at).
+    # LEFT JOIN — пустая сессия (без сообщений ещё) тоже попадает в выдачу.
+    msg_count = func.count(ChatMessage.id).label("message_count")
+    last_msg_at = func.max(ChatMessage.created_at).label("last_message_at")
+
+    base_filter = (
+        ChatSession.tree_id == tree_id,
+        ChatSession.user_id == user.id,
+    )
+
+    total = (
+        await session.execute(select(func.count(ChatSession.id)).where(*base_filter))
+    ).scalar_one()
+
+    q = (
+        select(ChatSession, msg_count, last_msg_at)
+        .outerjoin(ChatMessage, ChatMessage.session_id == ChatSession.id)
+        .where(*base_filter)
+        .group_by(ChatSession.id)
+        .order_by(last_msg_at.desc().nullslast(), ChatSession.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    rows = (await session.execute(q)).all()
+
+    items = [
+        ChatSessionListItem.model_validate(
+            {
+                "id": s.id,
+                "tree_id": s.tree_id,
+                "anchor_person_id": s.anchor_person_id,
+                "title": s.title,
+                "created_at": s.created_at,
+                "updated_at": s.updated_at,
+                "message_count": int(count or 0),
+                "last_message_at": last_at,
+            }
+        )
+        for s, count, last_at in rows
+    ]
+
+    return ChatSessionListResponse(
+        tree_id=tree_id,
+        total=int(total or 0),
+        limit=limit,
+        offset=offset,
+        items=items,
+    )
+
+
+@router.get(
+    "/trees/{tree_id}/chat/sessions/{session_id}",
+    response_model=ChatSessionResponse,
+    summary="Single chat session metadata (Phase 10.7d).",
+    dependencies=[Depends(require_tree_role(TreeRole.VIEWER))],
+)
+async def get_chat_session(
+    tree_id: uuid.UUID,
+    session_id: uuid.UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    user: Annotated[User, Depends(get_current_user)],
+) -> ChatSessionResponse:
+    """Single-session metadata. 404 на чужие session_id (leak-protection)."""
+    chat_session = await session.scalar(
+        select(ChatSession).where(
+            ChatSession.id == session_id,
+            ChatSession.tree_id == tree_id,
+            ChatSession.user_id == user.id,
+        )
+    )
+    if chat_session is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, detail=f"Chat session {session_id} not found"
+        )
+    return ChatSessionResponse.model_validate(chat_session)
+
+
+@router.get(
+    "/trees/{tree_id}/chat/sessions/{session_id}/messages",
+    response_model=ChatMessageListResponse,
+    summary="Paginated message history for a chat session (Phase 10.7d).",
+    dependencies=[Depends(require_tree_role(TreeRole.VIEWER))],
+)
+async def list_chat_session_messages(
+    tree_id: uuid.UUID,
+    session_id: uuid.UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    user: Annotated[User, Depends(get_current_user)],
+    limit: int = Query(_DEFAULT_MESSAGES_LIMIT, ge=1, le=_MAX_MESSAGES_LIMIT),
+    offset: int = Query(0, ge=0),
+) -> ChatMessageListResponse:
+    """История сообщений сессии в хронологическом порядке.
+
+    Permission: VIEWER+ (router-level) + ownership-check (404 на чужой
+    session_id). Сортировка — ``created_at ASC`` (старые сверху, как
+    обычно UI рисует chat-thread).
+    """
+    # Ownership check: убеждаемся, что session принадлежит (tree_id, user_id).
+    owned = await session.scalar(
+        select(ChatSession.id).where(
+            ChatSession.id == session_id,
+            ChatSession.tree_id == tree_id,
+            ChatSession.user_id == user.id,
+        )
+    )
+    if owned is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, detail=f"Chat session {session_id} not found"
+        )
+
+    total = (
+        await session.execute(
+            select(func.count(ChatMessage.id)).where(ChatMessage.session_id == session_id)
+        )
+    ).scalar_one()
+
+    msgs_res = await session.execute(
+        select(ChatMessage)
+        .where(ChatMessage.session_id == session_id)
+        .order_by(ChatMessage.created_at.asc(), ChatMessage.id.asc())
+        .limit(limit)
+        .offset(offset)
+    )
+    items = [ChatMessageResponse.model_validate(m) for m in msgs_res.scalars().all()]
+
+    return ChatMessageListResponse(
+        session_id=session_id,
+        total=int(total or 0),
+        limit=limit,
+        offset=offset,
+        items=items,
+    )
 
 
 __all__ = ["get_ai_layer_config", "get_anthropic_client", "router"]

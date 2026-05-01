@@ -27,10 +27,20 @@ export type ChatTurnRequest = {
 };
 
 export type ChatReferencedPerson = {
+  kind?: "person";
   person_id: string;
   mention_text: string;
   confidence: number;
 };
+
+export type ChatReferencedSource = {
+  kind: "source";
+  source_id: string;
+  mention_text: string;
+  confidence: number;
+};
+
+export type ChatReference = ChatReferencedPerson | ChatReferencedSource;
 
 export type ChatSessionFrame = {
   type: "session";
@@ -46,7 +56,9 @@ export type ChatTokenFrame = {
 export type ChatDoneFrame = {
   type: "done";
   message_id: string;
-  referenced_persons: ChatReferencedPerson[];
+  referenced_persons: ChatReference[];
+  /** Phase 10.7d: assistant-side resolved references (person + source). */
+  assistant_references?: ChatReference[];
 };
 
 export type ChatErrorFrame = {
@@ -55,6 +67,42 @@ export type ChatErrorFrame = {
 };
 
 export type ChatFrame = ChatSessionFrame | ChatTokenFrame | ChatDoneFrame | ChatErrorFrame;
+
+export type ChatSessionListItem = {
+  id: string;
+  tree_id: string;
+  anchor_person_id: string | null;
+  title: string | null;
+  created_at: string;
+  updated_at: string;
+  message_count: number;
+  last_message_at: string | null;
+};
+
+export type ChatSessionListResponse = {
+  tree_id: string;
+  total: number;
+  limit: number;
+  offset: number;
+  items: ChatSessionListItem[];
+};
+
+export type ChatMessageHistoryItem = {
+  id: string;
+  session_id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  references: ChatReference[];
+  created_at: string;
+};
+
+export type ChatMessageHistoryResponse = {
+  session_id: string;
+  total: number;
+  limit: number;
+  offset: number;
+  items: ChatMessageHistoryItem[];
+};
 
 // ---- Streaming helper -------------------------------------------------------
 
@@ -146,4 +194,58 @@ function parseSseFrame(segment: string): ChatFrame | null {
   } catch {
     return null;
   }
+}
+
+// ---- Phase 10.7d — history endpoints ----------------------------------------
+
+/**
+ * `GET /trees/{treeId}/chat/sessions` — paginated list of current user's sessions.
+ *
+ * UI sidebar показывает recent threads с message_count + last_message_at.
+ */
+export async function listChatSessions(
+  treeId: string,
+  options: { limit?: number; offset?: number; signal?: AbortSignal } = {},
+): Promise<ChatSessionListResponse> {
+  const params = new URLSearchParams();
+  if (options.limit !== undefined) params.set("limit", String(options.limit));
+  if (options.offset !== undefined) params.set("offset", String(options.offset));
+  const qs = params.toString();
+  const url = `${API_BASE}/trees/${treeId}/chat/sessions${qs ? `?${qs}` : ""}`;
+  const response = await _fetchImpl(url, {
+    headers: { Accept: "application/json", ...(await getAuthHeaders()) },
+    signal: options.signal,
+  });
+  if (!response.ok) {
+    const text = await response.text().catch(() => response.statusText);
+    throw classifyHttpError(response.status, text || `Failed to list sessions: ${response.status}`);
+  }
+  return (await response.json()) as ChatSessionListResponse;
+}
+
+/**
+ * `GET /trees/{treeId}/chat/sessions/{sessionId}/messages` — paginated history.
+ *
+ * Используется при resume-URL'е: страница `/trees/[id]/chat?session=<uuid>`
+ * на mount'е грузит историю и pre-populate'ит chat-thread.
+ */
+export async function loadChatMessages(
+  treeId: string,
+  sessionId: string,
+  options: { limit?: number; offset?: number; signal?: AbortSignal } = {},
+): Promise<ChatMessageHistoryResponse> {
+  const params = new URLSearchParams();
+  if (options.limit !== undefined) params.set("limit", String(options.limit));
+  if (options.offset !== undefined) params.set("offset", String(options.offset));
+  const qs = params.toString();
+  const url = `${API_BASE}/trees/${treeId}/chat/sessions/${sessionId}/messages${qs ? `?${qs}` : ""}`;
+  const response = await _fetchImpl(url, {
+    headers: { Accept: "application/json", ...(await getAuthHeaders()) },
+    signal: options.signal,
+  });
+  if (!response.ok) {
+    const text = await response.text().catch(() => response.statusText);
+    throw classifyHttpError(response.status, text || `Failed to load messages: ${response.status}`);
+  }
+  return (await response.json()) as ChatMessageHistoryResponse;
 }

@@ -649,6 +649,18 @@
       "anchorMissing": "No self-anchor set. Set yourself in tree settings to enable relative references like \"my wife\".",
       "people": "People referenced",
       "peopleEmpty": "No references yet."
+    },
+    "sessions": {
+      "heading": "Chats",
+      "newChat": "New",
+      "empty": "No chats yet.",
+      "loading": "Loading…",
+      "untitled": "Untitled chat",
+      "messageCount": "{count, plural, one {# msg} other {# msgs}}"
+    },
+    "history": {
+      "loading": "Loading history…",
+      "loadFailed": "Failed to load chat history."
     }
   }
 }
