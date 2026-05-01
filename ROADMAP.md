@@ -602,6 +602,10 @@ licensing, EE-Jewish coverage, partnership effort). Краткая сводка:
 4. **Hypothesis explainer:** «Почему система считает, что A и B — братья?» — генерация rationale на естественном языке.
 5. **Document summarizer:** длинное письмо XIX века → структурированные факты.
 6. **Vector search:** «найди в моих документах упоминания всех персон по фамилии Х» — semantic search.
+7. **Voice-to-tree (Phase 10.9):** owner записывает голосом семейные истории →
+   Whisper-транскрипт → LLM-extraction person/event candidates → review queue →
+   коммит в дерево. Demo MVP 06.05.2026. См. ADR-0064 +
+   `docs/feature_voice_to_tree.md`.
 
 ### 14.2 Архитектура
 
