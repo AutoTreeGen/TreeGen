@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Body & UI type</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:20px;background:var(--color-bg);font-family:var(--font-sans)}
+  .stack{display:flex;flex-direction:column;gap:10px}
+  .row{display:flex;align-items:baseline;gap:14px;padding:6px 0;border-bottom:1px dashed var(--color-divider)}
+  .row:last-child{border:0}
+  .lab{font-family:var(--font-mono);font-size:11px;color:var(--color-fg-muted);min-width:140px;flex-shrink:0}
+</style></head><body>
+  <div class="stack">
+    <div class="row"><span class="lab">eyebrow · 12/600</span><span class="eyebrow">Phase 1 · GEDCOM ingestion</span></div>
+    <div class="row"><span class="lab">h4 · 18/Inter 600</span><h4>Parse summary</h4></div>
+    <div class="row"><span class="lab">body · 16/Inter 400</span><p>Vilnius vital records, fond 728, pages 14–22.</p></div>
+    <div class="row"><span class="lab">body-sm · 14/Inter 400</span><p class="body-sm">3 conflicts detected across 2 sources.</p></div>
+    <div class="row"><span class="lab">body-muted · 14/muted</span><p class="body-muted">Imported from autotreegen-2024-03.ged · 12,847 INDI records.</p></div>
+    <div class="row"><span class="lab">caption · 12/muted</span><span class="caption">Last reviewed 2026-04-12 by V. Sokolov</span></div>
+  </div>
+</body></html>

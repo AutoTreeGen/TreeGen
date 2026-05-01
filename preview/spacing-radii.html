@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Radii</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{
+    margin:0;padding:32px 24px;background:var(--color-bg);font-family:var(--font-sans);
+    display:flex;gap:20px;align-items:flex-end;flex-wrap:wrap;
+  }
+  .b{display:flex;flex-direction:column;align-items:center;gap:10px}
+
+  /* — 3D box —
+     Front face is a gradient block with the radius applied. Inset highlight
+     on top, inset shadow on bottom, layered drop shadow for raised feel.
+     The radius is the whole point of this card, so it's drawn cleanly here. */
+  .box{
+    width:96px;height:72px;
+    background:linear-gradient(180deg, #FFFFFF 0%, #F4ECF8 50%, #DDD0E8 100%);
+    border:1px solid #B8A6C7;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.95),
+      inset 0 -1px 2px rgba(44,16,84,0.12),
+      0 1px 2px rgba(44,16,84,0.10),
+      0 8px 16px -4px rgba(44,16,84,0.20);
+    position:relative;
+  }
+  /* Subtle top "glass" highlight band */
+  .box::before{
+    content:"";position:absolute;left:1px;right:1px;top:1px;height:42%;
+    background:linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 100%);
+    border-radius:inherit;
+    pointer-events:none;
+  }
+
+  .name{
+    font-family:var(--font-display);font-size:14px;font-weight:700;
+    color:#1a0d2e;letter-spacing:-0.005em;
+  }
+  .lab{
+    font-family:var(--font-mono);font-size:10px;color:var(--color-fg-muted);
+    letter-spacing:0.04em;text-transform:uppercase;
+  }
+</style></head><body>
+  <div class="b"><div class="box" style="border-radius:4px"></div><span class="name">sm</span><span class="lab">4 · chips</span></div>
+  <div class="b"><div class="box" style="border-radius:6px"></div><span class="name">md</span><span class="lab">6 · buttons</span></div>
+  <div class="b"><div class="box" style="border-radius:10px"></div><span class="name">lg</span><span class="lab">10 · cards</span></div>
+  <div class="b"><div class="box" style="border-radius:16px"></div><span class="name">xl</span><span class="lab">16 · modals</span></div>
+  <div class="b"><div class="box" style="border-radius:24px"></div><span class="name">2xl</span><span class="lab">24 · hero</span></div>
+  <div class="b"><div class="box" style="border-radius:9999px;width:72px;height:72px"></div><span class="name">full</span><span class="lab">avatar</span></div>
+</body></html>

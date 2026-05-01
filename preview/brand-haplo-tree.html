@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Family ribbon tree</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  /* ─────────────────────────────────────────────────────────────
+     A daylight version of the ribbon tree.
+     The earlier version sat on a deep-purple night sky — beautiful,
+     but it read as a science specimen and the labels were hard for
+     older eyes. This version keeps the modern ribbon idiom but moves
+     it onto warm paper, enlarges every label, leads with NAMES (not
+     haplogroup codes), and treats the DNA codes as a quiet, optional
+     secondary line. It's still 21st century — vector, gradient ribbons,
+     soft halo — just no longer intimidating.
+     ───────────────────────────────────────────────────────────── */
+  html,body{margin:0;padding:0;height:100%;background:#F4ECDA;font-family:var(--font-sans);overflow:hidden;color:#2A1810}
+  .wrap{position:relative;height:100%;width:100%}
+
+  /* Header card — small, compact, hugs the corners. Two pills,
+     never wider than 38% of the canvas, so they don't bleed into the
+     ribbon canopy. */
+  .chrome{
+    position:absolute;left:14px;right:14px;top:12px;
+    display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+    z-index:3;pointer-events:none;
+  }
+  .chrome > div{
+    background:#FFFAF0;
+    border:1px solid #D8C9A8;
+    border-radius:8px;
+    padding:6px 10px;
+    box-shadow:0 1px 0 #FFFFFF inset, 0 2px 6px -2px rgba(80,50,20,0.18);
+    max-width:38%;
+  }
+  .chrome .top-label{
+    font-family:var(--font-mono);
+    font-size:9px;letter-spacing:0.10em;text-transform:uppercase;
+    color:#8A6A3A;
+    display:block;margin-bottom:1px;
+  }
+  .chrome .title{
+    font-family:var(--font-display, 'Cormorant Garamond', Georgia, serif);
+    font-weight:700;font-size:14px;letter-spacing:-0.005em;
+    color:#1A0E04;display:block;line-height:1.15;
+  }
+  .chrome .right{text-align:right}
+  .chrome .right .meta{font-size:11px;color:#5a3e1a;line-height:1.35;font-weight:500}
+  .chrome .right .sub{font-size:9px;color:#8A6A3A;font-family:var(--font-mono);letter-spacing:0.04em;margin-top:1px;display:block}
+
+  /* Legend — compact, single column of small swatches */
+  .legend{
+    position:absolute;left:14px;bottom:14px;
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:3px 14px;
+    background:#FFFAF0;border:1px solid #D8C9A8;border-radius:8px;
+    padding:8px 10px;
+    z-index:3;max-width:42%;
+    box-shadow:0 2px 6px -2px rgba(80,50,20,0.18);
+  }
+  .legend .row{display:flex;align-items:center;gap:6px;font-size:10.5px;color:#2A1810;line-height:1.25}
+  .legend i{display:inline-block;width:18px;height:3px;border-radius:2px;flex:none}
+  .legend .code{font-family:var(--font-mono);font-size:9px;color:#8A6A3A;letter-spacing:0.04em;margin-left:2px}
+
+  /* Generation-radius callout — small bottom-right tip */
+  .scale{
+    position:absolute;right:14px;bottom:14px;
+    background:#FFFAF0;border:1px solid #D8C9A8;border-radius:8px;
+    padding:8px 10px;
+    z-index:3;max-width:200px;
+    box-shadow:0 2px 6px -2px rgba(80,50,20,0.18);
+    font-size:10px;color:#5a3e1a;line-height:1.4;
+  }
+  .scale b{display:block;font-family:var(--font-display, Georgia, serif);font-size:11px;color:#1A0E04;margin-bottom:1px;font-weight:700}
+
+  svg{display:block;width:100%;height:100%}
+
+  /* All SVG text styles — generously sized for low-vision readers,
+     dark warm ink on light paper, no stroke halo (we don't need it
+     against the cream background). */
+  text{font-family:var(--font-sans);fill:#1A0E04}
+  text.tip-name{font-family:var(--font-display, 'Cormorant Garamond', Georgia, serif);font-size:15px;font-weight:700;fill:#1A0E04}
+  text.tip-meta{font-family:var(--font-mono);font-size:11px;fill:#7A5A2A;letter-spacing:0.02em}
+  text.tip-code{font-family:var(--font-mono);font-size:10px;fill:#8A6A3A;letter-spacing:0.06em}
+  text.gen-label{font-family:var(--font-mono);font-size:11px;fill:#8A6A3A;letter-spacing:0.06em}
+  text.portrait-name{font-family:var(--font-display, Georgia, serif);font-size:14px;font-weight:700;fill:#1A0E04}
+  text.portrait-rel{font-family:var(--font-sans);font-size:11px;fill:#5a3e1a;letter-spacing:0.02em}
+  text.portrait-date{font-family:var(--font-mono);font-size:10px;fill:#8A6A3A}
+</style></head>
+<body>
+<div class="wrap">
+  <svg viewBox="0 0 800 480" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <!-- Warm parchment field, slight vignette -->
+      <radialGradient id="bg" cx="0.5" cy="1" r="0.95">
+        <stop offset="0" stop-color="#FFF6E2"/>
+        <stop offset="1" stop-color="#E8DBBA"/>
+      </radialGradient>
+      <radialGradient id="rootGlow" cx="0.5" cy="1" r="0.45">
+        <stop offset="0" stop-color="#F4B86A" stop-opacity="0.35"/>
+        <stop offset="1" stop-color="#F4B86A" stop-opacity="0"/>
+      </radialGradient>
+
+      <!-- Daylight ribbon gradients — saturated but warm, all top-down
+           (root dark, tip light) so motion reads upward like growth. -->
+      <linearGradient id="g-r1a" x1="0.5" x2="0.5" y1="1" y2="0"><stop offset="0" stop-color="#1F4A82"/><stop offset="1" stop-color="#5C8DD6"/></linearGradient>
+      <linearGradient id="g-j2"  x1="0.5" x2="0.5" y1="1" y2="0"><stop offset="0" stop-color="#7A2A4F"/><stop offset="1" stop-color="#D85F95"/></linearGradient>
+      <linearGradient id="g-h1a" x1="0.5" x2="0.5" y1="1" y2="0"><stop offset="0" stop-color="#1F6E5E"/><stop offset="1" stop-color="#4FB39E"/></linearGradient>
+      <linearGradient id="g-t1"  x1="0.5" x2="0.5" y1="1" y2="0"><stop offset="0" stop-color="#7A5A1F"/><stop offset="1" stop-color="#D8A04A"/></linearGradient>
+      <linearGradient id="g-e1b" x1="0.5" x2="0.5" y1="1" y2="0"><stop offset="0" stop-color="#4F2C7A"/><stop offset="1" stop-color="#9A6FCC"/></linearGradient>
+      <linearGradient id="g-i1"  x1="0.5" x2="0.5" y1="1" y2="0"><stop offset="0" stop-color="#1F7A4D"/><stop offset="1" stop-color="#5BC288"/></linearGradient>
+      <linearGradient id="g-g2"  x1="0.5" x2="0.5" y1="1" y2="0"><stop offset="0" stop-color="#7A2C2A"/><stop offset="1" stop-color="#D86560"/></linearGradient>
+      <linearGradient id="g-n1c" x1="0.5" x2="0.5" y1="1" y2="0"><stop offset="0" stop-color="#2C4F7A"/><stop offset="1" stop-color="#5C95C8"/></linearGradient>
+
+      <!-- Sepia portrait washes (kept warm against cream) -->
+      <linearGradient id="sepia" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="#F0DBB8"/>
+        <stop offset="1" stop-color="#A88454"/>
+      </linearGradient>
+      <linearGradient id="sepia2" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="#F0CCD2"/>
+        <stop offset="1" stop-color="#A86878"/>
+      </linearGradient>
+      <linearGradient id="sepia3" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="#DCE8D4"/>
+        <stop offset="1" stop-color="#688060"/>
+      </linearGradient>
+      <linearGradient id="sepia4" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="#E8DCEC"/>
+        <stop offset="1" stop-color="#806890"/>
+      </linearGradient>
+
+      <symbol id="silMan" viewBox="0 0 40 40">
+        <circle cx="20" cy="15" r="7" fill="#3A2810" opacity="0.55"/>
+        <path d="M6 40 C 8 28, 14 24, 20 24 C 26 24, 32 28, 34 40 Z" fill="#3A2810" opacity="0.55"/>
+      </symbol>
+      <symbol id="silWoman" viewBox="0 0 40 40">
+        <path d="M11 18 C 11 9, 29 9, 29 18 L 28 22 L 12 22 Z" fill="#3A1828" opacity="0.55"/>
+        <circle cx="20" cy="18" r="6" fill="#3A1828" opacity="0.55"/>
+        <path d="M6 40 C 8 28, 14 23, 20 23 C 26 23, 32 28, 34 40 Z" fill="#3A1828" opacity="0.55"/>
+      </symbol>
+      <symbol id="silElder" viewBox="0 0 40 40">
+        <circle cx="20" cy="14" r="6.5" fill="#1F3010" opacity="0.55"/>
+        <path d="M14 16 C 14 22, 20 26, 20 26 C 20 26, 26 22, 26 16 L 26 22 C 26 26, 23 28, 20 28 C 17 28, 14 26, 14 22 Z" fill="#1F3010" opacity="0.6"/>
+        <path d="M6 40 C 8 28, 14 25, 20 25 C 26 25, 32 28, 34 40 Z" fill="#1F3010" opacity="0.55"/>
+      </symbol>
+      <symbol id="silGeneric" viewBox="0 0 40 40">
+        <circle cx="20" cy="15" r="6.5" fill="#2A1830" opacity="0.55"/>
+        <path d="M7 40 C 9 29, 14 25, 20 25 C 26 25, 31 29, 33 40 Z" fill="#2A1830" opacity="0.55"/>
+      </symbol>
+    </defs>
+
+    <!-- Background field -->
+    <rect width="800" height="480" fill="url(#bg)"/>
+    <ellipse cx="400" cy="470" rx="260" ry="80" fill="url(#rootGlow)"/>
+
+    <!-- Quiet generation rings — much lower contrast than before;
+         feel like topographic guides, not lab targets. -->
+    <g fill="none" stroke="#C9A96A" stroke-opacity="0.30" stroke-width="1">
+      <circle cx="400" cy="470" r="120"/>
+      <circle cx="400" cy="470" r="220"/>
+      <circle cx="400" cy="470" r="320"/>
+      <circle cx="400" cy="470" r="420"/>
+    </g>
+
+    <!-- Generation labels in plain language — "1st generation",
+         "grandparents", "great-grandparents". Bigger, friendlier. -->
+    <g>
+      <line x1="36" y1="350" x2="52" y2="350" stroke="#C9A96A"/>
+      <text class="gen-label" x="58" y="354">1st gen · parents</text>
+      <line x1="36" y1="250" x2="52" y2="250" stroke="#C9A96A"/>
+      <text class="gen-label" x="58" y="254">2nd gen · grandparents</text>
+      <line x1="36" y1="150" x2="52" y2="150" stroke="#C9A96A"/>
+      <text class="gen-label" x="58" y="154">3rd gen · great-gp.</text>
+      <line x1="36" y1="50"  x2="52" y2="50"  stroke="#C9A96A"/>
+      <text class="gen-label" x="58" y="54">4th gen · 2× great-gp.</text>
+    </g>
+
+    <!-- Trunk: solid base column. Anchors the proband at the bottom. -->
+    <rect x="395" y="370" width="10" height="100" rx="3" fill="#8A6A3A"/>
+    <g stroke="#FFFAF0" stroke-width="1.6" fill="none" stroke-linecap="round" opacity="0.85">
+      <path d="M395 470 C390 450, 410 440, 405 420 C400 400, 390 390, 400 370"/>
+      <path d="M405 470 C410 450, 390 440, 395 420 C400 400, 410 390, 400 370"/>
+    </g>
+    <!-- "You" tag at the trunk base -->
+    <g transform="translate(400,460)">
+      <rect x="-30" y="-9" width="60" height="20" rx="10" fill="#FFFAF0" stroke="#8A6A3A"/>
+      <text x="0" y="5" text-anchor="middle" font-family="var(--font-display, Georgia, serif)" font-size="13" font-weight="700" fill="#1A0E04">You</text>
+    </g>
+
+    <!-- Eight family ribbons -->
+    <g fill="none" stroke-linecap="round">
+      <path d="M398 372 C360 320, 240 250, 120 180" stroke="url(#g-r1a)" stroke-width="4"/>
+      <path d="M398 372 C340 300, 200 200, 70 110" stroke="url(#g-j2)" stroke-width="3.4" stroke-dasharray="9 5"/>
+      <path d="M399 372 C370 290, 320 200, 240 70" stroke="url(#g-h1a)" stroke-width="4"/>
+      <path d="M400 372 C402 280, 388 180, 360 50" stroke="url(#g-t1)" stroke-width="3.4" stroke-dasharray="2 4"/>
+      <path d="M401 372 C440 290, 500 200, 560 70" stroke="url(#g-e1b)" stroke-width="4"/>
+      <path d="M402 372 C460 300, 580 220, 700 110" stroke="url(#g-i1)" stroke-width="3.4" stroke-dasharray="9 5"/>
+      <path d="M402 372 C480 320, 620 270, 740 200" stroke="url(#g-g2)" stroke-width="4"/>
+      <path d="M398 372 C390 280, 360 180, 320 50" stroke="url(#g-n1c)" stroke-width="3" stroke-dasharray="2 4"/>
+    </g>
+
+    <!-- Tip nodes — bigger, with white halo for clear separation -->
+    <g>
+      <g><circle cx="120" cy="180" r="10" fill="#FFFAF0"/><circle cx="120" cy="180" r="6" fill="#5C8DD6"/></g>
+      <g><circle cx="70"  cy="110" r="10" fill="#FFFAF0"/><circle cx="70"  cy="110" r="6" fill="#D85F95"/></g>
+      <g><circle cx="240" cy="70"  r="10" fill="#FFFAF0"/><circle cx="240" cy="70"  r="6" fill="#4FB39E"/></g>
+      <g><circle cx="360" cy="50"  r="9"  fill="#FFFAF0"/><circle cx="360" cy="50"  r="5" fill="#D8A04A"/></g>
+      <g><circle cx="560" cy="70"  r="10" fill="#FFFAF0"/><circle cx="560" cy="70"  r="6" fill="#9A6FCC"/></g>
+      <g><circle cx="700" cy="110" r="10" fill="#FFFAF0"/><circle cx="700" cy="110" r="6" fill="#5BC288"/></g>
+      <g><circle cx="740" cy="200" r="10" fill="#FFFAF0"/><circle cx="740" cy="200" r="6" fill="#D86560"/></g>
+      <g><circle cx="320" cy="50"  r="9"  fill="#FFFAF0"/><circle cx="320" cy="50"  r="5" fill="#5C95C8"/></g>
+    </g>
+
+    <!-- Tip labels — plain-language family branch name leads, the
+         haplogroup code is a quiet caption. Bigger type throughout. -->
+    <g>
+      <text class="tip-name" x="100" y="208" text-anchor="middle">Russian line</text>
+      <text class="tip-meta" x="100" y="224" text-anchor="middle">312 cM · 14 segments</text>
+      <text class="tip-code" x="100" y="238" text-anchor="middle">R1a-Z280</text>
+
+      <text class="tip-name" x="70"  y="92"  text-anchor="middle">Jewish line</text>
+      <text class="tip-meta" x="70"  y="76"  text-anchor="middle">94 cM · 6 seg · CMH</text>
+      <text class="tip-code" x="70"  y="62"  text-anchor="middle">J1-Z18271</text>
+
+      <text class="tip-name" x="240" y="46"  text-anchor="middle">Northern Russian</text>
+      <text class="tip-meta" x="240" y="30"  text-anchor="middle">187 cM · 9 seg</text>
+      <text class="tip-code" x="240" y="16"  text-anchor="middle">H1a</text>
+
+      <text class="tip-name" x="380" y="34"  text-anchor="middle">Anatolian</text>
+      <text class="tip-code" x="380" y="20"  text-anchor="middle">T1</text>
+
+      <text class="tip-name" x="320" y="34"  text-anchor="middle" style="font-size:13px">Finno-Ugric</text>
+      <text class="tip-code" x="320" y="20"  text-anchor="middle">N1c</text>
+
+      <text class="tip-name" x="560" y="46"  text-anchor="middle">Levantine</text>
+      <text class="tip-meta" x="560" y="30"  text-anchor="middle">32 cM · 2 seg</text>
+      <text class="tip-code" x="560" y="16"  text-anchor="middle">E1b-M35</text>
+
+      <text class="tip-name" x="700" y="92"  text-anchor="middle">Scandinavian</text>
+      <text class="tip-code" x="700" y="76"  text-anchor="middle">I1</text>
+
+      <text class="tip-name" x="740" y="226" text-anchor="middle">Caucasian</text>
+      <text class="tip-code" x="740" y="242" text-anchor="middle">G2</text>
+    </g>
+
+    <!-- Ancestor portraits — bigger labels, gentler frames -->
+    <g>
+      <!-- Grandfather, R1a-Z280 (Russian) -->
+      <g transform="translate(245,275)">
+        <circle r="26" fill="#FFFAF0" stroke="#5C8DD6" stroke-width="2.5"/>
+        <circle r="24" fill="url(#sepia)" opacity="0.95"/>
+        <use href="#silMan" x="-22" y="-22" width="44" height="44"/>
+        <text class="portrait-rel"  x="34" y="-8">grandfather</text>
+        <text class="portrait-name" x="34" y="8">Pyotr Sokolov</text>
+        <text class="portrait-date" x="34" y="22">b. 1898 · Tula</text>
+      </g>
+
+      <!-- Grandmother, H1a -->
+      <g transform="translate(305,180)">
+        <circle r="26" fill="#FFFAF0" stroke="#4FB39E" stroke-width="2.5"/>
+        <circle r="24" fill="url(#sepia2)" opacity="0.95"/>
+        <use href="#silWoman" x="-22" y="-22" width="44" height="44"/>
+        <text class="portrait-rel"  x="-34" y="-8" text-anchor="end">grandmother</text>
+        <text class="portrait-name" x="-34" y="8" text-anchor="end">Anna Voronina</text>
+        <text class="portrait-date" x="-34" y="22" text-anchor="end">b. 1903 · Ryazan</text>
+      </g>
+
+      <!-- Great-grandfather, J1-Z18271 (Jewish, Cohen Modal Haplotype) -->
+      <g transform="translate(495,205)">
+        <circle r="22" fill="#FFFAF0" stroke="#9A6FCC" stroke-width="2.2"/>
+        <circle r="20" fill="url(#sepia4)" opacity="0.95"/>
+        <use href="#silElder" x="-18" y="-18" width="36" height="36"/>
+        <text class="portrait-rel"  x="30" y="-4">great-grandfather</text>
+        <text class="portrait-name" x="30" y="12">Iosif Levin</text>
+      </g>
+
+      <!-- Great-grandmother, I1 -->
+      <g transform="translate(620,180)">
+        <circle r="22" fill="#FFFAF0" stroke="#5BC288" stroke-width="2.2"/>
+        <circle r="20" fill="url(#sepia3)" opacity="0.95"/>
+        <use href="#silWoman" x="-18" y="-18" width="36" height="36"/>
+        <text class="portrait-rel"  x="-30" y="-4" text-anchor="end">great-grandmother</text>
+        <text class="portrait-name" x="-30" y="12" text-anchor="end">Ingrid Olsen</text>
+      </g>
+
+      <!-- Father -->
+      <g transform="translate(400,330)">
+        <circle r="22" fill="#FFFAF0" stroke="#8A6A3A" stroke-width="2.2"/>
+        <circle r="20" fill="url(#sepia)" opacity="0.95"/>
+        <use href="#silGeneric" x="-18" y="-18" width="36" height="36"/>
+        <text class="portrait-rel"  x="30" y="0">father</text>
+        <text class="portrait-name" x="30" y="16">Ivan Sokolov</text>
+      </g>
+    </g>
+  </svg>
+
+  <!-- Header card -->
+  <div class="chrome">
+    <div>
+      <span class="top-label">Family</span>
+      <span class="title">Sokolov line · proband I0042</span>
+    </div>
+    <div class="right">
+      <div class="meta">Family ribbon tree</div>
+      <span class="sub">8 lineages · 4 generations</span>
+    </div>
+  </div>
+
+  <!-- Plain-language legend -->
+  <div class="legend">
+    <div class="row"><i style="background:linear-gradient(90deg,#1F4A82,#5C8DD6)"></i><span>Russian <span class="code">R1a-Z280</span></span></div>
+    <div class="row"><i style="background:repeating-linear-gradient(90deg,#D85F95 0 5px,transparent 5px 8px)"></i><span>Jewish <span class="code">J1-CMH</span></span></div>
+    <div class="row"><i style="background:linear-gradient(90deg,#1F6E5E,#4FB39E)"></i><span>Northern Russian <span class="code">H1a</span></span></div>
+    <div class="row"><i style="background:repeating-linear-gradient(90deg,#D8A04A 0 2px,transparent 2px 5px)"></i><span>Anatolian <span class="code">T1</span></span></div>
+    <div class="row"><i style="background:linear-gradient(90deg,#4F2C7A,#9A6FCC)"></i><span>Levantine <span class="code">E1b</span></span></div>
+    <div class="row"><i style="background:repeating-linear-gradient(90deg,#5BC288 0 5px,transparent 5px 8px)"></i><span>Scandinavian <span class="code">I1</span></span></div>
+    <div class="row"><i style="background:linear-gradient(90deg,#7A2C2A,#D86560)"></i><span>Caucasian <span class="code">G2</span></span></div>
+    <div class="row"><i style="background:repeating-linear-gradient(90deg,#5C95C8 0 2px,transparent 2px 5px)"></i><span>Finno-Ugric <span class="code">N1c</span></span></div>
+  </div>
+
+  <div class="scale">
+    <b>How to read it</b>
+    Each ribbon is one family branch. Distance from "You" = generation depth.
+  </div>
+</div>
+</body></html>

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Brand colors</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:20px;background:var(--color-bg);font-family:var(--font-sans)}
+  .row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+  .swatch{border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--color-border);background:var(--color-surface)}
+  .chip{height:64px}
+  .meta{padding:8px 10px;display:flex;flex-direction:column;gap:1px}
+  .name{font-size:12px;font-weight:600;color:var(--color-fg-strong)}
+  .hex{font-family:var(--font-mono);font-size:11px;color:var(--color-fg-muted)}
+</style></head><body>
+  <div class="row">
+    <div class="swatch"><div class="chip" style="background:#2C1054"></div><div class="meta"><span class="name">Deep Purple</span><span class="hex">#2C1054</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#2E5DA5"></div><div class="meta"><span class="name">Brand Blue</span><span class="hex">#2E5DA5</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#1A1024"></div><div class="meta"><span class="name">Ink</span><span class="hex">#1A1024</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#B070C0"></div><div class="meta"><span class="name">Lilac · tints only</span><span class="hex">#B070C0</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#E8D5F0"></div><div class="meta"><span class="name">Light Lilac</span><span class="hex">#E8D5F0</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#FFFFFF;border-bottom:1px solid var(--color-border)"></div><div class="meta"><span class="name">Snow</span><span class="hex">#FFFFFF</span></div></div>
+  </div>
+</body></html>
