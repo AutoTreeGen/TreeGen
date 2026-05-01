@@ -49,6 +49,17 @@ class Tree(TreeOwnedMixins, Base):
         server_default=text("'{}'::jsonb"),
     )
 
+    # Self-anchor (Phase 10.7a / ADR-0068): позиция владельца внутри собственного
+    # дерева. Без anchor'а AI-фичи (Context Pack, Chat UI, MCP) «не знают, кто ты»
+    # и не могут вычислить эго-родство. Nullable — дерево создаётся без якоря,
+    # владелец выбирает себя через UI (PATCH /trees/{id}/owner-person).
+    # ``ON DELETE SET NULL`` — если person удалён, anchor сбрасывается тихо.
+    owner_person_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("persons.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
     # Voice-to-tree privacy gate (Phase 10.9a / ADR-0064 §B1).
     # Нужно отдельно от ``settings`` jsonb, потому что privacy-инвариант
     # должен быть инспектируем schema-tooling'ом и query-able по индексу

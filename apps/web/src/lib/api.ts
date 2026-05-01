@@ -236,6 +236,58 @@ export function fetchPerson(personId: string): Promise<PersonDetail> {
   return getJson<PersonDetail>(`/persons/${personId}`);
 }
 
+// ---- Self-anchor + ego-relationships (Phase 10.7a / ADR-0068) ---------------
+
+export type TreeOwnerPersonResponse = {
+  tree_id: string;
+  owner_person_id: string | null;
+};
+
+export type RelationshipPathPayload = {
+  kind: string;
+  degree: number;
+  via: string[];
+  is_twin: boolean;
+  blood_relation: boolean;
+};
+
+export type RelationshipResponse = {
+  tree_id: string;
+  from_person_id: string;
+  to_person_id: string;
+  language: string;
+  path: RelationshipPathPayload;
+  label: string;
+};
+
+export type RelationshipLanguage = "en" | "ru" | "he" | "nl" | "de";
+
+export function fetchTreeOwnerPerson(treeId: string): Promise<TreeOwnerPersonResponse> {
+  return getJson<TreeOwnerPersonResponse>(`/trees/${treeId}/owner-person`);
+}
+
+export async function setTreeOwnerPerson(
+  treeId: string,
+  personId: string | null,
+): Promise<TreeOwnerPersonResponse> {
+  return fetchOnceJson<TreeOwnerPersonResponse>(`/trees/${treeId}/owner-person`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ person_id: personId }),
+  });
+}
+
+export function fetchRelationshipToEgo(
+  treeId: string,
+  personId: string,
+  language: RelationshipLanguage = "en",
+): Promise<RelationshipResponse> {
+  const params = new URLSearchParams({ language });
+  return getJson<RelationshipResponse>(
+    `/trees/${treeId}/relationships/${personId}?${params.toString()}`,
+  );
+}
+
 // ---- Pedigree (Phase 4.3) ---------------------------------------------------
 
 export type AncestorTreeNode = {

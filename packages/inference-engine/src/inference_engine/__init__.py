@@ -14,8 +14,13 @@ Public API:
   — Phase 7.5 confidence aggregation v2 (Bayesian fusion + contradictions),
   см. ADR-0065. Доступно отдельно для caller'ов, которые хотят пересчитать
   score из persisted evidences без re-running rules.
+- ``ego_relations`` — Phase 10.7a ego-relationship resolver. Pure-function
+  BFS по структуре дерева, возвращающий kind/degree/via/twin-flag для
+  пары (ego, target). Вход — ``FamilyTraversal`` snapshot, заполняемый
+  caller'ом из БД. См. ADR-0068.
 
-См. README.md и docs/adr/0016-inference-engine-architecture.md, ADR-0065.
+См. README.md, docs/adr/0016-inference-engine-architecture.md, ADR-0065,
+ADR-0068.
 """
 
 from inference_engine.aggregation import (
