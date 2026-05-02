@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import datetime as dt
 import uuid
+from collections.abc import Iterable
 
 from sqlalchemy import (
     Boolean,
@@ -43,11 +44,14 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    select,
 )
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from shared_models.base import Base
+from shared_models.enums import CompletenessScope
 from shared_models.mixins import TreeEntityMixins
 
 
@@ -127,3 +131,99 @@ class CompletenessAssertionSource(Base):
         "CompletenessAssertion",
         back_populates="sources",
     )
+
+
+# ---------------------------------------------------------------------------
+# Read-side helpers (Phase 15.11c / ADR-0082)
+# ---------------------------------------------------------------------------
+#
+# Колокальны с ORM-моделью, чтобы любой service (parser-service, archive-service,
+# inference-engine consumers и т.д.) импортировал один и тот же код через
+# ``shared_models.orm.completeness_assertion``. Validation-слой (write-side)
+# наоборот живёт в ``parser_service.completeness.validation`` — см. ADR-0077:
+# «validation lives with the service that owns the operation, not with the ORM».
+# Read-side helper'ам этот принцип симметричен: запросы к ORM живут с ORM.
+
+
+async def is_scope_sealed(
+    session: AsyncSession,
+    person_id: uuid.UUID,
+    scope: CompletenessScope | str,
+) -> bool:
+    """Возвращает ``True``, если указанный scope-анкор для персоны опечатан.
+
+    «Sealed» = существует active (``deleted_at IS NULL``) ``CompletenessAssertion``
+    с ``is_sealed=True`` для (person, scope). Revoked assertion'ы (``is_sealed=False``)
+    оставляют row для audit, но не считаются sealed — мы фильтруем по флагу.
+
+    Используется консьюмерами (Phase 15.11c — Evidence Panel, Research Log /
+    Archive Search Planner, Hypothesis Sandbox, AI Tree Context Pack), чтобы
+    пропускать suggestion-логику внутри уже-исчерпанных scope'ов («не предлагать
+    больше siblings, если все 4 уже подтверждены и owner это закрепил»).
+
+    Args:
+        session: AsyncSession (caller-managed, no commit/rollback здесь).
+        person_id: UUID персоны-анкора.
+        scope: Член :class:`CompletenessScope` или его ``.value``-строка
+            (``"siblings"`` / ``"children"`` / ``"spouses"`` / ``"parents"``).
+
+    Returns:
+        ``True`` если есть active sealed assertion, иначе ``False``.
+
+    Raises:
+        ValueError: Если ``scope`` строка и не совпадает с известным enum-значением.
+    """
+    scope_value = _scope_to_value(scope)
+    stmt = (
+        select(CompletenessAssertion.id)
+        .where(
+            CompletenessAssertion.subject_person_id == person_id,
+            CompletenessAssertion.scope == scope_value,
+            CompletenessAssertion.is_sealed.is_(True),
+            CompletenessAssertion.deleted_at.is_(None),
+        )
+        .limit(1)
+    )
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none() is not None
+
+
+async def sealed_scopes_for_person(
+    session: AsyncSession,
+    person_id: uuid.UUID,
+) -> frozenset[CompletenessScope]:
+    """Все активные sealed scope'ы для персоны (одним SQL).
+
+    Удобнее ``is_scope_sealed`` если консьюмер собирается фильтровать
+    несколько scope'ов сразу (например, AI Tree Context Pack строит
+    «who's missing» промпт по siblings/children/spouses/parents).
+
+    Возвращает ``frozenset`` для immutable-by-design downstream-логики
+    («filter membership check»).
+    """
+    stmt = select(CompletenessAssertion.scope).where(
+        CompletenessAssertion.subject_person_id == person_id,
+        CompletenessAssertion.is_sealed.is_(True),
+        CompletenessAssertion.deleted_at.is_(None),
+    )
+    result = await session.execute(stmt)
+    raw_scopes: Iterable[str] = result.scalars().all()
+    out: set[CompletenessScope] = set()
+    for raw in raw_scopes:
+        try:
+            out.add(CompletenessScope(raw))
+        except ValueError:
+            # Незнакомая строка в БД (новый scope, который пока не в Python-enum'е).
+            # Тихо пропускаем — лучше вернуть подмножество, чем падать у каждого
+            # консьюмера. Авто-уведомления о таких рассинхронизациях ловит
+            # schema_invariants test, но not at runtime.
+            continue
+    return frozenset(out)
+
+
+def _scope_to_value(scope: CompletenessScope | str) -> str:
+    """Cast scope-input в DB-string. Defensive — отвергает невалидные строки."""
+    if isinstance(scope, CompletenessScope):
+        return scope.value
+    # Validate string is a known enum value. Raises ValueError if not.
+    return CompletenessScope(scope).value

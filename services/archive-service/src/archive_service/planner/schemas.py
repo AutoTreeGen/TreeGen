@@ -62,3 +62,14 @@ class PlannerResponse(BaseModel):
             "из каталога не покрыл событие)."
         ),
     )
+    # Phase 15.11c (ADR-0082): sealed scope'ы для UI research-log. Planner
+    # НЕ фильтрует event-suggestions (события могут быть undocumented даже
+    # если family-scope закреплена), но возвращает аннотацию: research-log
+    # рендерит «🔒 siblings sealed — no further search needed».
+    sealed_scopes: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Active sealed-set scope'ы для person_id (Phase 15.11a/c). "
+            "Пустой список = ничего не закреплено."
+        ),
+    )

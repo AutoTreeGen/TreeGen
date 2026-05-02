@@ -11,9 +11,12 @@ Auth — через router-level ``Depends(get_current_claims)``, поднима
 from __future__ import annotations
 
 import uuid
+from collections.abc import Awaitable, Callable
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
+from shared_models.enums import CompletenessScope
+from shared_models.orm.completeness_assertion import sealed_scopes_for_person
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from archive_service.database import get_session
@@ -23,6 +26,11 @@ from archive_service.planner.schemas import PlannerResponse
 from archive_service.planner.scorer import score_archives
 
 router = APIRouter(prefix="/archive-planner", tags=["planner"])
+
+#: Sealed-scopes fetcher: ``person_id → frozenset[CompletenessScope]``.
+#: Тип callable'а, который возвращает active sealed scope'ы. Прод-binding —
+#: through ``get_sealed_scopes_fetcher``, тесты переопределяют.
+SealedScopesFetcher = Callable[[uuid.UUID], Awaitable[frozenset[CompletenessScope]]]
 
 
 async def get_events_fetcher(
@@ -40,6 +48,22 @@ async def get_events_fetcher(
     return _fetch
 
 
+async def get_sealed_scopes_fetcher(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> SealedScopesFetcher:
+    """Sealed-scopes fetcher для UI research-log annotation (Phase 15.11c).
+
+    Зеркалит паттерн ``get_events_fetcher``: prod-binding закрывает session,
+    тесты могут переопределить через ``app.dependency_overrides`` чтобы
+    избежать инициализации engine'а в чисто-fetcher тестах.
+    """
+
+    async def _fetch(person_id: uuid.UUID) -> frozenset[CompletenessScope]:
+        return await sealed_scopes_for_person(session, person_id)
+
+    return _fetch
+
+
 @router.get(
     "/persons/{person_id}/suggestions",
     response_model=PlannerResponse,
@@ -49,6 +73,7 @@ async def suggest_archives(
     person_id: uuid.UUID,
     fetch_events: Annotated[EventsFetcher, Depends(get_events_fetcher)],
     catalog: Annotated[tuple[CatalogArchive, ...], Depends(get_catalog)],
+    fetch_sealed_scopes: Annotated[SealedScopesFetcher, Depends(get_sealed_scopes_fetcher)],
     locale: Annotated[
         str,
         Query(
@@ -87,8 +112,12 @@ async def suggest_archives(
         locale=locale,
         limit=limit,
     )
+    # Phase 15.11c (ADR-0082): annotate response с active sealed scope'ами
+    # для UI research-log'а («🔒 siblings sealed — no further search»).
+    sealed = await fetch_sealed_scopes(person_id)
     return PlannerResponse(
         person_id=person_id,
         suggestions=suggestions,
         undocumented_event_count=undocumented_count,
+        sealed_scopes=sorted(s.value for s in sealed),
     )

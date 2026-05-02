@@ -1685,6 +1685,13 @@ class RelationshipEvidenceResponse(BaseModel):
     contradicting: list[RelationshipEvidenceSource]
     confidence: RelationshipEvidenceConfidence
     provenance: RelationshipEvidenceProvenance
+    # Phase 15.11c (ADR-0082): scope-sealed indicators для UI. Если scope
+    # для subject/object опечатан, panel показывает 🔒 «no further candidates
+    # expected» вместо «add another sibling/spouse/parent» CTA. Список (а не
+    # bool) — UI может различать «siblings sealed, но spouses не sealed».
+    # Default = [] для обратной совместимости с pre-15.11c консьюмерами.
+    subject_sealed_scopes: list[str] = []
+    object_sealed_scopes: list[str] = []
 
 
 # =============================================================================
