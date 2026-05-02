@@ -149,6 +149,7 @@ async def test_response_pydantic_shape(
         "person_id",
         "suggestions",
         "undocumented_event_count",
+        "sealed_scopes",  # Phase 15.11c (ADR-0082)
     }
     assert isinstance(body["undocumented_event_count"], int)
     assert isinstance(body["suggestions"], list)
