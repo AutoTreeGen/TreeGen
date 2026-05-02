@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-from dna_analysis import UnsupportedFormatError
 from dna_analysis.parsers import (
     AncestryParser,
     BaseDnaParser,
@@ -23,14 +22,6 @@ _PARSERS: list[type[BaseDnaParser]] = [
 @pytest.mark.parametrize("parser_cls", _PARSERS)
 def test_parser_subclasses_base(parser_cls: type[BaseDnaParser]) -> None:
     assert issubclass(parser_cls, BaseDnaParser)
-
-
-@pytest.mark.parametrize("parser_cls", [MyHeritageParser, FamilyTreeDnaParser])
-def test_stub_parsers_raise_unsupported(parser_cls: type[BaseDnaParser]) -> None:
-    """MyHeritage / FTDNA — заглушки, должны fail loud в Phase 6.0."""
-    parser = parser_cls()
-    with pytest.raises(UnsupportedFormatError):
-        parser.parse("anything")
 
 
 @pytest.mark.parametrize("parser_cls", _PARSERS)
