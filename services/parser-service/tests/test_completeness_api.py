@@ -3,11 +3,14 @@
 Покрытие per-brief:
 
 1. test_create_assertion_with_sources               — happy path
-2. test_create_sealed_without_sources_accepted_15_11a  — TODO 15.11b ужесточит до 422
-3. test_unique_per_scope_upsert                     — second POST = upsert
+2. test_create_sealed_without_sources_rejected_422  — 15.11b ужесточил до 422
+3. test_unique_per_scope_upsert                     — second POST = upsert (same user)
 4. test_delete_sets_unsealed_keeps_row              — revoke семантика
 5. test_restrict_on_tree_delete                     — FK RESTRICT (отклонение от brief'а)
 6. test_get_returns_with_sources_eager_loaded       — N+1 защита
+
+Дополнительные validation-тесты Phase 15.11b — см. test_completeness_validation.py
+(source liveness, cross-tree, override mechanic, audit emission).
 """
 
 from __future__ import annotations
@@ -138,20 +141,13 @@ async def test_create_assertion_with_sources(app_client, session_factory: Any) -
 
 
 # ---------------------------------------------------------------------------
-# 2. Source-required — 15.11a permissive, 15.11b will tighten to 422
+# 2. Source-required — Phase 15.11b enforced (was permissive in 15.11a).
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
-async def test_create_sealed_without_sources_accepted_15_11a(
-    app_client, session_factory: Any
-) -> None:
-    """TODO(15.11b): is_sealed=True без sources → 422.
-
-    В 15.11a — permissive: pass-through, чтобы 15.11b мог расширить
-    enforcement отдельно. Тест жёстко фиксирует 201, чтобы 15.11b
-    переписал его в 422 одной строкой.
-    """
+async def test_create_sealed_without_sources_rejected_422(app_client, session_factory: Any) -> None:
+    """is_sealed=True без sources → 422 (Phase 15.11b)."""
     owner = await _make_user(session_factory)
     tree = await _make_tree_with_owner(session_factory, owner=owner)
     person = await _make_person(session_factory, tree=tree)
@@ -161,8 +157,8 @@ async def test_create_sealed_without_sources_accepted_15_11a(
         json={"scope": "children", "is_sealed": True, "source_ids": []},
         headers=_hdr(owner),
     )
-    assert r.status_code == 201, r.text
-    assert r.json()["source_ids"] == []
+    assert r.status_code == 422, r.text
+    assert "source citation" in r.json()["detail"].lower()
 
 
 # ---------------------------------------------------------------------------
