@@ -1,7 +1,7 @@
 """voice_extracted_proposals table (Phase 10.9b / ADR-0075).
 
-Revision ID: 0036
-Revises: 0033
+Revision ID: 0041
+Revises: 0034
 Create Date: 2026-05-02
 
 Создаёт ``voice_extracted_proposals`` — артефакт 3-pass NLU extraction'а над
@@ -11,8 +11,10 @@ Create Date: 2026-05-02
 Additive: одна новая таблица + 4 индекса + 5 CHECK-constraints. Никаких
 ALTER на существующих таблицах. Round-trip downgrade через ``op.drop_table``.
 
-Базируется на 0033 (``evidence_weight_provenance_split``) — текущий top
-``main`` на момент claim'а через ``scripts/next-chain-number.ps1``.
+Базируется на 0034 (``import_jobs_validation_findings``) — текущий top
+``main`` на момент re-claim'а через ``scripts/next-chain-number.ps1`` после
+collision-rebump (изначально клейм был 0036, но 0034 приземлился на main +
+worktrees заняли 0035-0040).
 """
 
 from __future__ import annotations
@@ -23,8 +25,8 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "0036"
-down_revision: str | None = "0033"
+revision: str = "0041"
+down_revision: str | None = "0034"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
