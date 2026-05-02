@@ -36,6 +36,10 @@ secrets/
 # Личный GED-файл владельца
 Ztree.ged
 *Ztree*.ged
+# Phase 5.11a discovery: raw probe outputs могут содержать sample-имена /
+# xref'ы из чужих GED-файлов (GM317, RR). Никогда не коммитим — отчёт
+# идёт в docs/discovery/ с уже очищенными агрегатами.
+_discovery_runs/
 # Личные/приватные образцы для тестирования
 packages/gedcom-parser/samples/personal/
 # DNA-данные (special category по GDPR — см. ADR-0012)
