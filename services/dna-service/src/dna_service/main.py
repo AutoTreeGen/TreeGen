@@ -16,7 +16,15 @@ from fastapi import Depends, FastAPI
 from shared_models.observability import setup_logging, setup_sentry
 from shared_models.security import apply_security_middleware
 
-from dna_service.api import consents, dna_matches, kits, matches, triangulation, uploads
+from dna_service.api import (
+    consents,
+    dna_matches,
+    kits,
+    match_list_import,
+    matches,
+    triangulation,
+    uploads,
+)
 from dna_service.auth import get_current_claims
 from dna_service.config import get_settings
 from dna_service.database import dispose_engine, init_engine
@@ -63,6 +71,7 @@ app.include_router(uploads.router, dependencies=_AUTH_DEPS)
 app.include_router(matches.router, dependencies=_AUTH_DEPS)
 app.include_router(kits.router, dependencies=_AUTH_DEPS)
 app.include_router(dna_matches.router, dependencies=_AUTH_DEPS)
+app.include_router(match_list_import.router, dependencies=_AUTH_DEPS)
 app.include_router(triangulation.router, dependencies=_AUTH_DEPS)
 
 

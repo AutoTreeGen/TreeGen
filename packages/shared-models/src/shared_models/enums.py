@@ -309,6 +309,38 @@ class EthnicityPopulation(StrEnum):
     LDS_PIONEER = "lds_pioneer"  # multiplier ≈ 1.5
 
 
+class PredictedRelationship(StrEnum):
+    """Прогноз родства, нормализованный к каноничной шкале (Phase 16.3).
+
+    Платформы (Ancestry, 23andMe, MyHeritage, FTDNA, GEDmatch) присылают
+    свободные строки: «3rd Cousin», «1st—2nd cousin», «Distant Cousin».
+    Match-list-парсеры маппят исходный текст в один из этих bucket'ов
+    (canonical-mapping per-platform внутри парсера); raw-строка
+    одновременно сохраняется в ``DnaMatch.predicted_relationship``
+    (legacy text-колонка) и в ``DnaMatch.raw_payload`` (полная CSV-row).
+
+    Anti-drift (ADR-0072): мы НЕ предсказываем родство сами — это
+    нормализованный bucket *чужого* прогноза. UI и 16.5 cross-platform
+    resolver могут группировать по enum'у без зависимости от
+    per-platform строкового форматирования.
+
+    ``UNKNOWN`` — fallback, когда платформа не дала прогноза или
+    строка не парсится в один из bucket'ов. Не сваливаем в
+    ``DISTANT``, потому что это меняло бы стат-расчёты вниз по
+    цепочке.
+    """
+
+    PARENT_CHILD = "parent_child"
+    FULL_SIBLING = "full_sibling"
+    HALF_SIBLING_OR_UNCLE_AUNT = "half_sibling_or_uncle_aunt"
+    FIRST_COUSIN = "first_cousin"
+    SECOND_COUSIN = "second_cousin"
+    THIRD_COUSIN = "third_cousin"
+    FOURTH_TO_SIXTH_COUSIN = "fourth_to_sixth_cousin"
+    DISTANT = "distant"
+    UNKNOWN = "unknown"
+
+
 class HypothesisType(StrEnum):
     """Тип гипотезы о связи между двумя сущностями (Phase 7.2 persistence).
 
