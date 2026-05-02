@@ -34,6 +34,20 @@ ANCESTRY_HEADER = (
 _AUTOSOMAL_GENOTYPES = ("AA", "AC", "AG", "AT", "CC", "CG", "CT", "GG", "GT", "TT")
 
 
+# MyHeritage CSV header — цитата из их публичного формата, без genetic data.
+MYHERITAGE_HEADER = (
+    "# MyHeritage DNA raw data.\n"
+    "# For each SNP, we provide the identifier, chromosome number,\n"
+    "# base pair position and genotype.\n"
+    "# The genotype is reported on the forward (+) strand with respect "
+    "to the human reference build 37.\n"
+    "RSID,CHROMOSOME,POSITION,RESULT\n"
+)
+
+# FTDNA Family Finder CSV header — без comment-блока, только CSV header line.
+FTDNA_HEADER = "RSID,CHROMOSOME,POSITION,RESULT\n"
+
+
 def _seeded_rng() -> random.Random:
     """Изолированный Random(seed=42), не для криптографии — детерминизм тестов."""
     return random.Random(42)
@@ -67,4 +81,35 @@ def generate_synthetic_ancestry(num_snps: int = 100) -> str:
             genotype = rng.choice(_AUTOSOMAL_GENOTYPES)
             allele1, allele2 = genotype[0], genotype[1]
         parts.append(f"rs{i}\t{chrom}\t{pos}\t{allele1}\t{allele2}\n")
+    return "".join(parts)
+
+
+def generate_synthetic_myheritage(num_snps: int = 100) -> str:
+    """Синтетический MyHeritage raw CSV файл с N SNP-ами (детерминированный).
+
+    Использует quoted CSV (как в реальных MyHeritage-экспортах). Default build
+    в header — GRCh37; для отдельных тестов на build detection см. ad-hoc
+    fixtures внутри test_myheritage.py.
+    """
+    rng = _seeded_rng()
+    chromosomes = [str(c) for c in range(1, 23)] + ["X", "Y", "MT"]
+    parts = [MYHERITAGE_HEADER]
+    for i in range(1, num_snps + 1):
+        chrom = rng.choice(chromosomes)
+        pos = rng.randint(1_000_000, 250_000_000)
+        genotype = "--" if rng.random() < 0.05 else rng.choice(_AUTOSOMAL_GENOTYPES)
+        parts.append(f'"rs{i}","{chrom}","{pos}","{genotype}"\n')
+    return "".join(parts)
+
+
+def generate_synthetic_ftdna(num_snps: int = 100) -> str:
+    """Синтетический FTDNA Family Finder raw CSV файл с N SNP-ами (детерминированный)."""
+    rng = _seeded_rng()
+    chromosomes = [str(c) for c in range(1, 23)] + ["X", "Y", "MT"]
+    parts = [FTDNA_HEADER]
+    for i in range(1, num_snps + 1):
+        chrom = rng.choice(chromosomes)
+        pos = rng.randint(1_000_000, 250_000_000)
+        genotype = "--" if rng.random() < 0.05 else rng.choice(_AUTOSOMAL_GENOTYPES)
+        parts.append(f'"rs{i}","{chrom}","{pos}","{genotype}"\n')
     return "".join(parts)

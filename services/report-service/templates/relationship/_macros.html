@@ -1,0 +1,51 @@
+{# Shared Jinja-макросы для Relationship Research Report. #}
+
+{% macro footnote_sup(c) -%}
+<sup>{{ footnote_index[c.source_id|string ~ '|' ~ c.citation_id|string] }}</sup>
+{%- endmacro %}
+
+{% macro evidence_row(piece) %}
+  <tr>
+    <td>{{ evidence_kind_label(piece.kind, ctx.locale) }}</td>
+    <td>
+      {{ piece.title }}
+      {% if piece.description %}<br><em>{{ piece.description }}</em>{% endif %}
+      {% for c in piece.citations %}{{ footnote_sup(c) }}{% if not loop.last %}, {% endif %}{% endfor %}
+    </td>
+    <td>{{ "%.2f" | format(piece.weight) }}</td>
+    <td>{{ "%.2f" | format(piece.match_certainty) }}</td>
+    <td>{{ "%.2f" | format(piece.weight * piece.match_certainty) }}</td>
+  </tr>
+{% endmacro %}
+
+{% macro provenance_block(p) %}
+  {% if p %}
+  <dl class="provenance">
+    <dt>{{ t("provenance_channel", ctx.locale) }}:</dt>
+    <dd>{{ p.channel }}</dd>
+    {% if p.cost_usd is not none %}
+    <dt>{{ t("provenance_cost", ctx.locale) }}:</dt>
+    <dd>${{ "%.2f" | format(p.cost_usd) }}</dd>
+    {% endif %}
+    {% if p.jurisdiction %}
+    <dt>{{ t("provenance_jurisdiction", ctx.locale) }}:</dt>
+    <dd>{{ p.jurisdiction }}</dd>
+    {% endif %}
+    {% if p.archive_name %}
+    <dt>{{ t("provenance_archive", ctx.locale) }}:</dt>
+    <dd>{{ p.archive_name }}</dd>
+    {% endif %}
+    {% if p.request_reference %}
+    <dt>{{ t("provenance_reference", ctx.locale) }}:</dt>
+    <dd>{{ p.request_reference }}</dd>
+    {% endif %}
+    {% if p.notes %}
+    <dt>{{ t("provenance_notes", ctx.locale) }}:</dt>
+    <dd>{{ p.notes }}</dd>
+    {% endif %}
+    {% if p.migrated %}
+    <dd class="negative">{{ t("provenance_migrated", ctx.locale) }}</dd>
+    {% endif %}
+  </dl>
+  {% endif %}
+{% endmacro %}
