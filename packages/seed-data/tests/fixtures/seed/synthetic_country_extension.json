@@ -1,0 +1,23 @@
+[
+  {
+    "country": "TestSyntheticland",
+    "iso2": "ZZ",
+    "historical_jurisdictions": [
+      {
+        "period": "1900-2000",
+        "name": "Synthetic Period",
+        "subdivisions": ["region", "district"],
+        "examples": ["Synthetic region 1"]
+      }
+    ],
+    "languages": ["synthetic"],
+    "scripts": ["latin"],
+    "record_types": ["synthetic_record"],
+    "key_archives": [],
+    "online_databases": [],
+    "famous_genealogy_problems": [],
+    "name_transliteration_notes": "Synthetic; no rules apply.",
+    "common_fabrication_patterns_local": [],
+    "AutoTreeGen_schema_notes": "Fixture-only — never reach production tables."
+  }
+]

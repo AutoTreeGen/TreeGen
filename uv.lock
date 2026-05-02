@@ -23,6 +23,7 @@ members = [
     "notification-service",
     "parser-service",
     "report-service",
+    "seed-data",
     "shared-models",
     "telegram-bot",
     "treegen-mcp",
@@ -3641,6 +3642,40 @@ sdist = { url = "https://files.pythonhosted.org/packages/46/29/af14f4ef3c11a5043
 wheels = [
     { url = "https://files.pythonhosted.org/packages/03/19/90d7d4ed51932c022d53f1d02d564b62d10e272692a1f9b76425c1ad2a02/s3transfer-0.16.1-py3-none-any.whl", hash = "sha256:61bcd00ccb83b21a0fe7e91a553fff9729d46c83b4e0106e7c314a733891f7c2", size = 86825, upload-time = "2026-04-22T20:36:04.992Z" },
 ]
+
+[[package]]
+name = "seed-data"
+version = "0.1.0"
+source = { editable = "packages/seed-data" }
+dependencies = [
+    { name = "asyncpg" },
+    { name = "pydantic" },
+    { name = "shared-models" },
+    { name = "sqlalchemy", extra = ["asyncio"] },
+    { name = "typer" },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "psycopg", extra = ["binary"] },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "testcontainers" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "asyncpg", specifier = ">=0.30" },
+    { name = "psycopg", extras = ["binary"], marker = "extra == 'test'", specifier = ">=3.2" },
+    { name = "pydantic", specifier = ">=2.10" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3" },
+    { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.24" },
+    { name = "shared-models", editable = "packages/shared-models" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
+    { name = "testcontainers", extras = ["postgres"], marker = "extra == 'test'", specifier = ">=4.8" },
+    { name = "typer", specifier = ">=0.13" },
+]
+provides-extras = ["test"]
 
 [[package]]
 name = "sentry-sdk"

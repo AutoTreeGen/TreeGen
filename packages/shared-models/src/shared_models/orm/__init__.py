@@ -49,6 +49,13 @@ from shared_models.orm.report_bundle_job import (
     BundleStatus,
     ReportBundleJob,
 )
+from shared_models.orm.seed_reference import (
+    CountryArchiveDirectorySeed,
+    FabricationPatternSeed,
+    PlaceLookupSeed,
+    SurnameTransliterationSeed,
+    SurnameVariantSeed,
+)
 from shared_models.orm.shared_match import SharedMatch
 from shared_models.orm.source import Source
 from shared_models.orm.source_extraction import SourceExtraction
@@ -74,6 +81,7 @@ __all__ = [
     "Citation",
     "CompletenessAssertion",
     "CompletenessAssertionSource",
+    "CountryArchiveDirectorySeed",
     "DnaCluster",
     "DnaClusterMember",
     "DnaConsent",
@@ -90,6 +98,7 @@ __all__ = [
     "EventParticipant",
     "Evidence",
     "ExtractedFact",
+    "FabricationPatternSeed",
     "Family",
     "FamilyChild",
     "FsDedupAttempt",
@@ -106,6 +115,7 @@ __all__ = [
     "PersonMergeLog",
     "Place",
     "PlaceAlias",
+    "PlaceLookupSeed",
     "PublicTreeShare",
     "ReportBundleJob",
     "SharedMatch",
@@ -114,6 +124,8 @@ __all__ = [
     "StripeCustomer",
     "StripeEventLog",
     "Subscription",
+    "SurnameTransliterationSeed",
+    "SurnameVariantSeed",
     "TelegramUserLink",
     "Tree",
     "TreeCollaborator",
