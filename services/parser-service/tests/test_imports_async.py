@@ -89,6 +89,7 @@ class _FakeJob:
         self.status = status
         self.stats: dict[str, int] = {}
         self.errors: list[dict[str, Any]] = []
+        self.validation_findings: list[dict[str, Any]] = []
         self.progress = progress
         self.cancel_requested = cancel_requested
         self.error: str | None = None

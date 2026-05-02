@@ -1,0 +1,3093 @@
+[
+  {
+    "country": "Ukraine",
+    "iso2": "UA",
+    "historical_jurisdictions": [
+      {
+        "period": "1772-1917",
+        "name": "Russian Empire / Pale of Settlement",
+        "subdivisions": ["guberniya", "uyezd", "volost", "kahal"],
+        "examples": [
+          "Kyiv guberniya",
+          "Podolia guberniya",
+          "Volhynia guberniya",
+          "Kherson guberniya",
+          "Ekaterinoslav guberniya"
+        ]
+      },
+      {
+        "period": "1772-1918",
+        "name": "Habsburg Crownlands / Galicia-Bukovina",
+        "subdivisions": ["crownland", "kreis", "bezirk", "gemeinde"],
+        "examples": ["Kingdom of Galicia and Lodomeria", "Duchy of Bukovina"]
+      },
+      {
+        "period": "1917-1991",
+        "name": "Ukrainian SSR / Soviet Union",
+        "subdivisions": ["oblast", "raion", "selsoviet"],
+        "examples": ["Kyiv oblast", "Dnipropetrovsk oblast", "Odesa oblast"]
+      },
+      {
+        "period": "1991-present",
+        "name": "Independent Ukraine",
+        "subdivisions": ["oblast", "raion", "hromada"],
+        "examples": ["Kyiv", "Lviv", "Dnipro", "Chernihiv"]
+      }
+    ],
+    "languages": ["uk", "ru", "yi", "pl", "he"],
+    "scripts": ["Cyrillic", "Latin", "Hebrew"],
+    "record_types": [
+      {
+        "type": "metric_book",
+        "religion": "Jewish/Christian depending locality",
+        "period": "c.1700-1940",
+        "languages": ["uk", "ru", "yi", "pl"],
+        "where_held_today": [
+          "state archive",
+          "regional archive",
+          "religious archive",
+          "digital repository where available"
+        ],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "local national portals"],
+        "search_syntax_notes": "Search by historical jurisdiction, locality variants, religion, date range, and surname variants; verify images, not indexes only."
+      },
+      {
+        "type": "revision_list_or_census",
+        "religion": "all/household",
+        "period": "c.1780-1930 depending jurisdiction",
+        "languages": ["uk", "ru", "yi"],
+        "where_held_today": ["national/state archives", "regional archives"],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "national archive catalogues"],
+        "search_syntax_notes": "Use household head, patronymic, age, estate/class, tax status, and previous revision cross-links."
+      },
+      {
+        "type": "BDM_civil",
+        "religion": "civil",
+        "period": "varies by country; usually 19th century-present",
+        "languages": ["uk", "ru"],
+        "where_held_today": ["civil registry", "municipal/state archives after privacy period"],
+        "online_index": ["national/state portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Use registration district, informant, certificate number, and privacy cutoff; request original certificate/image."
+      },
+      {
+        "type": "church_parish_register",
+        "religion": "Catholic/Orthodox/Protestant/Anglican/etc.",
+        "period": "c.1500-20th century depending locality",
+        "languages": ["uk", "ru", "yi", "pl"],
+        "where_held_today": [
+          "diocesan archive",
+          "parish",
+          "state archive",
+          "digital church portal"
+        ],
+        "online_index": [
+          "FamilySearch",
+          "Matricula/Archion where relevant",
+          "local archive portals"
+        ],
+        "search_syntax_notes": "Search parish, filial church, diocese, confession, and house number; account for Latin/German/Russian forms."
+      },
+      {
+        "type": "cemetery_burial",
+        "religion": "all/Jewish/Christian",
+        "period": "c.1600-present",
+        "languages": ["uk", "ru", "yi", "pl"],
+        "where_held_today": [
+          "cemetery authority",
+          "municipality",
+          "Jewish community",
+          "Find a Grave/BillionGraves/JOWBR"
+        ],
+        "online_index": ["JOWBR", "Find a Grave", "BillionGraves", "local cemetery databases"],
+        "search_syntax_notes": "Search inscription language, patronymic, Hebrew date, maiden name, plot owner and burial society."
+      },
+      {
+        "type": "military_conscription_service",
+        "religion": "all",
+        "period": "c.1700-present",
+        "languages": ["uk", "ru", "yi"],
+        "where_held_today": [
+          "national military archive",
+          "state archive",
+          "defence records office"
+        ],
+        "online_index": ["national archive portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Search by service number, draft board/unit, residence, age, next-of-kin and variant spelling."
+      },
+      {
+        "type": "immigration_passenger_naturalization",
+        "religion": "all",
+        "period": "c.1600-present",
+        "languages": ["uk", "ru", "yi"],
+        "where_held_today": [
+          "national archive",
+          "port records",
+          "court records",
+          "immigration agency"
+        ],
+        "online_index": [
+          "national archive portals",
+          "Ellis Island/Castle Garden where relevant",
+          "Ancestry/FamilySearch"
+        ],
+        "search_syntax_notes": "Correlate origin town, ship, arrival date, sponsor, contact, naturalization court and declaration/petition."
+      },
+      {
+        "type": "probate_land_tax_notarial",
+        "religion": "all",
+        "period": "c.1500-present",
+        "languages": ["uk", "ru", "yi"],
+        "where_held_today": ["court archive", "state archive", "land registry", "notarial archive"],
+        "online_index": ["national/state portals", "FamilySearch", "local indexes"],
+        "search_syntax_notes": "Use property location, heirs, witnesses, neighbors and tax class; excellent for FAN-club reconstruction."
+      }
+    ],
+    "key_archives": [
+      {
+        "name": "Central State Historical Archive of Ukraine, Kyiv (TsDIAK)",
+        "url": "https://cdiak.archives.gov.ua/",
+        "languages_for_correspondence": ["uk", "ru", "en"],
+        "request_method": ["email", "online_catalog", "postal_letter"],
+        "typical_response_time_days": 90,
+        "fee_structure": "fees vary by research/copying order; official estimates required",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "Central State Historical Archive of Ukraine, Lviv (TsDIAL)",
+        "url": "https://tsdial.archives.gov.ua/",
+        "languages_for_correspondence": ["uk", "pl", "en"],
+        "request_method": ["email", "reading_room", "postal_letter"],
+        "typical_response_time_days": 90,
+        "fee_structure": "fees vary by service and copies",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "State Archival Service of Ukraine",
+        "url": "https://archives.gov.ua/",
+        "languages_for_correspondence": ["uk", "en"],
+        "request_method": ["portal", "email"],
+        "typical_response_time_days": 60,
+        "fee_structure": "portal access; archive fees vary",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      }
+    ],
+    "online_databases": [
+      "https://www.familysearch.org/",
+      "https://www.jewishgen.org/databases/Ukraine/",
+      "https://uk.wikisource.org/wiki/Архіви_України",
+      "https://babynyar.org/en"
+    ],
+    "famous_genealogy_problems": [
+      "Russian Empire surname adoption and patronymic instability; Jewish metrical books may mix Hebrew, Yiddish, Russian and civil-script entries; many fonds require locality-level identification; wartime access and repository disruption; guberniya/uyezd borders changed repeatedly; German-colony records may use Latin or German handwriting.",
+      "Indexes are finding aids, not proof; AutoTreeGen should require image/citation verification.",
+      "Historical boundaries and modern country borders often route the same record to different archives.",
+      "Endogamy, pedigree collapse and repeated surnames can inflate DNA-based relationship estimates.",
+      "Locality disambiguation is usually more important than surname search alone."
+    ],
+    "name_transliteration_notes": "Normalize original-script name, transliteration, phonetic variant, patronymic/matronymic, maiden name and married name separately. Keep evidence-linked spelling per source. Use historical orthography and jurisdiction-aware transliteration; never overwrite original spelling.",
+    "common_fabrication_patterns_local": [
+      "forged rabbinical descent through unsupported 18th-century ancestor",
+      "invented noble/Cossack line from surname resemblance",
+      "assuming all same-surname shtetl families are one family",
+      "using modern oblast for pre-1917 archive routing",
+      "fabricated Mennonite bridge ancestors based only on small segments"
+    ],
+    "AutoTreeGen_schema_notes": {
+      "evidence_score_inputs": [
+        "source_type",
+        "record_image_available",
+        "DNA_total_cM",
+        "longest_segment_cM",
+        "triangulation",
+        "shared_matches",
+        "date_logic",
+        "place_logic",
+        "name_variant_distance",
+        "same_household_or_FAN_cluster"
+      ],
+      "recommended_confidence_status": [
+        "confirmed",
+        "probable",
+        "hypothesis",
+        "conflict",
+        "rejected"
+      ],
+      "minimum_proof_rule": "Do not promote a relationship above probable unless at least two independent evidence classes support it, or one primary record directly states the relationship and no conflicts exist."
+    },
+    "source_urls": [
+      "https://archives.gov.ua/",
+      "https://babynyar.org/en",
+      "https://cdiak.archives.gov.ua/",
+      "https://tsdial.archives.gov.ua/",
+      "https://uk.wikisource.org/wiki/Архіви_України",
+      "https://www.familysearch.org/",
+      "https://www.jewishgen.org/databases/Ukraine/"
+    ]
+  },
+  {
+    "country": "Belarus",
+    "iso2": "BY",
+    "historical_jurisdictions": [
+      {
+        "period": "1772-1917",
+        "name": "Russian Empire / Pale of Settlement",
+        "subdivisions": ["guberniya", "uyezd", "volost", "kahal"],
+        "examples": [
+          "Minsk guberniya",
+          "Grodno guberniya",
+          "Mogilev guberniya",
+          "Vitebsk guberniya"
+        ]
+      },
+      {
+        "period": "1919-1991",
+        "name": "Belorussian SSR / Soviet Union",
+        "subdivisions": ["oblast", "raion", "selsoviet"],
+        "examples": ["Minsk oblast", "Grodno oblast", "Vitebsk oblast"]
+      },
+      {
+        "period": "1991-present",
+        "name": "Republic of Belarus",
+        "subdivisions": ["oblast", "raion", "selsoviet"],
+        "examples": ["Minsk", "Grodno", "Brest"]
+      }
+    ],
+    "languages": ["be", "ru", "yi", "pl", "he"],
+    "scripts": ["Cyrillic", "Latin", "Hebrew"],
+    "record_types": [
+      {
+        "type": "metric_book",
+        "religion": "Jewish/Christian depending locality",
+        "period": "c.1700-1940",
+        "languages": ["be", "ru", "yi", "pl"],
+        "where_held_today": [
+          "state archive",
+          "regional archive",
+          "religious archive",
+          "digital repository where available"
+        ],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "local national portals"],
+        "search_syntax_notes": "Search by historical jurisdiction, locality variants, religion, date range, and surname variants; verify images, not indexes only."
+      },
+      {
+        "type": "revision_list_or_census",
+        "religion": "all/household",
+        "period": "c.1780-1930 depending jurisdiction",
+        "languages": ["be", "ru", "yi"],
+        "where_held_today": ["national/state archives", "regional archives"],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "national archive catalogues"],
+        "search_syntax_notes": "Use household head, patronymic, age, estate/class, tax status, and previous revision cross-links."
+      },
+      {
+        "type": "BDM_civil",
+        "religion": "civil",
+        "period": "varies by country; usually 19th century-present",
+        "languages": ["be", "ru"],
+        "where_held_today": ["civil registry", "municipal/state archives after privacy period"],
+        "online_index": ["national/state portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Use registration district, informant, certificate number, and privacy cutoff; request original certificate/image."
+      },
+      {
+        "type": "church_parish_register",
+        "religion": "Catholic/Orthodox/Protestant/Anglican/etc.",
+        "period": "c.1500-20th century depending locality",
+        "languages": ["be", "ru", "yi", "pl"],
+        "where_held_today": [
+          "diocesan archive",
+          "parish",
+          "state archive",
+          "digital church portal"
+        ],
+        "online_index": [
+          "FamilySearch",
+          "Matricula/Archion where relevant",
+          "local archive portals"
+        ],
+        "search_syntax_notes": "Search parish, filial church, diocese, confession, and house number; account for Latin/German/Russian forms."
+      },
+      {
+        "type": "cemetery_burial",
+        "religion": "all/Jewish/Christian",
+        "period": "c.1600-present",
+        "languages": ["be", "ru", "yi", "pl"],
+        "where_held_today": [
+          "cemetery authority",
+          "municipality",
+          "Jewish community",
+          "Find a Grave/BillionGraves/JOWBR"
+        ],
+        "online_index": ["JOWBR", "Find a Grave", "BillionGraves", "local cemetery databases"],
+        "search_syntax_notes": "Search inscription language, patronymic, Hebrew date, maiden name, plot owner and burial society."
+      },
+      {
+        "type": "military_conscription_service",
+        "religion": "all",
+        "period": "c.1700-present",
+        "languages": ["be", "ru", "yi"],
+        "where_held_today": [
+          "national military archive",
+          "state archive",
+          "defence records office"
+        ],
+        "online_index": ["national archive portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Search by service number, draft board/unit, residence, age, next-of-kin and variant spelling."
+      },
+      {
+        "type": "immigration_passenger_naturalization",
+        "religion": "all",
+        "period": "c.1600-present",
+        "languages": ["be", "ru", "yi"],
+        "where_held_today": [
+          "national archive",
+          "port records",
+          "court records",
+          "immigration agency"
+        ],
+        "online_index": [
+          "national archive portals",
+          "Ellis Island/Castle Garden where relevant",
+          "Ancestry/FamilySearch"
+        ],
+        "search_syntax_notes": "Correlate origin town, ship, arrival date, sponsor, contact, naturalization court and declaration/petition."
+      },
+      {
+        "type": "probate_land_tax_notarial",
+        "religion": "all",
+        "period": "c.1500-present",
+        "languages": ["be", "ru", "yi"],
+        "where_held_today": ["court archive", "state archive", "land registry", "notarial archive"],
+        "online_index": ["national/state portals", "FamilySearch", "local indexes"],
+        "search_syntax_notes": "Use property location, heirs, witnesses, neighbors and tax class; excellent for FAN-club reconstruction."
+      }
+    ],
+    "key_archives": [
+      {
+        "name": "National Historical Archives of Belarus, Minsk (NIAB)",
+        "url": "https://niab.by/",
+        "languages_for_correspondence": ["be", "ru", "en"],
+        "request_method": ["email", "postal_letter", "reading_room"],
+        "typical_response_time_days": 120,
+        "fee_structure": "paid genealogical requests; quote normally required",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "National Historical Archives of Belarus, Grodno",
+        "url": "https://archives.gov.by/",
+        "languages_for_correspondence": ["be", "ru"],
+        "request_method": ["email", "postal_letter"],
+        "typical_response_time_days": 120,
+        "fee_structure": "archive fee schedule varies",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "Archives of Belarus genealogy portal",
+        "url": "https://archives.gov.by/en/welcome-to-the-archives-of-belarus-website/genealogy-family-history",
+        "languages_for_correspondence": ["be", "ru", "en"],
+        "request_method": ["portal", "email"],
+        "typical_response_time_days": 60,
+        "fee_structure": "informational portal; archival services by repository",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      }
+    ],
+    "online_databases": [
+      "https://www.jewishgen.org/databases/Belarus/",
+      "https://www.familysearch.org/",
+      "https://archives.gov.by/"
+    ],
+    "famous_genealogy_problems": [
+      "Mogilev regional fonds suffered major WWII losses; records may be held in Minsk, Grodno or regional archives; place names appear in Polish, Russian, Belarusian, Yiddish and German variants; Jewish revision lists and family lists often require manual browsing; privacy and access rules can limit modern civil records.",
+      "Indexes are finding aids, not proof; AutoTreeGen should require image/citation verification.",
+      "Historical boundaries and modern country borders often route the same record to different archives.",
+      "Endogamy, pedigree collapse and repeated surnames can inflate DNA-based relationship estimates.",
+      "Locality disambiguation is usually more important than surname search alone."
+    ],
+    "name_transliteration_notes": "Normalize original-script name, transliteration, phonetic variant, patronymic/matronymic, maiden name and married name separately. Keep evidence-linked spelling per source. Use historical orthography and jurisdiction-aware transliteration; never overwrite original spelling.",
+    "common_fabrication_patterns_local": [
+      "invented Litvak noble descent without parish/revision evidence",
+      "merging towns with same or similar names",
+      "assuming Belarusian modern borders match historical Russian guberniyas",
+      "unsupported connection to famous rabbinical dynasties"
+    ],
+    "AutoTreeGen_schema_notes": {
+      "evidence_score_inputs": [
+        "source_type",
+        "record_image_available",
+        "DNA_total_cM",
+        "longest_segment_cM",
+        "triangulation",
+        "shared_matches",
+        "date_logic",
+        "place_logic",
+        "name_variant_distance",
+        "same_household_or_FAN_cluster"
+      ],
+      "recommended_confidence_status": [
+        "confirmed",
+        "probable",
+        "hypothesis",
+        "conflict",
+        "rejected"
+      ],
+      "minimum_proof_rule": "Do not promote a relationship above probable unless at least two independent evidence classes support it, or one primary record directly states the relationship and no conflicts exist."
+    },
+    "source_urls": [
+      "https://archives.gov.by/",
+      "https://archives.gov.by/en/welcome-to-the-archives-of-belarus-website/genealogy-family-history",
+      "https://niab.by/",
+      "https://www.familysearch.org/",
+      "https://www.jewishgen.org/databases/Belarus/"
+    ]
+  },
+  {
+    "country": "Russia",
+    "iso2": "RU",
+    "historical_jurisdictions": [
+      {
+        "period": "1721-1917",
+        "name": "Russian Empire",
+        "subdivisions": ["guberniya", "oblast", "uyezd", "volost", "stan"],
+        "examples": [
+          "St Petersburg guberniya",
+          "Moscow guberniya",
+          "Bessarabia oblast",
+          "Courland records in imperial context"
+        ]
+      },
+      {
+        "period": "1917-1991",
+        "name": "Soviet Union / RSFSR",
+        "subdivisions": ["krai", "oblast", "raion", "selsoviet"],
+        "examples": ["Moscow oblast", "Leningrad oblast"]
+      },
+      {
+        "period": "1991-present",
+        "name": "Russian Federation",
+        "subdivisions": ["federal_subject", "raion", "municipality"],
+        "examples": ["Moscow", "St Petersburg", "Krasnodar krai"]
+      }
+    ],
+    "languages": ["ru", "yi", "de", "pl", "he"],
+    "scripts": ["Cyrillic", "Latin", "Hebrew", "Old Cyrillic"],
+    "record_types": [
+      {
+        "type": "metric_book",
+        "religion": "Jewish/Christian depending locality",
+        "period": "c.1700-1940",
+        "languages": ["ru", "yi", "de", "pl"],
+        "where_held_today": [
+          "state archive",
+          "regional archive",
+          "religious archive",
+          "digital repository where available"
+        ],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "local national portals"],
+        "search_syntax_notes": "Search by historical jurisdiction, locality variants, religion, date range, and surname variants; verify images, not indexes only."
+      },
+      {
+        "type": "revision_list_or_census",
+        "religion": "all/household",
+        "period": "c.1780-1930 depending jurisdiction",
+        "languages": ["ru", "yi", "de"],
+        "where_held_today": ["national/state archives", "regional archives"],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "national archive catalogues"],
+        "search_syntax_notes": "Use household head, patronymic, age, estate/class, tax status, and previous revision cross-links."
+      },
+      {
+        "type": "BDM_civil",
+        "religion": "civil",
+        "period": "varies by country; usually 19th century-present",
+        "languages": ["ru", "yi"],
+        "where_held_today": ["civil registry", "municipal/state archives after privacy period"],
+        "online_index": ["national/state portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Use registration district, informant, certificate number, and privacy cutoff; request original certificate/image."
+      },
+      {
+        "type": "church_parish_register",
+        "religion": "Catholic/Orthodox/Protestant/Anglican/etc.",
+        "period": "c.1500-20th century depending locality",
+        "languages": ["ru", "yi", "de", "pl"],
+        "where_held_today": [
+          "diocesan archive",
+          "parish",
+          "state archive",
+          "digital church portal"
+        ],
+        "online_index": [
+          "FamilySearch",
+          "Matricula/Archion where relevant",
+          "local archive portals"
+        ],
+        "search_syntax_notes": "Search parish, filial church, diocese, confession, and house number; account for Latin/German/Russian forms."
+      },
+      {
+        "type": "cemetery_burial",
+        "religion": "all/Jewish/Christian",
+        "period": "c.1600-present",
+        "languages": ["ru", "yi", "de", "pl"],
+        "where_held_today": [
+          "cemetery authority",
+          "municipality",
+          "Jewish community",
+          "Find a Grave/BillionGraves/JOWBR"
+        ],
+        "online_index": ["JOWBR", "Find a Grave", "BillionGraves", "local cemetery databases"],
+        "search_syntax_notes": "Search inscription language, patronymic, Hebrew date, maiden name, plot owner and burial society."
+      },
+      {
+        "type": "military_conscription_service",
+        "religion": "all",
+        "period": "c.1700-present",
+        "languages": ["ru", "yi", "de"],
+        "where_held_today": [
+          "national military archive",
+          "state archive",
+          "defence records office"
+        ],
+        "online_index": ["national archive portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Search by service number, draft board/unit, residence, age, next-of-kin and variant spelling."
+      },
+      {
+        "type": "immigration_passenger_naturalization",
+        "religion": "all",
+        "period": "c.1600-present",
+        "languages": ["ru", "yi", "de"],
+        "where_held_today": [
+          "national archive",
+          "port records",
+          "court records",
+          "immigration agency"
+        ],
+        "online_index": [
+          "national archive portals",
+          "Ellis Island/Castle Garden where relevant",
+          "Ancestry/FamilySearch"
+        ],
+        "search_syntax_notes": "Correlate origin town, ship, arrival date, sponsor, contact, naturalization court and declaration/petition."
+      },
+      {
+        "type": "probate_land_tax_notarial",
+        "religion": "all",
+        "period": "c.1500-present",
+        "languages": ["ru", "yi", "de"],
+        "where_held_today": ["court archive", "state archive", "land registry", "notarial archive"],
+        "online_index": ["national/state portals", "FamilySearch", "local indexes"],
+        "search_syntax_notes": "Use property location, heirs, witnesses, neighbors and tax class; excellent for FAN-club reconstruction."
+      }
+    ],
+    "key_archives": [
+      {
+        "name": "Russian State Historical Archive (RGIA)",
+        "url": "https://fgurgia.ru/",
+        "languages_for_correspondence": ["ru"],
+        "request_method": ["online_catalog", "email", "reading_room"],
+        "typical_response_time_days": 90,
+        "fee_structure": "copying and research fees per archive tariff",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "State Archive of the Russian Federation (GARF)",
+        "url": "https://statearchive.ru/",
+        "languages_for_correspondence": ["ru"],
+        "request_method": ["online_catalog", "email", "reading_room"],
+        "typical_response_time_days": 90,
+        "fee_structure": "copying/research fees apply",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "Russian State Archive of Ancient Acts (RGADA)",
+        "url": "https://rgada.info/",
+        "languages_for_correspondence": ["ru"],
+        "request_method": ["online_catalog", "reading_room"],
+        "typical_response_time_days": 90,
+        "fee_structure": "fees apply; early records require specialist paleography",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      }
+    ],
+    "online_databases": [
+      "https://www.familysearch.org/",
+      "https://www.jewishgen.org/databases/",
+      "https://pamyat-naroda.ru/",
+      "https://obd-memorial.ru/"
+    ],
+    "famous_genealogy_problems": [
+      "Imperial records are divided by former guberniya and faith; pre-1918 orthography uses letters such as ѣ, і, ѳ and final ъ; Jewish records are local and inconsistent; Soviet privacy rules and archive access restrictions affect 20th-century research; Old Church Slavonic and skoropis handwriting require expertise.",
+      "Indexes are finding aids, not proof; AutoTreeGen should require image/citation verification.",
+      "Historical boundaries and modern country borders often route the same record to different archives.",
+      "Endogamy, pedigree collapse and repeated surnames can inflate DNA-based relationship estimates.",
+      "Locality disambiguation is usually more important than surname search alone."
+    ],
+    "name_transliteration_notes": "Normalize original-script name, transliteration, phonetic variant, patronymic/matronymic, maiden name and married name separately. Keep evidence-linked spelling per source. Use historical orthography and jurisdiction-aware transliteration; never overwrite original spelling.",
+    "common_fabrication_patterns_local": [
+      "fabricated noble descent from armorial surname match",
+      "unproved connection to well-known rabbinical lines",
+      "assuming all imperial records are in modern Russian repositories",
+      "confusing patronymics with surnames"
+    ],
+    "AutoTreeGen_schema_notes": {
+      "evidence_score_inputs": [
+        "source_type",
+        "record_image_available",
+        "DNA_total_cM",
+        "longest_segment_cM",
+        "triangulation",
+        "shared_matches",
+        "date_logic",
+        "place_logic",
+        "name_variant_distance",
+        "same_household_or_FAN_cluster"
+      ],
+      "recommended_confidence_status": [
+        "confirmed",
+        "probable",
+        "hypothesis",
+        "conflict",
+        "rejected"
+      ],
+      "minimum_proof_rule": "Do not promote a relationship above probable unless at least two independent evidence classes support it, or one primary record directly states the relationship and no conflicts exist."
+    },
+    "source_urls": [
+      "https://fgurgia.ru/",
+      "https://obd-memorial.ru/",
+      "https://pamyat-naroda.ru/",
+      "https://rgada.info/",
+      "https://statearchive.ru/",
+      "https://www.familysearch.org/",
+      "https://www.jewishgen.org/databases/"
+    ]
+  },
+  {
+    "country": "Poland",
+    "iso2": "PL",
+    "historical_jurisdictions": [
+      {
+        "period": "1772-1918",
+        "name": "Partitions of Poland",
+        "subdivisions": [
+          "Russian guberniya",
+          "Prussian province",
+          "Austrian crownland",
+          "powiat",
+          "gmina"
+        ],
+        "examples": ["Congress Poland", "Posen", "West Prussia", "Galicia"]
+      },
+      {
+        "period": "1918-1939",
+        "name": "Second Polish Republic",
+        "subdivisions": ["województwo", "powiat", "gmina"],
+        "examples": ["Wołyń Voivodeship", "Lwów Voivodeship", "Warsaw"]
+      },
+      {
+        "period": "1939-1945",
+        "name": "German/Soviet occupation",
+        "subdivisions": ["Reichsgau", "General Government", "oblast"],
+        "examples": ["General Government", "Reichsgau Wartheland"]
+      },
+      {
+        "period": "1945-present",
+        "name": "Republic of Poland",
+        "subdivisions": ["województwo", "powiat", "gmina"],
+        "examples": ["Mazowieckie", "Podkarpackie"]
+      }
+    ],
+    "languages": ["pl", "ru", "de", "yi", "he", "uk"],
+    "scripts": ["Latin", "Cyrillic", "Hebrew", "German Kurrent"],
+    "record_types": [
+      {
+        "type": "metric_book",
+        "religion": "Jewish/Christian depending locality",
+        "period": "c.1700-1940",
+        "languages": ["pl", "ru", "de", "yi"],
+        "where_held_today": [
+          "state archive",
+          "regional archive",
+          "religious archive",
+          "digital repository where available"
+        ],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "local national portals"],
+        "search_syntax_notes": "Search by historical jurisdiction, locality variants, religion, date range, and surname variants; verify images, not indexes only."
+      },
+      {
+        "type": "revision_list_or_census",
+        "religion": "all/household",
+        "period": "c.1780-1930 depending jurisdiction",
+        "languages": ["pl", "ru", "de"],
+        "where_held_today": ["national/state archives", "regional archives"],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "national archive catalogues"],
+        "search_syntax_notes": "Use household head, patronymic, age, estate/class, tax status, and previous revision cross-links."
+      },
+      {
+        "type": "BDM_civil",
+        "religion": "civil",
+        "period": "varies by country; usually 19th century-present",
+        "languages": ["pl", "ru"],
+        "where_held_today": ["civil registry", "municipal/state archives after privacy period"],
+        "online_index": ["national/state portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Use registration district, informant, certificate number, and privacy cutoff; request original certificate/image."
+      },
+      {
+        "type": "church_parish_register",
+        "religion": "Catholic/Orthodox/Protestant/Anglican/etc.",
+        "period": "c.1500-20th century depending locality",
+        "languages": ["pl", "ru", "de", "yi"],
+        "where_held_today": [
+          "diocesan archive",
+          "parish",
+          "state archive",
+          "digital church portal"
+        ],
+        "online_index": [
+          "FamilySearch",
+          "Matricula/Archion where relevant",
+          "local archive portals"
+        ],
+        "search_syntax_notes": "Search parish, filial church, diocese, confession, and house number; account for Latin/German/Russian forms."
+      },
+      {
+        "type": "cemetery_burial",
+        "religion": "all/Jewish/Christian",
+        "period": "c.1600-present",
+        "languages": ["pl", "ru", "de", "yi"],
+        "where_held_today": [
+          "cemetery authority",
+          "municipality",
+          "Jewish community",
+          "Find a Grave/BillionGraves/JOWBR"
+        ],
+        "online_index": ["JOWBR", "Find a Grave", "BillionGraves", "local cemetery databases"],
+        "search_syntax_notes": "Search inscription language, patronymic, Hebrew date, maiden name, plot owner and burial society."
+      },
+      {
+        "type": "military_conscription_service",
+        "religion": "all",
+        "period": "c.1700-present",
+        "languages": ["pl", "ru", "de"],
+        "where_held_today": [
+          "national military archive",
+          "state archive",
+          "defence records office"
+        ],
+        "online_index": ["national archive portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Search by service number, draft board/unit, residence, age, next-of-kin and variant spelling."
+      },
+      {
+        "type": "immigration_passenger_naturalization",
+        "religion": "all",
+        "period": "c.1600-present",
+        "languages": ["pl", "ru", "de"],
+        "where_held_today": [
+          "national archive",
+          "port records",
+          "court records",
+          "immigration agency"
+        ],
+        "online_index": [
+          "national archive portals",
+          "Ellis Island/Castle Garden where relevant",
+          "Ancestry/FamilySearch"
+        ],
+        "search_syntax_notes": "Correlate origin town, ship, arrival date, sponsor, contact, naturalization court and declaration/petition."
+      },
+      {
+        "type": "probate_land_tax_notarial",
+        "religion": "all",
+        "period": "c.1500-present",
+        "languages": ["pl", "ru", "de"],
+        "where_held_today": ["court archive", "state archive", "land registry", "notarial archive"],
+        "online_index": ["national/state portals", "FamilySearch", "local indexes"],
+        "search_syntax_notes": "Use property location, heirs, witnesses, neighbors and tax class; excellent for FAN-club reconstruction."
+      }
+    ],
+    "key_archives": [
+      {
+        "name": "State Archives of Poland / Archiwa Państwowe",
+        "url": "https://www.archiwa.gov.pl/en/",
+        "languages_for_correspondence": ["pl", "en"],
+        "request_method": ["online_form", "email", "reading_room"],
+        "typical_response_time_days": 60,
+        "fee_structure": "fees for research, scans and certificates vary",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "Search the Archives / Szukaj w Archiwach",
+        "url": "https://www.szukajwarchiwach.gov.pl/en/",
+        "languages_for_correspondence": ["pl", "en"],
+        "request_method": ["portal"],
+        "typical_response_time_days": 0,
+        "fee_structure": "free search and many free scans",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "AGAD Central Archives of Historical Records",
+        "url": "https://agad.gov.pl/",
+        "languages_for_correspondence": ["pl"],
+        "request_method": ["email", "reading_room"],
+        "typical_response_time_days": 90,
+        "fee_structure": "fees for copies/research",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      }
+    ],
+    "online_databases": [
+      "https://www.szukajwarchiwach.gov.pl/en/",
+      "https://geneteka.genealodzy.pl/",
+      "https://metryki.genealodzy.pl/",
+      "https://jri-poland.org/",
+      "https://www.jewishgen.org/databases/Poland/"
+    ],
+    "famous_genealogy_problems": [
+      "Partitions mean the same village may require Russian, German or Austrian administrative routing; records may be in Polish, Latin, Russian, German, Yiddish or Hebrew; duplicate village names are common; Jewish civil records in Congress Poland often use Polish/Russian format; postwar border shifts moved repositories across countries.",
+      "Indexes are finding aids, not proof; AutoTreeGen should require image/citation verification.",
+      "Historical boundaries and modern country borders often route the same record to different archives.",
+      "Endogamy, pedigree collapse and repeated surnames can inflate DNA-based relationship estimates.",
+      "Locality disambiguation is usually more important than surname search alone."
+    ],
+    "name_transliteration_notes": "Normalize original-script name, transliteration, phonetic variant, patronymic/matronymic, maiden name and married name separately. Keep evidence-linked spelling per source. Use historical orthography and jurisdiction-aware transliteration; never overwrite original spelling.",
+    "common_fabrication_patterns_local": [
+      "wrong village selected from same-name gazetteer",
+      "noble szlachta claim without metrical chain",
+      "copying JRI/Geneteka index without image verification",
+      "assuming current Poland held all prewar Polish records"
+    ],
+    "AutoTreeGen_schema_notes": {
+      "evidence_score_inputs": [
+        "source_type",
+        "record_image_available",
+        "DNA_total_cM",
+        "longest_segment_cM",
+        "triangulation",
+        "shared_matches",
+        "date_logic",
+        "place_logic",
+        "name_variant_distance",
+        "same_household_or_FAN_cluster"
+      ],
+      "recommended_confidence_status": [
+        "confirmed",
+        "probable",
+        "hypothesis",
+        "conflict",
+        "rejected"
+      ],
+      "minimum_proof_rule": "Do not promote a relationship above probable unless at least two independent evidence classes support it, or one primary record directly states the relationship and no conflicts exist."
+    },
+    "source_urls": [
+      "https://agad.gov.pl/",
+      "https://geneteka.genealodzy.pl/",
+      "https://jri-poland.org/",
+      "https://metryki.genealodzy.pl/",
+      "https://www.archiwa.gov.pl/en/",
+      "https://www.jewishgen.org/databases/Poland/",
+      "https://www.szukajwarchiwach.gov.pl/en/"
+    ]
+  },
+  {
+    "country": "Germany",
+    "iso2": "DE",
+    "historical_jurisdictions": [
+      {
+        "period": "1815-1871",
+        "name": "German Confederation / local states",
+        "subdivisions": ["kingdom", "duchy", "province", "kreis", "gemeinde"],
+        "examples": ["Prussia", "Bavaria", "Saxony", "Württemberg"]
+      },
+      {
+        "period": "1871-1918",
+        "name": "German Empire",
+        "subdivisions": ["state", "province", "kreis", "standesamt"],
+        "examples": ["Prussia", "Bavaria", "Alsace-Lorraine"]
+      },
+      {
+        "period": "1919-1945",
+        "name": "Weimar / Nazi Germany",
+        "subdivisions": ["state", "province", "kreis"],
+        "examples": ["Prussia", "Bavaria", "Reichsgau"]
+      },
+      {
+        "period": "1949-1990",
+        "name": "FRG/GDR",
+        "subdivisions": ["Bundesland", "Bezirk", "Kreis"],
+        "examples": ["Bavaria", "North Rhine-Westphalia", "Saxony"]
+      },
+      {
+        "period": "1990-present",
+        "name": "Federal Republic of Germany",
+        "subdivisions": ["Bundesland", "Kreis", "Gemeinde"],
+        "examples": ["Berlin", "Hamburg", "Baden-Württemberg"]
+      }
+    ],
+    "languages": ["de", "la", "pl", "fr", "yi"],
+    "scripts": ["Latin", "German Kurrent", "Sütterlin", "Hebrew"],
+    "record_types": [
+      {
+        "type": "metric_book",
+        "religion": "Jewish/Christian depending locality",
+        "period": "c.1700-1940",
+        "languages": ["de", "la", "pl", "fr"],
+        "where_held_today": [
+          "state archive",
+          "regional archive",
+          "religious archive",
+          "digital repository where available"
+        ],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "local national portals"],
+        "search_syntax_notes": "Search by historical jurisdiction, locality variants, religion, date range, and surname variants; verify images, not indexes only."
+      },
+      {
+        "type": "revision_list_or_census",
+        "religion": "all/household",
+        "period": "c.1780-1930 depending jurisdiction",
+        "languages": ["de", "la", "pl"],
+        "where_held_today": ["national/state archives", "regional archives"],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "national archive catalogues"],
+        "search_syntax_notes": "Use household head, patronymic, age, estate/class, tax status, and previous revision cross-links."
+      },
+      {
+        "type": "BDM_civil",
+        "religion": "civil",
+        "period": "varies by country; usually 19th century-present",
+        "languages": ["de", "la"],
+        "where_held_today": ["civil registry", "municipal/state archives after privacy period"],
+        "online_index": ["national/state portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Use registration district, informant, certificate number, and privacy cutoff; request original certificate/image."
+      },
+      {
+        "type": "church_parish_register",
+        "religion": "Catholic/Orthodox/Protestant/Anglican/etc.",
+        "period": "c.1500-20th century depending locality",
+        "languages": ["de", "la", "pl", "fr"],
+        "where_held_today": [
+          "diocesan archive",
+          "parish",
+          "state archive",
+          "digital church portal"
+        ],
+        "online_index": [
+          "FamilySearch",
+          "Matricula/Archion where relevant",
+          "local archive portals"
+        ],
+        "search_syntax_notes": "Search parish, filial church, diocese, confession, and house number; account for Latin/German/Russian forms."
+      },
+      {
+        "type": "cemetery_burial",
+        "religion": "all/Jewish/Christian",
+        "period": "c.1600-present",
+        "languages": ["de", "la", "pl", "fr"],
+        "where_held_today": [
+          "cemetery authority",
+          "municipality",
+          "Jewish community",
+          "Find a Grave/BillionGraves/JOWBR"
+        ],
+        "online_index": ["JOWBR", "Find a Grave", "BillionGraves", "local cemetery databases"],
+        "search_syntax_notes": "Search inscription language, patronymic, Hebrew date, maiden name, plot owner and burial society."
+      },
+      {
+        "type": "military_conscription_service",
+        "religion": "all",
+        "period": "c.1700-present",
+        "languages": ["de", "la", "pl"],
+        "where_held_today": [
+          "national military archive",
+          "state archive",
+          "defence records office"
+        ],
+        "online_index": ["national archive portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Search by service number, draft board/unit, residence, age, next-of-kin and variant spelling."
+      },
+      {
+        "type": "immigration_passenger_naturalization",
+        "religion": "all",
+        "period": "c.1600-present",
+        "languages": ["de", "la", "pl"],
+        "where_held_today": [
+          "national archive",
+          "port records",
+          "court records",
+          "immigration agency"
+        ],
+        "online_index": [
+          "national archive portals",
+          "Ellis Island/Castle Garden where relevant",
+          "Ancestry/FamilySearch"
+        ],
+        "search_syntax_notes": "Correlate origin town, ship, arrival date, sponsor, contact, naturalization court and declaration/petition."
+      },
+      {
+        "type": "probate_land_tax_notarial",
+        "religion": "all",
+        "period": "c.1500-present",
+        "languages": ["de", "la", "pl"],
+        "where_held_today": ["court archive", "state archive", "land registry", "notarial archive"],
+        "online_index": ["national/state portals", "FamilySearch", "local indexes"],
+        "search_syntax_notes": "Use property location, heirs, witnesses, neighbors and tax class; excellent for FAN-club reconstruction."
+      }
+    ],
+    "key_archives": [
+      {
+        "name": "Bundesarchiv",
+        "url": "https://www.bundesarchiv.de/en/",
+        "languages_for_correspondence": ["de", "en"],
+        "request_method": ["online_form", "email", "reading_room"],
+        "typical_response_time_days": 60,
+        "fee_structure": "fees for copies/research under archive rules",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "Archion Protestant Church Books",
+        "url": "https://www.archion.de/",
+        "languages_for_correspondence": ["de", "en"],
+        "request_method": ["subscription_portal"],
+        "typical_response_time_days": 0,
+        "fee_structure": "subscription database",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "German municipal Standesamt offices",
+        "url": "https://www.personenstandsrecht.de/",
+        "languages_for_correspondence": ["de"],
+        "request_method": ["municipal_request"],
+        "typical_response_time_days": 30,
+        "fee_structure": "certificate fees vary by municipality",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      }
+    ],
+    "online_databases": [
+      "https://www.bundesarchiv.de/en/",
+      "https://www.archion.de/",
+      "https://data.matricula-online.eu/en/",
+      "https://www.familysearch.org/",
+      "https://ofb.genealogy.net/"
+    ],
+    "famous_genealogy_problems": [
+      "Civil registration generally begins 1874/1876 depending on jurisdiction; newer BMD is privacy-protected at Standesamt; older civil registers move to local/state archives; church books may be in Latin or German and written in Kurrent/Sütterlin; historical place names changed after border shifts.",
+      "Indexes are finding aids, not proof; AutoTreeGen should require image/citation verification.",
+      "Historical boundaries and modern country borders often route the same record to different archives.",
+      "Endogamy, pedigree collapse and repeated surnames can inflate DNA-based relationship estimates.",
+      "Locality disambiguation is usually more important than surname search alone."
+    ],
+    "name_transliteration_notes": "Normalize original-script name, transliteration, phonetic variant, patronymic/matronymic, maiden name and married name separately. Keep evidence-linked spelling per source. Use historical orthography and jurisdiction-aware transliteration; never overwrite original spelling.",
+    "common_fabrication_patterns_local": [
+      "claiming aristocratic von-line from surname only",
+      "misreading Kurrent leading to false surname variants",
+      "merging same-named persons in one parish",
+      "ignoring Standesamt jurisdiction changes"
+    ],
+    "AutoTreeGen_schema_notes": {
+      "evidence_score_inputs": [
+        "source_type",
+        "record_image_available",
+        "DNA_total_cM",
+        "longest_segment_cM",
+        "triangulation",
+        "shared_matches",
+        "date_logic",
+        "place_logic",
+        "name_variant_distance",
+        "same_household_or_FAN_cluster"
+      ],
+      "recommended_confidence_status": [
+        "confirmed",
+        "probable",
+        "hypothesis",
+        "conflict",
+        "rejected"
+      ],
+      "minimum_proof_rule": "Do not promote a relationship above probable unless at least two independent evidence classes support it, or one primary record directly states the relationship and no conflicts exist."
+    },
+    "source_urls": [
+      "https://data.matricula-online.eu/en/",
+      "https://ofb.genealogy.net/",
+      "https://www.archion.de/",
+      "https://www.bundesarchiv.de/en/",
+      "https://www.familysearch.org/",
+      "https://www.personenstandsrecht.de/"
+    ]
+  },
+  {
+    "country": "Lithuania",
+    "iso2": "LT",
+    "historical_jurisdictions": [
+      {
+        "period": "1569-1795",
+        "name": "Polish-Lithuanian Commonwealth",
+        "subdivisions": ["voivodeship", "powiat", "parish", "kahal"],
+        "examples": ["Vilnius Voivodeship", "Trakai Voivodeship"]
+      },
+      {
+        "period": "1795-1917",
+        "name": "Russian Empire",
+        "subdivisions": ["guberniya", "uyezd", "volost"],
+        "examples": ["Vilna guberniya", "Kovno guberniya", "Suwalki guberniya"]
+      },
+      {
+        "period": "1918-1940",
+        "name": "Republic of Lithuania / Polish Vilnius region",
+        "subdivisions": ["apskritis", "valsčius", "powiat"],
+        "examples": ["Kaunas Lithuania", "Wilno Voivodeship"]
+      },
+      {
+        "period": "1940-1990",
+        "name": "Lithuanian SSR",
+        "subdivisions": ["oblast/apskritis", "raion"],
+        "examples": ["Vilnius", "Kaunas"]
+      },
+      {
+        "period": "1990-present",
+        "name": "Republic of Lithuania",
+        "subdivisions": ["county", "municipality", "eldership"],
+        "examples": ["Vilnius", "Kaunas"]
+      }
+    ],
+    "languages": ["lt", "ru", "pl", "yi", "he", "de"],
+    "scripts": ["Latin", "Cyrillic", "Hebrew", "German Kurrent"],
+    "record_types": [
+      {
+        "type": "metric_book",
+        "religion": "Jewish/Christian depending locality",
+        "period": "c.1700-1940",
+        "languages": ["lt", "ru", "pl", "yi"],
+        "where_held_today": [
+          "state archive",
+          "regional archive",
+          "religious archive",
+          "digital repository where available"
+        ],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "local national portals"],
+        "search_syntax_notes": "Search by historical jurisdiction, locality variants, religion, date range, and surname variants; verify images, not indexes only."
+      },
+      {
+        "type": "revision_list_or_census",
+        "religion": "all/household",
+        "period": "c.1780-1930 depending jurisdiction",
+        "languages": ["lt", "ru", "pl"],
+        "where_held_today": ["national/state archives", "regional archives"],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "national archive catalogues"],
+        "search_syntax_notes": "Use household head, patronymic, age, estate/class, tax status, and previous revision cross-links."
+      },
+      {
+        "type": "BDM_civil",
+        "religion": "civil",
+        "period": "varies by country; usually 19th century-present",
+        "languages": ["lt", "ru"],
+        "where_held_today": ["civil registry", "municipal/state archives after privacy period"],
+        "online_index": ["national/state portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Use registration district, informant, certificate number, and privacy cutoff; request original certificate/image."
+      },
+      {
+        "type": "church_parish_register",
+        "religion": "Catholic/Orthodox/Protestant/Anglican/etc.",
+        "period": "c.1500-20th century depending locality",
+        "languages": ["lt", "ru", "pl", "yi"],
+        "where_held_today": [
+          "diocesan archive",
+          "parish",
+          "state archive",
+          "digital church portal"
+        ],
+        "online_index": [
+          "FamilySearch",
+          "Matricula/Archion where relevant",
+          "local archive portals"
+        ],
+        "search_syntax_notes": "Search parish, filial church, diocese, confession, and house number; account for Latin/German/Russian forms."
+      },
+      {
+        "type": "cemetery_burial",
+        "religion": "all/Jewish/Christian",
+        "period": "c.1600-present",
+        "languages": ["lt", "ru", "pl", "yi"],
+        "where_held_today": [
+          "cemetery authority",
+          "municipality",
+          "Jewish community",
+          "Find a Grave/BillionGraves/JOWBR"
+        ],
+        "online_index": ["JOWBR", "Find a Grave", "BillionGraves", "local cemetery databases"],
+        "search_syntax_notes": "Search inscription language, patronymic, Hebrew date, maiden name, plot owner and burial society."
+      },
+      {
+        "type": "military_conscription_service",
+        "religion": "all",
+        "period": "c.1700-present",
+        "languages": ["lt", "ru", "pl"],
+        "where_held_today": [
+          "national military archive",
+          "state archive",
+          "defence records office"
+        ],
+        "online_index": ["national archive portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Search by service number, draft board/unit, residence, age, next-of-kin and variant spelling."
+      },
+      {
+        "type": "immigration_passenger_naturalization",
+        "religion": "all",
+        "period": "c.1600-present",
+        "languages": ["lt", "ru", "pl"],
+        "where_held_today": [
+          "national archive",
+          "port records",
+          "court records",
+          "immigration agency"
+        ],
+        "online_index": [
+          "national archive portals",
+          "Ellis Island/Castle Garden where relevant",
+          "Ancestry/FamilySearch"
+        ],
+        "search_syntax_notes": "Correlate origin town, ship, arrival date, sponsor, contact, naturalization court and declaration/petition."
+      },
+      {
+        "type": "probate_land_tax_notarial",
+        "religion": "all",
+        "period": "c.1500-present",
+        "languages": ["lt", "ru", "pl"],
+        "where_held_today": ["court archive", "state archive", "land registry", "notarial archive"],
+        "online_index": ["national/state portals", "FamilySearch", "local indexes"],
+        "search_syntax_notes": "Use property location, heirs, witnesses, neighbors and tax class; excellent for FAN-club reconstruction."
+      }
+    ],
+    "key_archives": [
+      {
+        "name": "Lithuanian State Historical Archives (LVIA)",
+        "url": "https://lvia.archyvai.lrv.lt/en/",
+        "languages_for_correspondence": ["lt", "en", "ru", "pl"],
+        "request_method": ["email", "reading_room", "EAIS"],
+        "typical_response_time_days": 90,
+        "fee_structure": "copying and research fees apply",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "Lithuanian Central State Archives",
+        "url": "https://lcva.archyvai.lrv.lt/en/",
+        "languages_for_correspondence": ["lt", "en"],
+        "request_method": ["email", "reading_room"],
+        "typical_response_time_days": 90,
+        "fee_structure": "fees apply",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "Electronic Archive Information System (EAIS)",
+        "url": "https://eais.archyvai.lt/",
+        "languages_for_correspondence": ["lt", "en"],
+        "request_method": ["portal"],
+        "typical_response_time_days": 0,
+        "fee_structure": "digital access where files are available",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      }
+    ],
+    "online_databases": [
+      "https://eais.archyvai.lt/",
+      "https://www.litvaksig.org/",
+      "https://www.jewishgen.org/databases/Lithuania/",
+      "https://www.familysearch.org/"
+    ],
+    "famous_genealogy_problems": [
+      "Litvak records use Russian imperial, Polish, Lithuanian, Hebrew/Yiddish and German variants; Kovno/Vilna/Suwalki records may be split across Lithuania, Poland and Belarus; revision/family lists are crucial; Jewish surnames can be unstable before 19th-century state standardization.",
+      "Indexes are finding aids, not proof; AutoTreeGen should require image/citation verification.",
+      "Historical boundaries and modern country borders often route the same record to different archives.",
+      "Endogamy, pedigree collapse and repeated surnames can inflate DNA-based relationship estimates.",
+      "Locality disambiguation is usually more important than surname search alone."
+    ],
+    "name_transliteration_notes": "Normalize original-script name, transliteration, phonetic variant, patronymic/matronymic, maiden name and married name separately. Keep evidence-linked spelling per source. Use historical orthography and jurisdiction-aware transliteration; never overwrite original spelling.",
+    "common_fabrication_patterns_local": [
+      "unsupported descent from Vilna Gaon or rabbinical dynasty",
+      "wrong Kovno/Vilna town due to variant spelling",
+      "mixing Suwalki Lithuania/Poland repositories",
+      "assuming index has all surviving records"
+    ],
+    "AutoTreeGen_schema_notes": {
+      "evidence_score_inputs": [
+        "source_type",
+        "record_image_available",
+        "DNA_total_cM",
+        "longest_segment_cM",
+        "triangulation",
+        "shared_matches",
+        "date_logic",
+        "place_logic",
+        "name_variant_distance",
+        "same_household_or_FAN_cluster"
+      ],
+      "recommended_confidence_status": [
+        "confirmed",
+        "probable",
+        "hypothesis",
+        "conflict",
+        "rejected"
+      ],
+      "minimum_proof_rule": "Do not promote a relationship above probable unless at least two independent evidence classes support it, or one primary record directly states the relationship and no conflicts exist."
+    },
+    "source_urls": [
+      "https://eais.archyvai.lt/",
+      "https://lcva.archyvai.lrv.lt/en/",
+      "https://lvia.archyvai.lrv.lt/en/",
+      "https://www.familysearch.org/",
+      "https://www.jewishgen.org/databases/Lithuania/",
+      "https://www.litvaksig.org/"
+    ]
+  },
+  {
+    "country": "Austria/Galicia",
+    "iso2": "AT-GAL",
+    "historical_jurisdictions": [
+      {
+        "period": "1772-1918",
+        "name": "Habsburg Monarchy / Austrian Empire / Austria-Hungary",
+        "subdivisions": ["crownland", "kreis", "bezirk", "gemeinde", "parish"],
+        "examples": ["Kingdom of Galicia and Lodomeria", "Bukovina", "Lower Austria"]
+      },
+      {
+        "period": "1918-1938",
+        "name": "First Austrian Republic / successor states for Galicia",
+        "subdivisions": ["Bundesland", "powiat", "voivodeship"],
+        "examples": ["Austria", "Second Polish Republic Galicia"]
+      },
+      {
+        "period": "1938-1945",
+        "name": "Nazi Germany / occupied territories",
+        "subdivisions": ["Reichsgau", "district"],
+        "examples": ["Ostmark", "Generalgouvernement for parts of Galicia"]
+      },
+      {
+        "period": "1945-present",
+        "name": "Austria plus successor repositories",
+        "subdivisions": ["Bundesland", "district", "gmina/hromada"],
+        "examples": ["Vienna", "Lviv oblast", "Podkarpackie"]
+      }
+    ],
+    "languages": ["de", "pl", "uk", "la", "yi", "he", "cz", "hu"],
+    "scripts": ["Latin", "German Kurrent", "Hebrew", "Cyrillic"],
+    "record_types": [
+      {
+        "type": "metric_book",
+        "religion": "Jewish/Christian depending locality",
+        "period": "c.1700-1940",
+        "languages": ["de", "pl", "uk", "la"],
+        "where_held_today": [
+          "state archive",
+          "regional archive",
+          "religious archive",
+          "digital repository where available"
+        ],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "local national portals"],
+        "search_syntax_notes": "Search by historical jurisdiction, locality variants, religion, date range, and surname variants; verify images, not indexes only."
+      },
+      {
+        "type": "revision_list_or_census",
+        "religion": "all/household",
+        "period": "c.1780-1930 depending jurisdiction",
+        "languages": ["de", "pl", "uk"],
+        "where_held_today": ["national/state archives", "regional archives"],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "national archive catalogues"],
+        "search_syntax_notes": "Use household head, patronymic, age, estate/class, tax status, and previous revision cross-links."
+      },
+      {
+        "type": "BDM_civil",
+        "religion": "civil",
+        "period": "varies by country; usually 19th century-present",
+        "languages": ["de", "pl"],
+        "where_held_today": ["civil registry", "municipal/state archives after privacy period"],
+        "online_index": ["national/state portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Use registration district, informant, certificate number, and privacy cutoff; request original certificate/image."
+      },
+      {
+        "type": "church_parish_register",
+        "religion": "Catholic/Orthodox/Protestant/Anglican/etc.",
+        "period": "c.1500-20th century depending locality",
+        "languages": ["de", "pl", "uk", "la"],
+        "where_held_today": [
+          "diocesan archive",
+          "parish",
+          "state archive",
+          "digital church portal"
+        ],
+        "online_index": [
+          "FamilySearch",
+          "Matricula/Archion where relevant",
+          "local archive portals"
+        ],
+        "search_syntax_notes": "Search parish, filial church, diocese, confession, and house number; account for Latin/German/Russian forms."
+      },
+      {
+        "type": "cemetery_burial",
+        "religion": "all/Jewish/Christian",
+        "period": "c.1600-present",
+        "languages": ["de", "pl", "uk", "la"],
+        "where_held_today": [
+          "cemetery authority",
+          "municipality",
+          "Jewish community",
+          "Find a Grave/BillionGraves/JOWBR"
+        ],
+        "online_index": ["JOWBR", "Find a Grave", "BillionGraves", "local cemetery databases"],
+        "search_syntax_notes": "Search inscription language, patronymic, Hebrew date, maiden name, plot owner and burial society."
+      },
+      {
+        "type": "military_conscription_service",
+        "religion": "all",
+        "period": "c.1700-present",
+        "languages": ["de", "pl", "uk"],
+        "where_held_today": [
+          "national military archive",
+          "state archive",
+          "defence records office"
+        ],
+        "online_index": ["national archive portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Search by service number, draft board/unit, residence, age, next-of-kin and variant spelling."
+      },
+      {
+        "type": "immigration_passenger_naturalization",
+        "religion": "all",
+        "period": "c.1600-present",
+        "languages": ["de", "pl", "uk"],
+        "where_held_today": [
+          "national archive",
+          "port records",
+          "court records",
+          "immigration agency"
+        ],
+        "online_index": [
+          "national archive portals",
+          "Ellis Island/Castle Garden where relevant",
+          "Ancestry/FamilySearch"
+        ],
+        "search_syntax_notes": "Correlate origin town, ship, arrival date, sponsor, contact, naturalization court and declaration/petition."
+      },
+      {
+        "type": "probate_land_tax_notarial",
+        "religion": "all",
+        "period": "c.1500-present",
+        "languages": ["de", "pl", "uk"],
+        "where_held_today": ["court archive", "state archive", "land registry", "notarial archive"],
+        "online_index": ["national/state portals", "FamilySearch", "local indexes"],
+        "search_syntax_notes": "Use property location, heirs, witnesses, neighbors and tax class; excellent for FAN-club reconstruction."
+      }
+    ],
+    "key_archives": [
+      {
+        "name": "Austrian State Archives",
+        "url": "https://www.statearchives.gv.at/",
+        "languages_for_correspondence": ["de", "en"],
+        "request_method": ["online_form", "email", "reading_room"],
+        "typical_response_time_days": 60,
+        "fee_structure": "fees for copies/research",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "Matricula Online",
+        "url": "https://data.matricula-online.eu/en/",
+        "languages_for_correspondence": ["de", "en"],
+        "request_method": ["portal"],
+        "typical_response_time_days": 0,
+        "fee_structure": "free church book images where digitized",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "AGAD for former Galicia records",
+        "url": "https://agad.gov.pl/",
+        "languages_for_correspondence": ["pl"],
+        "request_method": ["email", "reading_room"],
+        "typical_response_time_days": 90,
+        "fee_structure": "fees apply",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      }
+    ],
+    "online_databases": [
+      "https://www.statearchives.gv.at/",
+      "https://data.matricula-online.eu/en/",
+      "https://www.geshergalicia.org/",
+      "https://jri-poland.org/",
+      "https://www.familysearch.org/"
+    ],
+    "famous_genealogy_problems": [
+      "Galicia records are repository-split among Austria, Poland and Ukraine; Jewish metrical books may be held by AGAD, local Polish archives or Ukrainian archives; languages include German, Polish, Latin, Hebrew/Yiddish and Ukrainian; Habsburg house-number systems can replace street addresses.",
+      "Indexes are finding aids, not proof; AutoTreeGen should require image/citation verification.",
+      "Historical boundaries and modern country borders often route the same record to different archives.",
+      "Endogamy, pedigree collapse and repeated surnames can inflate DNA-based relationship estimates.",
+      "Locality disambiguation is usually more important than surname search alone."
+    ],
+    "name_transliteration_notes": "Normalize original-script name, transliteration, phonetic variant, patronymic/matronymic, maiden name and married name separately. Keep evidence-linked spelling per source. Use historical orthography and jurisdiction-aware transliteration; never overwrite original spelling.",
+    "common_fabrication_patterns_local": [
+      "invented Habsburg aristocratic link",
+      "confusing Galicia Spain with Galicia Austria",
+      "wrong parish due to duplicate village names",
+      "rabbinical chain copied from secondary trees without record proof"
+    ],
+    "AutoTreeGen_schema_notes": {
+      "evidence_score_inputs": [
+        "source_type",
+        "record_image_available",
+        "DNA_total_cM",
+        "longest_segment_cM",
+        "triangulation",
+        "shared_matches",
+        "date_logic",
+        "place_logic",
+        "name_variant_distance",
+        "same_household_or_FAN_cluster"
+      ],
+      "recommended_confidence_status": [
+        "confirmed",
+        "probable",
+        "hypothesis",
+        "conflict",
+        "rejected"
+      ],
+      "minimum_proof_rule": "Do not promote a relationship above probable unless at least two independent evidence classes support it, or one primary record directly states the relationship and no conflicts exist."
+    },
+    "source_urls": [
+      "https://agad.gov.pl/",
+      "https://data.matricula-online.eu/en/",
+      "https://jri-poland.org/",
+      "https://www.familysearch.org/",
+      "https://www.geshergalicia.org/",
+      "https://www.statearchives.gv.at/"
+    ]
+  },
+  {
+    "country": "Romania",
+    "iso2": "RO",
+    "historical_jurisdictions": [
+      {
+        "period": "1859-1881",
+        "name": "United Principalities / Ottoman-influenced Moldavia-Wallachia",
+        "subdivisions": ["județ", "commune", "parish"],
+        "examples": ["Moldavia", "Wallachia"]
+      },
+      {
+        "period": "1881-1918",
+        "name": "Kingdom of Romania and neighboring empires",
+        "subdivisions": ["județ", "comitat", "Bezirk"],
+        "examples": ["Old Kingdom", "Austro-Hungarian Transylvania", "Bukovina", "Bessarabia"]
+      },
+      {
+        "period": "1918-1940",
+        "name": "Greater Romania",
+        "subdivisions": ["județ", "plasă", "commune"],
+        "examples": ["Bessarabia", "Bukovina", "Transylvania", "Moldavia"]
+      },
+      {
+        "period": "1945-1989",
+        "name": "Socialist Republic of Romania",
+        "subdivisions": ["region", "raion", "județ"],
+        "examples": ["Iași", "Bucharest"]
+      },
+      {
+        "period": "1989-present",
+        "name": "Romania",
+        "subdivisions": ["județ", "municipiu", "comună"],
+        "examples": ["Iași", "Bucharest", "Cluj"]
+      }
+    ],
+    "languages": ["ro", "hu", "de", "yi", "he", "uk", "ru"],
+    "scripts": ["Latin", "Cyrillic historical", "Hebrew", "German Kurrent"],
+    "record_types": [
+      {
+        "type": "metric_book",
+        "religion": "Jewish/Christian depending locality",
+        "period": "c.1700-1940",
+        "languages": ["ro", "hu", "de", "yi"],
+        "where_held_today": [
+          "state archive",
+          "regional archive",
+          "religious archive",
+          "digital repository where available"
+        ],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "local national portals"],
+        "search_syntax_notes": "Search by historical jurisdiction, locality variants, religion, date range, and surname variants; verify images, not indexes only."
+      },
+      {
+        "type": "revision_list_or_census",
+        "religion": "all/household",
+        "period": "c.1780-1930 depending jurisdiction",
+        "languages": ["ro", "hu", "de"],
+        "where_held_today": ["national/state archives", "regional archives"],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "national archive catalogues"],
+        "search_syntax_notes": "Use household head, patronymic, age, estate/class, tax status, and previous revision cross-links."
+      },
+      {
+        "type": "BDM_civil",
+        "religion": "civil",
+        "period": "varies by country; usually 19th century-present",
+        "languages": ["ro", "hu"],
+        "where_held_today": ["civil registry", "municipal/state archives after privacy period"],
+        "online_index": ["national/state portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Use registration district, informant, certificate number, and privacy cutoff; request original certificate/image."
+      },
+      {
+        "type": "church_parish_register",
+        "religion": "Catholic/Orthodox/Protestant/Anglican/etc.",
+        "period": "c.1500-20th century depending locality",
+        "languages": ["ro", "hu", "de", "yi"],
+        "where_held_today": [
+          "diocesan archive",
+          "parish",
+          "state archive",
+          "digital church portal"
+        ],
+        "online_index": [
+          "FamilySearch",
+          "Matricula/Archion where relevant",
+          "local archive portals"
+        ],
+        "search_syntax_notes": "Search parish, filial church, diocese, confession, and house number; account for Latin/German/Russian forms."
+      },
+      {
+        "type": "cemetery_burial",
+        "religion": "all/Jewish/Christian",
+        "period": "c.1600-present",
+        "languages": ["ro", "hu", "de", "yi"],
+        "where_held_today": [
+          "cemetery authority",
+          "municipality",
+          "Jewish community",
+          "Find a Grave/BillionGraves/JOWBR"
+        ],
+        "online_index": ["JOWBR", "Find a Grave", "BillionGraves", "local cemetery databases"],
+        "search_syntax_notes": "Search inscription language, patronymic, Hebrew date, maiden name, plot owner and burial society."
+      },
+      {
+        "type": "military_conscription_service",
+        "religion": "all",
+        "period": "c.1700-present",
+        "languages": ["ro", "hu", "de"],
+        "where_held_today": [
+          "national military archive",
+          "state archive",
+          "defence records office"
+        ],
+        "online_index": ["national archive portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Search by service number, draft board/unit, residence, age, next-of-kin and variant spelling."
+      },
+      {
+        "type": "immigration_passenger_naturalization",
+        "religion": "all",
+        "period": "c.1600-present",
+        "languages": ["ro", "hu", "de"],
+        "where_held_today": [
+          "national archive",
+          "port records",
+          "court records",
+          "immigration agency"
+        ],
+        "online_index": [
+          "national archive portals",
+          "Ellis Island/Castle Garden where relevant",
+          "Ancestry/FamilySearch"
+        ],
+        "search_syntax_notes": "Correlate origin town, ship, arrival date, sponsor, contact, naturalization court and declaration/petition."
+      },
+      {
+        "type": "probate_land_tax_notarial",
+        "religion": "all",
+        "period": "c.1500-present",
+        "languages": ["ro", "hu", "de"],
+        "where_held_today": ["court archive", "state archive", "land registry", "notarial archive"],
+        "online_index": ["national/state portals", "FamilySearch", "local indexes"],
+        "search_syntax_notes": "Use property location, heirs, witnesses, neighbors and tax class; excellent for FAN-club reconstruction."
+      }
+    ],
+    "key_archives": [
+      {
+        "name": "National Archives of Romania",
+        "url": "https://arhivelenationale.ro/site/en/first-page/",
+        "languages_for_correspondence": ["ro", "en"],
+        "request_method": ["branch_request", "email", "reading_room"],
+        "typical_response_time_days": 90,
+        "fee_structure": "fees vary by branch and service",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "Romanian Civil Status Offices",
+        "url": "https://www.mai.gov.ro/",
+        "languages_for_correspondence": ["ro"],
+        "request_method": ["local_request"],
+        "typical_response_time_days": 30,
+        "fee_structure": "certificate fees and eligibility vary",
+        "remote_search_supported": false,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "Jewish Community / Federation sources",
+        "url": "https://www.jewishfed.ro/",
+        "languages_for_correspondence": ["ro", "en"],
+        "request_method": ["email"],
+        "typical_response_time_days": 90,
+        "fee_structure": "community access varies",
+        "remote_search_supported": false,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      }
+    ],
+    "online_databases": [
+      "https://arhivelenationale.ro/site/en/first-page/",
+      "https://www.jewishgen.org/databases/Romania/",
+      "https://www.familysearch.org/",
+      "https://genealogyindexer.org/"
+    ],
+    "famous_genealogy_problems": [
+      "Civil registration in the Old Kingdom begins in the mid-1860s, while Transylvania/Bukovina/Bessarabia follow different regimes; repositories vary by historical province; names may be Romanian, German, Hungarian, Russian, Ukrainian, Yiddish or Hebrew; modern vital records are privacy restricted.",
+      "Indexes are finding aids, not proof; AutoTreeGen should require image/citation verification.",
+      "Historical boundaries and modern country borders often route the same record to different archives.",
+      "Endogamy, pedigree collapse and repeated surnames can inflate DNA-based relationship estimates.",
+      "Locality disambiguation is usually more important than surname search alone."
+    ],
+    "name_transliteration_notes": "Normalize original-script name, transliteration, phonetic variant, patronymic/matronymic, maiden name and married name separately. Keep evidence-linked spelling per source. Use historical orthography and jurisdiction-aware transliteration; never overwrite original spelling.",
+    "common_fabrication_patterns_local": [
+      "wrong historical province routing",
+      "assuming Romanian civil registration dates apply to Transylvania/Bukovina/Bessarabia",
+      "noble boyar descent without metrical chain",
+      "merging Jewish surname variants without locality evidence"
+    ],
+    "AutoTreeGen_schema_notes": {
+      "evidence_score_inputs": [
+        "source_type",
+        "record_image_available",
+        "DNA_total_cM",
+        "longest_segment_cM",
+        "triangulation",
+        "shared_matches",
+        "date_logic",
+        "place_logic",
+        "name_variant_distance",
+        "same_household_or_FAN_cluster"
+      ],
+      "recommended_confidence_status": [
+        "confirmed",
+        "probable",
+        "hypothesis",
+        "conflict",
+        "rejected"
+      ],
+      "minimum_proof_rule": "Do not promote a relationship above probable unless at least two independent evidence classes support it, or one primary record directly states the relationship and no conflicts exist."
+    },
+    "source_urls": [
+      "https://arhivelenationale.ro/site/en/first-page/",
+      "https://genealogyindexer.org/",
+      "https://www.familysearch.org/",
+      "https://www.jewishfed.ro/",
+      "https://www.jewishgen.org/databases/Romania/",
+      "https://www.mai.gov.ro/"
+    ]
+  },
+  {
+    "country": "France",
+    "iso2": "FR",
+    "historical_jurisdictions": [
+      {
+        "period": "pre-1789",
+        "name": "Ancien Régime",
+        "subdivisions": ["province", "diocese", "parish", "seigneurie"],
+        "examples": ["Brittany", "Normandy", "Alsace"]
+      },
+      {
+        "period": "1792-present",
+        "name": "Civil registration after French Revolution",
+        "subdivisions": ["département", "arrondissement", "commune"],
+        "examples": ["Paris", "Bas-Rhin", "Rhône"]
+      },
+      {
+        "period": "1871-1918",
+        "name": "Alsace-Lorraine under German Empire",
+        "subdivisions": ["Bezirk", "Kreis", "Standesamt"],
+        "examples": ["Elsass-Lothringen"]
+      },
+      {
+        "period": "1940-1944",
+        "name": "Occupation / Vichy period",
+        "subdivisions": ["département", "commune"],
+        "examples": ["Zone occupée", "Zone libre"]
+      }
+    ],
+    "languages": ["fr", "la", "de", "oc", "br", "yi", "he"],
+    "scripts": ["Latin", "Hebrew", "German Kurrent in Alsace-Lorraine"],
+    "record_types": [
+      {
+        "type": "metric_book",
+        "religion": "Jewish/Christian depending locality",
+        "period": "c.1700-1940",
+        "languages": ["fr", "la", "de", "oc"],
+        "where_held_today": [
+          "state archive",
+          "regional archive",
+          "religious archive",
+          "digital repository where available"
+        ],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "local national portals"],
+        "search_syntax_notes": "Search by historical jurisdiction, locality variants, religion, date range, and surname variants; verify images, not indexes only."
+      },
+      {
+        "type": "revision_list_or_census",
+        "religion": "all/household",
+        "period": "c.1780-1930 depending jurisdiction",
+        "languages": ["fr", "la", "de"],
+        "where_held_today": ["national/state archives", "regional archives"],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "national archive catalogues"],
+        "search_syntax_notes": "Use household head, patronymic, age, estate/class, tax status, and previous revision cross-links."
+      },
+      {
+        "type": "BDM_civil",
+        "religion": "civil",
+        "period": "varies by country; usually 19th century-present",
+        "languages": ["fr", "la"],
+        "where_held_today": ["civil registry", "municipal/state archives after privacy period"],
+        "online_index": ["national/state portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Use registration district, informant, certificate number, and privacy cutoff; request original certificate/image."
+      },
+      {
+        "type": "church_parish_register",
+        "religion": "Catholic/Orthodox/Protestant/Anglican/etc.",
+        "period": "c.1500-20th century depending locality",
+        "languages": ["fr", "la", "de", "oc"],
+        "where_held_today": [
+          "diocesan archive",
+          "parish",
+          "state archive",
+          "digital church portal"
+        ],
+        "online_index": [
+          "FamilySearch",
+          "Matricula/Archion where relevant",
+          "local archive portals"
+        ],
+        "search_syntax_notes": "Search parish, filial church, diocese, confession, and house number; account for Latin/German/Russian forms."
+      },
+      {
+        "type": "cemetery_burial",
+        "religion": "all/Jewish/Christian",
+        "period": "c.1600-present",
+        "languages": ["fr", "la", "de", "oc"],
+        "where_held_today": [
+          "cemetery authority",
+          "municipality",
+          "Jewish community",
+          "Find a Grave/BillionGraves/JOWBR"
+        ],
+        "online_index": ["JOWBR", "Find a Grave", "BillionGraves", "local cemetery databases"],
+        "search_syntax_notes": "Search inscription language, patronymic, Hebrew date, maiden name, plot owner and burial society."
+      },
+      {
+        "type": "military_conscription_service",
+        "religion": "all",
+        "period": "c.1700-present",
+        "languages": ["fr", "la", "de"],
+        "where_held_today": [
+          "national military archive",
+          "state archive",
+          "defence records office"
+        ],
+        "online_index": ["national archive portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Search by service number, draft board/unit, residence, age, next-of-kin and variant spelling."
+      },
+      {
+        "type": "immigration_passenger_naturalization",
+        "religion": "all",
+        "period": "c.1600-present",
+        "languages": ["fr", "la", "de"],
+        "where_held_today": [
+          "national archive",
+          "port records",
+          "court records",
+          "immigration agency"
+        ],
+        "online_index": [
+          "national archive portals",
+          "Ellis Island/Castle Garden where relevant",
+          "Ancestry/FamilySearch"
+        ],
+        "search_syntax_notes": "Correlate origin town, ship, arrival date, sponsor, contact, naturalization court and declaration/petition."
+      },
+      {
+        "type": "probate_land_tax_notarial",
+        "religion": "all",
+        "period": "c.1500-present",
+        "languages": ["fr", "la", "de"],
+        "where_held_today": ["court archive", "state archive", "land registry", "notarial archive"],
+        "online_index": ["national/state portals", "FamilySearch", "local indexes"],
+        "search_syntax_notes": "Use property location, heirs, witnesses, neighbors and tax class; excellent for FAN-club reconstruction."
+      }
+    ],
+    "key_archives": [
+      {
+        "name": "Archives nationales de France",
+        "url": "https://www.archives-nationales.culture.gouv.fr/",
+        "languages_for_correspondence": ["fr"],
+        "request_method": ["online_catalog", "reading_room"],
+        "typical_response_time_days": 60,
+        "fee_structure": "fees for copies/research",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "FranceArchives portal",
+        "url": "https://francearchives.gouv.fr/",
+        "languages_for_correspondence": ["fr"],
+        "request_method": ["portal"],
+        "typical_response_time_days": 0,
+        "fee_structure": "free portal to archive descriptions",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "Departmental Archives network",
+        "url": "https://francearchives.gouv.fr/fr/annuaire/departements",
+        "languages_for_correspondence": ["fr"],
+        "request_method": ["departmental_portal"],
+        "typical_response_time_days": 0,
+        "fee_structure": "many free images; local policies vary",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      }
+    ],
+    "online_databases": [
+      "https://francearchives.gouv.fr/",
+      "https://www.archives-nationales.culture.gouv.fr/",
+      "https://gallica.bnf.fr/",
+      "https://en.geneanet.org/",
+      "https://www.filae.com/"
+    ],
+    "famous_genealogy_problems": [
+      "Civil registration is mainly departmental/commune based, not centralized nationally; Paris 1871 fires destroyed many earlier civil/parish registers but reconstructions exist; Alsace-Lorraine switches language/jurisdiction; privacy limits recent BMD; cadastral and military records are often departmental.",
+      "Indexes are finding aids, not proof; AutoTreeGen should require image/citation verification.",
+      "Historical boundaries and modern country borders often route the same record to different archives.",
+      "Endogamy, pedigree collapse and repeated surnames can inflate DNA-based relationship estimates.",
+      "Locality disambiguation is usually more important than surname search alone."
+    ],
+    "name_transliteration_notes": "Normalize original-script name, transliteration, phonetic variant, patronymic/matronymic, maiden name and married name separately. Keep evidence-linked spelling per source. Use historical orthography and jurisdiction-aware transliteration; never overwrite original spelling.",
+    "common_fabrication_patterns_local": [
+      "invented noble line via same surname",
+      "ignoring Paris record loss/reconstituted records",
+      "wrong commune due to departmental homonyms",
+      "assuming Geneanet tree equals evidence"
+    ],
+    "AutoTreeGen_schema_notes": {
+      "evidence_score_inputs": [
+        "source_type",
+        "record_image_available",
+        "DNA_total_cM",
+        "longest_segment_cM",
+        "triangulation",
+        "shared_matches",
+        "date_logic",
+        "place_logic",
+        "name_variant_distance",
+        "same_household_or_FAN_cluster"
+      ],
+      "recommended_confidence_status": [
+        "confirmed",
+        "probable",
+        "hypothesis",
+        "conflict",
+        "rejected"
+      ],
+      "minimum_proof_rule": "Do not promote a relationship above probable unless at least two independent evidence classes support it, or one primary record directly states the relationship and no conflicts exist."
+    },
+    "source_urls": [
+      "https://en.geneanet.org/",
+      "https://francearchives.gouv.fr/",
+      "https://francearchives.gouv.fr/fr/annuaire/departements",
+      "https://gallica.bnf.fr/",
+      "https://www.archives-nationales.culture.gouv.fr/",
+      "https://www.filae.com/"
+    ]
+  },
+  {
+    "country": "UK",
+    "iso2": "GB",
+    "historical_jurisdictions": [
+      {
+        "period": "pre-1837",
+        "name": "England/Wales parish-register era",
+        "subdivisions": ["county", "parish", "hundred"],
+        "examples": ["Middlesex", "Yorkshire", "Glamorgan"]
+      },
+      {
+        "period": "1837-present",
+        "name": "Civil registration England/Wales",
+        "subdivisions": ["registration_district", "county", "parish"],
+        "examples": ["GRO districts", "London boroughs"]
+      },
+      {
+        "period": "1855-present",
+        "name": "Scotland civil registration",
+        "subdivisions": ["county", "parish", "registration_district"],
+        "examples": ["Lanarkshire", "Aberdeenshire"]
+      },
+      {
+        "period": "1922-present",
+        "name": "UK with separate Northern Ireland systems",
+        "subdivisions": ["county", "district", "council"],
+        "examples": ["England", "Wales", "Scotland", "Northern Ireland"]
+      }
+    ],
+    "languages": ["en", "cy", "gd", "la", "yi", "he"],
+    "scripts": ["Latin", "Hebrew"],
+    "record_types": [
+      {
+        "type": "metric_book",
+        "religion": "Jewish/Christian depending locality",
+        "period": "c.1700-1940",
+        "languages": ["en", "cy", "gd", "la"],
+        "where_held_today": [
+          "state archive",
+          "regional archive",
+          "religious archive",
+          "digital repository where available"
+        ],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "local national portals"],
+        "search_syntax_notes": "Search by historical jurisdiction, locality variants, religion, date range, and surname variants; verify images, not indexes only."
+      },
+      {
+        "type": "revision_list_or_census",
+        "religion": "all/household",
+        "period": "c.1780-1930 depending jurisdiction",
+        "languages": ["en", "cy", "gd"],
+        "where_held_today": ["national/state archives", "regional archives"],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "national archive catalogues"],
+        "search_syntax_notes": "Use household head, patronymic, age, estate/class, tax status, and previous revision cross-links."
+      },
+      {
+        "type": "BDM_civil",
+        "religion": "civil",
+        "period": "varies by country; usually 19th century-present",
+        "languages": ["en", "cy"],
+        "where_held_today": ["civil registry", "municipal/state archives after privacy period"],
+        "online_index": ["national/state portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Use registration district, informant, certificate number, and privacy cutoff; request original certificate/image."
+      },
+      {
+        "type": "church_parish_register",
+        "religion": "Catholic/Orthodox/Protestant/Anglican/etc.",
+        "period": "c.1500-20th century depending locality",
+        "languages": ["en", "cy", "gd", "la"],
+        "where_held_today": [
+          "diocesan archive",
+          "parish",
+          "state archive",
+          "digital church portal"
+        ],
+        "online_index": [
+          "FamilySearch",
+          "Matricula/Archion where relevant",
+          "local archive portals"
+        ],
+        "search_syntax_notes": "Search parish, filial church, diocese, confession, and house number; account for Latin/German/Russian forms."
+      },
+      {
+        "type": "cemetery_burial",
+        "religion": "all/Jewish/Christian",
+        "period": "c.1600-present",
+        "languages": ["en", "cy", "gd", "la"],
+        "where_held_today": [
+          "cemetery authority",
+          "municipality",
+          "Jewish community",
+          "Find a Grave/BillionGraves/JOWBR"
+        ],
+        "online_index": ["JOWBR", "Find a Grave", "BillionGraves", "local cemetery databases"],
+        "search_syntax_notes": "Search inscription language, patronymic, Hebrew date, maiden name, plot owner and burial society."
+      },
+      {
+        "type": "military_conscription_service",
+        "religion": "all",
+        "period": "c.1700-present",
+        "languages": ["en", "cy", "gd"],
+        "where_held_today": [
+          "national military archive",
+          "state archive",
+          "defence records office"
+        ],
+        "online_index": ["national archive portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Search by service number, draft board/unit, residence, age, next-of-kin and variant spelling."
+      },
+      {
+        "type": "immigration_passenger_naturalization",
+        "religion": "all",
+        "period": "c.1600-present",
+        "languages": ["en", "cy", "gd"],
+        "where_held_today": [
+          "national archive",
+          "port records",
+          "court records",
+          "immigration agency"
+        ],
+        "online_index": [
+          "national archive portals",
+          "Ellis Island/Castle Garden where relevant",
+          "Ancestry/FamilySearch"
+        ],
+        "search_syntax_notes": "Correlate origin town, ship, arrival date, sponsor, contact, naturalization court and declaration/petition."
+      },
+      {
+        "type": "probate_land_tax_notarial",
+        "religion": "all",
+        "period": "c.1500-present",
+        "languages": ["en", "cy", "gd"],
+        "where_held_today": ["court archive", "state archive", "land registry", "notarial archive"],
+        "online_index": ["national/state portals", "FamilySearch", "local indexes"],
+        "search_syntax_notes": "Use property location, heirs, witnesses, neighbors and tax class; excellent for FAN-club reconstruction."
+      }
+    ],
+    "key_archives": [
+      {
+        "name": "The National Archives UK",
+        "url": "https://www.nationalarchives.gov.uk/",
+        "languages_for_correspondence": ["en"],
+        "request_method": ["online_catalog", "reading_room", "record_order"],
+        "typical_response_time_days": 30,
+        "fee_structure": "download/copy charges for some records",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "General Register Office England and Wales",
+        "url": "https://www.gro.gov.uk/gro/content/certificates/",
+        "languages_for_correspondence": ["en"],
+        "request_method": ["online_order"],
+        "typical_response_time_days": 14,
+        "fee_structure": "certificate/PDF fees set by GRO",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "ScotlandsPeople / National Records of Scotland",
+        "url": "https://www.scotlandspeople.gov.uk/",
+        "languages_for_correspondence": ["en"],
+        "request_method": ["portal"],
+        "typical_response_time_days": 0,
+        "fee_structure": "credit-based images/certificates",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      }
+    ],
+    "online_databases": [
+      "https://www.nationalarchives.gov.uk/",
+      "https://www.gro.gov.uk/gro/content/certificates/",
+      "https://www.scotlandspeople.gov.uk/",
+      "https://www.freebmd.org.uk/",
+      "https://www.findmypast.co.uk/"
+    ],
+    "famous_genealogy_problems": [
+      "England/Wales, Scotland and Northern Ireland have different systems; census access is decennial and privacy-restricted for recent censuses; parish boundaries and registration districts changed; common names require certificate-level correlation; nonconformist and Jewish records may be outside Anglican parish series.",
+      "Indexes are finding aids, not proof; AutoTreeGen should require image/citation verification.",
+      "Historical boundaries and modern country borders often route the same record to different archives.",
+      "Endogamy, pedigree collapse and repeated surnames can inflate DNA-based relationship estimates.",
+      "Locality disambiguation is usually more important than surname search alone."
+    ],
+    "name_transliteration_notes": "Normalize original-script name, transliteration, phonetic variant, patronymic/matronymic, maiden name and married name separately. Keep evidence-linked spelling per source. Use historical orthography and jurisdiction-aware transliteration; never overwrite original spelling.",
+    "common_fabrication_patterns_local": [
+      "wrong person selected from common-name census hit",
+      "assuming county boundaries stayed fixed",
+      "linking to aristocracy without probate/land evidence",
+      "ignoring mother's maiden name and informant evidence"
+    ],
+    "AutoTreeGen_schema_notes": {
+      "evidence_score_inputs": [
+        "source_type",
+        "record_image_available",
+        "DNA_total_cM",
+        "longest_segment_cM",
+        "triangulation",
+        "shared_matches",
+        "date_logic",
+        "place_logic",
+        "name_variant_distance",
+        "same_household_or_FAN_cluster"
+      ],
+      "recommended_confidence_status": [
+        "confirmed",
+        "probable",
+        "hypothesis",
+        "conflict",
+        "rejected"
+      ],
+      "minimum_proof_rule": "Do not promote a relationship above probable unless at least two independent evidence classes support it, or one primary record directly states the relationship and no conflicts exist."
+    },
+    "source_urls": [
+      "https://www.findmypast.co.uk/",
+      "https://www.freebmd.org.uk/",
+      "https://www.gro.gov.uk/gro/content/certificates/",
+      "https://www.nationalarchives.gov.uk/",
+      "https://www.scotlandspeople.gov.uk/"
+    ]
+  },
+  {
+    "country": "Ireland",
+    "iso2": "IE",
+    "historical_jurisdictions": [
+      {
+        "period": "pre-1801",
+        "name": "Kingdom of Ireland",
+        "subdivisions": ["county", "barony", "parish", "townland"],
+        "examples": ["Dublin", "Cork", "Antrim"]
+      },
+      {
+        "period": "1801-1922",
+        "name": "United Kingdom of Great Britain and Ireland",
+        "subdivisions": ["county", "poor_law_union", "registration_district", "townland"],
+        "examples": ["Dublin", "Galway", "Belfast"]
+      },
+      {
+        "period": "1922-present",
+        "name": "Ireland / Northern Ireland split",
+        "subdivisions": ["county", "civil_parish", "townland", "registration_district"],
+        "examples": ["Republic of Ireland", "Northern Ireland"]
+      }
+    ],
+    "languages": ["en", "ga", "la"],
+    "scripts": ["Latin"],
+    "record_types": [
+      {
+        "type": "metric_book",
+        "religion": "Jewish/Christian depending locality",
+        "period": "c.1700-1940",
+        "languages": ["en", "ga", "la"],
+        "where_held_today": [
+          "state archive",
+          "regional archive",
+          "religious archive",
+          "digital repository where available"
+        ],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "local national portals"],
+        "search_syntax_notes": "Search by historical jurisdiction, locality variants, religion, date range, and surname variants; verify images, not indexes only."
+      },
+      {
+        "type": "revision_list_or_census",
+        "religion": "all/household",
+        "period": "c.1780-1930 depending jurisdiction",
+        "languages": ["en", "ga", "la"],
+        "where_held_today": ["national/state archives", "regional archives"],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "national archive catalogues"],
+        "search_syntax_notes": "Use household head, patronymic, age, estate/class, tax status, and previous revision cross-links."
+      },
+      {
+        "type": "BDM_civil",
+        "religion": "civil",
+        "period": "varies by country; usually 19th century-present",
+        "languages": ["en", "ga"],
+        "where_held_today": ["civil registry", "municipal/state archives after privacy period"],
+        "online_index": ["national/state portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Use registration district, informant, certificate number, and privacy cutoff; request original certificate/image."
+      },
+      {
+        "type": "church_parish_register",
+        "religion": "Catholic/Orthodox/Protestant/Anglican/etc.",
+        "period": "c.1500-20th century depending locality",
+        "languages": ["en", "ga", "la"],
+        "where_held_today": [
+          "diocesan archive",
+          "parish",
+          "state archive",
+          "digital church portal"
+        ],
+        "online_index": [
+          "FamilySearch",
+          "Matricula/Archion where relevant",
+          "local archive portals"
+        ],
+        "search_syntax_notes": "Search parish, filial church, diocese, confession, and house number; account for Latin/German/Russian forms."
+      },
+      {
+        "type": "cemetery_burial",
+        "religion": "all/Jewish/Christian",
+        "period": "c.1600-present",
+        "languages": ["en", "ga", "la"],
+        "where_held_today": [
+          "cemetery authority",
+          "municipality",
+          "Jewish community",
+          "Find a Grave/BillionGraves/JOWBR"
+        ],
+        "online_index": ["JOWBR", "Find a Grave", "BillionGraves", "local cemetery databases"],
+        "search_syntax_notes": "Search inscription language, patronymic, Hebrew date, maiden name, plot owner and burial society."
+      },
+      {
+        "type": "military_conscription_service",
+        "religion": "all",
+        "period": "c.1700-present",
+        "languages": ["en", "ga", "la"],
+        "where_held_today": [
+          "national military archive",
+          "state archive",
+          "defence records office"
+        ],
+        "online_index": ["national archive portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Search by service number, draft board/unit, residence, age, next-of-kin and variant spelling."
+      },
+      {
+        "type": "immigration_passenger_naturalization",
+        "religion": "all",
+        "period": "c.1600-present",
+        "languages": ["en", "ga", "la"],
+        "where_held_today": [
+          "national archive",
+          "port records",
+          "court records",
+          "immigration agency"
+        ],
+        "online_index": [
+          "national archive portals",
+          "Ellis Island/Castle Garden where relevant",
+          "Ancestry/FamilySearch"
+        ],
+        "search_syntax_notes": "Correlate origin town, ship, arrival date, sponsor, contact, naturalization court and declaration/petition."
+      },
+      {
+        "type": "probate_land_tax_notarial",
+        "religion": "all",
+        "period": "c.1500-present",
+        "languages": ["en", "ga", "la"],
+        "where_held_today": ["court archive", "state archive", "land registry", "notarial archive"],
+        "online_index": ["national/state portals", "FamilySearch", "local indexes"],
+        "search_syntax_notes": "Use property location, heirs, witnesses, neighbors and tax class; excellent for FAN-club reconstruction."
+      }
+    ],
+    "key_archives": [
+      {
+        "name": "National Archives of Ireland",
+        "url": "https://www.nationalarchives.ie/",
+        "languages_for_correspondence": ["en", "ga"],
+        "request_method": ["online_catalog", "reading_room", "email"],
+        "typical_response_time_days": 60,
+        "fee_structure": "most online census access free; copies/services vary",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "IrishGenealogy.ie / Department of Culture",
+        "url": "https://www.irishgenealogy.ie/",
+        "languages_for_correspondence": ["en", "ga"],
+        "request_method": ["portal"],
+        "typical_response_time_days": 0,
+        "fee_structure": "free civil/church indexes and images by statutory limits",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "General Register Office Ireland",
+        "url": "https://www.gov.ie/en/organisation/general-register-office/",
+        "languages_for_correspondence": ["en", "ga"],
+        "request_method": ["certificate_order"],
+        "typical_response_time_days": 30,
+        "fee_structure": "certificate fees apply",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      }
+    ],
+    "online_databases": [
+      "https://www.census.nationalarchives.ie/",
+      "https://www.irishgenealogy.ie/",
+      "https://www.nationalarchives.ie/",
+      "https://www.askaboutireland.ie/griffith-valuation/",
+      "https://virtualtreasury.ie/"
+    ],
+    "famous_genealogy_problems": [
+      "Major record losses occurred in the 1922 Public Record Office fire; 1901 and 1911 are the first complete surviving all-Ireland censuses online; civil registration begins 1864 for births/deaths and most marriages, 1845 for non-Catholic marriages; townland identification is critical; many parish registers are not indexed fully.",
+      "Indexes are finding aids, not proof; AutoTreeGen should require image/citation verification.",
+      "Historical boundaries and modern country borders often route the same record to different archives.",
+      "Endogamy, pedigree collapse and repeated surnames can inflate DNA-based relationship estimates.",
+      "Locality disambiguation is usually more important than surname search alone."
+    ],
+    "name_transliteration_notes": "Normalize original-script name, transliteration, phonetic variant, patronymic/matronymic, maiden name and married name separately. Keep evidence-linked spelling per source. Use historical orthography and jurisdiction-aware transliteration; never overwrite original spelling.",
+    "common_fabrication_patterns_local": [
+      "claiming clan/chief descent from surname alone",
+      "wrong townland/county due to repeated placenames",
+      "using Griffith's Valuation as proof of parentage",
+      "ignoring parish/register gaps"
+    ],
+    "AutoTreeGen_schema_notes": {
+      "evidence_score_inputs": [
+        "source_type",
+        "record_image_available",
+        "DNA_total_cM",
+        "longest_segment_cM",
+        "triangulation",
+        "shared_matches",
+        "date_logic",
+        "place_logic",
+        "name_variant_distance",
+        "same_household_or_FAN_cluster"
+      ],
+      "recommended_confidence_status": [
+        "confirmed",
+        "probable",
+        "hypothesis",
+        "conflict",
+        "rejected"
+      ],
+      "minimum_proof_rule": "Do not promote a relationship above probable unless at least two independent evidence classes support it, or one primary record directly states the relationship and no conflicts exist."
+    },
+    "source_urls": [
+      "https://virtualtreasury.ie/",
+      "https://www.askaboutireland.ie/griffith-valuation/",
+      "https://www.census.nationalarchives.ie/",
+      "https://www.gov.ie/en/organisation/general-register-office/",
+      "https://www.irishgenealogy.ie/",
+      "https://www.nationalarchives.ie/"
+    ]
+  },
+  {
+    "country": "USA",
+    "iso2": "US",
+    "historical_jurisdictions": [
+      {
+        "period": "1607-1776",
+        "name": "Colonial British/French/Spanish/Dutch America",
+        "subdivisions": ["colony", "county", "township", "parish"],
+        "examples": ["Virginia", "Massachusetts Bay", "New Netherland", "Louisiana"]
+      },
+      {
+        "period": "1776-1865",
+        "name": "Early Republic / antebellum",
+        "subdivisions": ["state", "county", "township", "territory"],
+        "examples": ["Pennsylvania", "New York", "Ohio Territory"]
+      },
+      {
+        "period": "1865-present",
+        "name": "United States",
+        "subdivisions": ["state", "county", "city", "township"],
+        "examples": ["New York", "Illinois", "California"]
+      }
+    ],
+    "languages": ["en", "es", "de", "fr", "yi", "he"],
+    "scripts": ["Latin", "Hebrew"],
+    "record_types": [
+      {
+        "type": "metric_book",
+        "religion": "Jewish/Christian depending locality",
+        "period": "c.1700-1940",
+        "languages": ["en", "es", "de", "fr"],
+        "where_held_today": [
+          "state archive",
+          "regional archive",
+          "religious archive",
+          "digital repository where available"
+        ],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "local national portals"],
+        "search_syntax_notes": "Search by historical jurisdiction, locality variants, religion, date range, and surname variants; verify images, not indexes only."
+      },
+      {
+        "type": "revision_list_or_census",
+        "religion": "all/household",
+        "period": "c.1780-1930 depending jurisdiction",
+        "languages": ["en", "es", "de"],
+        "where_held_today": ["national/state archives", "regional archives"],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "national archive catalogues"],
+        "search_syntax_notes": "Use household head, patronymic, age, estate/class, tax status, and previous revision cross-links."
+      },
+      {
+        "type": "BDM_civil",
+        "religion": "civil",
+        "period": "varies by country; usually 19th century-present",
+        "languages": ["en", "es"],
+        "where_held_today": ["civil registry", "municipal/state archives after privacy period"],
+        "online_index": ["national/state portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Use registration district, informant, certificate number, and privacy cutoff; request original certificate/image."
+      },
+      {
+        "type": "church_parish_register",
+        "religion": "Catholic/Orthodox/Protestant/Anglican/etc.",
+        "period": "c.1500-20th century depending locality",
+        "languages": ["en", "es", "de", "fr"],
+        "where_held_today": [
+          "diocesan archive",
+          "parish",
+          "state archive",
+          "digital church portal"
+        ],
+        "online_index": [
+          "FamilySearch",
+          "Matricula/Archion where relevant",
+          "local archive portals"
+        ],
+        "search_syntax_notes": "Search parish, filial church, diocese, confession, and house number; account for Latin/German/Russian forms."
+      },
+      {
+        "type": "cemetery_burial",
+        "religion": "all/Jewish/Christian",
+        "period": "c.1600-present",
+        "languages": ["en", "es", "de", "fr"],
+        "where_held_today": [
+          "cemetery authority",
+          "municipality",
+          "Jewish community",
+          "Find a Grave/BillionGraves/JOWBR"
+        ],
+        "online_index": ["JOWBR", "Find a Grave", "BillionGraves", "local cemetery databases"],
+        "search_syntax_notes": "Search inscription language, patronymic, Hebrew date, maiden name, plot owner and burial society."
+      },
+      {
+        "type": "military_conscription_service",
+        "religion": "all",
+        "period": "c.1700-present",
+        "languages": ["en", "es", "de"],
+        "where_held_today": [
+          "national military archive",
+          "state archive",
+          "defence records office"
+        ],
+        "online_index": ["national archive portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Search by service number, draft board/unit, residence, age, next-of-kin and variant spelling."
+      },
+      {
+        "type": "immigration_passenger_naturalization",
+        "religion": "all",
+        "period": "c.1600-present",
+        "languages": ["en", "es", "de"],
+        "where_held_today": [
+          "national archive",
+          "port records",
+          "court records",
+          "immigration agency"
+        ],
+        "online_index": [
+          "national archive portals",
+          "Ellis Island/Castle Garden where relevant",
+          "Ancestry/FamilySearch"
+        ],
+        "search_syntax_notes": "Correlate origin town, ship, arrival date, sponsor, contact, naturalization court and declaration/petition."
+      },
+      {
+        "type": "probate_land_tax_notarial",
+        "religion": "all",
+        "period": "c.1500-present",
+        "languages": ["en", "es", "de"],
+        "where_held_today": ["court archive", "state archive", "land registry", "notarial archive"],
+        "online_index": ["national/state portals", "FamilySearch", "local indexes"],
+        "search_syntax_notes": "Use property location, heirs, witnesses, neighbors and tax class; excellent for FAN-club reconstruction."
+      }
+    ],
+    "key_archives": [
+      {
+        "name": "National Archives and Records Administration (NARA)",
+        "url": "https://www.archives.gov/research/genealogy",
+        "languages_for_correspondence": ["en"],
+        "request_method": ["online_catalog", "regional_archive", "record_order"],
+        "typical_response_time_days": 30,
+        "fee_structure": "copies and certified records have fees",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "USCIS Genealogy Program",
+        "url": "https://www.uscis.gov/records/genealogy",
+        "languages_for_correspondence": ["en"],
+        "request_method": ["online_request"],
+        "typical_response_time_days": 180,
+        "fee_structure": "index/search and record request fees apply",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "Library of Congress",
+        "url": "https://www.loc.gov/collections/",
+        "languages_for_correspondence": ["en"],
+        "request_method": ["portal", "reading_room"],
+        "typical_response_time_days": 0,
+        "fee_structure": "many digital collections free",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      }
+    ],
+    "online_databases": [
+      "https://www.archives.gov/research/genealogy",
+      "https://catalog.archives.gov/",
+      "https://www.familysearch.org/",
+      "https://www.ancestry.com/",
+      "https://www.findagrave.com/",
+      "https://chroniclingamerica.loc.gov/"
+    ],
+    "famous_genealogy_problems": [
+      "Vital records are state/local not federal; 1890 federal census is mostly destroyed; privacy differs by state; immigration/naturalization records are split across courts, NARA, USCIS and ports; enslaved-person research requires indirect evidence; county boundary changes are frequent.",
+      "Indexes are finding aids, not proof; AutoTreeGen should require image/citation verification.",
+      "Historical boundaries and modern country borders often route the same record to different archives.",
+      "Endogamy, pedigree collapse and repeated surnames can inflate DNA-based relationship estimates.",
+      "Locality disambiguation is usually more important than surname search alone."
+    ],
+    "name_transliteration_notes": "Normalize original-script name, transliteration, phonetic variant, patronymic/matronymic, maiden name and married name separately. Keep evidence-linked spelling per source. Use historical orthography and jurisdiction-aware transliteration; never overwrite original spelling.",
+    "common_fabrication_patterns_local": [
+      "Mayflower/Revolutionary descent without generational proof",
+      "wrong immigrant from same-name passenger list",
+      "public-tree copying without source review",
+      "assuming DNA ethnicity proves a specific ancestor"
+    ],
+    "AutoTreeGen_schema_notes": {
+      "evidence_score_inputs": [
+        "source_type",
+        "record_image_available",
+        "DNA_total_cM",
+        "longest_segment_cM",
+        "triangulation",
+        "shared_matches",
+        "date_logic",
+        "place_logic",
+        "name_variant_distance",
+        "same_household_or_FAN_cluster"
+      ],
+      "recommended_confidence_status": [
+        "confirmed",
+        "probable",
+        "hypothesis",
+        "conflict",
+        "rejected"
+      ],
+      "minimum_proof_rule": "Do not promote a relationship above probable unless at least two independent evidence classes support it, or one primary record directly states the relationship and no conflicts exist."
+    },
+    "source_urls": [
+      "https://catalog.archives.gov/",
+      "https://chroniclingamerica.loc.gov/",
+      "https://www.ancestry.com/",
+      "https://www.archives.gov/research/genealogy",
+      "https://www.familysearch.org/",
+      "https://www.findagrave.com/",
+      "https://www.loc.gov/collections/",
+      "https://www.uscis.gov/records/genealogy"
+    ]
+  },
+  {
+    "country": "Canada",
+    "iso2": "CA",
+    "historical_jurisdictions": [
+      {
+        "period": "1608-1763",
+        "name": "New France / colonial era",
+        "subdivisions": ["colony", "seigneurie", "parish"],
+        "examples": ["Québec", "Acadia"]
+      },
+      {
+        "period": "1763-1867",
+        "name": "British North America",
+        "subdivisions": ["province", "county", "township", "parish"],
+        "examples": ["Upper Canada", "Lower Canada", "Nova Scotia"]
+      },
+      {
+        "period": "1867-present",
+        "name": "Dominion/Canada",
+        "subdivisions": ["province", "territory", "county", "municipality"],
+        "examples": ["Ontario", "Quebec", "Manitoba"]
+      }
+    ],
+    "languages": ["en", "fr", "ga", "de", "yi", "he"],
+    "scripts": ["Latin", "Hebrew"],
+    "record_types": [
+      {
+        "type": "metric_book",
+        "religion": "Jewish/Christian depending locality",
+        "period": "c.1700-1940",
+        "languages": ["en", "fr", "ga", "de"],
+        "where_held_today": [
+          "state archive",
+          "regional archive",
+          "religious archive",
+          "digital repository where available"
+        ],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "local national portals"],
+        "search_syntax_notes": "Search by historical jurisdiction, locality variants, religion, date range, and surname variants; verify images, not indexes only."
+      },
+      {
+        "type": "revision_list_or_census",
+        "religion": "all/household",
+        "period": "c.1780-1930 depending jurisdiction",
+        "languages": ["en", "fr", "ga"],
+        "where_held_today": ["national/state archives", "regional archives"],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "national archive catalogues"],
+        "search_syntax_notes": "Use household head, patronymic, age, estate/class, tax status, and previous revision cross-links."
+      },
+      {
+        "type": "BDM_civil",
+        "religion": "civil",
+        "period": "varies by country; usually 19th century-present",
+        "languages": ["en", "fr"],
+        "where_held_today": ["civil registry", "municipal/state archives after privacy period"],
+        "online_index": ["national/state portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Use registration district, informant, certificate number, and privacy cutoff; request original certificate/image."
+      },
+      {
+        "type": "church_parish_register",
+        "religion": "Catholic/Orthodox/Protestant/Anglican/etc.",
+        "period": "c.1500-20th century depending locality",
+        "languages": ["en", "fr", "ga", "de"],
+        "where_held_today": [
+          "diocesan archive",
+          "parish",
+          "state archive",
+          "digital church portal"
+        ],
+        "online_index": [
+          "FamilySearch",
+          "Matricula/Archion where relevant",
+          "local archive portals"
+        ],
+        "search_syntax_notes": "Search parish, filial church, diocese, confession, and house number; account for Latin/German/Russian forms."
+      },
+      {
+        "type": "cemetery_burial",
+        "religion": "all/Jewish/Christian",
+        "period": "c.1600-present",
+        "languages": ["en", "fr", "ga", "de"],
+        "where_held_today": [
+          "cemetery authority",
+          "municipality",
+          "Jewish community",
+          "Find a Grave/BillionGraves/JOWBR"
+        ],
+        "online_index": ["JOWBR", "Find a Grave", "BillionGraves", "local cemetery databases"],
+        "search_syntax_notes": "Search inscription language, patronymic, Hebrew date, maiden name, plot owner and burial society."
+      },
+      {
+        "type": "military_conscription_service",
+        "religion": "all",
+        "period": "c.1700-present",
+        "languages": ["en", "fr", "ga"],
+        "where_held_today": [
+          "national military archive",
+          "state archive",
+          "defence records office"
+        ],
+        "online_index": ["national archive portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Search by service number, draft board/unit, residence, age, next-of-kin and variant spelling."
+      },
+      {
+        "type": "immigration_passenger_naturalization",
+        "religion": "all",
+        "period": "c.1600-present",
+        "languages": ["en", "fr", "ga"],
+        "where_held_today": [
+          "national archive",
+          "port records",
+          "court records",
+          "immigration agency"
+        ],
+        "online_index": [
+          "national archive portals",
+          "Ellis Island/Castle Garden where relevant",
+          "Ancestry/FamilySearch"
+        ],
+        "search_syntax_notes": "Correlate origin town, ship, arrival date, sponsor, contact, naturalization court and declaration/petition."
+      },
+      {
+        "type": "probate_land_tax_notarial",
+        "religion": "all",
+        "period": "c.1500-present",
+        "languages": ["en", "fr", "ga"],
+        "where_held_today": ["court archive", "state archive", "land registry", "notarial archive"],
+        "online_index": ["national/state portals", "FamilySearch", "local indexes"],
+        "search_syntax_notes": "Use property location, heirs, witnesses, neighbors and tax class; excellent for FAN-club reconstruction."
+      }
+    ],
+    "key_archives": [
+      {
+        "name": "Library and Archives Canada",
+        "url": "https://www.canada.ca/en/library-archives/collection/research-help/genealogy-family-history.html",
+        "languages_for_correspondence": ["en", "fr"],
+        "request_method": ["portal", "record_order", "reading_room"],
+        "typical_response_time_days": 30,
+        "fee_structure": "copy/service fees may apply",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "Bibliothèque et Archives nationales du Québec (BAnQ)",
+        "url": "https://www.banq.qc.ca/",
+        "languages_for_correspondence": ["fr", "en"],
+        "request_method": ["portal", "reading_room"],
+        "typical_response_time_days": 30,
+        "fee_structure": "many digital resources free; copies may cost",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "Provincial vital statistics offices",
+        "url": "https://www.statcan.gc.ca/en/subjects-start/population_and_demography/vital_statistics",
+        "languages_for_correspondence": ["en", "fr"],
+        "request_method": ["provincial_request"],
+        "typical_response_time_days": 30,
+        "fee_structure": "fees and privacy rules vary by province",
+        "remote_search_supported": false,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      }
+    ],
+    "online_databases": [
+      "https://recherche-collection-search.bac-lac.gc.ca/",
+      "https://recherche-collection-search.bac-lac.gc.ca/eng/Census/index",
+      "https://www.banq.qc.ca/",
+      "https://www.familysearch.org/",
+      "https://www.ancestry.ca/"
+    ],
+    "famous_genealogy_problems": [
+      "Records are divided federally/provincially; Quebec Catholic parish registers are strong but naming conventions vary; early passenger lists before 1865 are incomplete; privacy periods vary by province; Indigenous genealogy requires culturally careful, community-aware methodology.",
+      "Indexes are finding aids, not proof; AutoTreeGen should require image/citation verification.",
+      "Historical boundaries and modern country borders often route the same record to different archives.",
+      "Endogamy, pedigree collapse and repeated surnames can inflate DNA-based relationship estimates.",
+      "Locality disambiguation is usually more important than surname search alone."
+    ],
+    "name_transliteration_notes": "Normalize original-script name, transliteration, phonetic variant, patronymic/matronymic, maiden name and married name separately. Keep evidence-linked spelling per source. Use historical orthography and jurisdiction-aware transliteration; never overwrite original spelling.",
+    "common_fabrication_patterns_local": [
+      "wrong same-name settler in parish register",
+      "assuming all records are federal",
+      "unsupported Loyalist/Acadian descent",
+      "ignoring French dit names and surname variants"
+    ],
+    "AutoTreeGen_schema_notes": {
+      "evidence_score_inputs": [
+        "source_type",
+        "record_image_available",
+        "DNA_total_cM",
+        "longest_segment_cM",
+        "triangulation",
+        "shared_matches",
+        "date_logic",
+        "place_logic",
+        "name_variant_distance",
+        "same_household_or_FAN_cluster"
+      ],
+      "recommended_confidence_status": [
+        "confirmed",
+        "probable",
+        "hypothesis",
+        "conflict",
+        "rejected"
+      ],
+      "minimum_proof_rule": "Do not promote a relationship above probable unless at least two independent evidence classes support it, or one primary record directly states the relationship and no conflicts exist."
+    },
+    "source_urls": [
+      "https://recherche-collection-search.bac-lac.gc.ca/",
+      "https://recherche-collection-search.bac-lac.gc.ca/eng/Census/index",
+      "https://www.ancestry.ca/",
+      "https://www.banq.qc.ca/",
+      "https://www.canada.ca/en/library-archives/collection/research-help/genealogy-family-history.html",
+      "https://www.familysearch.org/",
+      "https://www.statcan.gc.ca/en/subjects-start/population_and_demography/vital_statistics"
+    ]
+  },
+  {
+    "country": "Australia",
+    "iso2": "AU",
+    "historical_jurisdictions": [
+      {
+        "period": "1788-1901",
+        "name": "Australian colonies",
+        "subdivisions": ["colony", "county", "parish", "district"],
+        "examples": ["New South Wales", "Victoria", "Queensland"]
+      },
+      {
+        "period": "1901-present",
+        "name": "Commonwealth of Australia",
+        "subdivisions": ["state", "territory", "local_government_area"],
+        "examples": ["Victoria", "New South Wales", "Australian Capital Territory"]
+      }
+    ],
+    "languages": ["en"],
+    "scripts": ["Latin"],
+    "record_types": [
+      {
+        "type": "metric_book",
+        "religion": "Jewish/Christian depending locality",
+        "period": "c.1700-1940",
+        "languages": ["en"],
+        "where_held_today": [
+          "state archive",
+          "regional archive",
+          "religious archive",
+          "digital repository where available"
+        ],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "local national portals"],
+        "search_syntax_notes": "Search by historical jurisdiction, locality variants, religion, date range, and surname variants; verify images, not indexes only."
+      },
+      {
+        "type": "revision_list_or_census",
+        "religion": "all/household",
+        "period": "c.1780-1930 depending jurisdiction",
+        "languages": ["en"],
+        "where_held_today": ["national/state archives", "regional archives"],
+        "online_index": ["FamilySearch", "JewishGen where relevant", "national archive catalogues"],
+        "search_syntax_notes": "Use household head, patronymic, age, estate/class, tax status, and previous revision cross-links."
+      },
+      {
+        "type": "BDM_civil",
+        "religion": "civil",
+        "period": "varies by country; usually 19th century-present",
+        "languages": ["en"],
+        "where_held_today": ["civil registry", "municipal/state archives after privacy period"],
+        "online_index": ["national/state portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Use registration district, informant, certificate number, and privacy cutoff; request original certificate/image."
+      },
+      {
+        "type": "church_parish_register",
+        "religion": "Catholic/Orthodox/Protestant/Anglican/etc.",
+        "period": "c.1500-20th century depending locality",
+        "languages": ["en"],
+        "where_held_today": [
+          "diocesan archive",
+          "parish",
+          "state archive",
+          "digital church portal"
+        ],
+        "online_index": [
+          "FamilySearch",
+          "Matricula/Archion where relevant",
+          "local archive portals"
+        ],
+        "search_syntax_notes": "Search parish, filial church, diocese, confession, and house number; account for Latin/German/Russian forms."
+      },
+      {
+        "type": "cemetery_burial",
+        "religion": "all/Jewish/Christian",
+        "period": "c.1600-present",
+        "languages": ["en"],
+        "where_held_today": [
+          "cemetery authority",
+          "municipality",
+          "Jewish community",
+          "Find a Grave/BillionGraves/JOWBR"
+        ],
+        "online_index": ["JOWBR", "Find a Grave", "BillionGraves", "local cemetery databases"],
+        "search_syntax_notes": "Search inscription language, patronymic, Hebrew date, maiden name, plot owner and burial society."
+      },
+      {
+        "type": "military_conscription_service",
+        "religion": "all",
+        "period": "c.1700-present",
+        "languages": ["en"],
+        "where_held_today": [
+          "national military archive",
+          "state archive",
+          "defence records office"
+        ],
+        "online_index": ["national archive portals", "FamilySearch", "commercial databases"],
+        "search_syntax_notes": "Search by service number, draft board/unit, residence, age, next-of-kin and variant spelling."
+      },
+      {
+        "type": "immigration_passenger_naturalization",
+        "religion": "all",
+        "period": "c.1600-present",
+        "languages": ["en"],
+        "where_held_today": [
+          "national archive",
+          "port records",
+          "court records",
+          "immigration agency"
+        ],
+        "online_index": [
+          "national archive portals",
+          "Ellis Island/Castle Garden where relevant",
+          "Ancestry/FamilySearch"
+        ],
+        "search_syntax_notes": "Correlate origin town, ship, arrival date, sponsor, contact, naturalization court and declaration/petition."
+      },
+      {
+        "type": "probate_land_tax_notarial",
+        "religion": "all",
+        "period": "c.1500-present",
+        "languages": ["en"],
+        "where_held_today": ["court archive", "state archive", "land registry", "notarial archive"],
+        "online_index": ["national/state portals", "FamilySearch", "local indexes"],
+        "search_syntax_notes": "Use property location, heirs, witnesses, neighbors and tax class; excellent for FAN-club reconstruction."
+      }
+    ],
+    "key_archives": [
+      {
+        "name": "National Archives of Australia",
+        "url": "https://www.naa.gov.au/explore-collection/search-people/researching-your-family",
+        "languages_for_correspondence": ["en"],
+        "request_method": ["RecordSearch", "NameSearch", "copy_order"],
+        "typical_response_time_days": 30,
+        "fee_structure": "digital copies and retrieval fees vary",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "National Library of Australia / Trove",
+        "url": "https://trove.nla.gov.au/",
+        "languages_for_correspondence": ["en"],
+        "request_method": ["portal"],
+        "typical_response_time_days": 0,
+        "fee_structure": "free search; some linked content external",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      },
+      {
+        "name": "Births, Deaths and Marriages Victoria",
+        "url": "https://www.bdm.vic.gov.au/search-your-family-history",
+        "languages_for_correspondence": ["en"],
+        "request_method": ["online_search", "certificate_order"],
+        "typical_response_time_days": 14,
+        "fee_structure": "index/images/certificates have fees",
+        "remote_search_supported": true,
+        "sample_letter_template_en": "Dear Archivist, I am researching the family of [FULL NAME], born/married/died about [DATE] in [PLACE]. Please search [RECORD TYPE] for [RELIGION/COMMUNITY] in the period [YEARS]. Known relatives: [NAMES]. I understand fees may apply and would be grateful for a quote and available digital copies. Sincerely, [NAME]."
+      }
+    ],
+    "online_databases": [
+      "https://www.naa.gov.au/explore-collection/search-people/researching-your-family",
+      "https://recordsearch.naa.gov.au/",
+      "https://trove.nla.gov.au/",
+      "https://www.bdm.vic.gov.au/search-your-family-history",
+      "https://www.library.gov.au/research/family-history/births-deaths-and-marriages"
+    ],
+    "famous_genealogy_problems": [
+      "BDM is state-based and privacy-restricted for recent events; immigration, naturalisation, defence and internment records are often federal; newspapers are unusually important through Trove; convict records are colony-specific; Aboriginal and Torres Strait Islander research needs culturally sensitive sources and access protocols.",
+      "Indexes are finding aids, not proof; AutoTreeGen should require image/citation verification.",
+      "Historical boundaries and modern country borders often route the same record to different archives.",
+      "Endogamy, pedigree collapse and repeated surnames can inflate DNA-based relationship estimates.",
+      "Locality disambiguation is usually more important than surname search alone."
+    ],
+    "name_transliteration_notes": "Normalize original-script name, transliteration, phonetic variant, patronymic/matronymic, maiden name and married name separately. Keep evidence-linked spelling per source. Use historical orthography and jurisdiction-aware transliteration; never overwrite original spelling.",
+    "common_fabrication_patterns_local": [
+      "claiming convict descent from same-name person without locality proof",
+      "wrong state BDM index selected",
+      "assuming federal archive has all vital records",
+      "using newspaper mention as proof without civil/source correlation"
+    ],
+    "AutoTreeGen_schema_notes": {
+      "evidence_score_inputs": [
+        "source_type",
+        "record_image_available",
+        "DNA_total_cM",
+        "longest_segment_cM",
+        "triangulation",
+        "shared_matches",
+        "date_logic",
+        "place_logic",
+        "name_variant_distance",
+        "same_household_or_FAN_cluster"
+      ],
+      "recommended_confidence_status": [
+        "confirmed",
+        "probable",
+        "hypothesis",
+        "conflict",
+        "rejected"
+      ],
+      "minimum_proof_rule": "Do not promote a relationship above probable unless at least two independent evidence classes support it, or one primary record directly states the relationship and no conflicts exist."
+    },
+    "source_urls": [
+      "https://recordsearch.naa.gov.au/",
+      "https://trove.nla.gov.au/",
+      "https://www.bdm.vic.gov.au/search-your-family-history",
+      "https://www.library.gov.au/research/family-history/births-deaths-and-marriages",
+      "https://www.naa.gov.au/explore-collection/search-people/researching-your-family"
+    ]
+  }
+]

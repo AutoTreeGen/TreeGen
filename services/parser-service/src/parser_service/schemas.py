@@ -43,6 +43,11 @@ class ImportJobResponse(BaseModel):
         default=None,
         description="Относительный URL SSE-эндпоинта (только в ответе POST/PATCH).",
     )
+    # Phase 5.8: structured validator-findings (advisory). Каждый элемент —
+    # ``Finding.to_dict()`` (rule_id, severity, message, person_xref?,
+    # family_xref?, suggested_fix?, context). Пустой list — данные чистые
+    # ИЛИ validator не запускался (для не-GEDCOM импортов).
+    validation_findings: list[dict[str, Any]] = Field(default_factory=list)
     started_at: datetime | None = None
     finished_at: datetime | None = None
 
@@ -1680,6 +1685,13 @@ class RelationshipEvidenceResponse(BaseModel):
     contradicting: list[RelationshipEvidenceSource]
     confidence: RelationshipEvidenceConfidence
     provenance: RelationshipEvidenceProvenance
+    # Phase 15.11c (ADR-0082): scope-sealed indicators для UI. Если scope
+    # для subject/object опечатан, panel показывает 🔒 «no further candidates
+    # expected» вместо «add another sibling/spouse/parent» CTA. Список (а не
+    # bool) — UI может различать «siblings sealed, но spouses не sealed».
+    # Default = [] для обратной совместимости с pre-15.11c консьюмерами.
+    subject_sealed_scopes: list[str] = []
+    object_sealed_scopes: list[str] = []
 
 
 # =============================================================================

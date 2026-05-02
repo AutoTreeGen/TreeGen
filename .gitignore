@@ -166,6 +166,25 @@ data/
 # падают с FileNotFoundError на CI (см. PR #170 first run).
 !packages/entity-resolution/src/entity_resolution/names/data/
 !packages/entity-resolution/src/entity_resolution/names/data/**
+# Phase 22.1b / ADR-0081: committed canonical reference seeds
+# (small files: 14 countries v1 + 61 fabrication patterns). Larger
+# seed files остаются gitignored personal WIP — owner runs ingest
+# CLI с SEED_DATA_DIR на dev-машине; CI использует synthetic mini-fixtures
+# (см. packages/seed-data/tests/fixtures/seed/).
+# NB: глобальный ``data/`` ignore выше матчит ``packages/seed-data/data/``
+# (любая dir по имени ``data``); чтобы re-include canonical/, сначала
+# нужно un-ignore parent (``data/``), потом subdir + контент.
+!packages/seed-data/data/
+!packages/seed-data/data/canonical/
+!packages/seed-data/data/canonical/**
+# Defensive explicit ignore для local-only seeds (overlap с глобальным
+# `data/` правилом выше; держим явные строки для документации intent'а
+# и защиты при возможных rename'ах).
+/data/reference/autotreegen_surname_variant_clusters_merged.json
+/data/reference/autotreegen_eastern_europe_place_lookup_506_merged.json
+/data/reference/autotreegen_country_reference_database_v2_batch*.json
+/data/reference/autotreegen_country_reference_database_former_ussr_extension.json
+/data/reference/autotreegen_competitive_analysis_genealogy_platforms.*
 
 # ---- Логи и временные файлы ----
 *.log
