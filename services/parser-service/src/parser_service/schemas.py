@@ -43,6 +43,11 @@ class ImportJobResponse(BaseModel):
         default=None,
         description="Относительный URL SSE-эндпоинта (только в ответе POST/PATCH).",
     )
+    # Phase 5.8: structured validator-findings (advisory). Каждый элемент —
+    # ``Finding.to_dict()`` (rule_id, severity, message, person_xref?,
+    # family_xref?, suggested_fix?, context). Пустой list — данные чистые
+    # ИЛИ validator не запускался (для не-GEDCOM импортов).
+    validation_findings: list[dict[str, Any]] = Field(default_factory=list)
     started_at: datetime | None = None
     finished_at: datetime | None = None
 

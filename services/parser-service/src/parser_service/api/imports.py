@@ -216,6 +216,7 @@ async def create_import(
         # бы осталось ``None`` и Pydantic-валидация ответа упала бы.
         stats={},
         errors=[],
+        validation_findings=[],
         progress=None,
         cancel_requested=False,
     )

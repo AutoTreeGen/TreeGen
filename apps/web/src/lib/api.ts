@@ -802,6 +802,22 @@ export function fetchPersonCitations(personId: string): Promise<PersonCitationsR
 
 export type ImportJobStatus = "queued" | "processing" | "succeeded" | "failed" | "canceled";
 
+/**
+ * Phase 5.8 — structured validator finding (advisory). Зеркалит
+ * ``gedcom_parser.validator.types.Finding``. Поля snake_case под backend.
+ */
+export type ValidationSeverity = "info" | "warning" | "error";
+
+export type ValidationFinding = {
+  rule_id: string;
+  severity: ValidationSeverity;
+  message: string;
+  person_xref: string | null;
+  family_xref: string | null;
+  suggested_fix: string | null;
+  context: Record<string, unknown>;
+};
+
 export type ImportJobResponse = {
   id: string;
   tree_id: string;
@@ -810,6 +826,7 @@ export type ImportJobResponse = {
   source_sha256: string | null;
   stats: Record<string, number>;
   error: string | null;
+  validation_findings: ValidationFinding[];
   started_at: string | null;
   finished_at: string | null;
 };
