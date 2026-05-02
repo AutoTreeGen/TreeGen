@@ -1,0 +1,50 @@
+# Compatibility rules: MyHeritage web platform import.
+#
+# MyHeritage tolerates UTF-8 well and preserves more proprietary tags than
+# Ancestry, but it strips other-platform person identifiers and rewrites
+# inline OBJE to its own multimedia store (path becomes opaque). Empirically
+# preserves FONE/ROMN, but maps them to localised name variants.
+
+target: myheritage
+description: |
+  MyHeritage import. Tolerates UTF-8 and most structural patterns, but
+  rewrites inline OBJE paths and strips non-MyHeritage proprietary ids.
+
+drops:
+  - tag: _APID
+    reason: "Ancestry person id is not preserved by MyHeritage."
+    weight: 0.02
+  - tag: _TID
+    reason: "Ancestry tree id is not preserved by MyHeritage."
+    weight: 0.02
+  - tag: _PID
+    reason: "Ancestry profile id is not preserved by MyHeritage."
+    weight: 0.02
+  - tag: _FSFTID
+    reason: "FamilySearch person id is not preserved by MyHeritage."
+    weight: 0.02
+  - tag: _GENI_PROFILE_ID
+    reason: "Geni profile id is not preserved by MyHeritage."
+    weight: 0.01
+  - tag: _ATG_HYP
+    reason: "AutoTreeGen hypothesis-link tags are not understood by MyHeritage; dropped on import."
+    weight: 0.03
+  - tag: _ATG_PROV
+    reason: "AutoTreeGen provenance JSON tags are not understood by MyHeritage; dropped on import."
+    weight: 0.03
+  - feature: inline_objects
+    reason: "MyHeritage rewrites inline OBJE to its own media store; original local FILE path is lost."
+    weight: 0.03
+
+encoding:
+  max_charset: UTF-8
+  weight: 0.01
+  substitutions: {}
+
+structure:
+  - description: "Inline OBJE paths are rewritten to MyHeritage CDN URLs; the original local path is no longer reachable."
+    severity: 0.15
+    trigger: any_inline_obje
+  - description: "FONE/ROMN script variants are mapped to localised name variants; the script type label may shift."
+    severity: 0.10
+    trigger: any_name_variants

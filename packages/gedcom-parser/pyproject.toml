@@ -20,6 +20,7 @@ dependencies = [
     # (`person_match_score`, ADR-0015) для матчинга персон между двумя файлами.
     # Workspace-resolve через корневой [tool.uv.sources] (см. /pyproject.toml).
     "entity-resolution",
+    "pyyaml>=6.0",                 # YAML-правила Compatibility Simulator (compatibility/rules/*.yaml)
 ]
 
 [project.scripts]

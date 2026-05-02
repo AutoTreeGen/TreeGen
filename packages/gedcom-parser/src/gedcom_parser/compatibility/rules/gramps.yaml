@@ -1,0 +1,26 @@
+# Compatibility rules: Gramps desktop GEDCOM import.
+#
+# Gramps is the most permissive of the four targets — it preserves UTF-8,
+# FONE/ROMN, inline OBJE, citations and most "_*" extension tags as
+# generic "user attributes" on the relevant entity. The remaining
+# incompatibility is largely cosmetic: a handful of platform-specific id
+# tags lose their semantic meaning and survive only as strings in the
+# notes pane.
+
+target: gramps
+description: |
+  Gramps desktop GEDCOM import. Preserves UTF-8 and most structural
+  patterns; non-Gramps proprietary id tags survive as user attributes
+  but lose their original semantic meaning.
+
+drops: []
+
+encoding:
+  max_charset: UTF-8
+  weight: 0.005
+  substitutions: {}
+
+structure:
+  - description: "Non-Gramps proprietary id tags (_APID, _UID, _FSFTID, _GENI_PROFILE_ID) survive as user attributes on the imported person but lose their cross-platform meaning."
+    severity: 0.05
+    trigger: always

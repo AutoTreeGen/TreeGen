@@ -1,0 +1,75 @@
+# Compatibility rules: Ancestry.com web platform import.
+#
+# Behaviour observed on real export → re-import round-trips and documented
+# in docs/gedcom-extensions.md. Ancestry replaces custom person/family
+# identifiers with its own internal IDs, drops most "_*" proprietary tags
+# from non-Ancestry exporters, flattens nested structures, and historically
+# normalises non-ASCII content to a stripped form (modern UI tolerates more,
+# but the export round-trip still loses combining marks).
+
+target: ancestry
+description: |
+  Ancestry.com web platform import. Replaces custom ids, drops non-Ancestry
+  proprietary tags, flattens FONE/ROMN name variants and inline OBJE,
+  normalises text to ASCII for export compatibility.
+
+drops:
+  - tag: _UID
+    reason: "Ancestry overwrites custom _UID with its own internal id; original lost."
+    weight: 0.02
+  - tag: _FSFTID
+    reason: "FamilySearch person id is not preserved on Ancestry import."
+    weight: 0.02
+  - tag: _UPD
+    reason: "MyHeritage update timestamp is not preserved by Ancestry."
+    weight: 0.01
+  - tag: _GENI_PROFILE_ID
+    reason: "Geni profile id is not preserved by Ancestry."
+    weight: 0.01
+  - tag: _PUBLIC
+    reason: "Geni privacy flag is not preserved by Ancestry."
+    weight: 0.01
+  - tag: _LIVING
+    reason: "Geni living-person flag is not preserved by Ancestry."
+    weight: 0.01
+  - tag: _ATG_*
+    reason: "AutoTreeGen extension tags (_ATG_CONF/_ATG_HYP/_ATG_PROV/_ATG_TRSL) are stripped on Ancestry import."
+    weight: 0.04
+  - feature: name_variants
+    reason: "FONE/ROMN alternate-script name variants are stripped on Ancestry import."
+    weight: 0.05
+  - feature: inline_objects
+    reason: "Inline OBJE records (without xref) are flattened to top-level OBJE on Ancestry import; some inline metadata is lost."
+    weight: 0.04
+  - feature: event_citations
+    reason: "Per-event SOUR citations are partially flattened to person-level on Ancestry; PAGE/QUAY survive but EVEN/ROLE may be lost."
+    weight: 0.03
+  - feature: multiple_names
+    reason: "Ancestry keeps only one primary NAME per person; alternate NAMEs become 'Also known as' notes."
+    weight: 0.04
+
+encoding:
+  max_charset: ASCII
+  weight: 0.04
+  substitutions:
+    "ё": "e"
+    "Ё": "E"
+    "—": "-"
+    "–": "-"
+    "“": '"'
+    "”": '"'
+    "‘": "'"
+    "’": "'"
+    "…": "..."
+    "№": "No."
+
+structure:
+  - description: "Note-level SOUR citations are flattened to person-level on Ancestry."
+    severity: 0.20
+    trigger: any_event_citations
+  - description: "Inline OBJE records become top-level OBJE; the link is preserved but inline metadata may be lost."
+    severity: 0.15
+    trigger: any_inline_obje
+  - description: "FONE/ROMN script variants on names are removed; only the primary script survives."
+    severity: 0.20
+    trigger: any_name_variants
