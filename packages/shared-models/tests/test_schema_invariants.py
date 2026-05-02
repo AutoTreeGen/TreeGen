@@ -149,6 +149,12 @@ SERVICE_TABLES = {
     # Reference data, seed'ится миграцией; UPDATE in-place для
     # переоценки tier'а без деплоя.
     "document_type_weights",
+    # Off-catalog archive registry (Phase 22.1 / ADR-0074): curated
+    # каталог архивов (SBU/MVD/ZAGS/Standesamt/AGAD/military) по
+    # country + record_type. Не доменная сущность дерева — admin-CRUD,
+    # без tree_id / provenance / version_id / soft-delete. last_verified
+    # обязательно (honesty over coverage).
+    "archive_listings",
 }
 
 TREE_ENTITY_TABLES = {

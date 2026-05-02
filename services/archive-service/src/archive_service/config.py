@@ -74,6 +74,17 @@ class Settings(BaseSettings):
     clerk_jwks_url: str = Field(default="", description="Override JWKS URL.")
     clerk_audience: str = Field(default="", description="Optional ``aud``.")
 
+    # -- Admin gate (Phase 22.1) -----------------------------------------------
+    # POST/PATCH/DELETE /archives/registry разрешены только для caller'а
+    # с этим email в Clerk-claims. Mirrors parser-service.owner_email default.
+    admin_email: str = Field(
+        default="owner@autotreegen.local",
+        description=(
+            "Email caller'а, которому разрешены mutating-операции registry. "
+            "Если ``ClerkClaims.email`` не совпадает — 403."
+        ),
+    )
+
     # -- Database (Phase 15.5) -------------------------------------------------
     # Используется планировщиком архивов для read-only-запросов к
     # events/citations/places (см. ``planner.repo``). Пусто → lifespan
