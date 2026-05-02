@@ -164,6 +164,27 @@ SERVICE_TABLES = {
     # без mixin'ов и tree_id; revoke на API-слое чистит junction
     # hard-delete'ом, родительская assertion остаётся для audit.
     "completeness_assertion_sources",
+    # Reference seed tables (Phase 22.1b / ADR-0081): committed canonical
+    # data + ingested-from-local data. Без tree_id, soft-delete, provenance —
+    # это shared reference (страны, фамилии, места, паттерны фабрикации),
+    # не user-tree-domain. Refresh = ingest CLI с ON CONFLICT DO UPDATE.
+    # Consumers (22.1c+) читают по PK; lifecycle = manual rollback DELETE
+    # при ошибочной seed-версии.
+    "country_archive_directory_seed",
+    "surname_variant_seed",
+    "surname_transliteration_seed",
+    "fabrication_pattern_seed",
+    "place_lookup_seed",
+    # Merge sessions / decisions / apply batches (Phase 5.7c-a / ADR-0070):
+    # сессионный 2-way merge (orchestration-artifact merge-service'а), не
+    # доменная сущность дерева. ``merge_sessions.status`` — узкий lifecycle
+    # с терминальным ``abandoned``; ``merge_decisions`` / ``merge_apply_batches``
+    # immutable history rows. Без provenance/version_id/soft-delete на самих
+    # session-row'ах — provenance пишется на затронутые domain-row'ы при
+    # apply (ADR-0070 §«Аудит и provenance»).
+    "merge_sessions",
+    "merge_decisions",
+    "merge_apply_batches",
 }
 
 TREE_ENTITY_TABLES = {
