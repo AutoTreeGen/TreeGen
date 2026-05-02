@@ -39,6 +39,7 @@ from parser_service.api import (
     sources,
     trees,
     users,
+    voice_extraction,
     waitlist,
 )
 from parser_service.auth import get_current_claims
@@ -145,6 +146,14 @@ app.include_router(safe_merge.router, tags=["trees", "merge"], dependencies=_AUT
 # gates (OWNER для consent, EDITOR/VIEWER для sessions) — внутри ручек.
 app.include_router(audio_consent.router, tags=["voice", "consent"], dependencies=_AUTH_DEPS)
 app.include_router(audio_sessions.router, tags=["voice", "sessions"], dependencies=_AUTH_DEPS)
+# Phase 10.9b — voice-to-tree NLU 3-pass extraction (ADR-0075). Auth required;
+# permission gate (EDITOR для POST /audio-sessions/{id}/extract, VIEWER для GET)
+# resolved через session→tree внутри ручек.
+app.include_router(
+    voice_extraction.router,
+    tags=["voice", "extraction"],
+    dependencies=_AUTH_DEPS,
+)
 # Phase 10.7c — AI tree-chat (SSE-streamed). Включён до sharing/users/etc
 # чтобы /trees/{id}/chat/* пути не перехватывались generic'ами. Permission
 # gate (VIEWER+) на router-level через require_tree_role внутри ручки.

@@ -135,6 +135,10 @@ class PromptRegistry:
     # Pale of Settlement, Kohanim/Levite markers, transliteration schemes).
     PLACE_NORMALIZER_V1: Final[PromptTemplate] = PromptTemplate("place_normalizer", 1)
     NAME_NORMALIZER_V1: Final[PromptTemplate] = PromptTemplate("name_normalizer", 1)
+    # Phase 10.9b (ADR-0075): voice-to-tree 3-pass NLU extraction.
+    VOICE_EXTRACT_PASS1_V1: Final[PromptTemplate] = PromptTemplate("voice_extract_pass1", 1)
+    VOICE_EXTRACT_PASS2_V1: Final[PromptTemplate] = PromptTemplate("voice_extract_pass2", 1)
+    VOICE_EXTRACT_PASS3_V1: Final[PromptTemplate] = PromptTemplate("voice_extract_pass3", 1)
 
     @classmethod
     def all_templates(cls) -> list[PromptTemplate]:

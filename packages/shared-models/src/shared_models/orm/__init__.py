@@ -51,6 +51,12 @@ from shared_models.orm.tree import Tree, TreeCollaborator
 from shared_models.orm.user import User
 from shared_models.orm.user_action_request import UserActionRequest
 from shared_models.orm.version import Version
+from shared_models.orm.voice_extracted_proposal import (
+    ExtractionJobStatus,
+    ProposalStatus,
+    ProposalType,
+    VoiceExtractedProposal,
+)
 from shared_models.orm.waitlist_entry import WaitlistEntry
 
 __all__ = [
@@ -77,6 +83,7 @@ __all__ = [
     "EventParticipant",
     "Evidence",
     "ExtractedFact",
+    "ExtractionJobStatus",
     "Family",
     "FamilyChild",
     "FsDedupAttempt",
@@ -93,6 +100,8 @@ __all__ = [
     "PersonMergeLog",
     "Place",
     "PlaceAlias",
+    "ProposalStatus",
+    "ProposalType",
     "PublicTreeShare",
     "SharedMatch",
     "Source",
@@ -108,6 +117,7 @@ __all__ = [
     "User",
     "UserActionRequest",
     "Version",
+    "VoiceExtractedProposal",
     "WaitlistEntry",
     "reset_document_type_weight_cache",
 ]

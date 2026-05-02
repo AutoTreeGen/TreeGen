@@ -149,6 +149,16 @@ SERVICE_TABLES = {
     # Reference data, seed'ится миграцией; UPDATE in-place для
     # переоценки tier'а без деплоя.
     "document_type_weights",
+    # Voice-to-tree NLU extraction proposals (Phase 10.9b / ADR-0075):
+    # артефакт 3-pass extraction'а над AudioSession.transcript_text.
+    # Group-by ``extraction_job_id`` (UUID, не FK) объединяет proposals
+    # одного запуска в review-queue. Имеет ``tree_id`` + ``provenance``
+    # и ``deleted_at`` напрямую (без SoftDeleteMixin — иначе попадает под
+    # audit-listener; mirror AudioSession / SourceExtraction). Не TreeEntity:
+    # ``status`` свой узкий lifecycle (pending|approved|rejected) для
+    # review-queue, не доменный confidence_score / version_id (review
+    # решает, конвертировать ли в Hypothesis в 10.9c-cold).
+    "voice_extracted_proposals",
 }
 
 TREE_ENTITY_TABLES = {
@@ -247,6 +257,35 @@ def test_audio_sessions_consent_egress_provider_not_null() -> None:
     """``consent_egress_provider`` NOT NULL — пара к ``consent_egress_at``."""
     table = Base.metadata.tables["audio_sessions"]
     assert table.c.consent_egress_provider.nullable is False
+
+
+def test_voice_extracted_proposals_table_present() -> None:
+    """Phase 10.9b обязана зарегистрировать voice_extracted_proposals (ADR-0075)."""
+    assert "voice_extracted_proposals" in Base.metadata.tables
+
+
+def test_voice_extracted_proposals_audio_session_fk_cascade() -> None:
+    """``voice_extracted_proposals.audio_session_id → audio_sessions.id ON DELETE CASCADE``.
+
+    Proposals не должны переживать удаление родительской audio-сессии —
+    contextless review queue без transcript'а бесполезен.
+    """
+    table = Base.metadata.tables["voice_extracted_proposals"]
+    fks = [
+        fk
+        for fk in table.c.audio_session_id.foreign_keys
+        if fk.column.table.name == "audio_sessions"
+    ]
+    assert len(fks) == 1
+    assert fks[0].ondelete == "CASCADE"
+
+
+def test_voice_extracted_proposals_tree_id_fk_cascade() -> None:
+    """``voice_extracted_proposals.tree_id → trees.id ON DELETE CASCADE`` (safety net)."""
+    table = Base.metadata.tables["voice_extracted_proposals"]
+    fks = [fk for fk in table.c.tree_id.foreign_keys if fk.column.table.name == "trees"]
+    assert len(fks) == 1
+    assert fks[0].ondelete == "CASCADE"
 
 
 def test_audio_sessions_tree_id_fk_cascade() -> None:
