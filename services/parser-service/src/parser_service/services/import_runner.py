@@ -269,12 +269,21 @@ async def run_import(
     # и для Phase 3.5 inline-OBJE round-trip.
     await publisher.publish(Stage.PARSING, current=0, total=1, message="parsing GEDCOM")
     from gedcom_parser import GedcomDocument, parse_file
+    from gedcom_parser.validator import ValidatorContext, validate_document
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         records, encoding = parse_file(ged_path)
         document = GedcomDocument.from_records(records, encoding=encoding)
     await publisher.publish(Stage.PARSING, current=1, total=1, message="parsed")
+
+    # Phase 5.8 — structured validation findings (advisory).
+    # Никогда не блокирует импорт; severity=ERROR — флаг для review,
+    # не hard-fail. Передаём raw ``records`` через ctx чтобы missing-xref
+    # rule увидел top-level записи, скипнутые ``GedcomDocument.from_records``.
+    validator_ctx = ValidatorContext(raw_records=tuple(records))
+    findings = validate_document(document, ctx=validator_ctx)
+    job.validation_findings = [f.to_dict() for f in findings]
 
     set_audit_skip(session.sync_session, True)
     try:
