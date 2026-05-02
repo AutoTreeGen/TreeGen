@@ -101,3 +101,24 @@ CRUD endpoints в `parser_service.api.completeness` под
 | ADR-0075 | ADR-0076 | 0075 уже claimed в sibling worktree |
 | `tree_id ON DELETE CASCADE` | RESTRICT | Project convention `TreeScopedMixin`; ADR-0003 soft-delete-first |
 | Scopes: descendants/ancestors не упоминались | Не добавлены в 15.11a | Brief заявил 4 scope'а; рекурсивные scope'ы требуют отдельной revoke-cascade семантики (15.11b/c) |
+
+## Update — 2026-05-02 (Phase 15.11b architectural review)
+
+Validation layer (15.11b, ADR-0077) живёт в `services/parser-service/` рядом
+с handler'ами, которые она охраняет, а **не** в `packages/shared-models/`
+рядом с ORM. Обоснование (per architectural review 2026-05-02):
+
+- `shared-models` — pure ORM/Pydantic-схемы, без зависимости на
+  `AsyncSession`/FastAPI. Validation требует session-scoped query'ев
+  (lookup live sources, existing assertion от другого user'а), поэтому
+  не вписывается в pure-data контракт пакета.
+- Validation logic (role check, source-required, override mechanic,
+  audit-emission) — это business logic операции, а не data definition.
+  Она принадлежит сервису, который владеет операцией.
+- Tests-collocation: validation-tests integration-уровня (DB hit через
+  `app_client`), что согласуется с остальным `parser-service/tests/`
+  layout'ом.
+
+Принцип кратко: **validation lives with the service that owns the
+operation, not with the ORM definitions**. Это решение задокументировано
+полностью в ADR-0077 §«Решение».

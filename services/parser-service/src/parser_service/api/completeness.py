@@ -1,4 +1,5 @@
-"""Completeness Assertions endpoint (Phase 15.11a / ADR-0076).
+"""Completeness Assertions endpoint (Phase 15.11a / ADR-0076,
+Phase 15.11b validation layer / ADR-0077).
 
 CRUD над «sealed sets» — owner-asserted-negation flag'ами на scope вокруг
 анкорной персоны. Foundation only — consumers (15.3 / 15.5 / 15.6 / 10.7)
@@ -9,7 +10,7 @@ Routes:
 * ``POST   /trees/{tree_id}/persons/{person_id}/completeness``
   — create or upsert assertion (для (tree, person, scope) активна
   ровно одна). Source list заменяется атомарно. Body: scope, is_sealed,
-  note?, source_ids[].
+  note?, source_ids[], override?.
 * ``GET    /trees/{tree_id}/persons/{person_id}/completeness``
   — list active assertions для персоны (eager-load sources).
 * ``GET    /trees/{tree_id}/persons/{person_id}/completeness/{scope}``
@@ -20,8 +21,12 @@ Routes:
 
 Permission gate: VIEWER+ на read, EDITOR+ на write/revoke (как в safe_merge).
 
-Source-count invariant (≥1) — TODO для 15.11b. В 15.11a permissive: создаём
-без sources, тест на 422 пишется но expects 201 (до 15.11b).
+Validation (Phase 15.11b):
+    * is_sealed=True требует ≥1 source → 422
+    * source_ids должны быть live и принадлежать тому же tree → 422
+    * re-assert другим user'ом без override=True → 409
+    * override=True пишет audit-row с metadata
+    * revoke пишет audit-row
 """
 
 from __future__ import annotations
@@ -32,7 +37,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field
 from shared_models import TreeRole
-from shared_models.enums import CompletenessScope
+from shared_models.enums import AuditAction, CompletenessScope
 from shared_models.orm import (
     CompletenessAssertion,
     CompletenessAssertionSource,
@@ -43,6 +48,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from parser_service.auth import get_current_user_id
+from parser_service.completeness import (
+    emit_completeness_audit,
+    validate_assertion_create,
+    validate_assertion_revoke,
+)
 from parser_service.database import get_session
 from parser_service.services.permissions import require_tree_role
 
@@ -55,7 +65,13 @@ router = APIRouter()
 
 
 class CompletenessAssertionCreate(BaseModel):
-    """Body of POST /trees/{tree_id}/persons/{person_id}/completeness."""
+    """Body of POST /trees/{tree_id}/persons/{person_id}/completeness.
+
+    ``override`` (Phase 15.11b): caller подтверждает, что осведомлён о
+    существующей active assertion от другого user'а и сознательно её
+    перезаписывает. Без override — re-assertion другим user'ом отклоняется
+    с 409.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
@@ -63,6 +79,7 @@ class CompletenessAssertionCreate(BaseModel):
     is_sealed: bool = True
     note: str | None = Field(default=None, max_length=2000)
     source_ids: list[uuid.UUID] = Field(default_factory=list)
+    override: bool = False
 
 
 class CompletenessAssertionRead(BaseModel):
@@ -161,18 +178,30 @@ async def create_assertion(
     """Создать или upsert'нуть active assertion для (tree, person, scope).
 
     Если active row для тройки уже есть — атомарно заменяем sources и
-    обновляем is_sealed/note. Это держит invariant «одна active assertion
-    на scope per person», заявленный в ADR-0076 §Schema.
+    обновляем is_sealed/note. Invariant «одна active assertion на
+    scope per person» — ADR-0076 §Schema.
 
-    TODO(15.11b): отвергать ``is_sealed=True`` при пустом ``source_ids``
-    с 422. В 15.11a — permissive: пишем как есть, чтобы 15.11b мог
-    расширить тестовое покрытие на rejection-сценарии.
+    Validation (Phase 15.11b / ADR-0077):
+      * is_sealed=True без ``source_ids`` → 422.
+      * source_ids указывают на live, same-tree sources → иначе 422.
+      * existing assertion от другого user'а без ``override=True`` → 409.
+      * override=True пишет audit-row с prev_actor + override metadata.
     """
     await _ensure_person_in_tree(session, tree_id, person_id)
 
-    existing = await _load_active(session, tree_id, person_id, payload.scope)
-    if existing:
-        row = existing[0]
+    ctx = await validate_assertion_create(
+        session,
+        tree_id=tree_id,
+        subject_person_id=person_id,
+        scope=payload.scope,
+        is_sealed=payload.is_sealed,
+        source_ids=payload.source_ids,
+        actor_user_id=user_id,
+        override=payload.override,
+    )
+
+    if ctx.existing is not None:
+        row = ctx.existing
         row.is_sealed = payload.is_sealed
         row.note = payload.note
         row.asserted_by = user_id
@@ -201,6 +230,31 @@ async def create_assertion(
             )
         )
     await session.flush()
+
+    # Override audit — пишется ТОЛЬКО когда existing assertion от другого
+    # user'а перезаписывается. Auto-listener зафиксирует `UPDATE diff`
+    # отдельно; этот row добавляет ``reason`` + override metadata.
+    if ctx.is_override_reassertion:
+        emit_completeness_audit(
+            session,
+            tree_id=tree_id,
+            assertion_id=row.id,
+            actor_user_id=user_id,
+            action=AuditAction.UPDATE,
+            reason="override_reassertion",
+            diff={
+                "scope": payload.scope.value,
+                "subject_person_id": str(person_id),
+                "prev_actor_id": (
+                    str(ctx.prev_actor_id) if ctx.prev_actor_id is not None else None
+                ),
+                "new_actor_id": str(user_id),
+                "is_sealed": payload.is_sealed,
+                "source_count": len(payload.source_ids),
+            },
+        )
+        await session.flush()
+
     await session.refresh(row, attribute_names=["sources"])
     await session.commit()
     return _to_read(row)
@@ -256,6 +310,7 @@ async def revoke_assertion(
     tree_id: uuid.UUID,
     person_id: uuid.UUID,
     scope: CompletenessScope,
+    user_id: Annotated[uuid.UUID, Depends(get_current_user_id)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> None:
     """Revoke: ``is_sealed=False`` + clear sources, row остаётся.
@@ -264,16 +319,37 @@ async def revoke_assertion(
     flow'ов (GDPR-purge, owner-инициированный hard cleanup). Семантика
     revoke'а (read-side: «эта семья снова открыта») реализуется через
     ``is_sealed`` flag, а не через soft-delete.
+
+    Phase 15.11b: revoke пишет audit-row с reason=``revoke`` и metadata
+    о prev_actor — пусть downstream consumer'ы видят, кто и когда
+    инициировал unseal.
     """
     await _ensure_person_in_tree(session, tree_id, person_id)
-    rows = await _load_active(session, tree_id, person_id, scope)
-    if not rows:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No active completeness assertion for scope {scope.value}",
-        )
-    row = rows[0]
+    ctx = await validate_assertion_revoke(
+        session,
+        tree_id=tree_id,
+        subject_person_id=person_id,
+        scope=scope,
+        actor_user_id=user_id,
+    )
+    row = ctx.existing
     row.is_sealed = False
     row.sources.clear()
+    await session.flush()
+
+    emit_completeness_audit(
+        session,
+        tree_id=tree_id,
+        assertion_id=row.id,
+        actor_user_id=user_id,
+        action=AuditAction.DELETE,
+        reason="revoke",
+        diff={
+            "scope": scope.value,
+            "subject_person_id": str(person_id),
+            "prev_actor_id": (str(ctx.prev_actor_id) if ctx.prev_actor_id is not None else None),
+            "revoking_actor_id": str(user_id),
+        },
+    )
     await session.flush()
     await session.commit()
