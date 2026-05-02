@@ -38,6 +38,7 @@ from shared_models.orm import (
     Person,
     Source,
 )
+from shared_models.orm.completeness_assertion import sealed_scopes_for_person
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -434,6 +435,11 @@ async def get_relationship_evidence(
 
     provenance = _aggregate_provenance(families)
 
+    # Phase 15.11c (ADR-0082): tag obviously-relevant scope-seals для UI panel'а.
+    # Не блокируем endpoint при ошибке БД — это enrichment, не критический путь.
+    subject_sealed = await sealed_scopes_for_person(session, subject_id)
+    object_sealed = await sealed_scopes_for_person(session, object_id)
+
     _LOG.debug(
         "relationship evidence: tree=%s kind=%s supporting=%d contradicting=%d method=%s",
         tree_id,
@@ -453,6 +459,8 @@ async def get_relationship_evidence(
         contradicting=contradicting,
         confidence=confidence,
         provenance=provenance,
+        subject_sealed_scopes=sorted(s.value for s in subject_sealed),
+        object_sealed_scopes=sorted(s.value for s in object_sealed),
     )
 
 
