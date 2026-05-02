@@ -233,9 +233,18 @@ def _recompute_confidence(_mapper: Any, connection: Any, target: Evidence) -> No
     SELECT (одна транзакция), чтобы не было drift'а между Evidence
     и кэшем weights. Локальный кэш ``_WEIGHT_CACHE`` ускоряет
     последовательные flush'и в одной сессии.
+
+    Если ``document_type`` или ``match_certainty`` не установлены на
+    Python-объекте (caller полагается на server_default), подставляем
+    те же дефолты явно — listener срабатывает *до* того, как server-
+    default успевает применить значение.
     """
-    weight = _lookup_weight(connection, target.document_type)
-    target.confidence = float(weight) * float(target.match_certainty)
+    document_type = target.document_type or DocumentType.OTHER.value
+    match_certainty = target.match_certainty if target.match_certainty is not None else 0.5
+    weight = _lookup_weight(connection, document_type)
+    target.document_type = document_type
+    target.match_certainty = match_certainty
+    target.confidence = float(weight) * float(match_certainty)
 
 
 __all__ = [
