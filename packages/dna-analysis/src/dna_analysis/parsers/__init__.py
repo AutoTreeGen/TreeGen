@@ -3,8 +3,9 @@
 Phase 6.0:
     - 23andMe v5 (TSV) — TwentyThreeAndMeParser.
     - AncestryDNA v2 (TSV) — AncestryParser.
-    - MyHeritage CSV — MyHeritageParser (stub, Phase 6.1).
-    - FTDNA Family Finder CSV — FamilyTreeDnaParser (stub, Phase 6.1).
+Phase 16.1 (vendor coverage extension, ADR-0072):
+    - MyHeritage CSV — MyHeritageParser.
+    - FTDNA Family Finder CSV — FamilyTreeDnaParser.
 """
 
 from __future__ import annotations
