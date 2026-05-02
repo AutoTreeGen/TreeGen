@@ -24,7 +24,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 import pytest
-from hypothesis import given, settings
+from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 from pydantic import ValidationError
 from shared_models.enums import DocumentType, ProvenanceChannel
@@ -188,7 +188,7 @@ async def _seed_owner_and_tree(session: AsyncSession) -> tuple[Tree, Person]:
     session.add(tree)
     await session.flush()
 
-    person = Person(tree_id=tree.id, primary_name="Naum Katz")
+    person = Person(tree_id=tree.id)
     session.add(person)
     await session.flush()
 
@@ -458,20 +458,38 @@ async def test_evidence_tree_cascade_delete(db_session: AsyncSession) -> None:
 
 
 # Property: derivation lookup is closed under DocumentType enum.
-@settings(max_examples=10, deadline=None)
+#
+# Hypothesis-based property test против seed-данных миграции
+# (источник истины tier-классификации). DB-вариант теста —
+# ``test_document_type_weight_seed_covers_every_enum_member``
+# выше; этот property-тест проверяет ту же closure-инвариант
+# на уровне миграции без БД.
+@settings(
+    max_examples=10, deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture]
+)
 @given(member=st.sampled_from(list(DocumentType)))
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_property_weight_lookup_closed_over_enum(
-    db_session: AsyncSession,
-    member: DocumentType,
-) -> None:
-    """Для любой ``DocumentType`` weight в {1,2,3} — закрытость lookup'а."""
-    row = (
-        await db_session.execute(
-            select(DocumentTypeWeight.weight).where(
-                DocumentTypeWeight.document_type == member.value,
-            )
-        )
-    ).scalar_one_or_none()
-    assert row in {1, 2, 3}, f"missing or invalid weight for {member.value}: {row!r}"
+def test_property_weight_lookup_closed_over_enum(member: DocumentType) -> None:
+    """Для любой ``DocumentType`` миграция содержит row с weight ∈ {1,2,3}."""
+    # Импорт seed-списков из миграции — она и есть источник истины.
+    import importlib.util
+    from pathlib import Path
+
+    migration_path = (
+        Path(__file__).resolve().parents[3]
+        / "infrastructure"
+        / "alembic"
+        / "versions"
+        / "2026_05_02_0033-0033_evidence_weight_provenance_split.py"
+    )
+    spec = importlib.util.spec_from_file_location("evidence_migration", migration_path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    seed = {dt_value: 1 for dt_value, _ in module._TIER_1}
+    seed.update({dt_value: 2 for dt_value, _ in module._TIER_2})
+    seed.update({dt_value: 3 for dt_value, _ in module._TIER_3})
+
+    weight = seed.get(member.value)
+    assert weight in {1, 2, 3}, f"missing or invalid weight for {member.value}: {weight!r}"
