@@ -149,6 +149,15 @@ SERVICE_TABLES = {
     # Reference data, seed'ится миграцией; UPDATE in-place для
     # переоценки tier'а без деплоя.
     "document_type_weights",
+    # Bulk report-bundle jobs (Phase 24.4 / ADR-0078): async job state
+    # для batch relationship-report генерации. Service-table mirror:
+    # узкий status enum (queued|running|completed|failed|cancelled),
+    # без provenance/version_id/confidence_score (job artifact, не
+    # доменный факт), hard-delete по cancel или TTL purge (вместо
+    # soft-delete, чтобы не аудитить как domain-факт). FK CASCADE
+    # на tree, FK RESTRICT на requested_by — erasure pipeline сначала
+    # чистит jobs, потом user.
+    "report_bundle_jobs",
 }
 
 TREE_ENTITY_TABLES = {

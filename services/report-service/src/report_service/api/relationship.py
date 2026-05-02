@@ -30,16 +30,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from report_service.config import get_settings
 from report_service.database import get_session
-from report_service.relationship.data import build_report_context
 from report_service.relationship.models import (
     RelationshipReportRequest,
     RelationshipReportResponse,
 )
-from report_service.relationship.render import (
-    PdfRenderError,
-    render_html,
-    render_pdf,
-)
+from report_service.relationship.pipeline import generate_pdf_bytes_for_pair
+from report_service.relationship.render import PdfRenderError
 
 router = APIRouter(prefix="/api/v1/reports", tags=["reports", "relationship"])
 
@@ -148,7 +144,7 @@ async def generate_relationship_report(
         )
 
     try:
-        context = await build_report_context(
+        artifact = await generate_pdf_bytes_for_pair(
             session,
             tree_id=body.tree_id,
             person_a_id=body.person_a_id,
@@ -159,23 +155,21 @@ async def generate_relationship_report(
             include_dna_evidence=body.options.include_dna_evidence,
             include_archive_evidence=body.options.include_archive_evidence,
             include_hypothesis_flags=body.options.include_hypothesis_flags,
-            researcher_name=None,
         )
     except KeyError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(exc),
         ) from exc
-
-    html = render_html(context)
-    try:
-        pdf_bytes = render_pdf(html)
     except PdfRenderError as exc:
         _LOG.warning("PDF render failed: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="PDF rendering is not available in this environment.",
         ) from exc
+
+    context = artifact.context
+    pdf_bytes = artifact.pdf_bytes
 
     key = _storage_key(context.report_id, body.tree_id)
     await storage.put(key, pdf_bytes, content_type="application/pdf")
