@@ -594,6 +594,31 @@ class ProvenanceChannel(StrEnum):
     UNKNOWN = "unknown"
 
 
+class CompletenessScope(StrEnum):
+    """Scope утверждения «исчерпан» вокруг анкорной персоны (Phase 15.11a).
+
+    Используется в ``completeness_assertions.scope`` чтобы downstream-
+    консьюмеры (15.3 / 15.5 / 15.6 / 10.7) знали, какие наборы можно
+    пропускать при поиске новых connection'ов: если siblings персоны X
+    подтверждены как exhaustive, никакой агент не должен предлагать
+    «look for more siblings of X».
+
+    * ``SIBLINGS`` — все siblings персоны учтены.
+    * ``CHILDREN`` — все biological children учтены.
+    * ``SPOUSES`` — все spouses учтены (брак, civil partnership и т. п.).
+    * ``PARENTS`` — оба биологических родителя известны (или оба
+      аннотированы как unknown — orphan claim).
+
+    Расширения (descendants/ancestors) отложены до 15.11b/c — рекурсивные
+    scope'ы требуют отдельной семантики revoke-cascade.
+    """
+
+    SIBLINGS = "siblings"
+    CHILDREN = "children"
+    SPOUSES = "spouses"
+    PARENTS = "parents"
+
+
 class StripeEventStatus(StrEnum):
     """Статус обработки Stripe webhook event'а (idempotency log).
 
