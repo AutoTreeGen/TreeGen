@@ -149,6 +149,14 @@ SERVICE_TABLES = {
     # Reference data, seed'ится миграцией; UPDATE in-place для
     # переоценки tier'а без деплоя.
     "document_type_weights",
+    # Fantasy filter advisory flags (Phase 5.10 / ADR-0077): per-rule
+    # findings от rule-based fabrication detector. Имеет ``tree_id``
+    # FK CASCADE, но НЕ доменный факт дерева — это аудит-запись о
+    # подозрении, не сама правда. Без provenance/version_id/soft-delete:
+    # cleanup через retention (TBD), dismiss-lifecycle отдельно через
+    # ``dismissed_at`` (не SoftDeleteMixin — иначе попадёт под audit-
+    # listener как domain change).
+    "fantasy_flags",
 }
 
 TREE_ENTITY_TABLES = {

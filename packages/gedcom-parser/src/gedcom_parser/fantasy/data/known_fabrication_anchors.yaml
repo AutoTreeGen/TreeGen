@@ -1,0 +1,47 @@
+# known_fabrication_anchors.yaml
+#
+# Curated whitelist of pre-1500 historical figures that recurrently appear
+# as fabrication anchors in viral genealogy databases. Triggers the
+# `direct_descent_from_pre_1500_named_figure` rule when:
+#   - a person matching one of these names is born <= 1500
+#   - any modern person reaches them via parent chain
+#   - the chain has zero source citations
+#
+# This is **not** an ethnicity / surname filter. Each entry is a specific
+# named historical figure documented across multi-researcher fabrication
+# investigations. Keep narrow.
+#
+# Format: lowercase, surname-or-given-or-full-name, one per line.
+# Matching is case-insensitive equality on `given`, `surname`, or
+# `given + " " + surname`.
+
+# Frankish / Holy Roman lineage anchors
+- charlemagne
+- karl der grosse
+- carolus magnus
+
+# Mongol / Central Asian
+- genghis khan
+- temujin
+- chinggis khan
+
+# English royalty (frequent in viral US trees claiming Plantagenet descent)
+- william the conqueror
+- edward iii
+- alfred the great
+
+# Norse / Scandinavian (Ragnar / Ivar etc.)
+- ragnar lothbrok
+- ragnar lodbrok
+- ivar the boneless
+
+# Ancient figures (rarely defensible as direct line)
+- julius caesar
+- cleopatra
+- nefertiti
+
+# Biblical figures (very common in fabricated trees)
+- adam
+- eve
+- noah
+- abraham

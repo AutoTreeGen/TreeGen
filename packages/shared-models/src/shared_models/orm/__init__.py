@@ -26,6 +26,7 @@ from shared_models.orm.evidence import (
 )
 from shared_models.orm.extracted_fact import ExtractedFact
 from shared_models.orm.family import Family, FamilyChild
+from shared_models.orm.fantasy_flag import FantasyFlag, FantasySeverity
 from shared_models.orm.fs_dedup_attempt import FsDedupAttempt
 from shared_models.orm.hypothesis import Hypothesis, HypothesisEvidence
 from shared_models.orm.hypothesis_compute_job import HypothesisComputeJob
@@ -79,6 +80,8 @@ __all__ = [
     "ExtractedFact",
     "Family",
     "FamilyChild",
+    "FantasyFlag",
+    "FantasySeverity",
     "FsDedupAttempt",
     "Hypothesis",
     "HypothesisComputeJob",

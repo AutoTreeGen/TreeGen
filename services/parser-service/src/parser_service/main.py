@@ -25,6 +25,7 @@ from parser_service.api import (
     digest,
     ego_anchor,
     familysearch,
+    fantasy,
     hypotheses,
     hypotheses_sse,
     imports,
@@ -135,6 +136,10 @@ app.include_router(hypotheses.router, tags=["hypotheses"], dependencies=_AUTH_DE
 # persons router включается ПОСЛЕ trees (тот владеет `GET /persons/{id}`),
 # но имена путей не пересекаются: тут `/persons/{id}/merge*`.
 app.include_router(persons.router, tags=["persons", "merge"], dependencies=_AUTH_DEPS)
+# Phase 5.10 (ADR-0077) — fantasy filter (rule-based fabrication detector).
+# Pure CRUD over fantasy_flags + sync POST /fantasy-scan executor. Pathy
+# /trees/{id}/fantasy-* — 4-сегментные, не пересекаются с safe_merge / ego_anchor.
+app.include_router(fantasy.router, tags=["fantasy"], dependencies=_AUTH_DEPS)
 # Phase 5.7b — Safe Merge applier. Path /api/v1/trees/{tree_id}/merge —
 # единственный 5-сегментный путь под /api/v1/, никаких маршрут-collision'ов
 # с другими /trees/{id}/* (4 сегмента) роутерами.
