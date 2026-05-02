@@ -137,6 +137,18 @@ SERVICE_TABLES = {
     # это conversation log, не доменная сущность дерева.
     "chat_sessions",
     "chat_messages",
+    # Off-catalog evidence (Phase 22.5 / ADR-0071): документ-уровневое
+    # доказательство со split weight (document-type derived) и
+    # provenance (chain-of-custody JSONB strict-shape). Service-table
+    # потому что provenance тут — *жёсткая* Pydantic-форма, не свободный
+    # JSONB ProvenanceMixin'а; status/version_id не нужны (артефакт
+    # исследования, не доменный факт). Имеет ``deleted_at`` напрямую.
+    "evidence",
+    # Tier-weight lookup для DocumentType (Phase 22.5 / ADR-0071):
+    # data-driven классификация tier'а документа без хардкода в Python.
+    # Reference data, seed'ится миграцией; UPDATE in-place для
+    # переоценки tier'а без деплоя.
+    "document_type_weights",
 }
 
 TREE_ENTITY_TABLES = {

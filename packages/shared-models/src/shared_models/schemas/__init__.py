@@ -46,6 +46,12 @@ from shared_models.schemas.entities import (
     SourceRead,
     SourceUpdate,
 )
+from shared_models.schemas.evidence import (
+    DocumentType,
+    Provenance,
+    ProvenanceChannel,
+    default_unknown_provenance,
+)
 from shared_models.schemas.management import (
     ImportJobProgress,
     ImportJobRead,
@@ -62,6 +68,7 @@ __all__ = [
     "DnaKitCreate",
     "DnaKitRead",
     "DnaMatchRead",
+    "DocumentType",
     "EventCreate",
     "EventRead",
     "EventUpdate",
@@ -82,6 +89,8 @@ __all__ = [
     "PlaceCreate",
     "PlaceRead",
     "PlaceUpdate",
+    "Provenance",
+    "ProvenanceChannel",
     "ProvenanceSchema",
     "SharedMatchRead",
     "SoftTimestamps",
@@ -94,4 +103,5 @@ __all__ = [
     "TreeUpdate",
     "UserCreate",
     "UserRead",
+    "default_unknown_provenance",
 ]

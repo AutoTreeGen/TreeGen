@@ -19,6 +19,11 @@ from shared_models.orm.dna_pile_up_region import DnaPileUpRegion
 from shared_models.orm.dna_test_record import DnaTestRecord
 from shared_models.orm.email_send_log import EmailSendLog
 from shared_models.orm.event import Event, EventParticipant
+from shared_models.orm.evidence import (
+    DocumentTypeWeight,
+    Evidence,
+    reset_document_type_weight_cache,
+)
 from shared_models.orm.extracted_fact import ExtractedFact
 from shared_models.orm.family import Family, FamilyChild
 from shared_models.orm.fs_dedup_attempt import FsDedupAttempt
@@ -64,11 +69,13 @@ __all__ = [
     "DnaMatch",
     "DnaPileUpRegion",
     "DnaTestRecord",
+    "DocumentTypeWeight",
     "EmailSendLog",
     "EntityMultimedia",
     "EntityNote",
     "Event",
     "EventParticipant",
+    "Evidence",
     "ExtractedFact",
     "Family",
     "FamilyChild",
@@ -102,4 +109,5 @@ __all__ = [
     "UserActionRequest",
     "Version",
     "WaitlistEntry",
+    "reset_document_type_weight_cache",
 ]
