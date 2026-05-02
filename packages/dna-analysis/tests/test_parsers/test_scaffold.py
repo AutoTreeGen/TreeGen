@@ -7,6 +7,7 @@ from dna_analysis.parsers import (
     AncestryParser,
     BaseDnaParser,
     FamilyTreeDnaParser,
+    LivingDnaParser,
     MyHeritageParser,
     TwentyThreeAndMeParser,
 )
@@ -16,6 +17,7 @@ _PARSERS: list[type[BaseDnaParser]] = [
     AncestryParser,
     MyHeritageParser,
     FamilyTreeDnaParser,
+    LivingDnaParser,
 ]
 
 
