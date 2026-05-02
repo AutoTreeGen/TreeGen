@@ -24,6 +24,7 @@ from parser_service.api import (
     dedup_attempts,
     digest,
     ego_anchor,
+    export_audit,
     familysearch,
     hypotheses,
     hypotheses_sse,
@@ -139,6 +140,10 @@ app.include_router(persons.router, tags=["persons", "merge"], dependencies=_AUTH
 # единственный 5-сегментный путь под /api/v1/, никаких маршрут-collision'ов
 # с другими /trees/{id}/* (4 сегмента) роутерами.
 app.include_router(safe_merge.router, tags=["trees", "merge"], dependencies=_AUTH_DEPS)
+# Phase 5.9 — Export Audit (pre-export loss preview). Stateless multipart:
+# принимает .ged + список target_platforms, возвращает per-platform findings.
+# Reuses Phase 5.6 compatibility rules. Auth required (по конвенции router-deps).
+app.include_router(export_audit.router, tags=["gedcom", "audit"], dependencies=_AUTH_DEPS)
 # Phase 10.9a — voice-to-tree (ADR-0064). Включён до sharing чтобы
 # /trees/{id}/audio-* пути не перехватывались sharing-router'ом или
 # trees-router'ом /trees/{id}/* generic'ами. Auth required; permission
