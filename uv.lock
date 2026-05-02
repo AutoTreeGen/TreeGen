@@ -22,6 +22,7 @@ members = [
     "inference-engine",
     "notification-service",
     "parser-service",
+    "report-service",
     "shared-models",
     "telegram-bot",
     "treegen-mcp",
@@ -3437,6 +3438,60 @@ sdist = { url = "https://files.pythonhosted.org/packages/22/f5/df4e9027acead3ecc
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2c/58/ca301544e1fa93ed4f80d724bf5b194f6e4b945841c5bfd555878eea9fcb/referencing-0.37.0-py3-none-any.whl", hash = "sha256:381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231", size = 26766, upload-time = "2025-10-13T15:30:47.625Z" },
 ]
+
+[[package]]
+name = "report-service"
+version = "0.1.0"
+source = { editable = "services/report-service" }
+dependencies = [
+    { name = "asyncpg" },
+    { name = "fastapi" },
+    { name = "jinja2" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "python-dotenv" },
+    { name = "shared-models", extra = ["observability", "security"] },
+    { name = "sqlalchemy", extra = ["asyncio"] },
+    { name = "uvicorn", extra = ["standard"] },
+    { name = "weasyprint" },
+]
+
+[package.optional-dependencies]
+storage-gcs = [
+    { name = "shared-models", extra = ["storage-gcs"] },
+]
+storage-minio = [
+    { name = "shared-models", extra = ["storage-minio"] },
+]
+test = [
+    { name = "httpx" },
+    { name = "psycopg", extra = ["binary"] },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "testcontainers" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "asyncpg", specifier = ">=0.30" },
+    { name = "fastapi", specifier = ">=0.115" },
+    { name = "httpx", marker = "extra == 'test'", specifier = ">=0.27" },
+    { name = "jinja2", specifier = ">=3.1" },
+    { name = "psycopg", extras = ["binary"], marker = "extra == 'test'", specifier = ">=3.2" },
+    { name = "pydantic", specifier = ">=2.10" },
+    { name = "pydantic-settings", specifier = ">=2.6" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3" },
+    { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.24" },
+    { name = "python-dotenv", specifier = ">=1.0" },
+    { name = "shared-models", extras = ["security", "observability"], editable = "packages/shared-models" },
+    { name = "shared-models", extras = ["storage-gcs"], marker = "extra == 'storage-gcs'", editable = "packages/shared-models" },
+    { name = "shared-models", extras = ["storage-minio"], marker = "extra == 'storage-minio'", editable = "packages/shared-models" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
+    { name = "testcontainers", extras = ["postgres"], marker = "extra == 'test'", specifier = ">=4.8" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.32" },
+    { name = "weasyprint", specifier = ">=63" },
+]
+provides-extras = ["test", "storage-minio", "storage-gcs"]
 
 [[package]]
 name = "requests"

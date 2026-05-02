@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block content %}
+
+{# === Title page === #}
+<section class="title-page">
+  <h1>{{ report_title(ctx.title_style, ctx.locale) }}</h1>
+  <p style="font-size: 13pt;">
+    {{ ctx.person_a.primary_name }} ⟷ {{ ctx.person_b.primary_name }}
+  </p>
+  <p style="font-size: 11pt; color: #555;">
+    {{ t("subtitle_template", ctx.locale).format(
+        a=ctx.person_a.primary_name,
+        b=ctx.person_b.primary_name,
+        claim_label=claim_label(ctx.claimed_relationship, ctx.locale)
+    ) }}
+  </p>
+  <dl class="meta">
+    <dt>{{ t("tree", ctx.locale) }}:</dt>
+    <dd>{{ ctx.tree_name }}</dd>
+    <dt>{{ t("claim", ctx.locale) }}:</dt>
+    <dd>{{ claim_label(ctx.claimed_relationship, ctx.locale) }}</dd>
+    <dt>{{ t("generated_at", ctx.locale) }}:</dt>
+    <dd>{{ ctx.generated_at | fmt_date }}</dd>
+  </dl>
+</section>
+
+{# === Subjects === #}
+<section>
+  <h2>{{ t("person_a", ctx.locale) }}</h2>
+  <p><strong>{{ t("primary_name", ctx.locale) }}:</strong> {{ ctx.person_a.primary_name }}</p>
+  {% if ctx.person_a.aka_names %}
+  <p><strong>{{ t("also_known_as", ctx.locale) }}:</strong> {{ ctx.person_a.aka_names | join("; ") }}</p>
+  {% endif %}
+  <p><strong>{{ t("sex", ctx.locale) }}:</strong> {{ sex_label(ctx.person_a.sex, ctx.locale) }}</p>
+  <p><strong>{{ t("lifespan", ctx.locale) }}:</strong>
+    {{ ctx.person_a.birth_year if ctx.person_a.birth_year is not none else "?" }}
+    –
+    {{ ctx.person_a.death_year if ctx.person_a.death_year is not none else "?" }}
+  </p>
+
+  <h2>{{ t("person_b", ctx.locale) }}</h2>
+  <p><strong>{{ t("primary_name", ctx.locale) }}:</strong> {{ ctx.person_b.primary_name }}</p>
+  {% if ctx.person_b.aka_names %}
+  <p><strong>{{ t("also_known_as", ctx.locale) }}:</strong> {{ ctx.person_b.aka_names | join("; ") }}</p>
+  {% endif %}
+  <p><strong>{{ t("sex", ctx.locale) }}:</strong> {{ sex_label(ctx.person_b.sex, ctx.locale) }}</p>
+  <p><strong>{{ t("lifespan", ctx.locale) }}:</strong>
+    {{ ctx.person_b.birth_year if ctx.person_b.birth_year is not none else "?" }}
+    –
+    {{ ctx.person_b.death_year if ctx.person_b.death_year is not none else "?" }}
+  </p>
+</section>
+
+{# === Claim caveats === #}
+{% if not ctx.is_direct_claim %}
+<section>
+  <p class="negative">{{ t("extended_claim_caveat", ctx.locale).format(claim_label=claim_label(ctx.claimed_relationship, ctx.locale)) }}</p>
+</section>
+{% elif not ctx.direct_relationship_resolved %}
+<section>
+  <p class="negative">{{ t("direct_claim_unresolved", ctx.locale).format(claim_label=claim_label(ctx.claimed_relationship, ctx.locale)) }}</p>
+</section>
+{% endif %}
+
+{# === Narrative === #}
+<section class="narrative">
+  <h2>{{ t("narrative", ctx.locale) }}</h2>
+  {% for paragraph in ctx.narrative.split("\n\n") %}
+  <p>{{ paragraph }}</p>
+  {% endfor %}
+</section>
+
+{# === Evidence summary === #}
+<section>
+  <h2>{{ t("evidence_summary", ctx.locale) }}</h2>
+  <p><strong>{{ t("evidence_count_label", ctx.locale) }}:</strong> {{ ctx.evidence | length }}</p>
+  <p><strong>{{ t("counter_count_label", ctx.locale) }}:</strong> {{ ctx.counter_evidence | length }}</p>
+  <p>
+    <strong>{{ t("confidence_value", ctx.locale) }}:</strong>
+    {{ "%.2f" | format(ctx.confidence) }}
+    <span class="badge conf-{{ 'bayesian' if ctx.confidence_method == 'bayesian_22_5' else ('naive' if ctx.confidence_method == 'naive_count' else 'asserted') }}">
+      {{ confidence_method_label(ctx.confidence_method, ctx.locale) }}
+    </span>
+  </p>
+</section>
+
+{# === Supporting evidence === #}
+<section>
+  <h2>{{ t("supporting_evidence", ctx.locale) }}</h2>
+  {% if ctx.evidence %}
+  <table>
+    <thead>
+      <tr>
+        <th>{{ t("evidence_kind_citation", ctx.locale).split(' ')[0] }}</th>
+        <th>{{ t("claim", ctx.locale) }}</th>
+        <th>{{ t("weight", ctx.locale) }}</th>
+        <th>{{ t("match_certainty", ctx.locale) }}</th>
+        <th>w × m</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for piece in ctx.evidence %}
+        {{ evidence_row(piece) }}
+      {% endfor %}
+    </tbody>
+  </table>
+  {% for piece in ctx.evidence %}
+    {% if piece.provenance %}
+      <h3>{{ t("provenance_heading", ctx.locale) }} — {{ piece.title }}</h3>
+      {{ provenance_block(piece.provenance) }}
+    {% endif %}
+  {% endfor %}
+  {% else %}
+  <p>{{ t("no_supporting", ctx.locale) }}</p>
+  {% endif %}
+</section>
+
+{# === Counter-evidence === #}
+<section>
+  <h2 class="{% if ctx.counter_evidence %}negative{% endif %}">{{ t("counter_evidence", ctx.locale) }}</h2>
+  {% if ctx.counter_evidence %}
+  <table>
+    <thead>
+      <tr>
+        <th>{{ t("evidence_kind_citation", ctx.locale).split(' ')[0] }}</th>
+        <th>{{ t("claim", ctx.locale) }}</th>
+        <th>{{ t("weight", ctx.locale) }}</th>
+        <th>{{ t("match_certainty", ctx.locale) }}</th>
+        <th>w × m</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for piece in ctx.counter_evidence %}
+        {{ evidence_row(piece) }}
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>{{ t("no_counter", ctx.locale) }}</p>
+  {% endif %}
+</section>
+
+{# === Confidence calculation === #}
+<section>
+  <h2>{{ t("confidence_calculation", ctx.locale) }}</h2>
+  <p>
+    Σ supporting weight × match_certainty −
+    Σ contradicting weight × match_certainty =
+    <strong>{{ "%.2f" | format(ctx.confidence) }}</strong>
+  </p>
+  <p><em>{{ t("confidence_method", ctx.locale) }}:</em> {{ confidence_method_label(ctx.confidence_method, ctx.locale) }}</p>
+</section>
+
+{# === Sources / Footnotes === #}
+{% if footnotes %}
+<section class="footnotes">
+  <h2>{{ t("sources", ctx.locale) }}</h2>
+  <ol class="footnote-list">
+  {% for fn in footnotes %}
+    <li>{{ format_chicago(fn) }}</li>
+  {% endfor %}
+  </ol>
+</section>
+{% else %}
+<section class="footnotes">
+  <h2>{{ t("sources", ctx.locale) }}</h2>
+  <p>{{ t("no_sources", ctx.locale) }}</p>
+</section>
+{% endif %}
+
+{# === Methodology + signature === #}
+<section class="signature-page">
+  <h2>{{ t("methodology", ctx.locale) }}</h2>
+  <p>{{ ctx.methodology_statement }}</p>
+
+  <div class="signature-block">
+    <p><strong>{{ t("researcher", ctx.locale) }}:</strong>
+      {{ ctx.researcher_name if ctx.researcher_name else "_______________________" }}
+    </p>
+    <div class="line"></div>
+    <p style="margin-top: 4mm;"><strong>{{ t("generated_at", ctx.locale) }}:</strong>
+      {{ ctx.generated_at | fmt_date }}
+    </p>
+    <p><strong>{{ t("report_id_label", ctx.locale) }}:</strong> {{ ctx.report_id }}</p>
+  </div>
+</section>
+
+{% endblock %}
