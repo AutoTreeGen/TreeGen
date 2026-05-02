@@ -44,6 +44,7 @@ members = [
     "services/notification-service",
     "services/email-service",
     "services/billing-service",
+    "services/report-service",
     "services/telegram-bot",
 ]
 
@@ -63,6 +64,7 @@ archive-service = { workspace = true }
 notification-service = { workspace = true }
 email-service = { workspace = true }
 billing-service = { workspace = true }
+report-service = { workspace = true }
 telegram-bot = { workspace = true }
 
 [tool.uv]
@@ -223,6 +225,7 @@ mypy_path = [
     "services/email-service/src",
     "services/notification-service/src",
     "services/parser-service/src",
+    "services/report-service/src",
     "services/telegram-bot/src",
 ]
 exclude = [
