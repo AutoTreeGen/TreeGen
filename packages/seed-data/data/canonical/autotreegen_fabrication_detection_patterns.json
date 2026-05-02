@@ -1,0 +1,917 @@
+[
+  {
+    "pattern_id": "rabbinical_schneerson_to_baal_shem_tov",
+    "category": "rabbinical_fantasy",
+    "description": "Claimed unbroken descent from Baal Shem Tov through Schneerson or related Hasidic families without generation-by-generation documentary proof.",
+    "telltale_signs": [
+      "Sources only Geni, MyHeritage, Ancestry public trees, or copied GEDCOMs",
+      "No ketubah, birth, marriage, burial, revision-list, census, or contemporary rabbinical source for bridge generations",
+      "Generation gap inconsistent with known Hasidic chronology",
+      "Honorific titles used as identity proof instead of evidence"
+    ],
+    "detection_rule": "If claim_path contains {Baal Shem Tov, Besht} AND family_name contains {Schneerson, Shneerson, Schneersohn, Lubavitch} AND no source.type in {primary_record, archival_record, cemetery_inscription, contemporary_rabbinical_record}, flag high-severity fantasy.",
+    "confidence_when_flagged": 0.86,
+    "propagation_vector": "Geni merge-cascade and copied MyHeritage Smart Matches",
+    "real_alternative": "Often the family is connected through discipleship, marriage network, same town, naming tradition, or collateral same-name relatives rather than direct descent."
+  },
+  {
+    "pattern_id": "rabbinical_lubavitch_rebbe_descendant_claim",
+    "category": "rabbinical_fantasy",
+    "description": "Claim of biological descent from a Lubavitch Rebbe where the claimed line ignores known childless or collateral-only branches.",
+    "telltale_signs": [
+      "Claim says 'descendant of the Rebbe' without naming the exact Rebbe",
+      "Movement affiliation treated as bloodline evidence",
+      "No documented parent-child chain",
+      "Known historical constraints of the dynasty are ignored"
+    ],
+    "detection_rule": "If claim contains {Lubavitch Rebbe, Chabad Rebbe, Schneerson dynasty descendant} AND exact ancestor_identity_id is missing OR no documented parent-child chain exists, flag high-severity fantasy.",
+    "confidence_when_flagged": 0.88,
+    "propagation_vector": "Community memory converted into biological descent in online trees",
+    "real_alternative": "The family may have religious affiliation, service, marriage ties, or naming tradition connected to Chabad rather than direct descent."
+  },
+  {
+    "pattern_id": "rabbinical_twersky_chernobyl_generic_daughter",
+    "category": "rabbinical_fantasy",
+    "description": "Generic bridge into Twersky/Chernobyl dynasty through an unnamed daughter or son-in-law.",
+    "telltale_signs": [
+      "Bridge person named only as 'daughter of Rabbi X'",
+      "No spouse name, residence, or date-specific evidence",
+      "Different trees attach incompatible children to the same rabbi",
+      "Dates allow impossible childbearing or marriage age"
+    ],
+    "detection_rule": "If parent.family_name in {Twersky, Twerski, Chernobyl} AND child.name is unknown_or_generic AND relationship has no primary citation, flag fantasy_bridge.",
+    "confidence_when_flagged": 0.84,
+    "propagation_vector": "Dynasty-prestige attachment in collaborative trees",
+    "real_alternative": "Ancestor may belong to a local rabbinic family or in-law network without direct descent from the central Twersky line."
+  },
+  {
+    "pattern_id": "rabbinical_heschel_apta_title_confusion",
+    "category": "rabbinical_fantasy",
+    "description": "Claimed descent from Heschel/Apta line based on title similarity, rabbinical occupation, or town association.",
+    "telltale_signs": [
+      "Record says rabbi, dayan, maggid, or rav but not exact dynasty",
+      "Apta/Opatow locality used as proof of descent",
+      "No chain through named children",
+      "Different men with similar titles collapsed into one famous rabbi"
+    ],
+    "detection_rule": "If ancestor.title contains rabbinical_title AND place overlaps known_dynasty_center AND direct descent is asserted with no child-level source, flag unsupported_rabbinical_claim.",
+    "confidence_when_flagged": 0.79,
+    "propagation_vector": "Place-title confusion in Geni and MyHeritage profiles",
+    "real_alternative": "The ancestor may have served in the same region or community but not be biologically descended from the famous Heschel/Apta branch."
+  },
+  {
+    "pattern_id": "rabbinical_schick_maharam_name_collision",
+    "category": "rabbinical_fantasy",
+    "description": "Connection to Schick/Maharam Schick line created from surname similarity and rabbinic title only.",
+    "telltale_signs": [
+      "Surname Schick/Shik/Shick appears without documented parentage",
+      "Rabbi title added in unsourced online trees",
+      "Children assigned from incompatible regions",
+      "No yahrzeit, tombstone, responsa, or community-register evidence"
+    ],
+    "detection_rule": "If surname in {Schick, Shik, Shick} AND famous_rabbi_connection exists AND source_set contains only online_tree sources, flag medium-high severity.",
+    "confidence_when_flagged": 0.8,
+    "propagation_vector": "Name collision plus rabbinical-title inflation",
+    "real_alternative": "Could be a separate Schick/Shik family or non-rabbinical collateral branch."
+  },
+  {
+    "pattern_id": "rabbinical_soloveitchik_brisk_unsourced_bridge",
+    "category": "rabbinical_fantasy",
+    "description": "Claimed descent from Soloveitchik/Brisk rabbinical family through undocumented Eastern European bridge generations.",
+    "telltale_signs": [
+      "Soloveitchik/Soloveichik/Soloveichik appears only as surname variant",
+      "Bridge generation lacks birth or marriage place",
+      "Claim relies on family story without records",
+      "DNA match is distant and in an endogamous Ashkenazi cluster"
+    ],
+    "detection_rule": "If direct descent to Soloveitchik/Brisk line is asserted AND evidence_score < 0.65 AND no primary bridge source exists, flag rabbinical_high_risk.",
+    "confidence_when_flagged": 0.82,
+    "propagation_vector": "Famous-rabbi attachment and Ashkenazi endogamy overinterpretation",
+    "real_alternative": "There may be a surname or collateral community connection, but not necessarily direct descent from the famous Brisk branch."
+  },
+  {
+    "pattern_id": "rabbinical_maharal_to_modern_family_shortcut",
+    "category": "rabbinical_fantasy",
+    "description": "Shortcut from a modern Ashkenazi family to Maharal of Prague through unsupported 17th-18th century generations.",
+    "telltale_signs": [
+      "Long pre-1800 chain has no contemporary documents",
+      "Bridge contains repeated unknown spouses",
+      "Same chain appears identically in many public trees",
+      "Dates copied without places or source citations"
+    ],
+    "detection_rule": "If target_famous_ancestor in {Maharal, Judah Loew, Yehuda Loew} AND bridge_century in {1600s, 1700s} AND primary_source_count == 0, flag very-high severity.",
+    "confidence_when_flagged": 0.9,
+    "propagation_vector": "Copied medieval pedigree imported into public trees",
+    "real_alternative": "Possible cultural or scholarly association, not proven biological descent."
+  },
+  {
+    "pattern_id": "rabbinical_ari_luria_unbroken_descent",
+    "category": "rabbinical_fantasy",
+    "description": "Claimed unbroken descent from Isaac Luria, the ARI, through poorly documented Sephardic/Ashkenazi bridge generations.",
+    "telltale_signs": [
+      "Mystical prestige ancestor appears as endpoint",
+      "No continuous civil or rabbinical evidence",
+      "Chain jumps between Ottoman, Polish, Lithuanian, or Russian records without migration proof",
+      "Calendar dates and death dates conflict"
+    ],
+    "detection_rule": "If famous_ancestor in {ARI, Isaac Luria, Yitzhak Luria} AND chain_length > 8 AND no contemporary source before 1800 exists, flag high-severity fantasy.",
+    "confidence_when_flagged": 0.88,
+    "propagation_vector": "Prestige genealogy and secondary-book copying",
+    "real_alternative": "Family may carry a tradition of rabbinical learning without provable biological descent."
+  },
+  {
+    "pattern_id": "rabbinical_title_inherited_as_surname",
+    "category": "rabbinical_fantasy",
+    "description": "Rabbinical title or honorific treated as hereditary surname and used to connect unrelated people.",
+    "telltale_signs": [
+      "HaRav, Gaon, Tzadik, Moreinu, Admor, Dayan, or Maggid appears in surname field",
+      "Different men with same title are merged",
+      "No patronymic or civil surname match",
+      "Children appear to inherit the title incorrectly"
+    ],
+    "detection_rule": "If name_token in rabbinical_titles appears in surname_field AND same-title merge connects unrelated places or families, flag title_confusion.",
+    "confidence_when_flagged": 0.81,
+    "propagation_vector": "GEDCOM name-field pollution and automated merge hints",
+    "real_alternative": "Title should be stored separately as occupation, role, or honorific, not as identity or lineage proof."
+  },
+  {
+    "pattern_id": "rabbinical_famous_student_becomes_descendant",
+    "category": "rabbinical_fantasy",
+    "description": "A known student, disciple, follower, or Hasid of a rabbi is incorrectly converted into biological child or descendant.",
+    "telltale_signs": [
+      "Source text says talmid, follower, chassid, disciple, or student",
+      "Online tree records the relationship as child or descendant",
+      "No birth or marriage document links the families",
+      "Spiritual lineage language becomes bloodline"
+    ],
+    "detection_rule": "If source_text contains {student, disciple, talmid, chassid, follower} AND relationship_type == child_of OR descendant_of, flag relationship_type_error.",
+    "confidence_when_flagged": 0.84,
+    "propagation_vector": "Misreading Hebrew/Yiddish rabbinical biographies",
+    "real_alternative": "Record as spiritual association, teacher-student relationship, or community tie."
+  },
+  {
+    "pattern_id": "rabbinical_same_named_rebbe_merge",
+    "category": "rabbinical_fantasy",
+    "description": "Two or more rabbis with the same given name, title, and town association are merged into one famous profile.",
+    "telltale_signs": [
+      "Same title but different death places",
+      "Children's birth dates overlap impossibly",
+      "Different wives from different regions",
+      "Multiple yahrzeit dates exist"
+    ],
+    "detection_rule": "If rabbinical_profiles share title and given_name but have conflicting spouse, death_date, death_place, or child chronology, block merge and flag same_name_rabbi_conflict.",
+    "confidence_when_flagged": 0.87,
+    "propagation_vector": "Collaborative tree merge cascade",
+    "real_alternative": "Maintain separate rabbinical profiles until a contemporary source proves identity."
+  },
+  {
+    "pattern_id": "rabbinical_book_index_as_parentage",
+    "category": "rabbinical_fantasy",
+    "description": "A rabbinical book index or mention in a responsa is treated as proof of parent-child relationship.",
+    "telltale_signs": [
+      "Source only mentions a name in an index",
+      "No explicit father, mother, spouse, or child relationship",
+      "Title or town is used to infer kinship",
+      "The same mention is copied to many profiles"
+    ],
+    "detection_rule": "If source.type in {book_index, responsa_mention, bibliography} AND relationship is inferred without explicit kinship terms, cap proof_status at hypothesis.",
+    "confidence_when_flagged": 0.78,
+    "propagation_vector": "Secondary-source overinterpretation",
+    "real_alternative": "Use the mention as locality/occupation evidence, not parentage proof."
+  },
+  {
+    "pattern_id": "rabbinical_unknown_wife_as_dynasty_daughter",
+    "category": "rabbinical_fantasy",
+    "description": "An unknown wife of a rabbi or notable man is upgraded to a daughter of a famous dynasty.",
+    "telltale_signs": [
+      "Wife has no given name or only 'daughter of Rabbi X'",
+      "Marriage date is estimated",
+      "No ketubah, dowry, tombstone, or family book citation",
+      "The connection appears only in later online trees"
+    ],
+    "detection_rule": "If spouse.name is unknown_or_generic AND spouse.parent is famous_rabbi AND no marriage/source evidence exists, flag dynasty_daughter_invention.",
+    "confidence_when_flagged": 0.86,
+    "propagation_vector": "Prestige bridge inserted into missing female lines",
+    "real_alternative": "Keep wife as unknown spouse with hypothesis notes until a marriage or contemporary source is found."
+  },
+  {
+    "pattern_id": "rabbinical_family_tradition_overpromoted",
+    "category": "rabbinical_fantasy",
+    "description": "Family oral tradition of descent from a rabbi is promoted to confirmed status without documentary evidence.",
+    "telltale_signs": [
+      "Source is oral history only",
+      "Exact connecting generations are unknown",
+      "Several famous rabbis are suggested interchangeably",
+      "No place/date continuity"
+    ],
+    "detection_rule": "If evidence_basis == oral_tradition_only AND claim_type == famous_rabbi_descent, set max_status = tradition_unproven.",
+    "confidence_when_flagged": 0.8,
+    "propagation_vector": "Oral tradition converted into GEDCOM parent-child links",
+    "real_alternative": "Preserve as family tradition and search for bridge evidence."
+  },
+  {
+    "pattern_id": "royal_charlemagne_everyone_descends_claim",
+    "category": "royal_descent_fake",
+    "description": "Charlemagne descent asserted for a specific recent family using the population-level argument that many Europeans descend from him.",
+    "telltale_signs": [
+      "No sourced gateway ancestor",
+      "Medieval links copied from public trees",
+      "No proof connecting immigrant, shtetl, or peasant ancestor to noble line",
+      "Argument relies on statistical plausibility rather than a documented chain"
+    ],
+    "detection_rule": "If target_ancestor == Charlemagne AND no documented_gateway_ancestor exists AND chain contains online_tree_only segment, flag high-severity unsupported royal descent.",
+    "confidence_when_flagged": 0.89,
+    "propagation_vector": "Royal gateway ancestor copying",
+    "real_alternative": "Population-level descent may be statistically plausible, but genealogical proof requires a documented chain."
+  },
+  {
+    "pattern_id": "royal_king_david_via_rashi",
+    "category": "royal_descent_fake",
+    "description": "Claimed descent from King David through Rashi without complete, reliable, positive proof for each generation.",
+    "telltale_signs": [
+      "Rashi appears as bridge to King David",
+      "Medieval-to-biblical segment has no contemporary evidence",
+      "Claim uses tradition as proof",
+      "Chain copied from famous lineage charts"
+    ],
+    "detection_rule": "If chain includes {King David, Davidic, Rashi} AND evidence before medieval period is not contemporary or primary-quality, flag extreme_claim_requires_manual_review.",
+    "confidence_when_flagged": 0.93,
+    "propagation_vector": "Prestige pedigree copying and unsourced rabbinical charts",
+    "real_alternative": "Treat as family tradition or cultural claim unless supported by rigorous scholarly proof."
+  },
+  {
+    "pattern_id": "royal_davidic_descent_generic_sephardic",
+    "category": "royal_descent_fake",
+    "description": "Generic Davidic descent attached to a Sephardic or exilarch-associated surname without family-specific evidence.",
+    "telltale_signs": [
+      "Surname alone treated as proof",
+      "Prestige surnames such as Abarbanel, Dayan, Shaltiel, Nasi, or Abravanel used without local documentation",
+      "No direct source from the family branch",
+      "Multiple incompatible chains exist"
+    ],
+    "detection_rule": "If claim_type == Davidic_descent AND proof_basis == surname_only, flag high-severity unsupported claim.",
+    "confidence_when_flagged": 0.84,
+    "propagation_vector": "Surname prestige and online tree inheritance",
+    "real_alternative": "Surname may indicate tradition, status, or later adoption but not proof of exact descent."
+  },
+  {
+    "pattern_id": "royal_rashi_daughters_auto_expand",
+    "category": "royal_descent_fake",
+    "description": "Automatic expansion from Rashi's daughters into every later Ashkenazi rabbinical family.",
+    "telltale_signs": [
+      "A daughter of Rashi is used as universal gateway",
+      "Intermediate generations are vague or repeated",
+      "No local records for bridge into known 18th-19th century family",
+      "Chain appears identically across many online trees"
+    ],
+    "detection_rule": "If Rashi_descendant_claim == true AND bridge_to_modern_family has unknown_or_unsourced_generations > 2, flag high-severity shortcut.",
+    "confidence_when_flagged": 0.88,
+    "propagation_vector": "Medieval prestige tree imports",
+    "real_alternative": "Keep Rashi line as unproven tradition unless each bridge generation is independently sourced."
+  },
+  {
+    "pattern_id": "royal_famous_rabbi_to_any_cohen_or_levi",
+    "category": "royal_descent_fake",
+    "description": "Cohen/Levi status used to prove descent from a specific famous rabbinical or biblical figure.",
+    "telltale_signs": [
+      "Cohen, Kagan, Katz, Levi, Levitan, Levitin, or Kogan used as proof alone",
+      "No geographic continuity",
+      "Y-DNA haplogroup misused as person-level proof",
+      "Multiple unrelated Cohen or Levi families merged"
+    ],
+    "detection_rule": "If surname_or_status in {Cohen, Kogan, Katz, Levi, Levitin} AND famous_descent_claim == true AND evidence_basis == status_only, flag unsupported.",
+    "confidence_when_flagged": 0.82,
+    "propagation_vector": "Priestly-status overinterpretation",
+    "real_alternative": "Cohen/Levi status may support broad caste tradition but cannot identify a specific famous ancestor alone."
+  },
+  {
+    "pattern_id": "royal_european_nobility_to_shtetl_family",
+    "category": "royal_descent_fake",
+    "description": "Shtetl, peasant, or urban artisan family attached to European nobility without conversion, adoption, migration, estate, or marriage records.",
+    "telltale_signs": [
+      "Sudden jump from village records to noble manor lineage",
+      "No marriage, conversion, adoption, or estate record",
+      "Place names are similar but not identical",
+      "Noble surname variant added later"
+    ],
+    "detection_rule": "If social_status jumps from peasant/shtetl/artisan to nobility AND no transitional source exists, flag noble_bridge_gap.",
+    "confidence_when_flagged": 0.85,
+    "propagation_vector": "Same-surname noble-line attraction",
+    "real_alternative": "Could be unrelated same surname, tenant relationship, estate residence, or patronymic coincidence."
+  },
+  {
+    "pattern_id": "royal_coat_of_arms_as_lineage_proof",
+    "category": "royal_descent_fake",
+    "description": "Coat-of-arms or commercial heraldry page used as proof of noble or royal descent.",
+    "telltale_signs": [
+      "Source is commercial heraldry or surname-history page",
+      "No individual-level documentary chain",
+      "Surname-only match",
+      "Different country, religion, or social estate"
+    ],
+    "detection_rule": "If source.category == heraldry_commercial AND relationship_claim == noble_descent, flag low-evidence claim.",
+    "confidence_when_flagged": 0.9,
+    "propagation_vector": "Commercial surname-history sites and copied profile notes",
+    "real_alternative": "Use heraldry only as background context, never as proof of parent-child relationship."
+  },
+  {
+    "pattern_id": "royal_gateway_ancestor_missing_generation",
+    "category": "royal_descent_fake",
+    "description": "A supposed gateway ancestor to royal or noble descent is inserted with one or more missing generations.",
+    "telltale_signs": [
+      "Gateway ancestor has no baptism, marriage, probate, land, or court record linking to known parents",
+      "Generation count is compressed",
+      "Dates require childbearing at extreme ages",
+      "Same gateway appears in many trees with conflicting parents"
+    ],
+    "detection_rule": "If royal_descent_path contains gateway_ancestor AND gateway.parent_link.source_count == 0, flag gateway_unproven.",
+    "confidence_when_flagged": 0.87,
+    "propagation_vector": "Gateway ancestor copying from compiled pedigrees",
+    "real_alternative": "Treat the gateway as unproven and verify with local records before extending medieval ancestry."
+  },
+  {
+    "pattern_id": "royal_biblical_tribal_claim_as_genealogy",
+    "category": "royal_descent_fake",
+    "description": "Biblical tribal identity or legendary ancestry is represented as exact genealogical parent-child descent.",
+    "telltale_signs": [
+      "Claim connects modern person to biblical figure through legendary generations",
+      "No contemporary documentary chain",
+      "Tribal or community identity is used as genealogy",
+      "Dates span implausible gaps"
+    ],
+    "detection_rule": "If target_ancestor_period == biblical AND relationship_type == direct_descent AND chain contains non-historical or legendary generations, flag non-genealogical_claim.",
+    "confidence_when_flagged": 0.95,
+    "propagation_vector": "Mythic or religious tradition imported into family-tree software",
+    "real_alternative": "Store as tradition, identity, or cultural note, not as evidence-based genealogical descent."
+  },
+  {
+    "pattern_id": "pedigree_collapse_ashkenazi_single_path_error",
+    "category": "pedigree_collapse",
+    "description": "Ashkenazi DNA match forced into one close relationship path when multiple distant paths are likely.",
+    "telltale_signs": [
+      "Many shared matches from multiple branches",
+      "Small segments across many chromosomes",
+      "Total cM appears higher than documented tree distance",
+      "Same surnames recur across several towns"
+    ],
+    "detection_rule": "If population_context == Ashkenazi AND match.total_cm < 80 AND shared_matches span multiple clusters, require multi-path hypothesis rather than single relationship.",
+    "confidence_when_flagged": 0.8,
+    "propagation_vector": "DNA match prediction copied directly into tree relationship",
+    "real_alternative": "Model as endogamous multi-path relationship until triangulated segments and archive links identify the branch."
+  },
+  {
+    "pattern_id": "pedigree_collapse_acadian_cousin_prediction_error",
+    "category": "pedigree_collapse",
+    "description": "Acadian/French Canadian pedigree collapse makes DNA match appear closer than the documented relationship.",
+    "telltale_signs": [
+      "Many repeated founding families",
+      "Multiple shared ancestral couples",
+      "High shared-match overlap",
+      "Relationship calculator gives broad or inconsistent estimates"
+    ],
+    "detection_rule": "If population_context in {Acadian, French_Canadian} AND multiple_shared_ancestor_couples >= 2, downweight single-path cousin prediction.",
+    "confidence_when_flagged": 0.78,
+    "propagation_vector": "DNA tool cousin estimate copied as exact genealogy",
+    "real_alternative": "Calculate combined relatedness across all known paths."
+  },
+  {
+    "pattern_id": "pedigree_collapse_mennonite_colony_founder_loop",
+    "category": "pedigree_collapse",
+    "description": "Mennonite colony families from Prussia/Russia/Ukraine merged incorrectly due to repeated colony surnames and founder couples.",
+    "telltale_signs": [
+      "Surnames Friesen, Wiens, Jantzen, Klassen, Penner, Reimer, Fast, Enns repeat heavily",
+      "Same first names recur in same colony",
+      "Colony migration dates are ignored",
+      "DNA match is endogamous and not branch-specific"
+    ],
+    "detection_rule": "If community == Mennonite AND surname in common_mennonite_surnames AND place is colony_region AND no colony register/source exists, flag colony_same_name_risk.",
+    "confidence_when_flagged": 0.82,
+    "propagation_vector": "Colony surname repetition and copied online trees",
+    "real_alternative": "Use church books, colony registers, migration lists, and FAN-club evidence before merging."
+  },
+  {
+    "pattern_id": "pedigree_collapse_amish_small_founder_pool",
+    "category": "pedigree_collapse",
+    "description": "Amish founder-population relatedness interpreted as one direct recent lineage.",
+    "telltale_signs": [
+      "Common Amish surnames repeat",
+      "Many cousin paths exist",
+      "Marriage within closed community",
+      "DNA match assigned to wrong ancestral couple"
+    ],
+    "detection_rule": "If community == Amish AND ancestor_overlap_count > 1, require multi-path relatedness model.",
+    "confidence_when_flagged": 0.79,
+    "propagation_vector": "Single-path family-tree simplification",
+    "real_alternative": "Represent multiple ancestral paths and avoid selecting one without segment triangulation."
+  },
+  {
+    "pattern_id": "pedigree_collapse_mormon_pioneer_duplicate_ancestry",
+    "category": "pedigree_collapse",
+    "description": "LDS/Mormon pioneer families overconnected due to repeated polygamous family structures and shared pioneer surnames.",
+    "telltale_signs": [
+      "Multiple spouses and large sibling groups",
+      "Children assigned to wrong mother",
+      "Same name in same settlement",
+      "Temple or ordinance data mistaken for civil proof"
+    ],
+    "detection_rule": "If community == Mormon_pioneer AND polygamous_family == true AND child_mother_source missing, flag maternal_assignment_risk.",
+    "confidence_when_flagged": 0.76,
+    "propagation_vector": "Shared tree merges and same-settlement duplication",
+    "real_alternative": "Separate households by census, birth register, probate, and contemporary family records."
+  },
+  {
+    "pattern_id": "pedigree_collapse_european_royal_loop_overcompression",
+    "category": "pedigree_collapse",
+    "description": "European royal pedigree collapse causes duplicate ancestors to appear as multiple independent people or creates ancestry cycles.",
+    "telltale_signs": [
+      "Same medieval individual appears many times",
+      "Duplicate spouse or parent relationships",
+      "Impossible or circular ancestry",
+      "GEDCOM import repeats same noble profile under variant names"
+    ],
+    "detection_rule": "If medieval_royal_tree has duplicate_person_candidates with high similarity AND ancestry_cycle_detected == true, flag royal_loop.",
+    "confidence_when_flagged": 0.86,
+    "propagation_vector": "Large GEDCOM imports and duplicate medieval profiles",
+    "real_alternative": "Collapse duplicate ancestors and maintain one sourced profile per historical individual."
+  },
+  {
+    "pattern_id": "pedigree_collapse_endogamy_small_segment_overuse",
+    "category": "pedigree_collapse",
+    "description": "Small DNA segments are overused to prove a specific 18th-century ancestor in an endogamous population.",
+    "telltale_signs": [
+      "Segments under 7 cM used as decisive evidence",
+      "No triangulation",
+      "No archival connection",
+      "Many matches share the segment across multiple branches"
+    ],
+    "detection_rule": "If segment.length_cm < 7 AND population_context is endogamous AND no triangulation_group exists, do not allow proof_status above hypothesis.",
+    "confidence_when_flagged": 0.84,
+    "propagation_vector": "Chromosome-browser overinterpretation",
+    "real_alternative": "Use small segments only as clues unless triangulated with documentary evidence."
+  },
+  {
+    "pattern_id": "pedigree_collapse_mennonite_jewish_borderland_mix",
+    "category": "pedigree_collapse",
+    "description": "Mennonite and Jewish endogamous clusters from the same Ukrainian/Russian Empire region are incorrectly merged through shared locality and distant DNA.",
+    "telltale_signs": [
+      "Same Ekaterinoslav/Dnipropetrovsk locality appears in both lines",
+      "Mennonite colony surnames and Jewish surnames are combined without conversion or marriage record",
+      "Distant DNA matches assigned as direct ancestor evidence",
+      "Religious record sets are mixed"
+    ],
+    "detection_rule": "If community labels differ {Mennonite, Ashkenazi Jewish} AND link_basis in {locality_only, distant_DNA_only} AND no cross-religious marriage/conversion source exists, flag cross_endogamy_merge_risk.",
+    "confidence_when_flagged": 0.83,
+    "propagation_vector": "Locality overlap and distant DNA cluster overinterpretation",
+    "real_alternative": "Keep as separate clusters unless a primary marriage, conversion, adoption, or household source proves connection."
+  },
+  {
+    "pattern_id": "holocaust_missing_bridge_fabrication",
+    "category": "holocaust_reconstruction_error",
+    "description": "Missing Holocaust-era records lead researchers to insert an invented bridge person between known survivors/victims and older shtetl families.",
+    "telltale_signs": [
+      "Bridge person has no birth, marriage, death, address, or testimony record",
+      "Bridge person's only purpose is to connect two known clusters",
+      "Page of Testimony names are interpreted too broadly",
+      "Age and place are approximate"
+    ],
+    "detection_rule": "If bridge_person.source_count == 0 AND bridge links prewar_family to survivor_family AND Holocaust_gap == true, flag invented_bridge_risk.",
+    "confidence_when_flagged": 0.83,
+    "propagation_vector": "Reconstruction pressure after record loss",
+    "real_alternative": "Represent as unknown parent or relative with hypothesis status and list required sources."
+  },
+  {
+    "pattern_id": "holocaust_page_of_testimony_same_name_merge",
+    "category": "holocaust_reconstruction_error",
+    "description": "Two victims or survivors with the same name are merged based on a Page of Testimony or memorial record.",
+    "telltale_signs": [
+      "Same given name and surname but different towns",
+      "Birth year range too broad",
+      "Submitter relationship differs",
+      "Spouse or parent names conflict"
+    ],
+    "detection_rule": "If Holocaust records share name but differ in town, spouse, parent, or birth_year by more than 5 years, block automatic merge.",
+    "confidence_when_flagged": 0.88,
+    "propagation_vector": "Holocaust memorial database name matching",
+    "real_alternative": "Keep separate candidate profiles until multiple identifiers align."
+  },
+  {
+    "pattern_id": "holocaust_survivor_alias_as_birth_name",
+    "category": "holocaust_reconstruction_error",
+    "description": "Wartime alias, hiding name, camp spelling, or immigration name treated as original birth surname.",
+    "telltale_signs": [
+      "Name appears first in postwar DP camp or immigration records",
+      "Prewar records use different surname",
+      "Alias has no parents attached",
+      "Different languages produce inconsistent spellings"
+    ],
+    "detection_rule": "If earliest_name_source_date > 1945 AND prewar_name_variant exists, classify as alias_candidate rather than birth_name.",
+    "confidence_when_flagged": 0.79,
+    "propagation_vector": "Postwar records imported as primary identity",
+    "real_alternative": "Store alias separately and seek prewar civil, Jewish community, school, address, or residence records."
+  },
+  {
+    "pattern_id": "holocaust_yizkor_book_family_group_overreach",
+    "category": "holocaust_reconstruction_error",
+    "description": "Yizkor book memorial lists are used to infer exact parent-child or sibling relationships without explicit relationship language.",
+    "telltale_signs": [
+      "Several people listed under one town or surname",
+      "No explicit kinship statement",
+      "Same household assumed from memorial proximity",
+      "Ages not provided"
+    ],
+    "detection_rule": "If source.type == yizkor_book AND relationship is not explicitly stated, cap confidence at 0.45.",
+    "confidence_when_flagged": 0.77,
+    "propagation_vector": "Memorial-list proximity converted into family structure",
+    "real_alternative": "Use Yizkor evidence as locality/surname clue, then confirm with civil, census, school, address, or testimony records."
+  },
+  {
+    "pattern_id": "holocaust_dp_camp_birthplace_default_error",
+    "category": "holocaust_reconstruction_error",
+    "description": "DP camp or postwar residence is incorrectly stored as birthplace.",
+    "telltale_signs": [
+      "Birthplace equals DP camp location",
+      "Birth date predates camp existence",
+      "Nationality and prewar residence differ",
+      "Record field actually says residence or registration place"
+    ],
+    "detection_rule": "If birth_date < 1945 AND birthplace in known_dp_camps AND source_field in {residence, registration_place}, flag birthplace_error.",
+    "confidence_when_flagged": 0.91,
+    "propagation_vector": "Field-mapping error in imports",
+    "real_alternative": "Store DP camp as residence/event, not birthplace."
+  },
+  {
+    "pattern_id": "holocaust_perished_vs_survived_duplicate",
+    "category": "holocaust_reconstruction_error",
+    "description": "A person recorded as murdered is merged with a same-named survivor because names and birth years are similar.",
+    "telltale_signs": [
+      "Death status conflicts with later immigration or census record",
+      "Different spouse or child names",
+      "Birth town differs",
+      "One record is memorial/testimony and one is postwar administrative"
+    ],
+    "detection_rule": "If one profile has death_event == Holocaust_victim AND another has postwar_life_event AND identity_score < 0.9, block merge and flag conflict.",
+    "confidence_when_flagged": 0.9,
+    "propagation_vector": "Automated hints and manual same-name merge",
+    "real_alternative": "Treat as two candidates until conflict is resolved by parents, spouse, exact birth date, or testimony submitter."
+  },
+  {
+    "pattern_id": "holocaust_orphan_parent_reconstruction_error",
+    "category": "holocaust_reconstruction_error",
+    "description": "Parents of child survivors or hidden children are reconstructed from surname and town only.",
+    "telltale_signs": [
+      "Child has estimated parents with no record",
+      "Town has several families of same surname",
+      "Adoptive, foster, or hiding family confused with biological family",
+      "No prewar household evidence"
+    ],
+    "detection_rule": "If person.role == child_survivor AND parent_link.source_count == 0 AND basis in {surname_only, town_only}, flag high-risk reconstructed_parent.",
+    "confidence_when_flagged": 0.85,
+    "propagation_vector": "Postwar reconstruction and oral-history compression",
+    "real_alternative": "Maintain biological, adoptive, foster, and guardian relationships as separate relationship types."
+  },
+  {
+    "pattern_id": "holocaust_maiden_name_lost_married_name_merge",
+    "category": "holocaust_reconstruction_error",
+    "description": "Women are merged incorrectly because Holocaust records list married name, maiden name, Hebrew name, or local civil name inconsistently.",
+    "telltale_signs": [
+      "Same woman has different surnames across memorial and civil records",
+      "Children's records show another maiden name",
+      "Spouse names conflict",
+      "Birth town and residence town are treated as identical"
+    ],
+    "detection_rule": "If female Holocaust-era candidate profiles differ by surname and no marriage record links maiden/married name, require manual review before merge.",
+    "confidence_when_flagged": 0.84,
+    "propagation_vector": "Married-name indexing and memorial record ambiguity",
+    "real_alternative": "Use marriage records, children's birth records, testimony submitter data, and cemetery inscriptions to resolve maiden name."
+  },
+  {
+    "pattern_id": "patronymic_ivanovich_as_surname",
+    "category": "patronymic_confusion",
+    "description": "Russian, Ukrainian, or Belarusian patronymic such as Ivanovich is mistaken for hereditary surname.",
+    "telltale_signs": [
+      "Surname field contains -ovich, -evich, -ovna, -evna in a record where separate surname exists",
+      "Father's given name matches patronymic root",
+      "Later records show a different hereditary surname",
+      "Gendered patronymic endings vary by person"
+    ],
+    "detection_rule": "If surname_field matches patronymic_pattern AND father.given_name root matches token AND region in {Russia, Ukraine, Belarus}, flag patronymic_as_surname.",
+    "confidence_when_flagged": 0.9,
+    "propagation_vector": "OCR/table parsing and Western GEDCOM import",
+    "real_alternative": "Move patronymic to middle_name or patronymic field and preserve hereditary surname separately."
+  },
+  {
+    "pattern_id": "patronymic_matronymic_jewish_records_confusion",
+    "category": "patronymic_confusion",
+    "description": "Jewish records using son/daughter of father or mother are parsed as surname or permanent middle name.",
+    "telltale_signs": [
+      "Hebrew/Yiddish ben, bas, or bat construction appears in name field",
+      "Russian record gives patronymic but not surname",
+      "Mother's name appears where father is unknown",
+      "Same person has shifting patronymics across records"
+    ],
+    "detection_rule": "If source_language in {Hebrew, Yiddish, Russian} AND name contains {ben, bas, bat, son of, daughter of} AND surname is missing, flag relationship_phrase_not_surname.",
+    "confidence_when_flagged": 0.82,
+    "propagation_vector": "Literal translation into GEDCOM name fields",
+    "real_alternative": "Store patronymic or matronymic as relationship evidence, not hereditary surname."
+  },
+  {
+    "pattern_id": "patronymic_polish_icz_suffix_false_russian",
+    "category": "patronymic_confusion",
+    "description": "Polish, Belarusian, or Jewish -icz/-wicz surnames are incorrectly treated as non-hereditary patronymics.",
+    "telltale_signs": [
+      "Established surname like Rabinowicz, Abramowicz, Dawidowicz, Markiewicz is split incorrectly",
+      "Same surname appears across multiple generations",
+      "Civil records use it as surname",
+      "Engine strips suffix and loses identity"
+    ],
+    "detection_rule": "If token ends with {icz, wicz, owicz, ewicz} AND appears as family surname across generations, do not classify as patronymic.",
+    "confidence_when_flagged": 0.76,
+    "propagation_vector": "Over-aggressive patronymic normalization",
+    "real_alternative": "Treat as hereditary surname unless record context clearly indicates patronymic usage."
+  },
+  {
+    "pattern_id": "patronymic_female_ending_duplicate_error",
+    "category": "patronymic_confusion",
+    "description": "Female patronymic endings create duplicate profiles for the same woman.",
+    "telltale_signs": [
+      "Same woman appears as Ivanovna, Iwanowna, Ioannovna, Janovna",
+      "Birth date, spouse, and children match",
+      "Surname is missing or variable",
+      "Different transliteration systems used"
+    ],
+    "detection_rule": "If female profiles differ only by patronymic transliteration and spouse/children/date/place match, propose duplicate_candidate but require review.",
+    "confidence_when_flagged": 0.73,
+    "propagation_vector": "Cyrillic-to-Latin transliteration variation",
+    "real_alternative": "Normalize patronymic variants while retaining original forms as aliases."
+  },
+  {
+    "pattern_id": "patronymic_jewish_double_name_to_father_error",
+    "category": "patronymic_confusion",
+    "description": "Jewish double given names are mistaken for patronymics or fathers' names.",
+    "telltale_signs": [
+      "Names like Zalman Moisei, Hersh Itzko, Rafail-Solomon split incorrectly",
+      "Second given name treated as father",
+      "Patronymic appears elsewhere with -ovich/-evich",
+      "Hebrew name and civil name mismatch"
+    ],
+    "detection_rule": "If second_name has no patronymic suffix AND known_double_given_name_pattern == true, do not infer father without explicit source phrase.",
+    "confidence_when_flagged": 0.78,
+    "propagation_vector": "Automated name parser overreach",
+    "real_alternative": "Store double given names as given-name components and infer father only from explicit patronymic or record fields."
+  },
+  {
+    "pattern_id": "patronymic_record_column_shift",
+    "category": "patronymic_confusion",
+    "description": "Archive table column shift places patronymic, surname, estate, residence, or notes into the wrong field.",
+    "telltale_signs": [
+      "Surname column contains village or social estate",
+      "Patronymic appears in surname field for every row",
+      "Record has OCR alignment errors",
+      "Notes include years and words mixed into name fields"
+    ],
+    "detection_rule": "If parsed_row has high anomaly count across name/date/place columns, flag column_shift and require manual parse.",
+    "confidence_when_flagged": 0.87,
+    "propagation_vector": "OCR and spreadsheet conversion of metric books or revision lists",
+    "real_alternative": "Re-parse from original image or structured transcription with column schema."
+  },
+  {
+    "pattern_id": "patronymic_slavic_surname_from_patronymic_false_positive",
+    "category": "patronymic_confusion",
+    "description": "A true hereditary Slavic surname ending in -ovich/-evich is wrongly treated as temporary patronymic.",
+    "telltale_signs": [
+      "Surname appears in same form across generations",
+      "Father's given name does not match the root",
+      "Women use feminine surname form separately from patronymic",
+      "Civil registers place the token in surname column"
+    ],
+    "detection_rule": "If -ovich/-evich token appears across at least two generations as surname AND father root mismatch exists, classify as hereditary_surname_candidate.",
+    "confidence_when_flagged": 0.75,
+    "propagation_vector": "Overcorrection by patronymic-detection rules",
+    "real_alternative": "Preserve as surname and store patronymic separately."
+  },
+  {
+    "pattern_id": "same_name_common_jewish_male_merge",
+    "category": "same_name_different_person",
+    "description": "Common Jewish male names such as Moshe, Itzik, Gersh, Yankel, or Zalman cause unrelated men to be merged.",
+    "telltale_signs": [
+      "Same given name and surname but different patronymic",
+      "Two spouses overlap in time",
+      "Children born in distant towns at same time",
+      "Different cemetery or revision-list households"
+    ],
+    "detection_rule": "If common_name_score is high AND patronymic/place/spouse conflict exists, block automatic merge.",
+    "confidence_when_flagged": 0.88,
+    "propagation_vector": "Name-only hints and tree copying",
+    "real_alternative": "Separate by patronymic, spouse, children, occupation, house number, and town."
+  },
+  {
+    "pattern_id": "same_name_common_woman_maiden_married_confusion",
+    "category": "same_name_different_person",
+    "description": "Women with common names are merged because maiden name, married name, patronymic, and Hebrew name are confused.",
+    "telltale_signs": [
+      "Same woman has different maiden surnames in children's records",
+      "Marriage record missing",
+      "Children assigned across two unrelated husbands",
+      "Hebrew name differs from civil name"
+    ],
+    "detection_rule": "If female profiles share given name but maiden_surname or spouse_set conflicts, require primary marriage or birth evidence before merge.",
+    "confidence_when_flagged": 0.86,
+    "propagation_vector": "Married-name imports and missing maiden names",
+    "real_alternative": "Use child birth records and marriage records to resolve maiden surname."
+  },
+  {
+    "pattern_id": "same_name_same_shtetl_household_collision",
+    "category": "same_name_different_person",
+    "description": "Two people with same name in the same shtetl are merged despite belonging to different households.",
+    "telltale_signs": [
+      "Revision list house or family number differs",
+      "Different father or patronymic",
+      "Different tax estate or occupation",
+      "Life events overlap impossibly"
+    ],
+    "detection_rule": "If same town and same name but household_number differs and patronymic differs, treat as separate unless a linking source exists.",
+    "confidence_when_flagged": 0.84,
+    "propagation_vector": "Shtetl name-density and weak indexing",
+    "real_alternative": "Track household IDs and FAN-club associations."
+  },
+  {
+    "pattern_id": "same_name_place_name_false_equivalence",
+    "category": "same_name_different_person",
+    "description": "People from different villages with same or similar place names are merged.",
+    "telltale_signs": [
+      "Village name exists in multiple guberniyas, powiats, or counties",
+      "Gazetteer coordinates differ",
+      "Archive jurisdiction does not match",
+      "Religious community differs"
+    ],
+    "detection_rule": "If place_name has multiple gazetteer matches AND jurisdiction differs, block merge until place is disambiguated.",
+    "confidence_when_flagged": 0.89,
+    "propagation_vector": "Ambiguous village names in search results",
+    "real_alternative": "Resolve by guberniya, uyezd, powiat, parish, synagogue district, and coordinates."
+  },
+  {
+    "pattern_id": "same_name_immigration_age_rounding_error",
+    "category": "same_name_different_person",
+    "description": "Passenger-list or naturalization age rounding causes the wrong immigrant to be attached to a European ancestor.",
+    "telltale_signs": [
+      "Age differs by more than expected rounding",
+      "Nearest relative or destination contact conflicts",
+      "Town spelling is approximate",
+      "Several immigrants share the same name"
+    ],
+    "detection_rule": "If immigration_candidate_count > 1 AND age_variance > 5 OR contact_conflict == true, prevent automatic attachment.",
+    "confidence_when_flagged": 0.8,
+    "propagation_vector": "Immigration hint overattachment",
+    "real_alternative": "Use chain migration contacts, naturalization papers, addresses, and sponsor names."
+  },
+  {
+    "pattern_id": "same_name_cemetery_plot_family_assumption",
+    "category": "same_name_different_person",
+    "description": "People buried in the same cemetery section are assumed to be direct relatives.",
+    "telltale_signs": [
+      "Same landsmanshaft or burial society plot",
+      "No inscription naming parents or spouse",
+      "Common surname in plot",
+      "Burial society membership mistaken for family"
+    ],
+    "detection_rule": "If cemetery evidence is plot_proximity_only AND relationship asserted as parent/child/spouse, cap confidence at 0.4.",
+    "confidence_when_flagged": 0.77,
+    "propagation_vector": "Cemetery plot clustering overinterpretation",
+    "real_alternative": "Use cemetery as locality/community clue, not direct kinship proof unless inscription or death certificate supports it."
+  },
+  {
+    "pattern_id": "same_name_gedcom_duplicate_import",
+    "category": "same_name_different_person",
+    "description": "Multiple GEDCOM imports create duplicate profiles that are then cross-merged incorrectly.",
+    "telltale_signs": [
+      "Same person imported from several trees with slight date variants",
+      "Conflicting parent sets",
+      "Notes copied but sources missing",
+      "Media or source IDs lost in export"
+    ],
+    "detection_rule": "If duplicate candidates share name but parent_set_conflict == true, require source comparison before merge.",
+    "confidence_when_flagged": 0.82,
+    "propagation_vector": "GEDCOM import/export loss and duplicate merge suggestions",
+    "real_alternative": "Run GEDCOM diff and preserve source provenance before merging."
+  },
+  {
+    "pattern_id": "same_name_famous_person_name_attraction",
+    "category": "same_name_different_person",
+    "description": "A person with the same name as a famous historical figure is merged into that famous person's profile.",
+    "telltale_signs": [
+      "Name and approximate century match but places differ",
+      "Occupation or title added after merge",
+      "Spouse and children are inconsistent with known biography",
+      "No evidence connects the local person to the famous individual"
+    ],
+    "detection_rule": "If candidate matches famous_person by name only AND place/spouse/children conflict exists, block merge and flag famous_name_attraction.",
+    "confidence_when_flagged": 0.88,
+    "propagation_vector": "Automated hints and prestige profile merges",
+    "real_alternative": "Treat as same-name local person unless independent identity evidence exists."
+  },
+  {
+    "pattern_id": "cross_religious_jewish_conversion_record_as_birth_family",
+    "category": "cross_religious_confusion",
+    "description": "Jewish-to-Christian conversion or baptism record is treated as ordinary birth record and linked to wrong Christian family.",
+    "telltale_signs": [
+      "Adult baptism date",
+      "Godparents mistaken for biological parents",
+      "New Christian name replaces Hebrew or Yiddish name",
+      "Record contains conversion language"
+    ],
+    "detection_rule": "If record.type in {baptism, conversion} AND age_at_event > 10 AND godparent fields exist, do not infer biological parents from sponsors.",
+    "confidence_when_flagged": 0.9,
+    "propagation_vector": "Church-record parsing without religious-context rules",
+    "real_alternative": "Store conversion as religious event; distinguish sponsors/godparents from biological parents."
+  },
+  {
+    "pattern_id": "cross_religious_mennonite_lutheran_transition",
+    "category": "cross_religious_confusion",
+    "description": "Mennonite family transitioning to Lutheran, Reformed, or civil records is split into two unrelated families or merged incorrectly with Lutheran namesakes.",
+    "telltale_signs": [
+      "Same surname and colony but different church books",
+      "Baptism practice differs by denomination",
+      "Civil registration starts after church records",
+      "German and Russian name forms alternate"
+    ],
+    "detection_rule": "If family appears in Mennonite colony records and later Lutheran/civil records with same household/place, classify as continuity_candidate rather than automatic duplicate.",
+    "confidence_when_flagged": 0.78,
+    "propagation_vector": "Denomination-specific database silos",
+    "real_alternative": "Track denomination as event attribute over time."
+  },
+  {
+    "pattern_id": "cross_religious_orthodox_catholic_mixed_borderland",
+    "category": "cross_religious_confusion",
+    "description": "Eastern Orthodox and Roman Catholic records in Polish-Ukrainian-Belarusian borderlands are mixed for same-name families.",
+    "telltale_signs": [
+      "Rite or religion changes without marriage or conversion evidence",
+      "Polish/Ruthenian/Ukrainian name forms alternate",
+      "Parish jurisdiction differs",
+      "Children baptized in incompatible parishes on overlapping dates"
+    ],
+    "detection_rule": "If religion changes between Orthodox and Catholic AND no conversion/mixed_marriage evidence exists AND parish conflict exists, flag cross_rite_identity_risk.",
+    "confidence_when_flagged": 0.83,
+    "propagation_vector": "Partition-era borderland record aggregation",
+    "real_alternative": "Use parish, rite, language, godparents, and village micro-location to separate families."
+  },
+  {
+    "pattern_id": "cross_religious_jewish_civil_name_christian_name_merge",
+    "category": "cross_religious_confusion",
+    "description": "Hebrew/Yiddish Jewish name and Christian civil name are merged incorrectly because they sound similar.",
+    "telltale_signs": [
+      "Moses/Moises/Moisey merged with Mikhail or Michael without evidence",
+      "Abram/Avraham merged with Adolf/Albert by sound only",
+      "No conversion or civil name-change source",
+      "Patronymic or parent names conflict"
+    ],
+    "detection_rule": "If name_equivalence is phonetic_only AND religion differs AND no conversion/name_change source exists, flag unsafe_name_equivalence.",
+    "confidence_when_flagged": 0.81,
+    "propagation_vector": "Cross-language name normalization too aggressive",
+    "real_alternative": "Maintain alias candidates separately until confirmed by parents, spouse, occupation, or residence."
+  },
+  {
+    "pattern_id": "cross_religious_burial_ground_identity_error",
+    "category": "cross_religious_confusion",
+    "description": "Burial in a cemetery with mixed sections or reused land is used to infer religion or family line incorrectly.",
+    "telltale_signs": [
+      "Cemetery has separate religious sections",
+      "Burial register language differs from assumed family religion",
+      "Plot owner differs from deceased surname",
+      "Reinterment or memorial inscription involved"
+    ],
+    "detection_rule": "If cemetery.religious_affiliation is mixed OR section_unknown AND religion inference is based only on cemetery, flag low confidence.",
+    "confidence_when_flagged": 0.74,
+    "propagation_vector": "Cemetery database metadata overgeneralization",
+    "real_alternative": "Use burial section, inscription language, death certificate, and congregation records."
+  },
+  {
+    "pattern_id": "cross_religious_adoption_foster_guardian_as_parent",
+    "category": "cross_religious_confusion",
+    "description": "Adoptive, foster, guardian, godparent, or sponsor relationship across religious communities is stored as biological parentage.",
+    "telltale_signs": [
+      "Record says guardian, sponsor, godparent, foster, adopted, or raised by",
+      "Child religion differs from adult household",
+      "Biological parent names appear elsewhere",
+      "Age gap or household structure is unusual"
+    ],
+    "detection_rule": "If source_text contains guardian_or_sponsor_terms AND relationship_type == biological_parent, flag relationship_type_misclassification.",
+    "confidence_when_flagged": 0.87,
+    "propagation_vector": "Literal household-to-family conversion",
+    "real_alternative": "Represent guardian/adoptive/foster/sponsor links as separate relationship types."
+  },
+  {
+    "pattern_id": "cross_religious_mixed_marriage_children_wrong_religion",
+    "category": "cross_religious_confusion",
+    "description": "Children of mixed Jewish-Christian, Mennonite-Lutheran, or Orthodox-Catholic marriages are assigned to the wrong religious register or wrong parent line.",
+    "telltale_signs": [
+      "Children appear in different religious registers",
+      "One parent absent from baptism or circumcision record",
+      "Surname and patronymic align but religion differs",
+      "Civil and religious records give different names"
+    ],
+    "detection_rule": "If parents have different religion labels AND children appear across multiple religious record sets, require event-level religion tracking before parent reassignment.",
+    "confidence_when_flagged": 0.8,
+    "propagation_vector": "Single-religion family model in tree software",
+    "real_alternative": "Track each event by religion, rite, parish/congregation, and legal status."
+  }
+]

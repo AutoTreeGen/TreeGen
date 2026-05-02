@@ -112,9 +112,11 @@ async def test_alembic_0040_up_down(alembic_dropdown_engine: Any, postgres_conta
     os.environ["DATABASE_URL"] = postgres_container
     cfg.set_main_option("sqlalchemy.url", postgres_container)
 
-    # Стартовое состояние: head = 0040 (применено session-scope'ным fixture).
-    # downgrade -1 → 0042 (после rebase onto Phase 24.4: 0040.down_revision="0042").
-    command.downgrade(cfg, "-1")
+    # Стартовое состояние: head может быть 0040 ИЛИ что-то стек'нутое сверху
+    # (Phase 22.1b/0043 chains via 0040). Pin downgrade к explicit "0042" —
+    # это direct parent 0040, downgrade-цепочка от любого head'а сверху
+    # пройдёт через 0040 и удалит completeness_assertions.
+    command.downgrade(cfg, "0042")
 
     async with alembic_dropdown_engine.connect() as conn:
         names = await conn.run_sync(lambda sync_conn: inspect(sync_conn).get_table_names())
