@@ -20,6 +20,7 @@ from parser_service.api import (
     audio_sessions,
     chat,
     clerk_webhooks,
+    completeness,
     dedup,
     dedup_attempts,
     digest,
@@ -139,6 +140,10 @@ app.include_router(persons.router, tags=["persons", "merge"], dependencies=_AUTH
 # единственный 5-сегментный путь под /api/v1/, никаких маршрут-collision'ов
 # с другими /trees/{id}/* (4 сегмента) роутерами.
 app.include_router(safe_merge.router, tags=["trees", "merge"], dependencies=_AUTH_DEPS)
+# Phase 15.11a — Completeness Assertions / sealed sets (ADR-0076). CRUD под
+# /trees/{id}/persons/{id}/completeness. Auth required; tree-role gates
+# (VIEWER read, EDITOR write/revoke) внутри ручек.
+app.include_router(completeness.router, tags=["trees", "completeness"], dependencies=_AUTH_DEPS)
 # Phase 10.9a — voice-to-tree (ADR-0064). Включён до sharing чтобы
 # /trees/{id}/audio-* пути не перехватывались sharing-router'ом или
 # trees-router'ом /trees/{id}/* generic'ами. Auth required; permission

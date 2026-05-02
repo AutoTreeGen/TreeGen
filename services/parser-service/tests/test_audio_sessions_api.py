@@ -355,3 +355,106 @@ async def test_delete_session_soft_deletes(app_client, session_factory: Any) -> 
     g = await app_client.get(f"/audio-sessions/{session_id}", headers=_hdr(owner))
     assert g.status_code == 200
     assert g.json()["deleted_at"] is not None
+
+
+# ---------------------------------------------------------------------------
+# Phase 10.9e slice A — language plumbing regression
+# ---------------------------------------------------------------------------
+#
+# Контракт (additive, не trogает 10.9a):
+#
+# * POST upload без ``language_hint`` → ``AudioSession.language is None``
+#   (Whisper auto-detect path, regression-stable для Geoffrey-демо).
+# * POST upload с ``language_hint="ru"|"he"|"en"`` → персистится на row.
+#
+# Тесты НЕ дёргают Whisper API (worker не запускается); проверяем только
+# form-field → ORM column propagation. См. ADR-0080 §"Slice A".
+
+
+async def _load_session_language(session_factory: Any, *, session_id: str) -> str | None:
+    from sqlalchemy import select
+
+    async with session_factory() as session:
+        result = await session.execute(
+            select(AudioSession.language).where(AudioSession.id == session_id)
+        )
+        return result.scalar_one()
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("audio_storage", "stt_configured")
+async def test_post_without_language_hint_persists_null(app_client, session_factory: Any) -> None:
+    """Anti-regression: omitting language_hint → AudioSession.language is None.
+
+    Это путь Geoffrey-демо: владелец нажимает Record без выбора в picker'е,
+    Whisper сам определяет язык на свой вкус.
+    """
+    owner = await _make_user(session_factory)
+    tree = await _make_tree_with_owner(session_factory, owner=owner)
+    await _grant_consent(session_factory, tree=tree)
+
+    r = await app_client.post(
+        f"/trees/{tree.id}/audio-sessions",
+        files=_audio_files(),
+        headers=_hdr(owner),
+    )
+    assert r.status_code == 201, r.text
+    persisted = await _load_session_language(session_factory, session_id=r.json()["id"])
+    assert persisted is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("audio_storage", "stt_configured")
+async def test_post_with_language_hint_ru_persists(app_client, session_factory: Any) -> None:
+    """Slice A целевая ручка: language_hint=ru → AudioSession.language=='ru'."""
+    owner = await _make_user(session_factory)
+    tree = await _make_tree_with_owner(session_factory, owner=owner)
+    await _grant_consent(session_factory, tree=tree)
+
+    r = await app_client.post(
+        f"/trees/{tree.id}/audio-sessions",
+        files=_audio_files(),
+        data={"language_hint": "ru"},
+        headers=_hdr(owner),
+    )
+    assert r.status_code == 201, r.text
+    persisted = await _load_session_language(session_factory, session_id=r.json()["id"])
+    assert persisted == "ru"
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("audio_storage", "stt_configured")
+async def test_post_with_language_hint_he_persists(app_client, session_factory: Any) -> None:
+    """Slice A: Hebrew (RTL) — symmetric coverage with Russian."""
+    owner = await _make_user(session_factory)
+    tree = await _make_tree_with_owner(session_factory, owner=owner)
+    await _grant_consent(session_factory, tree=tree)
+
+    r = await app_client.post(
+        f"/trees/{tree.id}/audio-sessions",
+        files=_audio_files(),
+        data={"language_hint": "he"},
+        headers=_hdr(owner),
+    )
+    assert r.status_code == 201, r.text
+    persisted = await _load_session_language(session_factory, session_id=r.json()["id"])
+    assert persisted == "he"
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("audio_storage", "stt_configured")
+async def test_post_with_language_hint_en_persists(app_client, session_factory: Any) -> None:
+    """Explicit EN choice (user opted out of Auto): persists 'en'."""
+    owner = await _make_user(session_factory)
+    tree = await _make_tree_with_owner(session_factory, owner=owner)
+    await _grant_consent(session_factory, tree=tree)
+
+    r = await app_client.post(
+        f"/trees/{tree.id}/audio-sessions",
+        files=_audio_files(),
+        data={"language_hint": "en"},
+        headers=_hdr(owner),
+    )
+    assert r.status_code == 201, r.text
+    persisted = await _load_session_language(session_factory, session_id=r.json()["id"])
+    assert persisted == "en"

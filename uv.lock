@@ -3444,12 +3444,14 @@ name = "report-service"
 version = "0.1.0"
 source = { editable = "services/report-service" }
 dependencies = [
+    { name = "arq" },
     { name = "asyncpg" },
     { name = "fastapi" },
     { name = "jinja2" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "python-dotenv" },
+    { name = "redis", extra = ["hiredis"] },
     { name = "shared-models", extra = ["observability", "security"] },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "uvicorn", extra = ["standard"] },
@@ -3464,6 +3466,7 @@ storage-minio = [
     { name = "shared-models", extra = ["storage-minio"] },
 ]
 test = [
+    { name = "fakeredis" },
     { name = "httpx" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pytest" },
@@ -3473,7 +3476,9 @@ test = [
 
 [package.metadata]
 requires-dist = [
+    { name = "arq", specifier = ">=0.26" },
     { name = "asyncpg", specifier = ">=0.30" },
+    { name = "fakeredis", marker = "extra == 'test'", specifier = ">=2.20" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "httpx", marker = "extra == 'test'", specifier = ">=0.27" },
     { name = "jinja2", specifier = ">=3.1" },
@@ -3483,6 +3488,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3" },
     { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.24" },
     { name = "python-dotenv", specifier = ">=1.0" },
+    { name = "redis", extras = ["hiredis"], specifier = ">=5.0" },
     { name = "shared-models", extras = ["security", "observability"], editable = "packages/shared-models" },
     { name = "shared-models", extras = ["storage-gcs"], marker = "extra == 'storage-gcs'", editable = "packages/shared-models" },
     { name = "shared-models", extras = ["storage-minio"], marker = "extra == 'storage-minio'", editable = "packages/shared-models" },
