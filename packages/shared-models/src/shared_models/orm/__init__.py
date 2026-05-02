@@ -35,6 +35,16 @@ from shared_models.orm.hypothesis import Hypothesis, HypothesisEvidence
 from shared_models.orm.hypothesis_compute_job import HypothesisComputeJob
 from shared_models.orm.import_job import ImportJob
 from shared_models.orm.membership import TreeInvitation, TreeMembership
+from shared_models.orm.merge_session import (
+    ChosenSource,
+    DecisionMethod,
+    MergeApplyBatch,
+    MergeDecision,
+    MergeDecisionScope,
+    MergeRefKind,
+    MergeSession,
+    MergeSessionStatus,
+)
 from shared_models.orm.multimedia import EntityMultimedia, MultimediaObject
 from shared_models.orm.name import Name
 from shared_models.orm.note import EntityNote, Note
@@ -78,10 +88,12 @@ __all__ = [
     "ChatMessage",
     "ChatMessageRole",
     "ChatSession",
+    "ChosenSource",
     "Citation",
     "CompletenessAssertion",
     "CompletenessAssertionSource",
     "CountryArchiveDirectorySeed",
+    "DecisionMethod",
     "DnaCluster",
     "DnaClusterMember",
     "DnaConsent",
@@ -106,6 +118,12 @@ __all__ = [
     "HypothesisComputeJob",
     "HypothesisEvidence",
     "ImportJob",
+    "MergeApplyBatch",
+    "MergeDecision",
+    "MergeDecisionScope",
+    "MergeRefKind",
+    "MergeSession",
+    "MergeSessionStatus",
     "MultimediaObject",
     "Name",
     "Note",
