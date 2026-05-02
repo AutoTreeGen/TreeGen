@@ -10,6 +10,10 @@ from shared_models.orm.audio_session import AudioSession, AudioSessionStatus
 from shared_models.orm.audit_log import AuditLog
 from shared_models.orm.chat import ChatMessage, ChatMessageRole, ChatSession
 from shared_models.orm.citation import Citation
+from shared_models.orm.completeness_assertion import (
+    CompletenessAssertion,
+    CompletenessAssertionSource,
+)
 from shared_models.orm.dna_cluster import DnaCluster, DnaClusterMember
 from shared_models.orm.dna_consent import DnaConsent
 from shared_models.orm.dna_import import DnaImport
@@ -40,6 +44,11 @@ from shared_models.orm.person import Person
 from shared_models.orm.person_merge_log import PersonMergeLog
 from shared_models.orm.place import Place, PlaceAlias
 from shared_models.orm.public_tree_share import PublicTreeShare
+from shared_models.orm.report_bundle_job import (
+    BundleOutputFormat,
+    BundleStatus,
+    ReportBundleJob,
+)
 from shared_models.orm.shared_match import SharedMatch
 from shared_models.orm.source import Source
 from shared_models.orm.source_extraction import SourceExtraction
@@ -57,10 +66,14 @@ __all__ = [
     "AudioSession",
     "AudioSessionStatus",
     "AuditLog",
+    "BundleOutputFormat",
+    "BundleStatus",
     "ChatMessage",
     "ChatMessageRole",
     "ChatSession",
     "Citation",
+    "CompletenessAssertion",
+    "CompletenessAssertionSource",
     "DnaCluster",
     "DnaClusterMember",
     "DnaConsent",
@@ -94,6 +107,7 @@ __all__ = [
     "Place",
     "PlaceAlias",
     "PublicTreeShare",
+    "ReportBundleJob",
     "SharedMatch",
     "Source",
     "SourceExtraction",
