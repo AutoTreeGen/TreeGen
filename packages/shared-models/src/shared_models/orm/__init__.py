@@ -40,6 +40,11 @@ from shared_models.orm.person import Person
 from shared_models.orm.person_merge_log import PersonMergeLog
 from shared_models.orm.place import Place, PlaceAlias
 from shared_models.orm.public_tree_share import PublicTreeShare
+from shared_models.orm.report_bundle_job import (
+    BundleOutputFormat,
+    BundleStatus,
+    ReportBundleJob,
+)
 from shared_models.orm.shared_match import SharedMatch
 from shared_models.orm.source import Source
 from shared_models.orm.source_extraction import SourceExtraction
@@ -57,6 +62,8 @@ __all__ = [
     "AudioSession",
     "AudioSessionStatus",
     "AuditLog",
+    "BundleOutputFormat",
+    "BundleStatus",
     "ChatMessage",
     "ChatMessageRole",
     "ChatSession",
@@ -94,6 +101,7 @@ __all__ = [
     "Place",
     "PlaceAlias",
     "PublicTreeShare",
+    "ReportBundleJob",
     "SharedMatch",
     "Source",
     "SourceExtraction",

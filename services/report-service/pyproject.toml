@@ -22,6 +22,12 @@ dependencies = [
     # endpoint graceful'ит 503).
     "Jinja2>=3.1",
     "weasyprint>=63",
+    # Phase 24.4 — async bundle worker. Same arq + redis pair as
+    # parser-service; report-service worker process слушает свою очередь
+    # ``report-bundles`` на том же Redis (см. ADR-0078). Никаких новых
+    # job runners — это второй deployment того же arq-фреймворка.
+    "arq>=0.26",
+    "redis[hiredis]>=5.0",
 ]
 
 [project.optional-dependencies]
@@ -31,6 +37,9 @@ test = [
     "pytest-asyncio>=0.24",
     "testcontainers[postgres]>=4.8",
     "psycopg[binary]>=3.2",
+    # Phase 24.4 — fakeredis для in-process arq pool без живого Redis
+    # (зеркало parser-service test deps).
+    "fakeredis>=2.20",
 ]
 
 # Phase 4.11a (ADR-0046) — opt-in storage backends. Тесты используют
