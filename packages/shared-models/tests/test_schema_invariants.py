@@ -158,6 +158,12 @@ SERVICE_TABLES = {
     # на tree, FK RESTRICT на requested_by — erasure pipeline сначала
     # чистит jobs, потом user.
     "report_bundle_jobs",
+    # Completeness-assertion ↔ source junction (Phase 15.11a / ADR-0076):
+    # composite-PK (assertion_id, source_id), CASCADE on assertion delete,
+    # RESTRICT on source delete (sources outlive their citations). Pure m2m,
+    # без mixin'ов и tree_id; revoke на API-слое чистит junction
+    # hard-delete'ом, родительская assertion остаётся для audit.
+    "completeness_assertion_sources",
 }
 
 TREE_ENTITY_TABLES = {
@@ -179,6 +185,11 @@ TREE_ENTITY_TABLES = {
     # → имеют tree_id, soft-delete, provenance, version_id, status,
     # confidence_score (в дополнение к специфичному composite_score).
     "hypotheses",
+    # Completeness assertions / sealed sets (Phase 15.11a / ADR-0076):
+    # owner-asserted-negation flag на scope вокруг анкорной персоны
+    # («siblings of X are exhaustive»). TreeEntityMixins для evidence-first
+    # семантики (status/confidence/provenance/soft-delete/version_id).
+    "completeness_assertions",
 }
 
 

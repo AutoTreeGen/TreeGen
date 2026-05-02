@@ -10,6 +10,10 @@ from shared_models.orm.audio_session import AudioSession, AudioSessionStatus
 from shared_models.orm.audit_log import AuditLog
 from shared_models.orm.chat import ChatMessage, ChatMessageRole, ChatSession
 from shared_models.orm.citation import Citation
+from shared_models.orm.completeness_assertion import (
+    CompletenessAssertion,
+    CompletenessAssertionSource,
+)
 from shared_models.orm.dna_cluster import DnaCluster, DnaClusterMember
 from shared_models.orm.dna_consent import DnaConsent
 from shared_models.orm.dna_import import DnaImport
@@ -68,6 +72,8 @@ __all__ = [
     "ChatMessageRole",
     "ChatSession",
     "Citation",
+    "CompletenessAssertion",
+    "CompletenessAssertionSource",
     "DnaCluster",
     "DnaClusterMember",
     "DnaConsent",
