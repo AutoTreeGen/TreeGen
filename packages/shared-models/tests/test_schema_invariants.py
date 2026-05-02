@@ -175,6 +175,16 @@ SERVICE_TABLES = {
     "surname_transliteration_seed",
     "fabrication_pattern_seed",
     "place_lookup_seed",
+    # Merge sessions / decisions / apply batches (Phase 5.7c-a / ADR-0070):
+    # сессионный 2-way merge (orchestration-artifact merge-service'а), не
+    # доменная сущность дерева. ``merge_sessions.status`` — узкий lifecycle
+    # с терминальным ``abandoned``; ``merge_decisions`` / ``merge_apply_batches``
+    # immutable history rows. Без provenance/version_id/soft-delete на самих
+    # session-row'ах — provenance пишется на затронутые domain-row'ы при
+    # apply (ADR-0070 §«Аудит и provenance»).
+    "merge_sessions",
+    "merge_decisions",
+    "merge_apply_batches",
 }
 
 TREE_ENTITY_TABLES = {
