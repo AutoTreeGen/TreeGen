@@ -1,0 +1,52 @@
+# Compatibility rules: FamilySearch import.
+#
+# FamilySearch operates as a single shared tree, so import semantics differ:
+# duplicates merge against existing PIDs, and the platform replaces all
+# inbound non-FamilySearch person identifiers with its own _FSFTID. Citation
+# structure is preserved, but multimedia is discarded entirely on the
+# free import path (only via Memories upload separately).
+
+target: familysearch
+description: |
+  FamilySearch shared-tree import. Replaces person identifiers with FSFTID,
+  drops multimedia on the free import path, accepts UTF-8 and citation
+  structure but normalises some date/place forms.
+
+drops:
+  - tag: _UID
+    reason: "FamilySearch generates its own FSFTID and discards inbound _UID."
+    weight: 0.02
+  - tag: _APID
+    reason: "Ancestry person id is not preserved on FamilySearch import."
+    weight: 0.02
+  - tag: _TID
+    reason: "Ancestry tree id is not preserved on FamilySearch import."
+    weight: 0.02
+  - tag: _UPD
+    reason: "MyHeritage update timestamp is not preserved on FamilySearch import."
+    weight: 0.01
+  - tag: _GENI_PROFILE_ID
+    reason: "Geni profile id is not preserved on FamilySearch import."
+    weight: 0.01
+  - tag: _ATG_*
+    reason: "AutoTreeGen extension tags are not preserved on FamilySearch import."
+    weight: 0.03
+  - feature: inline_objects
+    reason: "Inline OBJE multimedia is dropped on FamilySearch's free import path; uploads must use Memories separately."
+    weight: 0.05
+  - feature: source_long_text
+    reason: "Source TEXT/PUBL longer than ~250 chars may be truncated by FamilySearch source editor."
+    weight: 0.03
+
+encoding:
+  max_charset: UTF-8
+  weight: 0.01
+  substitutions: {}
+
+structure:
+  - description: "Multimedia (OBJE, both inline and xref'd) is not imported on the free FamilySearch import path."
+    severity: 0.30
+    trigger: any_inline_obje
+  - description: "Imported persons are merged against the existing FamilySearch shared tree; original IDs are remapped to FSFTIDs."
+    severity: 0.25
+    trigger: always

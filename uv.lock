@@ -1316,6 +1316,7 @@ dependencies = [
     { name = "entity-resolution" },
     { name = "pydantic" },
     { name = "python-dateutil" },
+    { name = "pyyaml" },
     { name = "rich" },
     { name = "typer" },
 ]
@@ -1326,6 +1327,7 @@ requires-dist = [
     { name = "entity-resolution", editable = "packages/entity-resolution" },
     { name = "pydantic", specifier = ">=2.10.0" },
     { name = "python-dateutil", specifier = ">=2.9.0" },
+    { name = "pyyaml", specifier = ">=6.0" },
     { name = "rich", specifier = ">=13.9.0" },
     { name = "typer", specifier = ">=0.12.0" },
 ]
