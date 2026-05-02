@@ -95,6 +95,18 @@ class ImportJob(IdMixin, Base):
         server_default=text("'[]'::jsonb"),
     )
 
+    # Phase 5.8: structured findings от validator-rules (см.
+    # ``gedcom_parser.validator``). Каждый element — JSON-сериализованный
+    # ``Finding`` (rule_id, severity, message, person_xref?, family_xref?,
+    # suggested_fix?, context). Findings advisory: импорт всегда завершается
+    # успехом если parse прошёл, даже при ``severity=error`` findings.
+    validation_findings: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=list,
+        server_default=text("'[]'::jsonb"),
+    )
+
     # Cancel-сигнал (Phase 3.5). Ставится PATCH /imports/{id}/cancel,
     # читается worker'ом между стадиями.
     cancel_requested: Mapped[bool] = mapped_column(

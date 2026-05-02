@@ -662,5 +662,75 @@
       "loading": "Loading history…",
       "loadFailed": "Failed to load chat history."
     }
+  },
+  "voice": {
+    "title": "Voice-to-tree (beta)",
+    "subtitle": "Record a memory and we'll transcribe it for you. Read-only in this version — editing arrives later.",
+    "backToTree": "Back to tree",
+    "linkLabel": "Voice",
+    "browserSupport": "MediaRecorder is supported in Chrome and Firefox. Safari support arrives in a future release.",
+    "consent": {
+      "heading": "Audio egress consent",
+      "body": "Recordings are sent to OpenAI Whisper for transcription. OpenAI retains requests for 30 days under the Standard tier policy. Once transcribed, the text stays in your tree's data zone. You can revoke this consent at any time, which will delete every recording in this tree.",
+      "grant": "I consent",
+      "granting": "Granting…",
+      "grantedAt": "Consent granted on {date}.",
+      "revoke": "Revoke consent",
+      "revoking": "Revoking…",
+      "revokeConfirm": "Revoke voice-egress consent? This deletes every recording in this tree.",
+      "revokedSuccess": "Consent revoked. {count, plural, =0 {No recordings to delete} =1 {# recording queued for deletion} other {# recordings queued for deletion}}.",
+      "ownerOnlyHint": "Only the tree owner can change the consent state.",
+      "loadFailed": "Failed to load consent state.",
+      "grantFailed": "Failed to grant consent.",
+      "revokeFailed": "Failed to revoke consent."
+    },
+    "recorder": {
+      "heading": "Record",
+      "start": "Start recording",
+      "stop": "Stop and upload",
+      "uploading": "Uploading…",
+      "elapsed": "{seconds}s",
+      "minDurationHint": "Minimum {seconds} seconds.",
+      "maxDurationHint": "Maximum {seconds} seconds — we'll stop automatically.",
+      "uploaded": "Uploaded — transcription queued.",
+      "consentRequired": "Grant consent above to enable recording.",
+      "deviceUnavailable": "Couldn't access the microphone. Check browser permissions.",
+      "unsupported": "MediaRecorder is not supported in this browser. Try Chrome or Firefox.",
+      "uploadFailed": "Upload failed: {message}"
+    },
+    "sessions": {
+      "heading": "Recordings",
+      "loading": "Loading recordings…",
+      "loadFailed": "Failed to load recordings.",
+      "empty": "No recordings yet — start by recording above.",
+      "createdAt": "Recorded {date}",
+      "duration": "{seconds, plural, =1 {# second} other {# seconds}}",
+      "language": "Language: {code}",
+      "deletedTombstone": "Deleted",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "deleteConfirm": "Delete this recording? This cannot be undone.",
+      "deleteFailed": "Failed to delete recording.",
+      "view": "View transcript",
+      "status": {
+        "uploaded": "Uploaded",
+        "transcribing": "Transcribing…",
+        "ready": "Ready",
+        "failed": "Failed"
+      }
+    },
+    "transcript": {
+      "heading": "Transcript",
+      "caveat": "Auto-generated transcript. Review before relying on it as evidence.",
+      "empty": "No transcript yet — wait for transcription to finish.",
+      "metadata": {
+        "provider": "Provider: {provider}",
+        "model": "Model: {model}",
+        "language": "Language: {code}",
+        "duration": "Duration: {seconds}s",
+        "cost": "Cost: ${cost}"
+      },
+      "errorPrefix": "Transcription failed: {message}"
+    }
   }
 }
