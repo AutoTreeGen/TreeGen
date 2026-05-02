@@ -518,6 +518,82 @@ class SubscriptionStatus(StrEnum):
     TRIALING = "trialing"
 
 
+class DocumentType(StrEnum):
+    """Тип документа-источника для off-catalog evidence (Phase 22.5).
+
+    Каждое значение классифицируется по «tier» через таблицу
+    ``document_type_weights``: tier-1 (government primary, weight=1),
+    tier-2 (private primary / corroborating, weight=2), tier-3 (derived /
+    secondary, weight=3). DNA-типы существуют для полноты, но реальная
+    оценка их силы — отдельный pipeline в Phase 16.x; сюда они попадают
+    только чтобы Evidence можно было привязать к DNA-наблюдению.
+
+    Любое расширение enum'а — отдельный ADR. Семантика tier'а фиксируется
+    в seed-данных миграции, не в коде.
+    """
+
+    # Tier-1: government primary
+    PASSPORT = "passport"
+    BIRTH_CERTIFICATE = "birth_certificate"
+    DEATH_CERTIFICATE = "death_certificate"
+    MARRIAGE_CERTIFICATE = "marriage_certificate"
+    DIVORCE_RECORD = "divorce_record"
+    CIVIL_REGISTER_EXTRACT = "civil_register_extract"
+    MILITARY_RECORD = "military_record"
+    NATURALIZATION = "naturalization"
+    CENSUS_HOUSEHOLD = "census_household"
+    METRIC_BOOK_ENTRY = "metric_book_entry"
+    REVISION_LIST_ENTRY = "revision_list_entry"
+
+    # Tier-2: private primary / corroborating
+    FAMILY_BIBLE = "family_bible"
+    PHOTOGRAPH_WITH_CAPTION = "photograph_with_caption"
+    HEADSTONE_INSCRIPTION = "headstone_inscription"
+    OBITUARY = "obituary"
+    IMMIGRATION_PASSENGER_LIST = "immigration_passenger_list"
+
+    # Tier-3: derived / secondary
+    GEDCOM_IMPORT = "gedcom_import"
+    PUBLIC_TREE_COPY = "public_tree_copy"
+    ONLINE_INDEX_ENTRY = "online_index_entry"
+    ORAL_TESTIMONY = "oral_testimony"
+    FAMILY_LETTER = "family_letter"
+
+    # DNA: weight handled separately by 16.x scoring; in this table — Tier-3 default.
+    DNA_MATCH_SEGMENT = "dna_match_segment"
+    DNA_MATCH_TOTAL_CM = "dna_match_total_cm"
+
+    # Catch-all (default for backfill / unknown).
+    OTHER = "other"
+
+
+class ProvenanceChannel(StrEnum):
+    """Канал, через который получен документ-источник (Phase 22.5).
+
+    Не путать с ``DocumentType`` (что это за документ): channel — *как*
+    документ оказался у пользователя. Ровно эта развязка — основная
+    цель ADR-0071: weight теперь привязан к типу документа, а channel
+    хранится отдельно для audit-trail и cost-tracking.
+
+    ``UNKNOWN`` — backfill-only (для строк, созданных до Phase 22.5).
+    Application-layer валидация POST/PATCH должна отвергать
+    ``UNKNOWN`` для новых записей: явный канал — обязательное поле
+    при создании evidence руками.
+    """
+
+    OFFICIAL_REQUEST = "official_request"
+    PAID_INTERMEDIARY = "paid_intermediary"
+    PAID_OFFICIAL_REQUEST = "paid_official_request"
+    IN_PERSON_VISIT = "in_person_visit"
+    FAMILY_ARCHIVE = "family_archive"
+    PRIVATE_COLLECTION = "private_collection"
+    ONLINE_CATALOG = "online_catalog"
+    DNA_PLATFORM_EXPORT = "dna_platform_export"
+    PUBLIC_TREE_SCRAPE = "public_tree_scrape"
+    OTHER = "other"
+    UNKNOWN = "unknown"
+
+
 class StripeEventStatus(StrEnum):
     """Статус обработки Stripe webhook event'а (idempotency log).
 
