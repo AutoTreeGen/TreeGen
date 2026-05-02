@@ -696,7 +696,13 @@
       "consentRequired": "Grant consent above to enable recording.",
       "deviceUnavailable": "Couldn't access the microphone. Check browser permissions.",
       "unsupported": "MediaRecorder is not supported in this browser. Try Chrome or Firefox.",
-      "uploadFailed": "Upload failed: {message}"
+      "uploadFailed": "Upload failed: {message}",
+      "languageLabel": "Language",
+      "languageAuto": "Auto-detect",
+      "languageEn": "English",
+      "languageRu": "Russian",
+      "languageHe": "Hebrew",
+      "languageHintNonLatin": "Names will be preserved in the original script and transliterated to Latin via the Phase 15.10 name engine."
     },
     "sessions": {
       "heading": "Recordings",
