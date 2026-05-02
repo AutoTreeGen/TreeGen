@@ -18,6 +18,7 @@ from dna_analysis.clustering import (
     detect_endogamy,
     run_clustering,
 )
+from dna_analysis.dispatcher import parse_raw
 from dna_analysis.errors import DnaParseError, UnsupportedFormatError
 from dna_analysis.genetic_map import GeneticMap, GeneticMapError
 from dna_analysis.matching import (
@@ -32,8 +33,10 @@ from dna_analysis.models import (
     Genotype,
     Provider,
     ReferenceBuild,
+    Sex,
     Snp,
 )
+from dna_analysis.sex import infer_sex
 from dna_analysis.triangulation import (
     Match,
     TriangulationGroup,
@@ -41,6 +44,11 @@ from dna_analysis.triangulation import (
     bayes_boost,
     find_triangulation_groups,
 )
+
+# Phase 16.1: alias для downstream consumers (Phase 16.2 dna-painter и далее),
+# которым семантически удобнее `ParseResult` для возврата `parse_raw`.
+# Тип идентичен DnaTest — back-compat без breaking change.
+ParseResult = DnaTest
 
 __all__ = [
     "Chromosome",
@@ -56,9 +64,11 @@ __all__ = [
     "GeneticMapError",
     "Genotype",
     "Match",
+    "ParseResult",
     "Provider",
     "ReferenceBuild",
     "RelationshipRange",
+    "Sex",
     "SharedSegment",
     "Snp",
     "TriangulationGroup",
@@ -69,6 +79,8 @@ __all__ = [
     "detect_endogamy",
     "find_shared_segments",
     "find_triangulation_groups",
+    "infer_sex",
+    "parse_raw",
     "predict_relationship",
     "run_clustering",
 ]

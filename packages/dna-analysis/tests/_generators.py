@@ -47,6 +47,14 @@ MYHERITAGE_HEADER = (
 # FTDNA Family Finder CSV header — без comment-блока, только CSV header line.
 FTDNA_HEADER = "RSID,CHROMOSOME,POSITION,RESULT\n"
 
+# LivingDNA raw TSV header — структурно копирует 23andMe (TSV, 4 колонки),
+# отличается только signature-строкой. Цитата из публичного формата.
+LIVING_DNA_HEADER = (
+    "# LivingDNA Raw Data Download v1.0.0\n"
+    "# Reference build: GRCh37 (hg19)\n"
+    "# rsid\tchromosome\tposition\tgenotype\n"
+)
+
 
 def _seeded_rng() -> random.Random:
     """Изолированный Random(seed=42), не для криптографии — детерминизм тестов."""
@@ -112,4 +120,17 @@ def generate_synthetic_ftdna(num_snps: int = 100) -> str:
         pos = rng.randint(1_000_000, 250_000_000)
         genotype = "--" if rng.random() < 0.05 else rng.choice(_AUTOSOMAL_GENOTYPES)
         parts.append(f'"rs{i}","{chrom}","{pos}","{genotype}"\n')
+    return "".join(parts)
+
+
+def generate_synthetic_livingdna(num_snps: int = 100) -> str:
+    """Синтетический LivingDNA raw TSV файл с N SNP-ами (детерминированный)."""
+    rng = _seeded_rng()
+    chromosomes = [str(c) for c in range(1, 23)] + ["X", "Y", "MT"]
+    parts = [LIVING_DNA_HEADER]
+    for i in range(1, num_snps + 1):
+        chrom = rng.choice(chromosomes)
+        pos = rng.randint(1_000_000, 250_000_000)
+        genotype = "--" if rng.random() < 0.05 else rng.choice(_AUTOSOMAL_GENOTYPES)
+        parts.append(f"rs{i}\t{chrom}\t{pos}\t{genotype}\n")
     return "".join(parts)
