@@ -430,11 +430,19 @@ async def test_evidence_match_certainty_range_check(
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_evidence_tree_cascade_delete(db_session: AsyncSession) -> None:
-    """Удаление дерева каскадно убирает evidence (FK CASCADE).
+    """Raw ``DELETE FROM trees`` каскадно убирает evidence (FK CASCADE).
 
-    GDPR-erasure ADR-0049 удаляет дерево через application-level worker;
-    DB-CASCADE — safety net.
+    GDPR-erasure ADR-0049 удаляет дерево через application-level worker
+    (он сам зачищает persons и прочее на уровне приложения); DB-CASCADE
+    тут — safety net на случай прямого DELETE FROM trees через psql.
+
+    ``persons.tree_id`` имеет ON DELETE RESTRICT (см. TreeScopedMixin),
+    поэтому полная цепочка через ORM невозможна — здесь идёт raw SQL,
+    который повторяет последний этап GDPR-worker'а: дерево удаляется,
+    evidence-row забирается с собой DB-CASCADE'ом.
     """
+    from sqlalchemy import delete as sa_delete
+
     reset_document_type_weight_cache()
     tree, person = await _seed_owner_and_tree(db_session)
 
@@ -450,7 +458,13 @@ async def test_evidence_tree_cascade_delete(db_session: AsyncSession) -> None:
     ev_id = ev.id
     assert ev_id is not None
 
-    await db_session.delete(tree)
+    # Зачистить persons первым — RESTRICT на FK trees блокирует, иначе
+    # tree.delete() упадёт. GDPR-worker делает то же самое сам.
+    await db_session.execute(sa_delete(Person).where(Person.tree_id == tree.id))
+    await db_session.flush()
+
+    # Теперь raw DELETE FROM trees — FK CASCADE на evidence срабатывает.
+    await db_session.execute(sa_delete(Tree).where(Tree.id == tree.id))
     await db_session.flush()
 
     remaining = await db_session.execute(select(Evidence).where(Evidence.id == ev_id))
