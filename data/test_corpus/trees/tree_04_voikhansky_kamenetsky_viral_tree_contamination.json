@@ -1,0 +1,331 @@
+{
+  "tree_id": "tree_04_voikhansky_kamenetsky_viral_tree_contamination",
+  "category": "fabrication_detection_and_same_name_separation",
+  "complexity": "high",
+  "population_context": "Ashkenazi",
+  "scope_description": "6-generation Pale-of-Settlement Jewish tree, ~95 synthetic persons, centered on a Voikhansky-Leschinsky-Kamenetsky cluster with a viral rabbinical bridge, same-name merges, and jurisdiction errors.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR AutoTreeGenSyntheticCorpus\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Test Proband /Voikhansky/\n1 SEX M\n1 BIRT\n2 DATE 1972\n2 PLAC Melbourne, Victoria, Australia\n1 FAMC @F1@\n0 @I2@ INDI\n1 NAME Miriam /Voikhansky/\n1 SEX F\n1 BIRT\n2 DATE 1948\n2 PLAC Dnipro, Ukraine\n1 FAMC @F2@\n0 @I3@ INDI\n1 NAME Aron /Voikhansky/\n1 SEX M\n1 BIRT\n2 DATE ABT 1912\n2 PLAC Berdychiv, Kiev Governorate, Russian Empire\n1 DEAT\n2 DATE 1984\n2 PLAC Dnipropetrovsk, Ukrainian SSR\n1 FAMC @F3@\n0 @I4@ INDI\n1 NAME Rakhla Rocha /Leschinsky/\n1 SEX F\n1 BIRT\n2 DATE ABT 1882\n2 PLAC Starokostiantyniv, Volhynia Governorate, Russian Empire\n1 DEAT\n2 DATE ABT 1941\n2 PLAC Unknown, German occupation zone\n1 FAMS @F3@\n0 @I5@ INDI\n1 NAME Yankel Nakhman /Voikhansky/\n1 SEX M\n1 BIRT\n2 DATE ABT 1878\n2 PLAC Berdychiv, Kiev Governorate, Russian Empire\n1 FAMS @F3@\n0 @I6@ INDI\n1 NAME Dvora /Kamenetsky/\n1 SEX F\n1 BIRT\n2 DATE ABT 1854\n2 PLAC Kamenets-Podolsk, Podolia Governorate, Russian Empire\n1 FAMS @F4@\n0 @I7@ INDI\n1 NAME Chaim Leib /Leschinsky/\n1 SEX M\n1 BIRT\n2 DATE ABT 1850\n2 PLAC Starokostiantyniv, Volhynia Governorate, Russian Empire\n1 FAMS @F4@\n0 @I8@ INDI\n1 NAME Rabbi Baruch Ber /Kamenetsky/\n1 SEX M\n1 BIRT\n2 DATE 1870\n2 PLAC Lithuania\n1 NOTE UNSOURCED VIRAL TREE LINK: attached as father of Dvora Kamenetsky.\n0 @I9@ INDI\n1 NAME Dvora /Kamenetsky/\n1 SEX F\n1 BIRT\n2 DATE ABT 1854\n2 PLAC Minsk Governorate, Russian Empire\n1 NOTE POSSIBLE DUPLICATE OF I6 BUT place/patronymic conflict exists.\n0 @I10@ INDI\n1 NAME Chaim Leib /Leshinsky/\n1 SEX M\n1 BIRT\n2 DATE ABT 1849\n2 PLAC Pinsk, Minsk Governorate, Russian Empire\n1 NOTE Similar name but separate household candidate.\n0 @F3@ FAM\n1 HUSB @I5@\n1 WIFE @I4@\n1 CHIL @I3@\n0 @F4@ FAM\n1 HUSB @I7@\n1 WIFE @I6@\n1 CHIL @I4@\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_401",
+      "match_name": "Anonymized Cousin V-1",
+      "platform": "MyHeritage",
+      "shared_cm": 42,
+      "longest_segment": 12,
+      "segment_count": 5,
+      "triangulated_segments": [
+        {
+          "chromosome": 7,
+          "start": 47300000,
+          "end": 58600000,
+          "cm": 11.8,
+          "triangulated_with": ["dna_402", "dna_403"]
+        }
+      ],
+      "shared_matches_with": ["dna_402", "dna_403", "dna_405"],
+      "expected_link": "probable via Leschinsky/Voikhansky collateral branch, not through famous Rabbi Kamenetsky"
+    },
+    {
+      "match_id": "dna_402",
+      "match_name": "Anonymized Cousin L-2",
+      "platform": "GEDmatch",
+      "shared_cm": 31,
+      "longest_segment": 10,
+      "segment_count": 4,
+      "shared_matches_with": ["dna_401", "dna_403"],
+      "expected_link": "Leschinsky cluster; weak-to-moderate endogamy-corrected signal"
+    },
+    {
+      "match_id": "dna_403",
+      "match_name": "Anonymized Cousin K-3",
+      "platform": "FamilyTreeDNA",
+      "shared_cm": 28,
+      "longest_segment": 9,
+      "segment_count": 6,
+      "shared_matches_with": ["dna_401", "dna_402"],
+      "expected_link": "Kamenetsky surname cluster only; not enough for famous-rabbi descent"
+    },
+    {
+      "match_id": "dna_404",
+      "match_name": "Anonymized Famous-Line Claimant",
+      "platform": "Geni DNA-linked profile",
+      "shared_cm": 7,
+      "longest_segment": 5,
+      "segment_count": 2,
+      "shared_matches_with": [],
+      "expected_link": "insufficient DNA; should not support viral rabbinical bridge"
+    },
+    {
+      "match_id": "dna_405",
+      "match_name": "Anonymized Cousin V-5",
+      "platform": "AncestryDNA",
+      "shared_cm": 19,
+      "longest_segment": 8,
+      "segment_count": 3,
+      "shared_matches_with": ["dna_401"],
+      "expected_link": "Voikhansky/Leschinsky locality clue only"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_401",
+      "type": "metric_book_marriage",
+      "year": 1876,
+      "place": "Starokostiantyniv, Volhynia Governorate",
+      "transcription_excerpt": "Marriage of Chaim Leib Leshchinsky, son of Movsha, with Dvora Kamenetsky, daughter of Nakhman, both registered in Starokostiantyniv Jewish community.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms I7-I6 marriage and gives Dvora's father as Nakhman, not Rabbi Baruch Ber Kamenetsky."
+    },
+    {
+      "snippet_id": "src_402",
+      "type": "revision_list",
+      "year": 1858,
+      "place": "Starokostiantyniv Uyezd, Volhynia Governorate",
+      "transcription_excerpt": "Household 112: Movsha Leshchinsky, son Chaim Leib age 8. No Kamenetsky household listed in same house.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "supports Chaim Leib I7 in Volhynia, separates him from Pinsk candidate I10."
+    },
+    {
+      "snippet_id": "src_403",
+      "type": "metric_book_birth",
+      "year": 1882,
+      "place": "Starokostiantyniv, Volhynia Governorate",
+      "transcription_excerpt": "Birth of Rakhla Rocha to Chaim Leib Leshchinsky and Dvora daughter of Nakhman Kamenetsky.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms I4 parents; blocks viral famous-rabbi bridge."
+    },
+    {
+      "snippet_id": "src_404",
+      "type": "online_tree",
+      "year": 2021,
+      "place": "Geni / MyHeritage copied tree",
+      "transcription_excerpt": "Dvora Kamenetsky shown as daughter of Rabbi Baruch Ber Kamenetsky, descendant of famous Lithuanian rabbinical line. No cited primary source.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "expected_use": "low-confidence conflicting source; should trigger fantasy/viral-tree contamination."
+    },
+    {
+      "snippet_id": "src_405",
+      "type": "cemetery",
+      "year": 1937,
+      "place": "Berdychiv Jewish Cemetery",
+      "transcription_excerpt": "Yankel Nakhman Voikhansky, son of Shmuel, died 1937. Inscription gives patronymic Shmuel, not linked to Kamenetsky rabbinical family.",
+      "language": "he+ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "supports Voikhansky branch; no famous-rabbi evidence."
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "I6",
+      "assertion": "Dvora Kamenetsky was daughter of Rabbi Baruch Ber Kamenetsky",
+      "scope": "parentage",
+      "evidence": "copied from Geni/MyHeritage tree; no archive citation"
+    },
+    {
+      "person_id": "I4",
+      "assertion": "Rakhla Rocha Leschinsky is the key ancestral bridge into Kamenetsky line",
+      "scope": "lineage_hypothesis",
+      "evidence": "surname cluster + distant DNA matches"
+    },
+    {
+      "person_id": "I9",
+      "assertion": "I9 is duplicate of I6",
+      "scope": "duplicate_merge",
+      "evidence": "same name and similar date only"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "fabrication",
+      "subtype": "rabbinical_famous_line_bridge",
+      "person_id": "I8",
+      "expected_flag": "rabbinical_soloveitchik_brisk_unsourced_bridge",
+      "expected_confidence_when_flagged": 0.82,
+      "parent_pattern_id": "rabbinical_maharal_to_modern_family_shortcut"
+    },
+    {
+      "type": "fabrication",
+      "subtype": "voikhansky_viral_tree_contamination",
+      "person_id": "I6",
+      "expected_flag": "pale_voikhansky_viral_tree_contamination",
+      "expected_confidence_when_flagged": 0.88,
+      "parent_pattern_id": "same_name_gedcom_duplicate_import"
+    },
+    {
+      "type": "duplicate",
+      "persons": ["I6", "I9"],
+      "expected_flag": "same_name_different_person",
+      "reason": "same given/surname, but father, jurisdiction and source chain conflict"
+    },
+    {
+      "type": "duplicate",
+      "persons": ["I7", "I10"],
+      "expected_flag": "same_name_place_name_false_equivalence",
+      "reason": "similar Chaim Leib Leschinsky/Leshinsky, but Volhynia vs Minsk/Pinsk household evidence"
+    },
+    {
+      "type": "source_quality",
+      "person_id": "I8",
+      "expected_flag": "online_tree_only_famous_descent",
+      "reason": "no primary source; only copied public tree"
+    },
+    {
+      "type": "dna_overinterpretation",
+      "match_id": "dna_404",
+      "expected_flag": "endogamy_small_segment_overuse",
+      "reason": "7 cM total, longest 5 cM, no triangulation"
+    },
+    {
+      "type": "geographic_temporal",
+      "person_id": "I8",
+      "expected_flag": "person_in_wrong_jurisdiction_for_claim",
+      "reason": "famous Lithuanian rabbinic line used to explain Volhynia Kamenetsky without migration/marriage evidence"
+    }
+  ],
+  "expected_reasoning_chain": [
+    "Step 1: Parse GEDCOM and identify I6/I9 and I7/I10 as duplicate candidates but not auto-mergeable.",
+    "Step 2: Run surname cluster matching for Voikhansky, Leschinsky and Kamenetsky; mark Kamenetsky as high-risk for famous-rabbi overattachment.",
+    "Step 3: Evaluate archive snippets src_401 and src_403 as primary records naming Dvora's father as Nakhman Kamenetsky.",
+    "Step 4: Compare src_404 copied online-tree claim to primary records; downgrade online tree and raise conflict.",
+    "Step 5: Apply fabrication library: viral-tree contamination + famous rabbinical bridge + online-tree-only descent.",
+    "Step 6: Evaluate DNA matches: dna_401, dna_402, dna_403 support a broad Leschinsky/Voikhansky/Kamenetsky cluster, but do not prove descent from Rabbi Baruch Ber Kamenetsky.",
+    "Step 7: Apply Ashkenazi endogamy correction; dna_404 is insufficient due to small segments and lack of triangulation.",
+    "Step 8: Output I6 parentage as Confirmed to Nakhman Kamenetsky based on metric books; reject I8 as father.",
+    "Step 9: Keep Rabbi Kamenetsky famous-line claim as Rejected/Quarantined, while preserving collateral Kamenetsky surname hypothesis as Hypothesis.",
+    "Step 10: Generate research targets: locate 1858 revision list for Kamenetsky household, cemetery for Nakhman, and marriage/birth scans for Dvora."
+  ],
+  "expected_confidence_outputs": {
+    "relationship_I6_daughter_of_Nakhman_Kamenetsky": {
+      "status": "Confirmed",
+      "confidence": 0.96,
+      "evidence": ["src_401", "src_403"],
+      "classes": ["archival_record", "name", "place", "time"]
+    },
+    "relationship_I6_daughter_of_Rabbi_Baruch_Ber_Kamenetsky_I8": {
+      "status": "Rejected",
+      "confidence": 0.08,
+      "evidence_against": ["src_401", "src_403"],
+      "flags": ["online_tree_only_famous_descent", "rabbinical_famous_line_bridge"]
+    },
+    "relationship_I4_child_of_I7_I6": {
+      "status": "Confirmed",
+      "confidence": 0.95,
+      "evidence": ["src_403"],
+      "classes": ["archival_record", "name", "place", "time"]
+    },
+    "duplicate_I6_I9": {
+      "status": "Conflict",
+      "confidence": 0.42,
+      "reason": "same name but father/place conflict; block merge"
+    },
+    "cluster_Leschinsky_Voikhansky_Kamenetsky": {
+      "status": "Probable",
+      "confidence": 0.78,
+      "reason": "DNA triangulation + surname/place cluster, endogamy corrected"
+    },
+    "famous_Rabbi_Kamenetsky_direct_descent": {
+      "status": "Rejected",
+      "confidence": 0.12,
+      "reason": "primary records point elsewhere; viral tree claim unsupported"
+    }
+  },
+  "expected_engine_flags": [
+    "pale_voikhansky_viral_tree_contamination",
+    "rabbinical_famous_line_bridge",
+    "online_tree_only_famous_descent",
+    "same_name_different_person",
+    "same_name_place_name_false_equivalence",
+    "endogamy_small_segment_overuse",
+    "person_in_wrong_jurisdiction_for_claim"
+  ],
+  "ground_truth_annotations": {
+    "true_lineage": [
+      "I1 Test Proband Voikhansky",
+      "I2 Miriam Voikhansky",
+      "I3 Aron Voikhansky",
+      "I5 Yankel Nakhman Voikhansky + I4 Rakhla Rocha Leschinsky",
+      "I7 Chaim Leib Leschinsky + I6 Dvora Kamenetsky",
+      "Dvora's father: Nakhman Kamenetsky, not Rabbi Baruch Ber Kamenetsky"
+    ],
+    "false_claims": [
+      "I8 Rabbi Baruch Ber Kamenetsky is not father of I6",
+      "I6 and I9 are not safe duplicates",
+      "I7 and I10 are not safe duplicates",
+      "dna_404 does not prove a famous rabbinical line"
+    ],
+    "intended_feature_coverage": [
+      "fabrication_filter",
+      "same_name_different_person",
+      "duplicate_blocking",
+      "archive_vs_tree_conflict",
+      "Ashkenazi_endogamy_correction",
+      "source_authority_chain",
+      "rabbinical_fantasy_detection",
+      "Pale_jurisdiction_routing"
+    ]
+  },
+  "evaluation_assertions": [
+    {
+      "assertion_id": "eval_04_001",
+      "description": "Engine must reject I8 as father of I6.",
+      "expected": {
+        "relationship": "I8->I6",
+        "status": "Rejected",
+        "max_confidence": 0.2
+      }
+    },
+    {
+      "assertion_id": "eval_04_002",
+      "description": "Engine must confirm Dvora's father as Nakhman Kamenetsky when primary metric records are present.",
+      "expected": {
+        "relationship": "Nakhman_Kamenetsky->I6",
+        "status": "Confirmed",
+        "min_confidence": 0.95
+      }
+    },
+    {
+      "assertion_id": "eval_04_003",
+      "description": "Engine must block automatic merge of I6 and I9.",
+      "expected": {
+        "merge_pair": ["I6", "I9"],
+        "auto_merge_allowed": false
+      }
+    },
+    {
+      "assertion_id": "eval_04_004",
+      "description": "Engine must not treat small non-triangulated dna_404 as proof.",
+      "expected": {
+        "match_id": "dna_404",
+        "max_dna_evidence_score": 0.25
+      }
+    },
+    {
+      "assertion_id": "eval_04_005",
+      "description": "Engine must keep Kamenetsky surname cluster as Hypothesis while rejecting famous-rabbi direct descent.",
+      "expected": {
+        "surname_cluster_status": "Hypothesis",
+        "famous_line_status": "Rejected"
+      }
+    }
+  ],
+  "phases_validated": [
+    "5.10_fantasy_filter",
+    "15.10_name_disambiguation",
+    "15.11_sealed_set_assertions",
+    "16.x_dna_cluster_interpretation",
+    "19.x_place_resolution",
+    "24.x_evidence_summary",
+    "25.x_research_dialogue_engine"
+  ],
+  "version": "0.1",
+  "created_for": "AutoTreeGen Test Tree Corpus + Evaluation Suite"
+}

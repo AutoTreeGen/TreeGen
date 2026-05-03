@@ -1,0 +1,199 @@
+{
+  "tree_id": "tree_03_friedman_raskes_identity_resolution",
+  "category": "maiden_name_identity_resolution",
+  "complexity": "medium",
+  "population_context": "Ashkenazi",
+  "scope_description": "Brest-Litovsk family where Freida Friedman, Freida Raskes and Freida Rashkes may be same person, maiden name, or separate same-name candidates.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR AutoTreeGenSynthetic\n1 GEDC\n2 VERS 5.5.1\n1 CHAR UTF-8\n0 @I1@ INDI\n1 NAME Synthetic Proband C /Feld/\n1 SEX F\n1 BIRT\n2 DATE 1980\n2 PLAC Toronto, Canada\n1 NOTE Ashkenazi family with Freida Friedman vs Raskes/Rashkes maiden-name puzzle.\n0 @I2@ INDI\n1 NAME Rivka /Levitin/\n1 SEX F\n1 BIRT\n2 DATE 1955\n2 PLAC Haifa, Israel\n0 @I3@ INDI\n1 NAME Aaron /Feld/\n1 SEX M\n1 BIRT\n2 DATE 1952\n2 PLAC Montreal, Canada\n0 @I4@ INDI\n1 NAME Naum /Levitin/\n1 SEX M\n1 BIRT\n2 DATE 1920\n2 PLAC Brest-Litovsk, Poland\n1 DEAT\n2 DATE 1992\n2 PLAC Haifa\n0 @I5@ INDI\n1 NAME Rakhil /Katz/\n1 SEX F\n1 BIRT\n2 DATE 1923\n2 PLAC Hrubieszow, Poland\n1 DEAT\n2 DATE 2001\n2 PLAC Haifa\n0 @I6@ INDI\n1 NAME Gersh Itzkov /Levitin/\n1 SEX M\n1 BIRT\n2 DATE 1862\n2 PLAC Brest-Litovsk\n1 DEAT\n2 DATE 1931\n2 PLAC Brest-Litovsk\n0 @I7@ INDI\n1 NAME Freida /Friedman/\n1 SEX F\n1 BIRT\n2 DATE 1865\n2 PLAC Brest-Litovsk\n1 DEAT\n2 DATE 1933\n2 PLAC Brest-Litovsk\n0 @I8@ INDI\n1 NAME Freida /Raskes/\n1 SEX F\n1 BIRT\n2 DATE 1864\n2 PLAC Brest-Litovsk\n1 DEAT\n2 DATE 1933\n2 PLAC Brest-Litovsk\n1 NOTE Potential duplicate or maiden-name form of I7; not automatically merge.\n0 @I9@ INDI\n1 NAME Yankel Nakhmanovich /Raskin/\n1 SEX M\n1 BIRT\n2 DATE 1835\n2 PLAC Brest-Litovsk\n1 DEAT\n2 DATE 1901\n2 PLAC Brest-Litovsk\n0 @I10@ INDI\n1 NAME Freida /Rashkes/\n1 SEX F\n1 BIRT\n2 DATE 1865\n2 PLAC Minsk Governorate\n1 NOTE Same-name different-person red herring.\n0 @I11@ INDI\n1 NAME Tzvi Hirsch /Levitin/\n1 SEX M\n1 BIRT\n2 DATE 1890\n2 PLAC Brest-Litovsk\n1 NOTE Double-name parser test: Tzvi/Hirsch not two persons.\n0 @F1@ FAM\n1 HUSB @I3@\n1 WIFE @I2@\n1 CHIL @I1@\n1 MARR\n2 DATE 1978\n2 PLAC Toronto\n0 @F2@ FAM\n1 HUSB @I4@\n1 WIFE @I5@\n1 CHIL @I2@\n1 MARR\n2 DATE 1948\n2 PLAC Haifa\n0 @F3@ FAM\n1 HUSB @I6@\n1 WIFE @I7@\n1 CHIL @I4@\n1 CHIL @I11@\n1 MARR\n2 DATE 1889\n2 PLAC Brest-Litovsk\n0 @F4@ FAM\n1 HUSB @I9@\n1 CHIL @I8@\n1 MARR\n2 DATE 1860\n2 PLAC Brest-Litovsk\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_201",
+      "match_name": "Raskes descendant A",
+      "platform": "MyHeritage",
+      "shared_cm": 72,
+      "longest_segment": 19,
+      "segment_count": 7,
+      "shared_matches_with": ["dna_202", "dna_203"],
+      "triangulation_status": "triangulated_chr11",
+      "expected_link": "possible descendant of Raskes/Raskin collateral branch"
+    },
+    {
+      "match_id": "dna_202",
+      "match_name": "Levitin descendant B",
+      "platform": "GEDmatch",
+      "shared_cm": 83,
+      "longest_segment": 21,
+      "segment_count": 8,
+      "shared_matches_with": ["dna_201", "dna_203"],
+      "triangulation_status": "triangulated_chr11",
+      "expected_link": "Levitin branch"
+    },
+    {
+      "match_id": "dna_203",
+      "match_name": "Friedman descendant C",
+      "platform": "AncestryDNA",
+      "shared_cm": 58,
+      "longest_segment": 17,
+      "segment_count": 5,
+      "shared_matches_with": ["dna_201", "dna_202"],
+      "triangulation_status": "not_available",
+      "expected_link": "Friedman/Raskes identity cluster"
+    },
+    {
+      "match_id": "dna_204",
+      "match_name": "Minsk Rashkes red herring",
+      "platform": "FamilyTreeDNA",
+      "shared_cm": 18,
+      "longest_segment": 7,
+      "segment_count": 3,
+      "shared_matches_with": [],
+      "triangulation_status": "none",
+      "expected_link": "same surname different locality, likely not same person"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_201",
+      "type": "metric_book_marriage",
+      "year": 1889,
+      "place": "Brest-Litovsk",
+      "transcription_excerpt": "Gersh Itzkov Levitin married Freida, daughter of Yankel Raskes/Raskin; surname later appears as Friedman in children's records.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "source_quality": 0.94
+    },
+    {
+      "snippet_id": "src_202",
+      "type": "metric_book_birth",
+      "year": 1895,
+      "place": "Brest-Litovsk",
+      "transcription_excerpt": "Birth of Naum/Movsha Levitin; mother listed as Freida Friedman.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "source_quality": 0.92
+    },
+    {
+      "snippet_id": "src_203",
+      "type": "cemetery",
+      "year": 1933,
+      "place": "Brest-Litovsk",
+      "transcription_excerpt": "Freida daughter of Yankel, wife of Gersh Levitin; Hebrew inscription does not show civil surname.",
+      "language": "he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "source_quality": 0.82
+    },
+    {
+      "snippet_id": "src_204",
+      "type": "online_tree",
+      "year": 2015,
+      "place": "MyHeritage",
+      "transcription_excerpt": "Freida Rashkes of Minsk merged with Freida Friedman of Brest-Litovsk; no source.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "source_quality": 0.14
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "I7",
+      "assertion": "Freida Friedman and Freida Raskes are two separate wives",
+      "scope": "spouse_identity",
+      "evidence": "two surnames in tree"
+    },
+    {
+      "person_id": "I8",
+      "assertion": "Raskes is maiden name",
+      "scope": "maiden_name",
+      "evidence": "marriage record"
+    },
+    {
+      "person_id": "I10",
+      "assertion": "Minsk Freida Rashkes is same as Brest Freida",
+      "scope": "identity_merge",
+      "evidence": "same name"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "identity_resolution",
+      "subtype": "maiden_married_name",
+      "persons": ["I7", "I8"],
+      "expected_flag": "same_person_maiden_married_candidate",
+      "expected_confidence_when_flagged": 0.9
+    },
+    {
+      "type": "same_name_different_person",
+      "subtype": "different_locality_red_herring",
+      "persons": ["I7", "I10"],
+      "expected_flag": "same_name_place_name_false_equivalence",
+      "expected_confidence_when_flagged": 0.89
+    },
+    {
+      "type": "name_variant",
+      "subtype": "raskes_rashkes_raskin_cluster",
+      "person_id": "I8",
+      "expected_flag": "surname_variant_cluster_match",
+      "expected_confidence_when_flagged": 0.78
+    },
+    {
+      "type": "duplicate",
+      "subtype": "double_wife_error",
+      "persons": ["I7", "I8"],
+      "expected_flag": "duplicate_spouse_from_maiden_name",
+      "expected_confidence_when_flagged": 0.86
+    }
+  ],
+  "ground_truth": {
+    "confirmed_relationships": [
+      "I6 married one woman: Freida, daughter of Yankel Raskes/Raskin, later recorded as Friedman",
+      "I7 and I8 are same person with married/record-variant surname"
+    ],
+    "rejected_relationships": ["I10 Minsk Freida Rashkes merged into Brest family"],
+    "hypotheses": [
+      "Exact reason Friedman surname appears after marriage remains probable but not fully explained"
+    ]
+  },
+  "expected_reasoning_chain": [
+    "Step 1: Parse names and detect Freida Friedman/Raskes/Rashkes variants using surname cluster and patronymic father Yankel.",
+    "Step 2: Correlate marriage src_201, birth src_202 and cemetery src_203 across same spouse, father-name and place.",
+    "Step 3: Treat I7 and I8 as same-person duplicate candidate with high confidence, but preserve both surname forms.",
+    "Step 4: Reject I10 merge because Minsk locality, weak DNA and online tree only contradict Brest evidence.",
+    "Step 5: Use dna_201/dna_202/dna_203 triangulation to support Raskes-Levitin branch as a real cluster.",
+    "Step 6: Output I7/I8 identity as Confirmed/Probable depending strictness; I10 as separate person."
+  ],
+  "expected_confidence_outputs": {
+    "I7_same_as_I8": "Confirmed 0.96 (marriage + birth + cemetery + name cluster + DNA triangulation)",
+    "I10_same_as_I7": "Rejected 0.12 (different locality + weak DNA + online-tree-only)",
+    "Raskes_as_maiden_name_for_Freida": "Confirmed 0.95 (primary marriage record + father-name + cemetery)",
+    "Friedman_as_birth_surname": "Hypothesis 0.48 (appears in child birth record but contradicted by marriage maiden name)"
+  },
+  "expected_engine_flags": [
+    "same_person_maiden_married_candidate",
+    "same_name_place_name_false_equivalence",
+    "surname_variant_cluster_match",
+    "duplicate_spouse_from_maiden_name"
+  ],
+  "edge_cases_red_herrings": [
+    "Two surnames do not automatically mean two wives.",
+    "Rashkes in Minsk is surname-similar but jurisdictionally weak."
+  ],
+  "phases_validated": ["15.10", "16.x", "19.x", "24.x", "25.x"],
+  "evaluation_assertions": [
+    {
+      "assertion": "Engine must merge/suggest same person for I7 and I8, preserving aliases",
+      "expected": true
+    },
+    {
+      "assertion": "Engine must reject I10 same-person merge",
+      "expected": true
+    },
+    {
+      "assertion": "Engine must classify Friedman birth surname as lower confidence than Raskes maiden record",
+      "expected": true
+    }
+  ]
+}

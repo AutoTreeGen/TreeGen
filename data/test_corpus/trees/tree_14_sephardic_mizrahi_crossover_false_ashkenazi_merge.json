@@ -1,0 +1,358 @@
+{
+  "tree_id": "tree_14_sephardic_mizrahi_crossover_false_ashkenazi_merge",
+  "category": "non_ashkenazi_jewish_crossover",
+  "complexity": "high",
+  "population_context": "Ashkenazi + Bukharian + Mountain Jewish",
+  "scope_description": "5-generation Jewish tree where Bukharian and Mountain Jewish DNA matches are mistakenly merged into an Ashkenazi Pale-of-Settlement branch due to shared Jewish names, Israel migration, and broad Jewish DNA overlap.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR AutoTreeGenSyntheticCorpus\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Synthetic Proband /Rabinovich/\n1 SEX F\n1 BIRT\n2 DATE 1982\n2 PLAC Tel Aviv, Israel\n1 FAMC @F1@\n0 @I2@ INDI\n1 NAME Miriam /Rabinovich/\n1 SEX F\n1 BIRT\n2 DATE 1955\n2 PLAC Haifa, Israel\n1 FAMC @F2@\n0 @I3@ INDI\n1 NAME Yosef /Rabinovich/\n1 SEX M\n1 BIRT\n2 DATE 1925\n2 PLAC Minsk, Belarusian SSR\n1 FAMS @F2@\n0 @I4@ INDI\n1 NAME Chana /Ginzburg/\n1 SEX F\n1 BIRT\n2 DATE 1928\n2 PLAC Vilna, Poland\n1 FAMS @F2@\n0 @I5@ INDI\n1 NAME Avraham /Rabinovich/\n1 SEX M\n1 BIRT\n2 DATE ABT 1892\n2 PLAC Minsk Governorate, Russian Empire\n1 FAMS @F3@\n0 @I6@ INDI\n1 NAME Sima /Kaplan/\n1 SEX F\n1 BIRT\n2 DATE ABT 1898\n2 PLAC Minsk Governorate, Russian Empire\n1 FAMS @F3@\n0 @I7@ INDI\n1 NAME Avraham /Rabinov/\n1 SEX M\n1 BIRT\n2 DATE ABT 1890\n2 PLAC Bukhara, Emirate of Bukhara\n1 NOTE Bukharian Jewish same/similar name; wrongly merged with I5 in public tree.\n0 @I8@ INDI\n1 NAME Simcha /Kaplunov/\n1 SEX F\n1 BIRT\n2 DATE ABT 1901\n2 PLAC Samarkand, Russian Turkestan\n1 NOTE Bukharian Jewish profile; not same as Sima Kaplan.\n0 @I9@ INDI\n1 NAME Gavriel /Gavrilov/\n1 SEX M\n1 BIRT\n2 DATE 1932\n2 PLAC Quba, Azerbaijan SSR\n1 NOTE Mountain Jewish match-line ancestor.\n0 @I10@ INDI\n1 NAME Ester /Yusupova/\n1 SEX F\n1 BIRT\n2 DATE 1934\n2 PLAC Derbent, Dagestan ASSR\n1 NOTE Mountain Jewish / Juhuro context.\n0 @I11@ INDI\n1 NAME David /Rabinovich/\n1 SEX M\n1 BIRT\n2 DATE 1950\n2 PLAC Samarkand, Uzbek SSR\n1 NOTE Public tree incorrectly attaches David Rabinovich to Ashkenazi Rabinovich family due to surname and Israel migration.\n0 @F2@ FAM\n1 HUSB @I3@\n1 WIFE @I4@\n1 CHIL @I2@\n0 @F3@ FAM\n1 HUSB @I5@\n1 WIFE @I6@\n1 CHIL @I3@\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_1401",
+      "match_name": "Anonymized Ashkenazi Rabinovich Cousin",
+      "platform": "AncestryDNA",
+      "shared_cm": 122,
+      "longest_segment": 31,
+      "segment_count": 10,
+      "shared_matches_with": ["dna_1402", "dna_1403"],
+      "expected_link": "Ashkenazi Rabinovich/Ginzburg/Kaplan Pale branch"
+    },
+    {
+      "match_id": "dna_1402",
+      "match_name": "Anonymized Ginzburg Cousin",
+      "platform": "MyHeritage",
+      "shared_cm": 88,
+      "longest_segment": 24,
+      "segment_count": 9,
+      "triangulated_segments": [
+        {
+          "chromosome": 4,
+          "start": 33000000,
+          "end": 50200000,
+          "cm": 23.1,
+          "triangulated_with": ["dna_1401"]
+        }
+      ],
+      "shared_matches_with": ["dna_1401", "dna_1403"],
+      "expected_link": "Ashkenazi Vilna/Minsk branch"
+    },
+    {
+      "match_id": "dna_1403",
+      "match_name": "Anonymized Kaplan Cousin",
+      "platform": "GEDmatch",
+      "shared_cm": 54,
+      "longest_segment": 17,
+      "segment_count": 6,
+      "shared_matches_with": ["dna_1401", "dna_1402"],
+      "expected_link": "Ashkenazi Kaplan/Rabinovich branch"
+    },
+    {
+      "match_id": "dna_1404",
+      "match_name": "Anonymized Bukharian Rabinov Match",
+      "platform": "MyHeritage",
+      "shared_cm": 32,
+      "longest_segment": 10,
+      "segment_count": 8,
+      "shared_matches_with": ["dna_1405"],
+      "ethnicity_context": ["Bukharian Jewish", "Central Asian Jewish"],
+      "expected_link": "Jewish population overlap / possible remote Jewish signal; not same Rabinovich branch"
+    },
+    {
+      "match_id": "dna_1405",
+      "match_name": "Anonymized Samarkand Kaplunov Match",
+      "platform": "FamilyTreeDNA",
+      "shared_cm": 27,
+      "longest_segment": 9,
+      "segment_count": 6,
+      "shared_matches_with": ["dna_1404"],
+      "ethnicity_context": ["Bukharian Jewish"],
+      "expected_link": "Bukharian Jewish cluster distinct from Ashkenazi Kaplan branch"
+    },
+    {
+      "match_id": "dna_1406",
+      "match_name": "Anonymized Mountain Jewish Gavrilov Match",
+      "platform": "GEDmatch",
+      "shared_cm": 21,
+      "longest_segment": 7,
+      "segment_count": 5,
+      "shared_matches_with": ["dna_1407"],
+      "ethnicity_context": ["Mountain Jewish", "Caucasus Jewish", "Juhuro"],
+      "expected_link": "Mountain Jewish cluster; distinct population context"
+    },
+    {
+      "match_id": "dna_1407",
+      "match_name": "Anonymized Yusupova Match",
+      "platform": "MyHeritage",
+      "shared_cm": 19,
+      "longest_segment": 7,
+      "segment_count": 4,
+      "shared_matches_with": ["dna_1406"],
+      "ethnicity_context": ["Mountain Jewish", "Azerbaijan/Dagestan"],
+      "expected_link": "Mountain Jewish cluster; not Ashkenazi Pale branch"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_1401",
+      "type": "revision_list",
+      "year": 1858,
+      "place": "Minsk Governorate, Russian Empire",
+      "transcription_excerpt": "Rabinovich household registered in Minsk Jewish community; surname Rabinovich appears across household.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "anchors Ashkenazi Rabinovich branch in Pale context."
+    },
+    {
+      "snippet_id": "src_1402",
+      "type": "metric_book_marriage",
+      "year": 1921,
+      "place": "Vilna / Minsk region",
+      "transcription_excerpt": "Marriage of Yosef Rabinovich of Minsk to Chana Ginzburg of Vilna.",
+      "language": "pl+ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms Ashkenazi branch identity."
+    },
+    {
+      "snippet_id": "src_1403",
+      "type": "soviet_passport_extract",
+      "year": 1950,
+      "place": "Samarkand, Uzbek SSR",
+      "transcription_excerpt": "David Rabinov/Rabinovich, nationality Jewish, born Bukhara/Samarkand family context, Bukharian community.",
+      "language": "ru+uz",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "separates Bukharian Rabinov/Rabinovich line from Minsk Rabinovich branch."
+    },
+    {
+      "snippet_id": "src_1404",
+      "type": "community_record",
+      "year": 1935,
+      "place": "Quba, Azerbaijan SSR",
+      "transcription_excerpt": "Gavriel Gavrilov listed in Mountain Jewish / Juhuro community registry.",
+      "language": "ru+juhuro",
+      "primary_or_derivative": "primary",
+      "image_available": false,
+      "expected_use": "separates Mountain Jewish branch from Ashkenazi Pale records."
+    },
+    {
+      "snippet_id": "src_1405",
+      "type": "immigration_record",
+      "year": 1991,
+      "place": "Israel",
+      "transcription_excerpt": "Bukharian Jewish family from Samarkand immigrated to Israel; surname Rabinov/Rabinovich normalized in Israeli records.",
+      "language": "he+ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "explains surname normalization and Israel co-location without proving Ashkenazi identity."
+    },
+    {
+      "snippet_id": "src_1406",
+      "type": "online_tree",
+      "year": 2025,
+      "place": "public tree import",
+      "transcription_excerpt": "All Rabinovich/Rabinov Jewish profiles in Israel merged into one Minsk Rabinovich family.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "expected_use": "low-confidence merge error; should be rejected."
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "I7",
+      "assertion": "Avraham Rabinov from Bukhara may be same as Avraham Rabinovich from Minsk because surname is close and both are Jewish.",
+      "scope": "identity_merge",
+      "evidence": "surname similarity"
+    },
+    {
+      "person_id": "dna_1404",
+      "assertion": "Bukharian Rabinov DNA match proves Rabinovich branch connection.",
+      "scope": "dna_cluster_assignment",
+      "evidence": "shared Jewish DNA and surname"
+    },
+    {
+      "person_id": "I9",
+      "assertion": "Mountain Jewish Gavrilov/Yusupova branch should be added as Ashkenazi collateral because it appears in Israel records.",
+      "scope": "population_context",
+      "evidence": "Israel immigration and Jewish ethnicity"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "population_context_error",
+      "subtype": "bukharian_as_ashkenazi_merge",
+      "persons": ["I5", "I7"],
+      "expected_flag": "non_ashkenazi_jewish_crossover_false_ashkenazi_merge",
+      "reason": "Rabinovich/Rabinov similarity plus Israel co-location used to merge distinct populations"
+    },
+    {
+      "type": "population_context_error",
+      "subtype": "mountain_jewish_as_ashkenazi_merge",
+      "persons": ["I9", "I10"],
+      "expected_flag": "mountain_jewish_cluster_not_pale_ashkenazi",
+      "reason": "Mountain Jewish cluster incorrectly assigned to Ashkenazi Pale branch"
+    },
+    {
+      "type": "dna_overinterpretation",
+      "match_id": "dna_1404",
+      "expected_flag": "broad_jewish_dna_overlap_not_branch_proof",
+      "reason": "32 cM with many small segments and no shared Ashkenazi anchors"
+    },
+    {
+      "type": "same_name_different_person",
+      "persons": ["I5", "I7"],
+      "expected_flag": "same_name_place_name_false_equivalence",
+      "reason": "Minsk vs Bukhara, different community context and no migration proof"
+    },
+    {
+      "type": "source_quality",
+      "snippet_id": "src_1406",
+      "expected_flag": "public_tree_population_context_collapse",
+      "reason": "public tree merges all Israeli Jewish Rabinovich/Rabinov profiles"
+    },
+    {
+      "type": "surname_cluster_collision",
+      "persons": ["I6", "I8"],
+      "expected_flag": "kaplan_kaplunov_false_equivalence",
+      "reason": "Kaplan/Kaplunov similarity without shared archive or cluster proof"
+    }
+  ],
+  "expected_reasoning_chain": [
+    "Step 1: Parse GEDCOM and identify Ashkenazi Pale branch I3-I6 and non-Ashkenazi candidate profiles I7-I11.",
+    "Step 2: Use src_1401 and src_1402 to confirm Minsk/Vilna Ashkenazi Rabinovich-Ginzburg-Kaplan branch.",
+    "Step 3: Use src_1403 and src_1405 to classify Rabinov/Rabinovich Samarkand/Bukhara branch as Bukharian Jewish context, not automatically same as Minsk branch.",
+    "Step 4: Use src_1404 to classify Gavrilov/Yusupova as Mountain Jewish/Juhuro context.",
+    "Step 5: Evaluate DNA clusters separately: dna_1401-1403 Ashkenazi anchors; dna_1404-1405 Bukharian cluster; dna_1406-1407 Mountain Jewish cluster.",
+    "Step 6: Apply population-context correction: broad Jewish DNA overlap is not proof of specific branch identity.",
+    "Step 7: Reject public-tree population collapse src_1406.",
+    "Step 8: Block I5/I7 merge despite surname similarity.",
+    "Step 9: Keep Bukharian and Mountain Jewish matches as separate clusters with optional remote Jewish-overlap hypothesis.",
+    "Step 10: Generate research routing: Minsk/Vilna archives for Ashkenazi branch; Uzbekistan/Bukhara/Samarkand and Caucasus/Quba/Derbent records for non-Ashkenazi clusters."
+  ],
+  "expected_confidence_outputs": {
+    "ashkenazi_rabinovich_branch": {
+      "status": "Confirmed",
+      "confidence": 0.95,
+      "evidence": ["src_1401", "src_1402", "dna_1401", "dna_1402"],
+      "population_context": "Ashkenazi Pale"
+    },
+    "identity_I5_I7_same_person": {
+      "status": "Rejected",
+      "confidence": 0.06,
+      "reason": "surname similarity only; Minsk vs Bukhara and distinct community records"
+    },
+    "bukharian_cluster_as_same_branch": {
+      "status": "Rejected",
+      "confidence": 0.18,
+      "reason": "distinct Bukharian context; no shared Ashkenazi anchors"
+    },
+    "bukharian_cluster_remote_jewish_overlap": {
+      "status": "Hypothesis",
+      "confidence": 0.42,
+      "reason": "possible broad Jewish population overlap, not branch proof"
+    },
+    "mountain_jewish_cluster_as_ashkenazi_branch": {
+      "status": "Rejected",
+      "confidence": 0.12,
+      "reason": "Mountain Jewish/Juhuro context; separate records and shared-match group"
+    },
+    "kaplan_kaplunov_equivalence": {
+      "status": "Conflict",
+      "confidence": 0.33,
+      "reason": "phonetic similarity but different community/language context; requires evidence"
+    }
+  },
+  "expected_engine_flags": [
+    "non_ashkenazi_jewish_crossover_false_ashkenazi_merge",
+    "mountain_jewish_cluster_not_pale_ashkenazi",
+    "broad_jewish_dna_overlap_not_branch_proof",
+    "same_name_place_name_false_equivalence",
+    "public_tree_population_context_collapse",
+    "kaplan_kaplunov_false_equivalence",
+    "population_context_required"
+  ],
+  "ground_truth_annotations": {
+    "true_lineage": [
+      "I1 Synthetic Proband Rabinovich",
+      "I2 Miriam Rabinovich",
+      "I3 Yosef Rabinovich + I4 Chana Ginzburg",
+      "I5 Avraham Rabinovich + I6 Sima Kaplan",
+      "Minsk/Vilna Ashkenazi branch only"
+    ],
+    "separate_clusters": [
+      "I7/I8/I11 belong to Bukharian/Samarkand/Bukhara context and are not proven ancestors.",
+      "I9/I10 belong to Mountain Jewish/Juhuro context and are not Ashkenazi Pale collateral in this synthetic tree."
+    ],
+    "false_claims": [
+      "All Israeli Rabinovich/Rabinov profiles are one family.",
+      "Bukharian Rabinov match proves Minsk Rabinovich branch.",
+      "Mountain Jewish Gavrilov/Yusupova branch should be added as Ashkenazi collateral.",
+      "Kaplan and Kaplunov are automatically same surname cluster."
+    ],
+    "intended_feature_coverage": [
+      "non_Ashkenazi_Jewish_population_context",
+      "Bukharian_Jewish_cluster_detection",
+      "Mountain_Jewish_cluster_detection",
+      "surname_collision_control",
+      "same_name_different_person",
+      "DNA_population_context_weighting",
+      "archive_routing_by_community"
+    ]
+  },
+  "evaluation_assertions": [
+    {
+      "assertion_id": "eval_14_001",
+      "description": "Engine must confirm Ashkenazi Rabinovich branch.",
+      "expected": {
+        "branch": "ashkenazi_rabinovich_branch",
+        "status": "Confirmed",
+        "min_confidence": 0.9
+      }
+    },
+    {
+      "assertion_id": "eval_14_002",
+      "description": "Engine must reject merge of Minsk Avraham Rabinovich and Bukhara Avraham Rabinov.",
+      "expected": {
+        "merge_pair": ["I5", "I7"],
+        "auto_merge_allowed": false,
+        "status": "Rejected"
+      }
+    },
+    {
+      "assertion_id": "eval_14_003",
+      "description": "Engine must keep Bukharian DNA cluster separate from Ashkenazi branch.",
+      "expected": {
+        "cluster": "bukharian_cluster",
+        "same_branch_as_ashkenazi": false
+      }
+    },
+    {
+      "assertion_id": "eval_14_004",
+      "description": "Engine must keep Mountain Jewish cluster separate from Ashkenazi branch.",
+      "expected": {
+        "cluster": "mountain_jewish_cluster",
+        "same_branch_as_ashkenazi": false
+      }
+    },
+    {
+      "assertion_id": "eval_14_005",
+      "description": "Engine must flag public-tree population-context collapse.",
+      "expected": {
+        "snippet_id": "src_1406",
+        "flag": "public_tree_population_context_collapse"
+      }
+    }
+  ],
+  "phases_validated": [
+    "16.x_dna_cluster_interpretation",
+    "non_ashkenazi_jewish_community_detection",
+    "15.10_name_disambiguation",
+    "19.x_place_resolution",
+    "22.x_archive_routing",
+    "24.x_evidence_summary",
+    "25.x_hypothesis_sandbox"
+  ],
+  "version": "0.1",
+  "created_for": "AutoTreeGen Test Tree Corpus + Evaluation Suite"
+}

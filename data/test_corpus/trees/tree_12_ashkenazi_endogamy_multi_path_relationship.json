@@ -1,0 +1,351 @@
+{
+  "tree_id": "tree_12_ashkenazi_endogamy_multi_path_relationship",
+  "category": "endogamy_multi_path_relationship",
+  "complexity": "high",
+  "population_context": "Ashkenazi endogamy",
+  "scope_description": "6-generation Brest/Volhynia/Galicia Jewish tree where a DNA match shares ancestry through two independent paths: Levitin-Friedman and Katz-Feldman. Includes shared matches that split by cluster, small segments, and a public-tree claim that overselects one path.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR AutoTreeGenSyntheticCorpus\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Synthetic Proband /Zhitnitsky/\n1 SEX M\n1 BIRT\n2 DATE 1971\n2 PLAC Melbourne, Australia\n1 FAMC @F1@\n0 @I2@ INDI\n1 NAME Tatyana /Zhitnitsky/\n1 SEX F\n1 BIRT\n2 DATE 1951\n2 PLAC Dnepropetrovsk, Ukrainian SSR\n1 FAMC @F2@\n0 @I3@ INDI\n1 NAME Zalman /Zhitnitsky/\n1 SEX M\n1 BIRT\n2 DATE 1924\n2 PLAC Ekaterinoslav/Dnipropetrovsk region\n1 FAMC @F3@\n0 @I4@ INDI\n1 NAME Lidia /Katz/\n1 SEX F\n1 BIRT\n2 DATE 1924\n2 PLAC Hrubieszów, Poland\n1 FAMC @F4@\n0 @I5@ INDI\n1 NAME Sura /Levitin/\n1 SEX F\n1 BIRT\n2 DATE 1885\n2 PLAC Brest-Litovsk, Grodno Governorate\n1 FAMS @F3@\n0 @I6@ INDI\n1 NAME Moisey /Zhitnitsky/\n1 SEX M\n1 BIRT\n2 DATE 1890\n2 PLAC Berdychiv, Kiev Governorate\n1 FAMS @F3@\n0 @I7@ INDI\n1 NAME Nuta Nahum /Katz/\n1 SEX M\n1 BIRT\n2 DATE 1899\n2 PLAC Hrubieszów, Congress Poland\n1 FAMS @F4@\n0 @I8@ INDI\n1 NAME Tatiana Tiena /Scherbatenko/\n1 SEX F\n1 BIRT\n2 DATE 1902\n2 PLAC Koniuchy near Hrubieszów, Congress Poland\n1 FAMS @F4@\n0 @I9@ INDI\n1 NAME Gersh /Levitin/\n1 SEX M\n1 BIRT\n2 DATE 1859\n2 PLAC Brest-Litovsk, Grodno Governorate\n1 FAMS @F5@\n0 @I10@ INDI\n1 NAME Freida /Friedman/\n1 SEX F\n1 BIRT\n2 DATE 1863\n2 PLAC Brest-Litovsk, Grodno Governorate\n1 FAMS @F5@\n0 @I11@ INDI\n1 NAME Tamara /Katz/\n1 SEX F\n1 BIRT\n2 DATE 1926\n2 PLAC Hrubieszów, Poland\n1 FAMC @F4@\n0 @I12@ INDI\n1 NAME Boris /Levitin/\n1 SEX M\n1 BIRT\n2 DATE 1899\n2 PLAC Brest-Litovsk, Grodno Governorate\n1 FAMC @F5@\n0 @I13@ INDI\n1 NAME Rivka /Feldman/\n1 SEX F\n1 BIRT\n2 DATE 1903\n2 PLAC Hrubieszów, Congress Poland\n1 NOTE Collateral Feldman branch intermarried with Katz descendants in synthetic match tree.\n0 @F3@ FAM\n1 HUSB @I6@\n1 WIFE @I5@\n1 CHIL @I3@\n0 @F4@ FAM\n1 HUSB @I7@\n1 WIFE @I8@\n1 CHIL @I4@\n1 CHIL @I11@\n0 @F5@ FAM\n1 HUSB @I9@\n1 WIFE @I10@\n1 CHIL @I5@\n1 CHIL @I12@\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_1201",
+      "match_name": "Anonymized Multi-Path Cousin",
+      "platform": "AncestryDNA",
+      "shared_cm": 116,
+      "longest_segment": 24,
+      "segment_count": 17,
+      "shared_matches_with": ["dna_1202", "dna_1203", "dna_1204", "dna_1205"],
+      "expected_link": "multi-path: Levitin-Friedman and Katz-Feldman; should not be forced into one path"
+    },
+    {
+      "match_id": "dna_1202",
+      "match_name": "Anonymized Levitin-Only Anchor",
+      "platform": "MyHeritage",
+      "shared_cm": 74,
+      "longest_segment": 21,
+      "segment_count": 8,
+      "triangulated_segments": [
+        {
+          "chromosome": 6,
+          "start": 17800000,
+          "end": 30200000,
+          "cm": 20.4,
+          "triangulated_with": ["dna_1201", "dna_1204"]
+        }
+      ],
+      "shared_matches_with": ["dna_1201", "dna_1204"],
+      "expected_link": "Levitin-Friedman path anchor"
+    },
+    {
+      "match_id": "dna_1203",
+      "match_name": "Anonymized Katz-Feldman Anchor",
+      "platform": "GEDmatch",
+      "shared_cm": 68,
+      "longest_segment": 18,
+      "segment_count": 9,
+      "triangulated_segments": [
+        {
+          "chromosome": 11,
+          "start": 62100000,
+          "end": 76400000,
+          "cm": 17.8,
+          "triangulated_with": ["dna_1201", "dna_1205"]
+        }
+      ],
+      "shared_matches_with": ["dna_1201", "dna_1205"],
+      "expected_link": "Katz-Feldman path anchor"
+    },
+    {
+      "match_id": "dna_1204",
+      "match_name": "Anonymized Boris-Levitin Descendant",
+      "platform": "FamilyTreeDNA",
+      "shared_cm": 48,
+      "longest_segment": 15,
+      "segment_count": 6,
+      "shared_matches_with": ["dna_1201", "dna_1202"],
+      "expected_link": "Levitin collateral via Boris Levitin"
+    },
+    {
+      "match_id": "dna_1205",
+      "match_name": "Anonymized Tamara-Katz Descendant",
+      "platform": "AncestryDNA",
+      "shared_cm": 52,
+      "longest_segment": 16,
+      "segment_count": 7,
+      "shared_matches_with": ["dna_1201", "dna_1203"],
+      "expected_link": "Katz collateral via Tamara Katz"
+    },
+    {
+      "match_id": "dna_1206",
+      "match_name": "Anonymized Endogamy Noise Match",
+      "platform": "GEDmatch",
+      "shared_cm": 19,
+      "longest_segment": 6,
+      "segment_count": 8,
+      "shared_matches_with": ["dna_1201"],
+      "expected_link": "small-segment endogamy noise; not a proof anchor"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_1201",
+      "type": "metric_book_birth",
+      "year": 1885,
+      "place": "Brest-Litovsk, Grodno Governorate",
+      "transcription_excerpt": "Birth of Sura Levitin, daughter of Gersh Levitin and Freida Friedman.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms Levitin-Friedman branch."
+    },
+    {
+      "snippet_id": "src_1202",
+      "type": "metric_book_birth",
+      "year": 1899,
+      "place": "Brest-Litovsk, Grodno Governorate",
+      "transcription_excerpt": "Birth of Boris Levitin, son of Gersh Levitin and Freida Friedman.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms Boris as collateral sibling path for dna_1204."
+    },
+    {
+      "snippet_id": "src_1203",
+      "type": "civil_BDM_birth",
+      "year": 1924,
+      "place": "Hrubieszów, Poland",
+      "transcription_excerpt": "Birth of Lidia Katz, daughter of Nuta Nahum Katz and Tatiana Tiena Scherbatenko.",
+      "language": "pl",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms Katz-Scherbatenko branch."
+    },
+    {
+      "snippet_id": "src_1204",
+      "type": "civil_BDM_birth",
+      "year": 1926,
+      "place": "Hrubieszów, Poland",
+      "transcription_excerpt": "Birth of Tamara Katz, daughter of Nuta Nahum Katz and Tatiana Tiena Scherbatenko.",
+      "language": "pl",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms Tamara as collateral sibling path for dna_1205."
+    },
+    {
+      "snippet_id": "src_1205",
+      "type": "online_tree",
+      "year": 2025,
+      "place": "public tree import",
+      "transcription_excerpt": "Multi-Path Cousin is assigned only to Levitin line; Katz-Feldman shared matches ignored.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "expected_use": "should be flagged as single-path overcompression in endogamous cluster."
+    },
+    {
+      "snippet_id": "src_1206",
+      "type": "research_note",
+      "year": 2026,
+      "place": "AutoTreeGen synthetic evaluation",
+      "transcription_excerpt": "Match dna_1201 descends from one Levitin-Friedman collateral and one Katz-Feldman collateral; expected combined relatedness is multi-path.",
+      "language": "en",
+      "primary_or_derivative": "ground_truth",
+      "image_available": false,
+      "expected_use": "ground truth for evaluation only, not input proof."
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "dna_1201",
+      "assertion": "This match must be only Levitin because shared cM is high and there are Levitin shared matches.",
+      "scope": "relationship_path",
+      "evidence": "shared matches dna_1202/dna_1204"
+    },
+    {
+      "person_id": "dna_1201",
+      "assertion": "Katz-Feldman shared matches are probably noise.",
+      "scope": "relationship_path",
+      "evidence": "assumption"
+    },
+    {
+      "person_id": "dna_1206",
+      "assertion": "Small-segment match proves another path.",
+      "scope": "dna_evidence",
+      "evidence": "19 cM total across many small segments"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "endogamy_error",
+      "subtype": "single_path_overcompression",
+      "match_id": "dna_1201",
+      "expected_flag": "pedigree_collapse_ashkenazi_single_path_error",
+      "expected_confidence_when_flagged": 0.8
+    },
+    {
+      "type": "dna_overinterpretation",
+      "match_id": "dna_1206",
+      "expected_flag": "pedigree_collapse_endogamy_small_segment_overuse",
+      "expected_confidence_when_flagged": 0.84
+    },
+    {
+      "type": "source_quality",
+      "snippet_id": "src_1205",
+      "expected_flag": "public_tree_single_path_overcompression",
+      "reason": "public tree selects Levitin path and ignores Katz-Feldman evidence"
+    },
+    {
+      "type": "relationship_modeling_error",
+      "match_id": "dna_1201",
+      "expected_flag": "multi_path_relationship_required",
+      "reason": "separate triangulated segments and shared-match clusters support two paths"
+    },
+    {
+      "type": "dna_cluster_assignment_error",
+      "match_id": "dna_1203",
+      "expected_flag": "katz_feldman_cluster_not_noise",
+      "reason": "Katz-Feldman anchor triangulates separately and should not be discarded"
+    }
+  ],
+  "expected_reasoning_chain": [
+    "Step 1: Parse GEDCOM and identify two independent ancestral branches: Levitin-Friedman and Katz-Feldman.",
+    "Step 2: Use src_1201/src_1202 to confirm Levitin sibling/collateral structure.",
+    "Step 3: Use src_1203/src_1204 to confirm Katz sibling/collateral structure.",
+    "Step 4: Evaluate dna_1201 total cM and segment count; note high segment count relative to longest segment, consistent with endogamy/multi-path.",
+    "Step 5: Split shared matches: dna_1202/dna_1204 anchor Levitin; dna_1203/dna_1205 anchor Katz-Feldman.",
+    "Step 6: Check triangulation: chromosome 6 supports Levitin path; chromosome 11 supports Katz-Feldman path.",
+    "Step 7: Apply Ashkenazi endogamy correction; avoid overestimating closeness from total cM alone.",
+    "Step 8: Downweight dna_1206 due to small segments and lack of robust triangulation.",
+    "Step 9: Flag public tree src_1205 for single-path overcompression.",
+    "Step 10: Output dna_1201 as multi-path relationship with two probable paths, not one confirmed single path."
+  ],
+  "expected_confidence_outputs": {
+    "relationship_dna_1201_via_Levitin_Friedman": {
+      "status": "Probable",
+      "confidence": 0.82,
+      "evidence": ["dna_1202", "dna_1204", "src_1201", "src_1202"],
+      "path_role": "path_A"
+    },
+    "relationship_dna_1201_via_Katz_Feldman": {
+      "status": "Probable",
+      "confidence": 0.79,
+      "evidence": ["dna_1203", "dna_1205", "src_1203", "src_1204"],
+      "path_role": "path_B"
+    },
+    "relationship_dna_1201_single_path_only": {
+      "status": "Rejected",
+      "confidence": 0.18,
+      "reason": "two independent shared-match/triangulation clusters exist"
+    },
+    "combined_relationship_dna_1201": {
+      "status": "Probable",
+      "confidence": 0.88,
+      "relationship_model": "multi_path",
+      "note": "combined confidence reflects two probable paths but should not be reported as a single exact cousin relationship"
+    },
+    "dna_1206_as_proof_anchor": {
+      "status": "Rejected",
+      "confidence": 0.12,
+      "reason": "small-segment endogamy noise"
+    },
+    "src_1205_public_tree_claim": {
+      "status": "Rejected",
+      "confidence": 0.16,
+      "reason": "single-path overcompression"
+    }
+  },
+  "expected_engine_flags": [
+    "pedigree_collapse_ashkenazi_single_path_error",
+    "pedigree_collapse_endogamy_small_segment_overuse",
+    "public_tree_single_path_overcompression",
+    "multi_path_relationship_required",
+    "katz_feldman_cluster_not_noise",
+    "shared_match_cluster_split",
+    "triangulated_segments_support_distinct_paths"
+  ],
+  "ground_truth_annotations": {
+    "true_relationship_model": "multi_path",
+    "true_paths": [
+      {
+        "path_id": "path_A_Levitin_Friedman",
+        "status": "Probable",
+        "via": ["Gersh Levitin", "Freida Friedman", "Sura Levitin/Boris Levitin collateral"]
+      },
+      {
+        "path_id": "path_B_Katz_Feldman",
+        "status": "Probable",
+        "via": ["Nuta Nahum Katz", "Tatiana Tiena Scherbatenko", "Lidia/Tamara Katz collateral"]
+      }
+    ],
+    "false_claims": [
+      "dna_1201 must be only Levitin",
+      "Katz-Feldman shared matches are noise",
+      "dna_1206 proves a third path",
+      "Total cM can be interpreted without endogamy correction"
+    ],
+    "intended_feature_coverage": [
+      "endogamy_aware_relationship_engine",
+      "multi_path_relationship_modeling",
+      "shared_match_cluster_split",
+      "triangulation_path_assignment",
+      "DNA_vs_public_tree_conflict",
+      "archive_supported_collateral_paths",
+      "confidence_combination_algebra"
+    ]
+  },
+  "evaluation_assertions": [
+    {
+      "assertion_id": "eval_12_001",
+      "description": "Engine must not force dna_1201 into one path.",
+      "expected": {
+        "match_id": "dna_1201",
+        "relationship_model": "multi_path",
+        "single_path_only_status": "Rejected"
+      }
+    },
+    {
+      "assertion_id": "eval_12_002",
+      "description": "Engine must assign Levitin-Friedman path as probable.",
+      "expected": {
+        "path": "Levitin_Friedman",
+        "status": "Probable",
+        "min_confidence": 0.75
+      }
+    },
+    {
+      "assertion_id": "eval_12_003",
+      "description": "Engine must assign Katz-Feldman path as probable.",
+      "expected": {
+        "path": "Katz_Feldman",
+        "status": "Probable",
+        "min_confidence": 0.75
+      }
+    },
+    {
+      "assertion_id": "eval_12_004",
+      "description": "Engine must reject dna_1206 as proof anchor.",
+      "expected": {
+        "match_id": "dna_1206",
+        "status": "Rejected",
+        "max_confidence": 0.2
+      }
+    },
+    {
+      "assertion_id": "eval_12_005",
+      "description": "Engine must flag public tree single-path overcompression.",
+      "expected": {
+        "snippet_id": "src_1205",
+        "flag": "public_tree_single_path_overcompression"
+      }
+    }
+  ],
+  "phases_validated": [
+    "16.x_dna_cluster_interpretation",
+    "endogamy_aware_relationship_engine",
+    "multi_evidence_combination_algebra",
+    "24.x_evidence_summary",
+    "25.x_hypothesis_sandbox",
+    "archive_tree_dna_correlation"
+  ],
+  "version": "0.1",
+  "created_for": "AutoTreeGen Test Tree Corpus + Evaluation Suite"
+}
