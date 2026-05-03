@@ -13,6 +13,7 @@ from inference_engine.detectors import (
     mennonite_founder_loop,
     metric_book_ocr,
     revision_list_household,
+    sephardic_mizrahi_crossover,
 )
 from inference_engine.detectors.result import DetectorResult
 
@@ -20,6 +21,7 @@ DetectorFn = Callable[[dict[str, Any]], DetectorResult]
 
 
 _DETECTORS: list[DetectorFn] = [
+    sephardic_mizrahi_crossover.detect,
     mennonite_founder_loop.detect,
     cross_platform_dna_match.detect,
     dna_vs_tree.detect,
