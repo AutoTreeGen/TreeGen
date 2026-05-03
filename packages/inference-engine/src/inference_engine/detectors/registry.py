@@ -19,6 +19,9 @@ from typing import Any
 
 from inference_engine.detectors import (
     dna_vs_tree,
+    famous_overclaim,
+    gedcom_safe_merge,
+    metric_book_ocr,
     gedcom_safe_merge,
     metric_book_ocr,
     revision_list_household,
@@ -29,6 +32,7 @@ DetectorFn = Callable[[dict[str, Any]], DetectorResult]
 
 
 _DETECTORS: list[DetectorFn] = [
+    famous_overclaim.detect,
     dna_vs_tree.detect,
     gedcom_safe_merge.detect,
     metric_book_ocr.detect,
