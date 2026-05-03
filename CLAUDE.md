@@ -7,6 +7,23 @@
 
 ---
 
+## 0. AI-sync (читать первым)
+
+Этот проект ведут два AI-ассистента в паре: **Claude Code** (имплементация,
+координация, PR) и **ChatGPT** (vision, брифы, reference data). Координация
+между ними идёт через committed-папку `docs/ai-sync/`:
+
+- `docs/ai-sync/00-HANDOVER.md` — orientation, читать ПЕРВЫМ. Ниже §1–12 этого
+  файла дополняют, а не заменяют его.
+- `docs/ai-sync/04-blockers.md` — live blockers и ожидания между сессиями.
+  Сверять перед стартом любой задачи.
+- `docs/ai-sync/06-claude-results.md` — лог Claude-deliverables.
+  Append-only — добавлять запись по каждому логическому deliverable.
+
+Companion-файл для ChatGPT — `CHATGPT.md` в корне репо.
+
+---
+
 ## 1. О проекте
 
 **AutoTreeGen / SmarTreeDNA** — AI-платформа для научной генеалогии. Объединяет

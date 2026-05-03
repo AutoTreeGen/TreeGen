@@ -1,0 +1,372 @@
+{
+  "tree_id": "tree_11_unknown_father_npe_dna_contradiction",
+  "category": "npe_unknown_parentage",
+  "complexity": "high",
+  "population_context": "Mixed Ashkenazi + Slavic",
+  "scope_description": "4-generation Soviet/Ukrainian-Ashkenazi tree where the recorded/social father in GEDCOM is contradicted by autosomal DNA, paternal half-sibling matches, and archive hints. Designed to validate NPE mode, sealed-set assertions, privacy-safe reporting, and DNA-vs-tree conflict resolution.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR AutoTreeGenSyntheticCorpus\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Synthetic Proband /Danilov/\n1 SEX M\n1 BIRT\n2 DATE 1971\n2 PLAC Kamenskoye, Koryak Okrug, RSFSR\n1 FAMC @F1@\n0 @I2@ INDI\n1 NAME Tatyana /Zhitnitsky/\n1 SEX F\n1 BIRT\n2 DATE 1951\n2 PLAC Dnepropetrovsk, Ukrainian SSR\n1 DEAT\n2 DATE 2008\n2 PLAC Melbourne, Australia\n1 FAMS @F1@\n0 @I3@ INDI\n1 NAME Ivan /Danilov/\n1 SEX M\n1 BIRT\n2 DATE 1949\n2 PLAC Kovran, Kamchatka, RSFSR\n1 DEAT\n2 DATE 2021\n2 PLAC Russia\n1 NOTE Social/adoptive father in GEDCOM; wrongly treated as biological father in imported public tree.\n1 FAMS @F1@\n0 @I4@ INDI\n1 NAME Alexander /Batensky/\n1 SEX M\n1 BIRT\n2 DATE 1948\n2 PLAC Privolnoye, Dnipropetrovsk Oblast, Ukrainian SSR\n1 DEAT\n2 DATE 2009\n2 PLAC Dnipropetrovsk, Ukraine\n1 NOTE Candidate biological father from DNA cluster.\n0 @I5@ INDI\n1 NAME Yuri /Batensky/\n1 SEX M\n1 BIRT\n2 DATE 1967\n2 PLAC Dnepropetrovsk, Ukrainian SSR\n1 FAMC @F2@\n0 @I6@ INDI\n1 NAME Vera /Koltunova/\n1 SEX F\n1 BIRT\n2 DATE 1947\n2 PLAC Ukrainian SSR\n1 FAMS @F2@\n0 @F1@ FAM\n1 HUSB @I3@\n1 WIFE @I2@\n1 CHIL @I1@\n0 @F2@ FAM\n1 HUSB @I4@\n1 WIFE @I6@\n1 CHIL @I5@\n0 @I7@ INDI\n1 NAME Gregory /Batensky/\n1 SEX M\n1 BIRT\n2 DATE 1908\n2 PLAC Privolnoye, Ekaterinoslav Governorate, Russian Empire\n1 FAMS @F3@\n0 @I8@ INDI\n1 NAME Matrona /Dodatko/\n1 SEX F\n1 BIRT\n2 DATE 1912\n2 PLAC Dnipropetrovsk region, Ukraine\n1 FAMS @F3@\n0 @F3@ FAM\n1 HUSB @I7@\n1 WIFE @I8@\n1 CHIL @I4@\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_1101",
+      "match_name": "Anonymized Paternal Half-Sibling",
+      "platform": "AncestryDNA",
+      "shared_cm": 1768,
+      "longest_segment": 178,
+      "segment_count": 43,
+      "shared_matches_with": ["dna_1102", "dna_1103", "dna_1104"],
+      "expected_link": "paternal half-sibling via Alexander Batensky"
+    },
+    {
+      "match_id": "dna_1102",
+      "match_name": "Anonymized Batensky First Cousin",
+      "platform": "MyHeritage",
+      "shared_cm": 612,
+      "longest_segment": 92,
+      "segment_count": 29,
+      "triangulated_segments": [
+        {
+          "chromosome": 2,
+          "start": 10400000,
+          "end": 78400000,
+          "cm": 81.5,
+          "triangulated_with": ["dna_1101"]
+        },
+        {
+          "chromosome": 9,
+          "start": 22000000,
+          "end": 73100000,
+          "cm": 66.2,
+          "triangulated_with": ["dna_1103"]
+        }
+      ],
+      "shared_matches_with": ["dna_1101", "dna_1103"],
+      "expected_link": "paternal Batensky/Dodatko branch"
+    },
+    {
+      "match_id": "dna_1103",
+      "match_name": "Anonymized Mennonite Cluster Match",
+      "platform": "GEDmatch",
+      "shared_cm": 54,
+      "longest_segment": 18,
+      "segment_count": 6,
+      "shared_matches_with": ["dna_1101", "dna_1102"],
+      "expected_link": "paternal Batensky region / Mennonite-adjacent cluster clue"
+    },
+    {
+      "match_id": "dna_1104",
+      "match_name": "Anonymized Maternal Zhitnitsky Cousin",
+      "platform": "FamilyTreeDNA",
+      "shared_cm": 146,
+      "longest_segment": 34,
+      "segment_count": 12,
+      "shared_matches_with": ["dna_1105"],
+      "expected_link": "maternal Zhitnitsky/Levitin branch, not paternal"
+    },
+    {
+      "match_id": "dna_1105",
+      "match_name": "Anonymized Levitin Cousin",
+      "platform": "MyHeritage",
+      "shared_cm": 72,
+      "longest_segment": 21,
+      "segment_count": 8,
+      "shared_matches_with": ["dna_1104"],
+      "expected_link": "maternal Levitin branch"
+    },
+    {
+      "match_id": "dna_1106",
+      "match_name": "Anonymized Danilov Social-Family Match",
+      "platform": "AncestryDNA",
+      "shared_cm": 0,
+      "longest_segment": 0,
+      "segment_count": 0,
+      "shared_matches_with": [],
+      "expected_link": "no biological match; social/adoptive family only"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_1101",
+      "type": "civil_BDM_birth",
+      "year": 1971,
+      "place": "Kamenskoye, Koryak Okrug, RSFSR",
+      "transcription_excerpt": "Birth record for Synthetic Proband, mother Tatyana Zhitnitsky. Father field: blank or later amended. Later Soviet documents use Danilov surname.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "does not prove Ivan Danilov as biological father; supports NPE review."
+    },
+    {
+      "snippet_id": "src_1102",
+      "type": "adoption_or_name_change",
+      "year": 1985,
+      "place": "Kamchatka / RSFSR",
+      "transcription_excerpt": "Legal name change/adoption event: child uses Danilov surname after mother's marriage to Ivan Danilov.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "supports social/adoptive father relationship, not biological fatherhood."
+    },
+    {
+      "snippet_id": "src_1103",
+      "type": "civil_BDM_birth",
+      "year": 1967,
+      "place": "Dnepropetrovsk, Ukrainian SSR",
+      "transcription_excerpt": "Birth of Yuri Batensky, son of Alexander Batensky and Vera Koltunova.",
+      "language": "ru+uk",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "anchors paternal half-sibling candidate and separates Yuri's maternal Koltunova branch."
+    },
+    {
+      "snippet_id": "src_1104",
+      "type": "civil_BDM_birth",
+      "year": 1948,
+      "place": "Privolnoye, Dnipropetrovsk Oblast, Ukrainian SSR",
+      "transcription_excerpt": "Birth of Alexander Batensky, son of Gregory Batensky and Matrona Dodatko.",
+      "language": "ru+uk",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "anchors Batensky/Dodatko paternal line."
+    },
+    {
+      "snippet_id": "src_1105",
+      "type": "online_tree",
+      "year": 2024,
+      "place": "Imported public GEDCOM",
+      "transcription_excerpt": "Ivan Danilov shown as biological father; no DNA or birth certificate citation.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "expected_use": "low-confidence tree claim contradicted by DNA and adoption/name-change records."
+    },
+    {
+      "snippet_id": "src_1106",
+      "type": "research_note",
+      "year": 2026,
+      "place": "AutoTreeGen sealed-set review",
+      "transcription_excerpt": "DNA cluster indicates Alexander Batensky as biological father; Ivan Danilov retained as adoptive/social father. Yuri Batensky is paternal half-sibling.",
+      "language": "en",
+      "primary_or_derivative": "research_log",
+      "image_available": false,
+      "expected_use": "sealed-set candidate after DNA + archive correlation."
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "I3",
+      "assertion": "Ivan Danilov is father because GEDCOM/social documents list Danilov surname.",
+      "scope": "biological_parentage",
+      "evidence": "surname and public tree"
+    },
+    {
+      "person_id": "I4",
+      "assertion": "Alexander Batensky is likely biological father based on DNA and archive evidence.",
+      "scope": "biological_parentage",
+      "evidence": "paternal half-sibling + Batensky first-cousin matches + birth records"
+    },
+    {
+      "person_id": "I5",
+      "assertion": "Yuri Batensky is paternal half-brother, but his Koltunova maternal line should not be imported into proband ancestry.",
+      "scope": "sibling_relationship",
+      "evidence": "DNA + birth record"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "npe_conflict",
+      "subtype": "social_father_as_biological",
+      "person_id": "I3",
+      "expected_flag": "dna_vs_tree_parentage_contradiction",
+      "reason": "GEDCOM/social father conflicts with paternal half-sibling and Batensky cluster DNA"
+    },
+    {
+      "type": "relationship_type_error",
+      "subtype": "adoptive_as_biological",
+      "person_id": "I3",
+      "expected_flag": "adoption_foster_guardian_as_parent",
+      "expected_confidence_when_flagged": 0.87
+    },
+    {
+      "type": "branch_contamination",
+      "subtype": "half_sibling_maternal_line_import",
+      "person_id": "I6",
+      "expected_flag": "half_sibling_other_parent_branch_contamination",
+      "reason": "Koltunova line belongs to Yuri's mother, not proband ancestry"
+    },
+    {
+      "type": "source_quality",
+      "snippet_id": "src_1105",
+      "expected_flag": "online_tree_contradicted_by_dna",
+      "reason": "public tree biological father assignment lacks sources and conflicts with DNA"
+    },
+    {
+      "type": "dna_evidence",
+      "match_id": "dna_1106",
+      "expected_flag": "zero_cm_social_family_not_biological",
+      "reason": "social-family match has no shared autosomal DNA"
+    },
+    {
+      "type": "privacy_sensitive",
+      "person_id": "I1",
+      "expected_flag": "npe_privacy_safe_mode_required",
+      "reason": "unknown parentage and living relatives require privacy-safe reporting"
+    }
+  ],
+  "expected_reasoning_chain": [
+    "Step 1: Parse GEDCOM and identify Ivan Danilov as recorded/social father in F1.",
+    "Step 2: Parse birth/adoption records src_1101 and src_1102; classify Ivan as social/adoptive father candidate rather than biological by default.",
+    "Step 3: Evaluate dna_1101: ~1768 cM fits full sibling/half-sibling/aunt/uncle range; shared matches point to Batensky paternal cluster.",
+    "Step 4: Evaluate dna_1102: high cM first-cousin-level match triangulates with dna_1101 on Batensky/Dodatko segments.",
+    "Step 5: Use src_1103 to confirm Yuri as child of Alexander Batensky and Vera Koltunova; classify Yuri as paternal half-sibling candidate.",
+    "Step 6: Use src_1104 to anchor Alexander Batensky to Gregory Batensky and Matrona Dodatko.",
+    "Step 7: Separate maternal Zhitnitsky/Levitin matches dna_1104/dna_1105 from paternal Batensky cluster.",
+    "Step 8: Confirm DNA contradiction against Ivan Danilov biological father claim; retain Ivan as adoptive/social father based on src_1102.",
+    "Step 9: Prevent branch contamination: Vera Koltunova is Yuri's mother but not proband's ancestor.",
+    "Step 10: Create sealed-set assertion for biological father Alexander Batensky and social/adoptive father Ivan Danilov with privacy-safe report mode."
+  ],
+  "expected_confidence_outputs": {
+    "relationship_I4_biological_father_of_I1": {
+      "status": "Confirmed",
+      "confidence": 0.98,
+      "evidence": ["dna_1101", "dna_1102", "src_1103", "src_1104"],
+      "classes": ["DNA", "archival_record", "FAN_cluster", "time", "place"],
+      "sealed_set_candidate": true
+    },
+    "relationship_I3_biological_father_of_I1": {
+      "status": "Rejected",
+      "confidence": 0.04,
+      "reason": "DNA contradiction + adoption/name-change record; no biological evidence"
+    },
+    "relationship_I3_social_adoptive_father_of_I1": {
+      "status": "Confirmed",
+      "confidence": 0.94,
+      "evidence": ["src_1102"],
+      "relationship_type": "adoptive_or_social_father"
+    },
+    "relationship_I5_paternal_half_sibling_of_I1": {
+      "status": "Confirmed",
+      "confidence": 0.97,
+      "evidence": ["dna_1101", "src_1103"],
+      "relationship_type": "paternal_half_sibling"
+    },
+    "relationship_I6_ancestor_of_I1": {
+      "status": "Rejected",
+      "confidence": 0.03,
+      "reason": "Vera Koltunova is mother of paternal half-sibling, not mother/ancestor of proband"
+    },
+    "maternal_Zhitnitsky_cluster": {
+      "status": "Confirmed",
+      "confidence": 0.94,
+      "evidence": ["dna_1104", "dna_1105"],
+      "relationship_summary": "separate maternal branch"
+    }
+  },
+  "expected_engine_flags": [
+    "dna_vs_tree_parentage_contradiction",
+    "adoption_foster_guardian_as_parent",
+    "half_sibling_other_parent_branch_contamination",
+    "online_tree_contradicted_by_dna",
+    "zero_cm_social_family_not_biological",
+    "npe_privacy_safe_mode_required",
+    "sealed_set_biological_parentage_candidate"
+  ],
+  "ground_truth_annotations": {
+    "true_lineage": [
+      "I1 Synthetic Proband",
+      "mother: I2 Tatyana Zhitnitsky",
+      "biological father: I4 Alexander Batensky",
+      "social/adoptive father: I3 Ivan Danilov",
+      "paternal half-sibling: I5 Yuri Batensky",
+      "paternal grandparents: I7 Gregory Batensky + I8 Matrona Dodatko"
+    ],
+    "false_claims": [
+      "Ivan Danilov is biological father because surname is Danilov",
+      "Yuri's maternal Koltunova line belongs to proband ancestry",
+      "Zero-cM social-family match supports biological Danilov line",
+      "Public GEDCOM parent assignment overrides DNA"
+    ],
+    "intended_feature_coverage": [
+      "NPE_mode",
+      "DNA_vs_tree_contradiction",
+      "paternal_half_sibling_detection",
+      "sealed_set_assertions",
+      "relationship_type_modeling",
+      "branch_contamination_prevention",
+      "privacy_safe_reporting",
+      "archive_DNA_correlation"
+    ]
+  },
+  "evaluation_assertions": [
+    {
+      "assertion_id": "eval_11_001",
+      "description": "Engine must confirm Alexander Batensky as biological father.",
+      "expected": {
+        "relationship": "I4 biological father of I1",
+        "status": "Confirmed",
+        "min_confidence": 0.97
+      }
+    },
+    {
+      "assertion_id": "eval_11_002",
+      "description": "Engine must reject Ivan Danilov as biological father but retain him as adoptive/social father.",
+      "expected": {
+        "biological_relationship": {
+          "person": "I3",
+          "status": "Rejected",
+          "max_confidence": 0.1
+        },
+        "social_relationship": {
+          "person": "I3",
+          "status": "Confirmed",
+          "min_confidence": 0.9
+        }
+      }
+    },
+    {
+      "assertion_id": "eval_11_003",
+      "description": "Engine must confirm Yuri as paternal half-sibling.",
+      "expected": {
+        "relationship": "I5 paternal half sibling of I1",
+        "status": "Confirmed",
+        "min_confidence": 0.95
+      }
+    },
+    {
+      "assertion_id": "eval_11_004",
+      "description": "Engine must prevent Koltunova branch import into proband ancestry.",
+      "expected": {
+        "relationship": "I6 ancestor of I1",
+        "status": "Rejected",
+        "max_confidence": 0.1
+      }
+    },
+    {
+      "assertion_id": "eval_11_005",
+      "description": "Engine must enter NPE privacy-safe mode.",
+      "expected": {
+        "privacy_mode": "npe_sensitive",
+        "required": true
+      }
+    },
+    {
+      "assertion_id": "eval_11_006",
+      "description": "Engine must create sealed-set candidate for biological parentage.",
+      "expected": {
+        "sealed_set_candidate": true,
+        "claim": "I4 biological father of I1"
+      }
+    }
+  ],
+  "phases_validated": [
+    "NPE_mode",
+    "DNA_vs_tree_contradiction",
+    "15.11_sealed_set_assertions",
+    "16.x_dna_cluster_interpretation",
+    "24.x_evidence_summary",
+    "25.x_research_dialogue_engine",
+    "privacy_sensitive_reporting",
+    "relationship_type_modeling"
+  ],
+  "version": "0.1",
+  "created_for": "AutoTreeGen Test Tree Corpus + Evaluation Suite"
+}

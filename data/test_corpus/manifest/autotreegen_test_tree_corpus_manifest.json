@@ -1,0 +1,244 @@
+{
+  "package_id": "autotreegen_test_tree_corpus_package_trees1_20",
+  "version": "0.1",
+  "generated_at_utc": "2026-05-02T16:17:04.452151+00:00",
+  "file_count": 60,
+  "files": [
+    {
+      "filename": "autotreegen_eval_runner_skeleton.py",
+      "size_bytes": 1734
+    },
+    {
+      "filename": "autotreegen_evaluation_harness_trees1_20.json",
+      "size_bytes": 97356
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_index.json",
+      "size_bytes": 34011
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_index.md",
+      "size_bytes": 6427
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_tree_04.zip",
+      "size_bytes": 5772
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_tree_05.zip",
+      "size_bytes": 5999
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_tree_06.zip",
+      "size_bytes": 6036
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_tree_07.zip",
+      "size_bytes": 4816
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_tree_08.zip",
+      "size_bytes": 5316
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_tree_09.zip",
+      "size_bytes": 5523
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_tree_10.zip",
+      "size_bytes": 5745
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_tree_11.zip",
+      "size_bytes": 5372
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_tree_12.zip",
+      "size_bytes": 5015
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_tree_13.zip",
+      "size_bytes": 5525
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_tree_14.zip",
+      "size_bytes": 5530
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_tree_15.zip",
+      "size_bytes": 4554
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_tree_16.zip",
+      "size_bytes": 4860
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_tree_17.zip",
+      "size_bytes": 5280
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_tree_18.zip",
+      "size_bytes": 5210
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_tree_19.zip",
+      "size_bytes": 5429
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_tree_20.zip",
+      "size_bytes": 6325
+    },
+    {
+      "filename": "autotreegen_test_tree_corpus_trees1_20_combined.json",
+      "size_bytes": 318293
+    },
+    {
+      "filename": "tree_01_pale_levitin_npe_resolution.json",
+      "size_bytes": 10290
+    },
+    {
+      "filename": "tree_02_mennonite_batensky_fictional_bridge.json",
+      "size_bytes": 9298
+    },
+    {
+      "filename": "tree_03_friedman_raskes_identity_resolution.json",
+      "size_bytes": 9548
+    },
+    {
+      "filename": "tree_04_voikhansky_kamenetsky_viral_tree_contamination.json",
+      "size_bytes": 15091
+    },
+    {
+      "filename": "tree_04_voikhansky_kamenetsky_viral_tree_contamination.md",
+      "size_bytes": 2630
+    },
+    {
+      "filename": "tree_05_brest_litovsk_holocaust_gap_reconstruction.json",
+      "size_bytes": 15917
+    },
+    {
+      "filename": "tree_05_brest_litovsk_holocaust_gap_reconstruction.md",
+      "size_bytes": 2293
+    },
+    {
+      "filename": "tree_06_rabbi_kamenetsky_hypothesis_not_confirmed.json",
+      "size_bytes": 15903
+    },
+    {
+      "filename": "tree_06_rabbi_kamenetsky_hypothesis_not_confirmed.md",
+      "size_bytes": 2515
+    },
+    {
+      "filename": "tree_07_patronymic_vs_surname_disambiguation.json",
+      "size_bytes": 13513
+    },
+    {
+      "filename": "tree_07_patronymic_vs_surname_disambiguation.md",
+      "size_bytes": 2292
+    },
+    {
+      "filename": "tree_08_maiden_vs_married_name_resolution.json",
+      "size_bytes": 13842
+    },
+    {
+      "filename": "tree_08_maiden_vs_married_name_resolution.md",
+      "size_bytes": 2258
+    },
+    {
+      "filename": "tree_09_cross_platform_dna_match_resolver.json",
+      "size_bytes": 17589
+    },
+    {
+      "filename": "tree_09_cross_platform_dna_match_resolver.md",
+      "size_bytes": 2331
+    },
+    {
+      "filename": "tree_10_historical_place_jurisdiction_resolution.json",
+      "size_bytes": 16897
+    },
+    {
+      "filename": "tree_10_historical_place_jurisdiction_resolution.md",
+      "size_bytes": 2489
+    },
+    {
+      "filename": "tree_11_unknown_father_npe_dna_contradiction.json",
+      "size_bytes": 15961
+    },
+    {
+      "filename": "tree_11_unknown_father_npe_dna_contradiction.md",
+      "size_bytes": 2360
+    },
+    {
+      "filename": "tree_12_ashkenazi_endogamy_multi_path_relationship.json",
+      "size_bytes": 15052
+    },
+    {
+      "filename": "tree_12_ashkenazi_endogamy_multi_path_relationship.md",
+      "size_bytes": 2243
+    },
+    {
+      "filename": "tree_13_mennonite_colony_founder_loop_ambiguity.json",
+      "size_bytes": 15872
+    },
+    {
+      "filename": "tree_13_mennonite_colony_founder_loop_ambiguity.md",
+      "size_bytes": 2529
+    },
+    {
+      "filename": "tree_14_sephardic_mizrahi_crossover_false_ashkenazi_merge.json",
+      "size_bytes": 16256
+    },
+    {
+      "filename": "tree_14_sephardic_mizrahi_crossover_false_ashkenazi_merge.md",
+      "size_bytes": 2557
+    },
+    {
+      "filename": "tree_15_gedcom_safe_merge_conflicting_sources.json",
+      "size_bytes": 13607
+    },
+    {
+      "filename": "tree_15_gedcom_safe_merge_conflicting_sources.md",
+      "size_bytes": 1391
+    },
+    {
+      "filename": "tree_16_metric_book_ocr_extraction_errors.json",
+      "size_bytes": 12394
+    },
+    {
+      "filename": "tree_16_metric_book_ocr_extraction_errors.md",
+      "size_bytes": 2121
+    },
+    {
+      "filename": "tree_17_revision_list_household_interpretation.json",
+      "size_bytes": 14739
+    },
+    {
+      "filename": "tree_17_revision_list_household_interpretation.md",
+      "size_bytes": 2288
+    },
+    {
+      "filename": "tree_18_immigration_name_change_myth_and_wrong_origin.json",
+      "size_bytes": 14013
+    },
+    {
+      "filename": "tree_18_immigration_name_change_myth_and_wrong_origin.md",
+      "size_bytes": 2282
+    },
+    {
+      "filename": "tree_19_famous_relative_royal_rabbinical_overclaim_filter.json",
+      "size_bytes": 14491
+    },
+    {
+      "filename": "tree_19_famous_relative_royal_rabbinical_overclaim_filter.md",
+      "size_bytes": 2426
+    },
+    {
+      "filename": "tree_20_full_pipeline_sealed_set_contradiction_resolution.json",
+      "size_bytes": 19253
+    },
+    {
+      "filename": "tree_20_full_pipeline_sealed_set_contradiction_resolution.md",
+      "size_bytes": 2847
+    }
+  ]
+}

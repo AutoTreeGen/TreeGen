@@ -1,0 +1,184 @@
+{
+  "tree_id": "tree_02_mennonite_batensky_fictional_bridge",
+  "category": "fictional_bridge_and_endogamy",
+  "complexity": "high",
+  "population_context": "Mixed Ukrainian Orthodox + Mennonite",
+  "scope_description": "4-generation Ekaterinoslav/Dnipropetrovsk tree with real Mennonite DNA adjacency and a fictional Friesen bridge inserted into Ukrainian Orthodox Batensky/Dodatko line.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR AutoTreeGenSynthetic\n1 GEDC\n2 VERS 5.5.1\n1 CHAR UTF-8\n0 @I1@ INDI\n1 NAME Synthetic Proband B /Dodatko/\n1 SEX M\n1 BIRT\n2 DATE 1975\n2 PLAC Dnipro, Ukraine\n1 NOTE Paternal Ukrainian line with Mennonite DNA matches; GEDCOM contains fictional Ludmila Friesen bridge.\n0 @I2@ INDI\n1 NAME Oleksandr /Batensky/\n1 SEX M\n1 BIRT\n2 DATE 1948\n2 PLAC Privolnoe, Solonyanskyi, Dnipropetrovsk\n1 DEAT\n2 DATE 2009\n2 PLAC Dnipro, Ukraine\n0 @I3@ INDI\n1 NAME Halyna /Dodatko/\n1 SEX F\n1 BIRT\n2 DATE 1952\n2 PLAC Dnipropetrovsk\n0 @I4@ INDI\n1 NAME Hryhorii /Batensky/\n1 SEX M\n1 BIRT\n2 DATE 1908\n2 PLAC Privolnoe, Ekaterinoslav Governorate\n1 DEAT\n2 DATE 2000\n2 PLAC Dnipropetrovsk\n0 @I5@ INDI\n1 NAME Matrona /Dodatko/\n1 SEX F\n1 BIRT\n2 DATE 1912\n2 PLAC Privolnoe, Ekaterinoslav Governorate\n1 DEAT\n2 DATE 1980\n2 PLAC Dnipropetrovsk\n0 @I6@ INDI\n1 NAME Johann /Friesen/\n1 SEX M\n1 BIRT\n2 DATE 1880\n2 PLAC Molotschna Colony, Taurida Governorate\n1 DEAT\n2 DATE 1943\n2 PLAC Ukraine\n0 @I7@ INDI\n1 NAME Anna /Wiens/\n1 SEX F\n1 BIRT\n2 DATE 1883\n2 PLAC Halbstadt, Molotschna\n1 DEAT\n2 DATE 1942\n2 PLAC Kazakhstan\n0 @I8@ INDI\n1 NAME Ludmila /Friesen/\n1 SEX F\n1 BIRT\n2 DATE 1890\n2 PLAC Molotschna Colony\n1 DEAT\n2 DATE 1960\n2 PLAC Dnipropetrovsk\n1 NOTE FICTIONAL bridge inserted to force Batensky-Dodatko into Mennonite tree.\n0 @I9@ INDI\n1 NAME Peter /Jantzen/\n1 SEX M\n1 BIRT\n2 DATE 1905\n2 PLAC Khortitsa Colony\n1 NOTE Mennonite DNA match ancestor.\n0 @I10@ INDI\n1 NAME Nikolai Ivanovich /Dodatko/\n1 SEX M\n1 BIRT\n2 DATE 1884\n2 PLAC Privolnoe\n1 NOTE Ukrainian Orthodox; patronymic must not be mistaken as surname.\n0 @I11@ INDI\n1 NAME Ivan /Ivanovich/\n1 SEX M\n1 BIRT\n2 DATE 1860\n2 PLAC Poltava Governorate\n1 NOTE Embedded patronymic-as-surname trap.\n0 @F1@ FAM\n1 HUSB @I2@\n1 WIFE @I3@\n1 CHIL @I1@\n1 MARR\n2 DATE 1973\n2 PLAC Dnipropetrovsk\n0 @F2@ FAM\n1 HUSB @I4@\n1 WIFE @I5@\n1 CHIL @I2@\n1 MARR\n2 DATE 1930\n2 PLAC Privolnoe\n0 @F3@ FAM\n1 HUSB @I10@\n1 CHIL @I5@\n0 @F4@ FAM\n1 HUSB @I6@\n1 WIFE @I7@\n1 CHIL @I8@\n1 MARR\n2 DATE 1902\n2 PLAC Molotschna Colony\n0 @F5@ FAM\n1 WIFE @I8@\n1 CHIL @I4@\n1 MARR\n2 DATE 1907\n2 PLAC Privolnoe\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_101",
+      "match_name": "Mennonite Match Friesen A",
+      "platform": "GEDmatch",
+      "shared_cm": 38,
+      "longest_segment": 12,
+      "segment_count": 5,
+      "shared_matches_with": ["dna_102", "dna_103"],
+      "triangulation_status": "weak_chr3",
+      "expected_link": "distant Mennonite colony cluster, not direct ancestor proof"
+    },
+    {
+      "match_id": "dna_102",
+      "match_name": "Mennonite Match Wiens B",
+      "platform": "MyHeritage",
+      "shared_cm": 31,
+      "longest_segment": 10,
+      "segment_count": 4,
+      "shared_matches_with": ["dna_101"],
+      "triangulation_status": "not_triangulated",
+      "expected_link": "Molotschna/Khortitsa endogamous cluster"
+    },
+    {
+      "match_id": "dna_103",
+      "match_name": "Ukrainian Orthodox cousin",
+      "platform": "AncestryDNA",
+      "shared_cm": 92,
+      "longest_segment": 28,
+      "segment_count": 7,
+      "shared_matches_with": ["dna_104"],
+      "triangulation_status": "not_available",
+      "expected_link": "Dodatko/Batensky line"
+    },
+    {
+      "match_id": "dna_104",
+      "match_name": "Sibling-line Batensky descendant",
+      "platform": "AncestryDNA",
+      "shared_cm": 210,
+      "longest_segment": 48,
+      "segment_count": 16,
+      "shared_matches_with": ["dna_103"],
+      "triangulation_status": "not_available",
+      "expected_link": "Batensky branch"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_101",
+      "type": "orthodox_metric_book_birth",
+      "year": 1908,
+      "place": "Privolnoe, Ekaterinoslav Governorate",
+      "transcription_excerpt": "Birth of Hryhorii Batensky to Ukrainian Orthodox parents; no Mennonite surname in record.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "source_quality": 0.93
+    },
+    {
+      "snippet_id": "src_102",
+      "type": "mennonite_church_register",
+      "year": 1880,
+      "place": "Molotschna Colony",
+      "transcription_excerpt": "Birth of Johann Friesen, son of Peter Friesen and Maria Klassen, Mennonite congregation.",
+      "language": "de",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "source_quality": 0.91
+    },
+    {
+      "snippet_id": "src_103",
+      "type": "user_tree_note",
+      "year": 2024,
+      "place": "private GEDCOM",
+      "transcription_excerpt": "Ludmila Friesen attached as mother of Hryhorii Batensky based on distant DNA clusters.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "source_quality": 0.1
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "I8",
+      "assertion": "Ludmila Friesen is mother of Hryhorii Batensky",
+      "scope": "maternal_link",
+      "evidence": "DNA cluster only"
+    },
+    {
+      "person_id": "I11",
+      "assertion": "Ivanovich is surname",
+      "scope": "name",
+      "evidence": "parsed from Russian record"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "fictional_bridge",
+      "subtype": "mennonite_to_orthodox_without_record",
+      "person_id": "I8",
+      "expected_flag": "fictional_bridge_ludmila_friesen",
+      "expected_confidence_when_flagged": 0.92
+    },
+    {
+      "type": "cross_religious_confusion",
+      "subtype": "mennonite_lutheran_orthodox_boundary",
+      "person_id": "I8",
+      "expected_flag": "cross_religious_mennonite_orthodox_merge_risk",
+      "expected_confidence_when_flagged": 0.83
+    },
+    {
+      "type": "patronymic_confusion",
+      "subtype": "ivanovich_as_surname",
+      "person_id": "I11",
+      "expected_flag": "patronymic_ivanovich_as_surname",
+      "expected_confidence_when_flagged": 0.9
+    },
+    {
+      "type": "endogamy",
+      "subtype": "mennonite_founder_loop",
+      "person_id": "I6",
+      "expected_flag": "pedigree_collapse_mennonite_colony_founder_loop",
+      "expected_confidence_when_flagged": 0.82
+    }
+  ],
+  "ground_truth": {
+    "confirmed_relationships": [
+      "I2 child of I4/I5",
+      "I4 born to Ukrainian Orthodox Batensky parents in Privolnoe",
+      "I6 married I7 in Mennonite colony"
+    ],
+    "rejected_relationships": ["I8 as biological mother of I4"],
+    "hypotheses": [
+      "Mennonite DNA cluster may represent distant population adjacency, collateral event, or deeper unknown path, not direct tree bridge"
+    ]
+  },
+  "expected_reasoning_chain": [
+    "Step 1: Parse GEDCOM and separate Ukrainian Orthodox Batensky/Dodatko branch from Mennonite Friesen/Wiens branch.",
+    "Step 2: Evaluate DNA: Mennonite matches are distant and endogamy-prone, while Batensky cousin dna_104 is close and internally consistent.",
+    "Step 3: Use Orthodox birth src_101 to confirm I4's immediate identity context and absence of Friesen mother.",
+    "Step 4: Use Mennonite register src_102 to confirm I6/I7 belong to colony context but not to I4.",
+    "Step 5: Flag Ludmila Friesen as fictional bridge because src_103 is user-tree-only and contradicts religious/place record context.",
+    "Step 6: Detect Ivanovich as patronymic, not surname.",
+    "Step 7: Output Mennonite cluster as Hypothesis for distant DNA only, not as confirmed ancestor."
+  ],
+  "expected_confidence_outputs": {
+    "I2_child_of_I4_I5": "Confirmed 0.97 (close DNA + Orthodox record + GEDCOM chronology)",
+    "I4_child_of_I8": "Rejected 0.04 (primary-record context + fictional bridge + no source)",
+    "I1_link_to_Mennonite_cluster": "Hypothesis 0.52 (distant DNA + regional adjacency + endogamy correction)",
+    "I6_I7_Mennonite_identity": "Confirmed 0.95 (church register + place + surname cluster)"
+  },
+  "expected_engine_flags": [
+    "fictional_bridge_ludmila_friesen",
+    "cross_religious_mennonite_orthodox_merge_risk",
+    "patronymic_ivanovich_as_surname",
+    "pedigree_collapse_mennonite_colony_founder_loop"
+  ],
+  "edge_cases_red_herrings": [
+    "Mennonite surnames near Ekaterinoslav are real but do not prove direct descent.",
+    "Shared small segments in colony populations can be founder-loop noise."
+  ],
+  "phases_validated": ["15.10", "16.x", "19.x", "5.10", "25.x"],
+  "evaluation_assertions": [
+    {
+      "assertion": "Engine must reject Ludmila Friesen as mother of Hryhorii Batensky",
+      "expected": true
+    },
+    {
+      "assertion": "Engine must not delete Mennonite DNA cluster; classify as hypothesis",
+      "expected": true
+    },
+    {
+      "assertion": "Engine must parse Ivanovich as patronymic trap",
+      "expected": true
+    }
+  ]
+}

@@ -1,0 +1,348 @@
+{
+  "tree_id": "tree_05_brest_litovsk_holocaust_gap_reconstruction",
+  "category": "holocaust_gap_reconstruction",
+  "complexity": "high",
+  "population_context": "Ashkenazi",
+  "scope_description": "5-generation Brest-Litovsk Jewish family with Holocaust-era missing records, duplicate same-name victim/survivor candidates, Yizkor overreach, DP-camp field-mapping error, and negative-evidence routing.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR AutoTreeGenSyntheticCorpus\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Research Proband /Friedman/\n1 SEX F\n1 BIRT\n2 DATE 1980\n2 PLAC Toronto, Ontario, Canada\n1 FAMC @F1@\n0 @I2@ INDI\n1 NAME David /Friedman/\n1 SEX M\n1 BIRT\n2 DATE 1948\n2 PLAC Munich DP Camp, Germany\n1 FAMC @F2@\n0 @I3@ INDI\n1 NAME Chana /Raskes/\n1 SEX F\n1 BIRT\n2 DATE ABT 1918\n2 PLAC Brest-Litovsk, Grodno Governorate, Russian Empire\n1 DEAT\n2 DATE 1992\n2 PLAC Montreal, Quebec, Canada\n1 FAMS @F2@\n0 @I4@ INDI\n1 NAME Moshe /Friedman/\n1 SEX M\n1 BIRT\n2 DATE ABT 1913\n2 PLAC Brest-Litovsk, Grodno Governorate, Russian Empire\n1 DEAT\n2 DATE ABT 1942\n2 PLAC Brisk Ghetto, German occupation\n1 FAMS @F2@\n0 @I5@ INDI\n1 NAME Moshe /Friedman/\n1 SEX M\n1 BIRT\n2 DATE ABT 1911\n2 PLAC Pruzhany, Grodno Governorate, Russian Empire\n1 DEAT\n2 DATE 1981\n2 PLAC New York, USA\n1 NOTE Same-name survivor candidate incorrectly merged with I4 in copied tree.\n0 @I6@ INDI\n1 NAME Freida /Raskes/\n1 SEX F\n1 BIRT\n2 DATE ABT 1888\n2 PLAC Brest-Litovsk, Grodno Governorate, Russian Empire\n1 FAMS @F3@\n0 @I7@ INDI\n1 NAME Yankel /Raskes/\n1 SEX M\n1 BIRT\n2 DATE ABT 1884\n2 PLAC Brest-Litovsk, Grodno Governorate, Russian Empire\n1 FAMS @F3@\n0 @I8@ INDI\n1 NAME Leib /Friedman/\n1 SEX M\n1 BIRT\n2 DATE ABT 1882\n2 PLAC Brest-Litovsk, Grodno Governorate, Russian Empire\n1 FAMS @F4@\n0 @I9@ INDI\n1 NAME Sura /Levitin/\n1 SEX F\n1 BIRT\n2 DATE ABT 1887\n2 PLAC Brest-Litovsk, Grodno Governorate, Russian Empire\n1 FAMS @F4@\n0 @I10@ INDI\n1 NAME Unknown Daughter /Famous Rabbi/\n1 SEX F\n1 NOTE Invented bridge from Yizkor surname cluster; no source.\n0 @F2@ FAM\n1 HUSB @I4@\n1 WIFE @I3@\n1 CHIL @I2@\n0 @F3@ FAM\n1 HUSB @I7@\n1 WIFE @I6@\n1 CHIL @I3@\n0 @F4@ FAM\n1 HUSB @I8@\n1 WIFE @I9@\n1 CHIL @I4@\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_501",
+      "match_name": "Anonymized Raskes Cousin",
+      "platform": "AncestryDNA",
+      "shared_cm": 86,
+      "longest_segment": 23,
+      "segment_count": 8,
+      "shared_matches_with": ["dna_502", "dna_503"],
+      "expected_link": "via Chana Raskes / Raskes-Friedman maternal side"
+    },
+    {
+      "match_id": "dna_502",
+      "match_name": "Anonymized Friedman Cousin",
+      "platform": "MyHeritage",
+      "shared_cm": 54,
+      "longest_segment": 16,
+      "segment_count": 6,
+      "triangulated_segments": [
+        {
+          "chromosome": 12,
+          "start": 31200000,
+          "end": 42100000,
+          "cm": 15.6,
+          "triangulated_with": ["dna_501"]
+        }
+      ],
+      "shared_matches_with": ["dna_501", "dna_504"],
+      "expected_link": "supports Friedman-Brest cluster, not survivor I5"
+    },
+    {
+      "match_id": "dna_503",
+      "match_name": "Anonymized Levitin Cluster Match",
+      "platform": "GEDmatch",
+      "shared_cm": 22,
+      "longest_segment": 9,
+      "segment_count": 4,
+      "shared_matches_with": ["dna_501"],
+      "expected_link": "weak Levitin collateral clue; endogamy corrected"
+    },
+    {
+      "match_id": "dna_504",
+      "match_name": "Anonymized Survivor Descendant",
+      "platform": "FamilyTreeDNA",
+      "shared_cm": 11,
+      "longest_segment": 6,
+      "segment_count": 3,
+      "shared_matches_with": ["dna_502"],
+      "expected_link": "insufficient to merge I4 with survivor candidate I5"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_501",
+      "type": "dp_camp_registration",
+      "year": 1948,
+      "place": "Munich, Germany",
+      "transcription_excerpt": "David Friedman, born 1948 in Munich; mother Chana Raskes Friedman, born Brest-Litovsk; father listed as Moshe Friedman, deceased during war. Registration place Munich DP camp.",
+      "language": "de+en",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms DP registration and identifies Munich as registration/birth context; parent names support I2-I3-I4."
+    },
+    {
+      "snippet_id": "src_502",
+      "type": "yad_vashem_page_of_testimony",
+      "year": 1956,
+      "place": "Brest / Brisk",
+      "transcription_excerpt": "Moshe Friedman, son of Leib, husband of Chana, resident of Brisk, murdered 1942. Submitter: Chana Friedman, wife.",
+      "language": "he+en",
+      "primary_or_derivative": "derivative",
+      "image_available": true,
+      "expected_use": "strong victim identity clue; not a civil death certificate but high relevance due to spouse submitter."
+    },
+    {
+      "snippet_id": "src_503",
+      "type": "yizkor_book",
+      "year": 1960,
+      "place": "Brest-Litovsk",
+      "transcription_excerpt": "The Friedman, Raskes, and Levitin families are remembered among the Brisk martyrs. Several Moshe Friedman names appear.",
+      "language": "yi+he",
+      "primary_or_derivative": "authored",
+      "image_available": true,
+      "expected_use": "locality/community clue only; cannot infer exact parent-child links."
+    },
+    {
+      "snippet_id": "src_504",
+      "type": "immigration_manifest",
+      "year": 1949,
+      "place": "Halifax, Canada",
+      "transcription_excerpt": "Chana Friedman, widow, traveling with son David Friedman. Last permanent residence: Munich, Germany. Birthplace: Brest-Litovsk.",
+      "language": "en",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms migration path and widow status; does not prove exact death record."
+    },
+    {
+      "snippet_id": "src_505",
+      "type": "naturalization_record",
+      "year": 1956,
+      "place": "New York, USA",
+      "transcription_excerpt": "Moshe Friedman, born 1911 Pruzhany, wife Bella, arrived 1923, naturalized 1956.",
+      "language": "en",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "separates survivor candidate I5 from victim I4."
+    },
+    {
+      "snippet_id": "src_506",
+      "type": "online_tree",
+      "year": 2022,
+      "place": "MyHeritage public tree",
+      "transcription_excerpt": "Moshe Friedman born Brest 1913, died New York 1981, married Chana Raskes. Also father of David born Munich.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "expected_use": "conflicting copied tree that incorrectly merges I4 and I5."
+    },
+    {
+      "snippet_id": "src_507",
+      "type": "archive_negative_search",
+      "year": 2026,
+      "place": "Brest Regional Archive / Jewish civil records",
+      "transcription_excerpt": "Search performed for Moshe Friedman civil death 1941-1944 in surviving local civil registers; no record found. Record loss likely due to ghetto liquidation and wartime destruction.",
+      "language": "en",
+      "primary_or_derivative": "research_log",
+      "image_available": false,
+      "expected_use": "negative evidence with documented search; supports record-loss context, not proof by itself."
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "I4",
+      "assertion": "Moshe Friedman survived and died in New York in 1981",
+      "scope": "identity",
+      "evidence": "same name in public tree"
+    },
+    {
+      "person_id": "I2",
+      "assertion": "Birthplace should be Munich DP Camp",
+      "scope": "birthplace",
+      "evidence": "DP registration shows Munich"
+    },
+    {
+      "person_id": "I10",
+      "assertion": "Family descends from a famous rabbinical line through unknown daughter",
+      "scope": "famous_descent",
+      "evidence": "Yizkor book mentions rabbi with similar surname"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "holocaust_reconstruction_error",
+      "subtype": "perished_vs_survived_duplicate",
+      "persons": ["I4", "I5"],
+      "expected_flag": "holocaust_perished_vs_survived_duplicate",
+      "expected_confidence_when_flagged": 0.9
+    },
+    {
+      "type": "holocaust_reconstruction_error",
+      "subtype": "dp_camp_birthplace_default_error",
+      "person_id": "I2",
+      "expected_flag": "holocaust_dp_camp_birthplace_default_error",
+      "expected_confidence_when_flagged": 0.91
+    },
+    {
+      "type": "holocaust_reconstruction_error",
+      "subtype": "yizkor_book_family_group_overreach",
+      "person_id": "I10",
+      "expected_flag": "holocaust_yizkor_book_family_group_overreach",
+      "expected_confidence_when_flagged": 0.77
+    },
+    {
+      "type": "fabrication",
+      "subtype": "unknown_famous_rabbi_daughter_bridge",
+      "person_id": "I10",
+      "expected_flag": "rabbinical_unknown_wife_as_dynasty_daughter",
+      "expected_confidence_when_flagged": 0.86
+    },
+    {
+      "type": "same_name_different_person",
+      "persons": ["I4", "I5"],
+      "expected_flag": "same_name_immigration_age_rounding_error",
+      "reason": "similar name and age but different birthplace, spouse, immigration path, and death status"
+    },
+    {
+      "type": "negative_evidence",
+      "snippet_id": "src_507",
+      "expected_flag": "record_likely_destroyed_not_absence_disproof",
+      "reason": "no civil death record found after documented search should not disprove Holocaust death"
+    }
+  ],
+  "expected_reasoning_chain": [
+    "Step 1: Parse GEDCOM and identify I4/I5 as same-name candidates with conflicting death/life events.",
+    "Step 2: Parse DP camp record src_501 and immigration manifest src_504; distinguish event place/residence from biological birthplace when required.",
+    "Step 3: Correlate Yad Vashem Page of Testimony src_502 with spouse submitter Chana and father Leib; assign strong identity evidence to I4.",
+    "Step 4: Treat Yizkor book src_503 as community/locality evidence only; block inferred parent-child or famous-rabbi bridge.",
+    "Step 5: Use naturalization record src_505 to separate survivor I5 from victim I4.",
+    "Step 6: Apply Holocaust-specific fabrication patterns: perished-vs-survived duplicate, DP-camp field mapping error, Yizkor overreach.",
+    "Step 7: Evaluate documented negative search src_507 as record-loss context, not disproof of death.",
+    "Step 8: Use DNA matches dna_501 and dna_502 to support Raskes/Friedman branch; apply Ashkenazi endogamy correction to dna_503/dna_504.",
+    "Step 9: Confirm Chana Raskes as mother of David and widow of Moshe; keep exact death details as Probable due to lack of primary civil death.",
+    "Step 10: Reject merged identity I4=I5 and quarantine public-tree claim src_506."
+  ],
+  "expected_confidence_outputs": {
+    "identity_I4_Moshe_Friedman_Brest_victim": {
+      "status": "Probable",
+      "confidence": 0.89,
+      "reason": "Yad Vashem spouse-submitted testimony + DP record + immigration widow status; no civil death record survives"
+    },
+    "identity_I5_Moshe_Friedman_New_York_survivor": {
+      "status": "Confirmed",
+      "confidence": 0.95,
+      "reason": "naturalization record with distinct birthplace/spouse/arrival path"
+    },
+    "merge_I4_I5": {
+      "status": "Rejected",
+      "confidence": 0.06,
+      "flags": ["holocaust_perished_vs_survived_duplicate", "same_name_different_person"]
+    },
+    "relationship_I2_child_of_I3_I4": {
+      "status": "Confirmed",
+      "confidence": 0.96,
+      "evidence": ["src_501", "src_504", "dna_501", "dna_502"]
+    },
+    "birthplace_I2_Munich_DP_Camp": {
+      "status": "Conflict",
+      "confidence": 0.41,
+      "reason": "DP registration may indicate birth/registration context; requires parsing event field carefully"
+    },
+    "famous_rabbinical_bridge_I10": {
+      "status": "Rejected",
+      "confidence": 0.11,
+      "flags": [
+        "holocaust_yizkor_book_family_group_overreach",
+        "rabbinical_unknown_wife_as_dynasty_daughter"
+      ]
+    },
+    "raskes_friedman_branch": {
+      "status": "Probable",
+      "confidence": 0.84,
+      "reason": "DNA cluster + DP/immigration records; older Brest records remain research target"
+    }
+  },
+  "expected_engine_flags": [
+    "holocaust_perished_vs_survived_duplicate",
+    "holocaust_dp_camp_birthplace_default_error",
+    "holocaust_yizkor_book_family_group_overreach",
+    "rabbinical_unknown_wife_as_dynasty_daughter",
+    "same_name_different_person",
+    "record_likely_destroyed_not_absence_disproof",
+    "online_tree_conflict_with_primary_records"
+  ],
+  "ground_truth_annotations": {
+    "true_lineage": [
+      "I1 Research Proband Friedman",
+      "I2 David Friedman",
+      "I3 Chana Raskes + I4 Moshe Friedman",
+      "I6 Freida Raskes + I7 Yankel Raskes",
+      "I8 Leib Friedman + I9 Sura Levitin"
+    ],
+    "true_events": [
+      "I4 Moshe Friedman died during Holocaust in Brest/Brisk area, exact civil death record absent.",
+      "I5 Moshe Friedman is a different survivor from Pruzhany/New York.",
+      "I2 David Friedman was registered in Munich DP context; birthplace parsing must not overwrite all identity evidence without field validation."
+    ],
+    "false_claims": [
+      "I4 and I5 are the same person.",
+      "Yizkor book surname list proves direct parent-child relationships.",
+      "Unknown Daughter Famous Rabbi bridge is real.",
+      "No civil death record means Moshe did not die in Holocaust."
+    ],
+    "intended_feature_coverage": [
+      "Holocaust gap reconstruction",
+      "negative evidence handling",
+      "same-name victim/survivor separation",
+      "DP camp record parsing",
+      "Yizkor evidence limits",
+      "archive-vs-tree conflict",
+      "Ashkenazi DNA endogamy correction",
+      "famous-rabbi bridge rejection"
+    ]
+  },
+  "evaluation_assertions": [
+    {
+      "assertion_id": "eval_05_001",
+      "description": "Engine must reject merge of Holocaust victim I4 with New York survivor I5.",
+      "expected": {
+        "merge_pair": ["I4", "I5"],
+        "auto_merge_allowed": false,
+        "status": "Rejected"
+      }
+    },
+    {
+      "assertion_id": "eval_05_002",
+      "description": "Engine must classify Yizkor source as locality/community evidence, not direct kinship proof.",
+      "expected": {
+        "snippet_id": "src_503",
+        "max_relationship_confidence_contribution": 0.25
+      }
+    },
+    {
+      "assertion_id": "eval_05_003",
+      "description": "Engine must use documented no-record-found as record-loss context, not disproof.",
+      "expected": {
+        "snippet_id": "src_507",
+        "negative_evidence_mode": "record_likely_destroyed"
+      }
+    },
+    {
+      "assertion_id": "eval_05_004",
+      "description": "Engine must confirm I2 as child of I3 and I4 using DP/immigration/DNA evidence.",
+      "expected": {
+        "relationship": "I2 child of I3/I4",
+        "status": "Confirmed",
+        "min_confidence": 0.95
+      }
+    },
+    {
+      "assertion_id": "eval_05_005",
+      "description": "Engine must reject famous-rabbinical bridge through I10.",
+      "expected": {
+        "person_id": "I10",
+        "status": "Rejected",
+        "max_confidence": 0.2
+      }
+    }
+  ],
+  "phases_validated": [
+    "5.10_fantasy_filter",
+    "15.10_name_disambiguation",
+    "16.x_dna_cluster_interpretation",
+    "19.x_place_resolution",
+    "22.x_archive_routing",
+    "24.x_evidence_summary",
+    "25.x_research_dialogue_engine",
+    "negative_evidence_handling"
+  ],
+  "version": "0.1",
+  "created_for": "AutoTreeGen Test Tree Corpus + Evaluation Suite"
+}
