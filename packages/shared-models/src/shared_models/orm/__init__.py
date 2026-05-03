@@ -10,6 +10,10 @@ from shared_models.orm.audio_session import AudioSession, AudioSessionStatus
 from shared_models.orm.audit_log import AuditLog
 from shared_models.orm.chat import ChatMessage, ChatMessageRole, ChatSession
 from shared_models.orm.citation import Citation
+from shared_models.orm.completeness_assertion import (
+    CompletenessAssertion,
+    CompletenessAssertionSource,
+)
 from shared_models.orm.dna_cluster import DnaCluster, DnaClusterMember
 from shared_models.orm.dna_consent import DnaConsent
 from shared_models.orm.dna_import import DnaImport
@@ -31,6 +35,16 @@ from shared_models.orm.hypothesis import Hypothesis, HypothesisEvidence
 from shared_models.orm.hypothesis_compute_job import HypothesisComputeJob
 from shared_models.orm.import_job import ImportJob
 from shared_models.orm.membership import TreeInvitation, TreeMembership
+from shared_models.orm.merge_session import (
+    ChosenSource,
+    DecisionMethod,
+    MergeApplyBatch,
+    MergeDecision,
+    MergeDecisionScope,
+    MergeRefKind,
+    MergeSession,
+    MergeSessionStatus,
+)
 from shared_models.orm.multimedia import EntityMultimedia, MultimediaObject
 from shared_models.orm.name import Name
 from shared_models.orm.note import EntityNote, Note
@@ -44,6 +58,13 @@ from shared_models.orm.report_bundle_job import (
     BundleOutputFormat,
     BundleStatus,
     ReportBundleJob,
+)
+from shared_models.orm.seed_reference import (
+    CountryArchiveDirectorySeed,
+    FabricationPatternSeed,
+    PlaceLookupSeed,
+    SurnameTransliterationSeed,
+    SurnameVariantSeed,
 )
 from shared_models.orm.shared_match import SharedMatch
 from shared_models.orm.source import Source
@@ -67,7 +88,12 @@ __all__ = [
     "ChatMessage",
     "ChatMessageRole",
     "ChatSession",
+    "ChosenSource",
     "Citation",
+    "CompletenessAssertion",
+    "CompletenessAssertionSource",
+    "CountryArchiveDirectorySeed",
+    "DecisionMethod",
     "DnaCluster",
     "DnaClusterMember",
     "DnaConsent",
@@ -84,6 +110,7 @@ __all__ = [
     "EventParticipant",
     "Evidence",
     "ExtractedFact",
+    "FabricationPatternSeed",
     "Family",
     "FamilyChild",
     "FsDedupAttempt",
@@ -91,6 +118,12 @@ __all__ = [
     "HypothesisComputeJob",
     "HypothesisEvidence",
     "ImportJob",
+    "MergeApplyBatch",
+    "MergeDecision",
+    "MergeDecisionScope",
+    "MergeRefKind",
+    "MergeSession",
+    "MergeSessionStatus",
     "MultimediaObject",
     "Name",
     "Note",
@@ -100,6 +133,7 @@ __all__ = [
     "PersonMergeLog",
     "Place",
     "PlaceAlias",
+    "PlaceLookupSeed",
     "PublicTreeShare",
     "ReportBundleJob",
     "SharedMatch",
@@ -108,6 +142,8 @@ __all__ = [
     "StripeCustomer",
     "StripeEventLog",
     "Subscription",
+    "SurnameTransliterationSeed",
+    "SurnameVariantSeed",
     "TelegramUserLink",
     "Tree",
     "TreeCollaborator",

@@ -62,6 +62,17 @@ from shared_models.schemas.management import (
     UserCreate,
     UserRead,
 )
+from shared_models.schemas.merge import (
+    MergeApplyBatchRead,
+    MergeApplyRequest,
+    MergeDecisionInput,
+    MergeDecisionRead,
+    MergeFieldHint,
+    MergeRef,
+    MergeSessionCreate,
+    MergeSessionRead,
+    MergeSessionSummary,
+)
 
 __all__ = [
     "DnaImportRead",
@@ -78,6 +89,15 @@ __all__ = [
     "ImportJobProgress",
     "ImportJobRead",
     "ImportStage",
+    "MergeApplyBatchRead",
+    "MergeApplyRequest",
+    "MergeDecisionInput",
+    "MergeDecisionRead",
+    "MergeFieldHint",
+    "MergeRef",
+    "MergeSessionCreate",
+    "MergeSessionRead",
+    "MergeSessionSummary",
     "NameCreate",
     "NameRead",
     "NameUpdate",

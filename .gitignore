@@ -36,6 +36,10 @@ secrets/
 # Личный GED-файл владельца
 Ztree.ged
 *Ztree*.ged
+# Phase 5.11a discovery: raw probe outputs могут содержать sample-имена /
+# xref'ы из чужих GED-файлов (GM317, RR). Никогда не коммитим — отчёт
+# идёт в docs/discovery/ с уже очищенными агрегатами.
+_discovery_runs/
 # Личные/приватные образцы для тестирования
 packages/gedcom-parser/samples/personal/
 # DNA-данные (special category по GDPR — см. ADR-0012)
@@ -170,12 +174,29 @@ data/*
 # падают с FileNotFoundError на CI (см. PR #170 first run).
 !packages/entity-resolution/src/entity_resolution/names/data/
 !packages/entity-resolution/src/entity_resolution/names/data/**
-# Phase 26.1 / ADR-0084: synthetic test tree corpus — product-level
-# evaluation data, not unit-test fixture. Hashes pinned in manifest.
-# Re-include the dir + everything under it; data/* above excludes
-# all other top-level entries in data/.
+# Ignore children under root-level `data/` instead of ignoring the `data/`
+# directory itself, so later negation rules can re-include selected paths.
+# Git cannot re-include files inside a directory whose parent directory is
+# excluded as a whole. See `man gitignore`.
+data/*
+
+# Keep product-level deterministic evaluation corpus in git.
+!data/
 !data/test_corpus/
 !data/test_corpus/**
+
+# Keep eval report directory, but not generated reports.
+!reports/
+!reports/eval/
+!reports/eval/.gitkeep
+reports/eval/*.json
+
+# Local imports / temporary artifacts.
+.imports/
+.local-artifacts/
+.chatgpt-export/
+autotreegen_snapshot.zip
+autotreegen_test_tree_corpus_trees1_20_complete.zip
 
 # ---- Логи и временные файлы ----
 *.log

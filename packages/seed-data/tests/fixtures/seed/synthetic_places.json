@@ -1,0 +1,72 @@
+[
+  {
+    "old_name": "TestBrest-Litovsk",
+    "old_name_local": "ТестБрест",
+    "old_name_yiddish": "טסטבריסק",
+    "modern_name": "TestBrest",
+    "modern_country": "TestBelarus",
+    "old_jurisdiction": [{ "period": "1795-1917", "name": "Synthetic Empire" }],
+    "alternative_spellings": [],
+    "lat_lon": [52.0976, 23.7341],
+    "coordinate_precision": "exact_or_high_confidence",
+    "associated_communities": ["synthetic"],
+    "place_group": "synthetic",
+    "source_notes": "Synthetic fixture for CI smoke coverage."
+  },
+  {
+    "old_name": "TestKishinev",
+    "old_name_local": "ТестКишинёв",
+    "old_name_yiddish": null,
+    "modern_name": "TestChisinau",
+    "modern_country": "TestMoldova",
+    "old_jurisdiction": [{ "period": "1812-1917", "name": "Synthetic Empire" }],
+    "alternative_spellings": [],
+    "lat_lon": [47.0105, 28.8638],
+    "coordinate_precision": "verified_city_seed",
+    "associated_communities": ["synthetic"],
+    "place_group": "synthetic",
+    "source_notes": "Synthetic."
+  },
+  {
+    "old_name": "TestLwow",
+    "old_name_local": "ТестЛьвів",
+    "old_name_yiddish": null,
+    "modern_name": "TestLviv",
+    "modern_country": "TestUkraine",
+    "old_jurisdiction": [{ "period": "1772-1918", "name": "Synthetic Empire" }],
+    "alternative_spellings": [],
+    "lat_lon": [49.8397, 24.0297],
+    "coordinate_precision": "approximate_seed",
+    "associated_communities": ["synthetic"],
+    "place_group": "synthetic",
+    "source_notes": "Synthetic."
+  },
+  {
+    "old_name": "TestVilna",
+    "old_name_local": "ТестВільня",
+    "old_name_yiddish": null,
+    "modern_name": "TestVilnius",
+    "modern_country": "TestLithuania",
+    "old_jurisdiction": [{ "period": "1795-1917", "name": "Synthetic Empire" }],
+    "alternative_spellings": [],
+    "lat_lon": [54.6872, 25.2797],
+    "coordinate_precision": "approximate_seed",
+    "associated_communities": ["synthetic"],
+    "place_group": "synthetic",
+    "source_notes": "Synthetic."
+  },
+  {
+    "old_name": "TestPlaceNoCoords",
+    "old_name_local": null,
+    "old_name_yiddish": null,
+    "modern_name": "TestModernNoCoords",
+    "modern_country": "TestUnknown",
+    "old_jurisdiction": [],
+    "alternative_spellings": [],
+    "lat_lon": [],
+    "coordinate_precision": "approximate_seed",
+    "associated_communities": [],
+    "place_group": "synthetic",
+    "source_notes": "Edge case: empty lat_lon array."
+  }
+]

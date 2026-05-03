@@ -63,6 +63,7 @@ from shared_models.orm import (
     Source,
     Tree,
 )
+from shared_models.orm.completeness_assertion import sealed_scopes_for_person
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -290,6 +291,15 @@ async def compute_hypothesis(
     if subject_a is None or subject_b is None:
         return None
 
+    # Phase 15.11c (ADR-0082): skip generation если хоть одна сторона
+    # уже опечатана для соответствующего scope'а. Person-only гипотезы
+    # (PARENT_CHILD / SIBLINGS / MARRIAGE) — DUPLICATE_SOURCE/PLACE
+    # не имеют scope-семантики, так что skip их не касается.
+    if subject_type is HypothesisSubjectType.PERSON and await _is_blocked_by_seal(
+        session, a_id=a_id, b_id=b_id, hypothesis_type=hypothesis_type
+    ):
+        return None
+
     # 3. DNA-aggregate (Phase 7.3.1, ADR-0023). Грузим только для person-пар:
     # SOURCE / PLACE гипотезы DNA-evidence не имеют. None → DNA rule silent.
     dna_evidence: dict[str, Any] | None = None
@@ -472,6 +482,43 @@ async def _fetch_subject(
         return await _place_to_subject(session, subject_id)
     # FAMILY support — Phase 7.x.
     return None
+
+
+# Phase 15.11c (ADR-0082): scope'ы, опечатывание которых блокирует
+# генерацию гипотезы соответствующего типа. PARENT_CHILD-направление
+# не сохраняется в canonicalize'нутом (a, b) — поэтому скип на ЛЮБОМ
+# из четырёх seal'ов (parents/children любой стороны), что покрывает
+# обе возможные интерпретации направления.
+_HYPOTHESIS_TYPE_TO_BLOCKING_SCOPES: dict[HypothesisType, tuple[str, ...]] = {
+    HypothesisType.SIBLINGS: ("siblings",),
+    HypothesisType.MARRIAGE: ("spouses",),
+    HypothesisType.PARENT_CHILD: ("parents", "children"),
+}
+
+
+async def _is_blocked_by_seal(
+    session: AsyncSession,
+    *,
+    a_id: uuid.UUID,
+    b_id: uuid.UUID,
+    hypothesis_type: HypothesisType,
+) -> bool:
+    """Возвращает ``True`` если соответствующий scope опечатан для любой стороны.
+
+    Используется ``compute_hypothesis()`` чтобы не генерировать гипотезу,
+    которая противоречит уже-зафиксированному owner'ом утверждению
+    «все siblings/spouses/parents/children X известны». Симметрично
+    обрабатывает обе стороны пары; для PARENT_CHILD проверяет parents+children
+    (canonical-order не сохраняет направление).
+    """
+    blocking_scopes = _HYPOTHESIS_TYPE_TO_BLOCKING_SCOPES.get(hypothesis_type)
+    if not blocking_scopes:
+        return False
+    a_sealed = await sealed_scopes_for_person(session, a_id)
+    b_sealed = await sealed_scopes_for_person(session, b_id)
+    a_values = {s.value for s in a_sealed}
+    b_values = {s.value for s in b_sealed}
+    return any(scope in a_values or scope in b_values for scope in blocking_scopes)
 
 
 def _compose_with_default_rules(

@@ -51,6 +51,7 @@ from shared_models.orm import (
     Tree,
     User,
 )
+from shared_models.orm.completeness_assertion import sealed_scopes_for_person
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
@@ -342,11 +343,36 @@ def _build_system_prompt(
     anchor_label: str,
     person_count: int,
     anchor_relations: str,
+    sealed_scopes_note: str = "",
 ) -> str:
-    return _SYSTEM_PROMPT_TEMPLATE.format(
+    base = _SYSTEM_PROMPT_TEMPLATE.format(
         anchor_label=anchor_label,
         person_count=person_count,
         anchor_relations=anchor_relations or "- (no close relations indexed)",
+    )
+    # Phase 15.11c: append опечатанные scope'ы как явное do-not-suggest
+    # указание для LLM. Пусто → ничего не добавляется (нет лишнего шума
+    # для деревьев без active assertions).
+    if sealed_scopes_note:
+        return f"{base}\n\n{sealed_scopes_note}"
+    return base
+
+
+def _format_sealed_scopes(sealed: frozenset[str]) -> str:
+    """Аннотация для system-prompt'а: какие scope'ы анкора уже опечатаны.
+
+    Phase 15.11c (ADR-0082): LLM получает явное «do-not-suggest»-указание
+    для исчерпанных scope'ов, чтобы не предлагать «search for another
+    sibling/spouse/parent/child» когда owner уже зафиксировал полноту.
+    Пустой ``frozenset`` → пустая строка (chat'у нечего добавить в prompt).
+    """
+    if not sealed:
+        return ""
+    listed = ", ".join(sorted(sealed))
+    return (
+        f"Sealed scopes for anchor: {listed}. "
+        "Do NOT suggest searching for additional members of these scopes "
+        "(owner has marked them exhaustive)."
     )
 
 
@@ -464,10 +490,15 @@ async def chat_turn(
     anchor_label = _person_label(tree_ctx.persons.get(anchor_id))
     person_count = len(tree_ctx.persons)
     anchor_relations = _format_anchor_relations(anchor_id=anchor_id, tree=tree_ctx)
+    # Phase 15.11c: query sealed scopes для анкора (одним SQL); пусто если
+    # owner ничего не закреплял. Передаём как готовый prompt-fragment,
+    # чтобы _build_system_prompt оставался чистым строко-форматтером.
+    sealed_for_anchor = await sealed_scopes_for_person(session, anchor_id)
     system_prompt = _build_system_prompt(
         anchor_label=anchor_label,
         person_count=person_count,
         anchor_relations=anchor_relations,
+        sealed_scopes_note=_format_sealed_scopes(frozenset(s.value for s in sealed_for_anchor)),
     )
 
     # Commit user-side state; assistant-side flushed после стрима.
