@@ -18,9 +18,15 @@ Public API:
   BFS по структуре дерева, возвращающий kind/degree/via/twin-flag для
   пары (ego, target). Вход — ``FamilyTraversal`` snapshot, заполняемый
   caller'ом из БД. См. ADR-0068.
+- ``run_tree`` (Phase 26.1) — top-level engine entrypoint для evaluation
+  harness. Принимает loaded tree JSON, возвращает dict в форме
+  ``EngineOutput``. Phase 26.1 baseline без реальных детекторов; Phase 26.2+
+  подключит ``detectors/``. См. ADR-0084.
+- ``EngineOutput`` / ``REQUIRED_OUTPUT_KEYS`` / ``validate_output`` —
+  output contract (Phase 26.1, ADR-0084).
 
 См. README.md, docs/adr/0016-inference-engine-architecture.md, ADR-0065,
-ADR-0068.
+ADR-0068, ADR-0084.
 """
 
 from inference_engine.aggregation import (
@@ -29,6 +35,12 @@ from inference_engine.aggregation import (
     aggregate_confidence,
 )
 from inference_engine.composer import compose_hypothesis
+from inference_engine.engine import run_tree
+from inference_engine.output_schema import (
+    REQUIRED_OUTPUT_KEYS,
+    EngineOutput,
+    validate_output,
+)
 from inference_engine.rules.base import InferenceRule
 from inference_engine.rules.registry import (
     RuleAlreadyRegisteredError,
@@ -47,7 +59,9 @@ from inference_engine.types import (
 )
 
 __all__ = [
+    "REQUIRED_OUTPUT_KEYS",
     "AggregatedConfidence",
+    "EngineOutput",
     "Evidence",
     "EvidenceDirection",
     "Hypothesis",
@@ -62,5 +76,7 @@ __all__ = [
     "compose_hypothesis",
     "get_rule",
     "register_rule",
+    "run_tree",
     "unregister_rule",
+    "validate_output",
 ]

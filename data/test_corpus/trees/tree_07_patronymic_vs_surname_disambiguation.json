@@ -1,0 +1,311 @@
+{
+  "tree_id": "tree_07_patronymic_vs_surname_disambiguation",
+  "category": "name_parsing_patronymic_surname",
+  "complexity": "medium",
+  "population_context": "Mixed Ashkenazi + Slavic",
+  "scope_description": "4-generation Eastern European family with Russian Empire/Soviet records where patronymics are incorrectly parsed as surnames, creating duplicate profiles and false lineages.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR AutoTreeGenSyntheticCorpus\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Anna /Moiseyevich/\n1 SEX F\n1 BIRT\n2 DATE 1970\n2 PLAC Kyiv, Ukrainian SSR\n1 NOTE ERROR: Moiseyevich imported as surname; should be patronymic.\n1 FAMC @F1@\n0 @I2@ INDI\n1 NAME Anna Moiseevna /Zhitnitsky/\n1 SEX F\n1 BIRT\n2 DATE 1970\n2 PLAC Kyiv, Ukrainian SSR\n1 NOTE Duplicate candidate for I1; correct surname Zhitnitsky.\n1 FAMC @F1@\n0 @I3@ INDI\n1 NAME Moisey Zelmanov /Zhitnitsky/\n1 SEX M\n1 BIRT\n2 DATE ABT 1898\n2 PLAC Berdychiv, Kiev Governorate, Russian Empire\n1 DEAT\n2 DATE 1952\n2 PLAC Kyiv, Ukrainian SSR\n0 @I4@ INDI\n1 NAME Zelman Movshevich /Zhitnitsky/\n1 SEX M\n1 BIRT\n2 DATE ABT 1867\n2 PLAC Berdychiv Uyezd, Kiev Governorate, Russian Empire\n0 @I5@ INDI\n1 NAME Movsha /Zhitnitsky/\n1 SEX M\n1 BIRT\n2 DATE ABT 1839\n2 PLAC Berdychiv Uyezd, Kiev Governorate, Russian Empire\n0 @I6@ INDI\n1 NAME Ivan Ivanovich /Ivanovich/\n1 SEX M\n1 BIRT\n2 DATE 1901\n2 PLAC Poltava Governorate, Russian Empire\n1 NOTE ERROR: patronymic Ivanovich duplicated as surname.\n0 @I7@ INDI\n1 NAME Ivan Ivanovich /Honcharenko/\n1 SEX M\n1 BIRT\n2 DATE 1901\n2 PLAC Poltava Governorate, Russian Empire\n1 NOTE Correct Slavic profile; duplicate of I6.\n0 @I8@ INDI\n1 NAME Chana bas Moshe /Zhitnitsky/\n1 SEX F\n1 BIRT\n2 DATE ABT 1875\n2 PLAC Berdychiv, Kiev Governorate\n1 NOTE Hebrew relationship phrase bas Moshe must not become surname Basmoshe.\n0 @I9@ INDI\n1 NAME Chana /Basmoshe/\n1 SEX F\n1 BIRT\n2 DATE ABT 1875\n2 PLAC Berdychiv, Kiev Governorate\n1 NOTE ERROR: Hebrew patronymic phrase imported as surname.\n0 @F1@ FAM\n1 HUSB @I10@\n1 WIFE @I11@\n1 CHIL @I1@\n1 CHIL @I2@\n0 @I10@ INDI\n1 NAME Lev /Katz/\n1 SEX M\n0 @I11@ INDI\n1 NAME Sura Moiseevna /Zhitnitsky/\n1 SEX F\n1 FAMC @F2@\n0 @F2@ FAM\n1 HUSB @I3@\n1 WIFE @I12@\n1 CHIL @I11@\n0 @I12@ INDI\n1 NAME Lidia /Katz/\n1 SEX F\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_701",
+      "match_name": "Anonymized Zhitnitsky Cousin",
+      "platform": "AncestryDNA",
+      "shared_cm": 118,
+      "longest_segment": 28,
+      "segment_count": 11,
+      "shared_matches_with": ["dna_702", "dna_703"],
+      "expected_link": "via Zhitnitsky/Katz branch; supports I2 not false surname Moiseyevich"
+    },
+    {
+      "match_id": "dna_702",
+      "match_name": "Anonymized Katz Cousin",
+      "platform": "MyHeritage",
+      "shared_cm": 64,
+      "longest_segment": 18,
+      "segment_count": 7,
+      "shared_matches_with": ["dna_701"],
+      "expected_link": "Katz/Zhitnitsky shared cluster"
+    },
+    {
+      "match_id": "dna_703",
+      "match_name": "Anonymized Ukrainian Line Cousin",
+      "platform": "GEDmatch",
+      "shared_cm": 42,
+      "longest_segment": 14,
+      "segment_count": 5,
+      "shared_matches_with": ["dna_701"],
+      "expected_link": "Slavic Honcharenko line; helps merge I6/I7 but not with Jewish Zhitnitsky branch"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_701",
+      "type": "civil_BDM_birth",
+      "year": 1970,
+      "place": "Kyiv, Ukrainian SSR",
+      "transcription_excerpt": "Anna Moiseevna Zhitnitsky, daughter of Lev Katz and Sura Moiseevna Zhitnitsky.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms Moiseevna as patronymic, Zhitnitsky as surname."
+    },
+    {
+      "snippet_id": "src_702",
+      "type": "metric_book_birth",
+      "year": 1898,
+      "place": "Berdychiv, Kiev Governorate",
+      "transcription_excerpt": "Birth of Moisey, son of Zelman Movshevich Zhitnitsky and Sura Levitin.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms layered patronymics: Moisey is given name; Zelmanov later patronymic; Movshevich patronymic of Zelman."
+    },
+    {
+      "snippet_id": "src_703",
+      "type": "revision_list",
+      "year": 1858,
+      "place": "Berdychiv Uyezd, Kiev Governorate",
+      "transcription_excerpt": "Household: Movsha Zhitnitsky, son Zelman age 9. Surname repeated across household.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "supports Zhitnitsky as hereditary surname, not patronymic."
+    },
+    {
+      "snippet_id": "src_704",
+      "type": "orthodox_church_birth",
+      "year": 1901,
+      "place": "Poltava Governorate",
+      "transcription_excerpt": "Ivan Ivanovich Honcharenko, son of Ivan Honcharenko and Maria Dodatko.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms I6/I7 duplicate; Ivanovich is patronymic and Honcharenko surname."
+    },
+    {
+      "snippet_id": "src_705",
+      "type": "cemetery",
+      "year": 1932,
+      "place": "Berdychiv Jewish Cemetery",
+      "transcription_excerpt": "Chana daughter of Moshe Zhitnitsky. Hebrew inscription: חנה בת משה ז׳יטניצקי.",
+      "language": "he+ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms bas/bat Moshe is relationship phrase, not surname."
+    },
+    {
+      "snippet_id": "src_706",
+      "type": "online_tree",
+      "year": 2024,
+      "place": "GEDCOM import from public tree",
+      "transcription_excerpt": "Anna Moiseyevich shown as separate person; Chana Basmoshe shown as separate surname branch.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "expected_use": "low-confidence source creating duplicate identities."
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "I1",
+      "assertion": "Moiseyevich may be a separate surname branch.",
+      "scope": "surname",
+      "evidence": "GEDCOM import"
+    },
+    {
+      "person_id": "I9",
+      "assertion": "Basmoshe is a rare Jewish surname.",
+      "scope": "surname",
+      "evidence": "public tree"
+    },
+    {
+      "person_id": "I6",
+      "assertion": "Ivanovich family may be unrelated to Honcharenko.",
+      "scope": "duplicate_merge",
+      "evidence": "surname field differs"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "patronymic_confusion",
+      "subtype": "russian_patronymic_as_surname",
+      "person_id": "I1",
+      "expected_flag": "patronymic_ivanovich_as_surname",
+      "expected_confidence_when_flagged": 0.9
+    },
+    {
+      "type": "patronymic_confusion",
+      "subtype": "slavic_patronymic_as_surname",
+      "person_id": "I6",
+      "expected_flag": "patronymic_ivanovich_as_surname",
+      "expected_confidence_when_flagged": 0.9
+    },
+    {
+      "type": "patronymic_confusion",
+      "subtype": "hebrew_relationship_phrase_as_surname",
+      "person_id": "I9",
+      "expected_flag": "patronymic_matronymic_jewish_records_confusion",
+      "expected_confidence_when_flagged": 0.82
+    },
+    {
+      "type": "duplicate",
+      "persons": ["I1", "I2"],
+      "expected_flag": "patronymic_female_ending_duplicate_error",
+      "reason": "same person; one import uses patronymic as surname"
+    },
+    {
+      "type": "duplicate",
+      "persons": ["I6", "I7"],
+      "expected_flag": "patronymic_record_column_shift",
+      "reason": "same person; surname column was shifted/duplicated"
+    },
+    {
+      "type": "duplicate",
+      "persons": ["I8", "I9"],
+      "expected_flag": "relationship_phrase_not_surname",
+      "reason": "Chana bas Moshe imported as Chana Basmoshe"
+    }
+  ],
+  "expected_reasoning_chain": [
+    "Step 1: Parse GEDCOM and detect suspicious surname tokens ending in -evich/-ovich/-ovna/-evna and Hebrew bas/bat/ben phrases.",
+    "Step 2: Compare I1/I2: same given name, birth date, place, parents; classify Moiseevna/Moiseyevich as patronymic, not surname.",
+    "Step 3: Use src_701 to confirm correct identity Anna Moiseevna Zhitnitsky.",
+    "Step 4: Use src_702 and src_703 to confirm Zhitnitsky as hereditary surname across generations and Movshevich/Zelmanov as patronymics.",
+    "Step 5: Compare I6/I7 with src_704; merge as same person with surname Honcharenko and patronymic Ivanovich.",
+    "Step 6: Compare I8/I9 with src_705; classify bas Moshe as Hebrew relationship phrase and block Basmoshe surname branch.",
+    "Step 7: Downweight src_706 public tree because it introduced parsing errors.",
+    "Step 8: Use DNA matches to support branches but not as primary evidence for patronymic parsing.",
+    "Step 9: Output GEDCOM repair actions: move patronymics into patronymic field, preserve original name forms as aliases, merge duplicates with audit trail.",
+    "Step 10: Generate warning rules for future imports."
+  ],
+  "expected_confidence_outputs": {
+    "identity_I1_I2_same_person": {
+      "status": "Confirmed",
+      "confidence": 0.97,
+      "action": "merge_with_repair",
+      "canonical_name": "Anna Moiseevna Zhitnitsky"
+    },
+    "surname_Moiseyevich_for_I1": {
+      "status": "Rejected",
+      "confidence": 0.04,
+      "correct_classification": "patronymic"
+    },
+    "identity_I6_I7_same_person": {
+      "status": "Confirmed",
+      "confidence": 0.96,
+      "action": "merge_with_repair",
+      "canonical_name": "Ivan Ivanovich Honcharenko"
+    },
+    "surname_Ivanovich_for_I6": {
+      "status": "Rejected",
+      "confidence": 0.05,
+      "correct_classification": "patronymic"
+    },
+    "identity_I8_I9_same_person": {
+      "status": "Probable",
+      "confidence": 0.88,
+      "action": "merge_after_review",
+      "canonical_name": "Chana Zhitnitsky bat Moshe"
+    },
+    "surname_Basmoshe_for_I9": {
+      "status": "Rejected",
+      "confidence": 0.08,
+      "correct_classification": "Hebrew patronymic phrase"
+    },
+    "zhitnitsky_hereditary_surname": {
+      "status": "Confirmed",
+      "confidence": 0.95,
+      "reason": "revision list and metric book show surname continuity"
+    }
+  },
+  "expected_engine_flags": [
+    "patronymic_ivanovich_as_surname",
+    "patronymic_matronymic_jewish_records_confusion",
+    "patronymic_female_ending_duplicate_error",
+    "relationship_phrase_not_surname",
+    "patronymic_record_column_shift",
+    "public_tree_parsing_error",
+    "gedcom_repair_required"
+  ],
+  "ground_truth_annotations": {
+    "true_lineage": [
+      "Anna Moiseevna Zhitnitsky is same person as erroneous Anna Moiseyevich",
+      "Sura Moiseevna Zhitnitsky is daughter of Moisey Zelmanov Zhitnitsky",
+      "Moisey Zelmanov is son of Zelman Movshevich Zhitnitsky",
+      "Zelman Movshevich is son of Movsha Zhitnitsky",
+      "Ivan Ivanovich Honcharenko is same person as erroneous Ivan Ivanovich Ivanovich"
+    ],
+    "false_claims": [
+      "Moiseyevich is a hereditary surname in this branch",
+      "Ivanovich is a hereditary surname in this Slavic branch",
+      "Basmoshe is a separate surname branch",
+      "I1/I2 and I6/I7 should remain separate because surname fields differ"
+    ],
+    "intended_feature_coverage": [
+      "patronymic_vs_surname_disambiguation",
+      "GEDCOM_doctor",
+      "duplicate_detection",
+      "Hebrew_name_parser",
+      "Russian_Cyrillic_name_parser",
+      "source_authority_chain",
+      "surname_variant_engine",
+      "audit_trail_repair"
+    ]
+  },
+  "evaluation_assertions": [
+    {
+      "assertion_id": "eval_07_001",
+      "description": "Engine must merge I1 and I2 and classify Moiseevna/Moiseyevich as patronymic.",
+      "expected": {
+        "merge_pair": ["I1", "I2"],
+        "status": "Confirmed",
+        "canonical_surname": "Zhitnitsky"
+      }
+    },
+    {
+      "assertion_id": "eval_07_002",
+      "description": "Engine must merge I6 and I7 and classify Ivanovich as patronymic.",
+      "expected": {
+        "merge_pair": ["I6", "I7"],
+        "status": "Confirmed",
+        "canonical_surname": "Honcharenko"
+      }
+    },
+    {
+      "assertion_id": "eval_07_003",
+      "description": "Engine must not create Basmoshe surname branch.",
+      "expected": {
+        "person_id": "I9",
+        "surname_branch_created": false
+      }
+    },
+    {
+      "assertion_id": "eval_07_004",
+      "description": "Engine must preserve original name strings as aliases after repair.",
+      "expected": {
+        "audit_trail_required": true,
+        "aliases_preserved": true
+      }
+    },
+    {
+      "assertion_id": "eval_07_005",
+      "description": "Engine must confirm Zhitnitsky as hereditary surname across revision-list and metric-book evidence.",
+      "expected": {
+        "surname": "Zhitnitsky",
+        "status": "Confirmed",
+        "min_confidence": 0.95
+      }
+    }
+  ],
+  "phases_validated": [
+    "15.10_name_disambiguation",
+    "GEDCOM_doctor",
+    "duplicate_detection",
+    "metric_book_parser",
+    "revision_list_parser",
+    "24.x_evidence_summary",
+    "25.x_research_dialogue_engine"
+  ],
+  "version": "0.1",
+  "created_for": "AutoTreeGen Test Tree Corpus + Evaluation Suite"
+}
