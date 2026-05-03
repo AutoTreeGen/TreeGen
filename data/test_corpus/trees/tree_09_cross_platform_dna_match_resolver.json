@@ -1,0 +1,401 @@
+{
+  "tree_id": "tree_09_cross_platform_dna_match_resolver",
+  "category": "cross_platform_dna_identity_resolution",
+  "complexity": "high",
+  "population_context": "Ashkenazi endogamy + diaspora",
+  "scope_description": "5-generation Jewish diaspora tree where the same DNA relative appears on AncestryDNA, MyHeritage, GEDmatch and FTDNA under different names, while one same-surname match is a different person. Designed to validate match identity resolution, cluster mapping, platform conflict handling and endogamy-aware evidence scoring.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR AutoTreeGenSyntheticCorpus\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Synthetic Proband /Levitin/\n1 SEX M\n1 BIRT\n2 DATE 1971\n2 PLAC Melbourne, Victoria, Australia\n1 FAMC @F1@\n0 @I2@ INDI\n1 NAME Talia /Levitin/\n1 SEX F\n1 BIRT\n2 DATE 1948\n2 PLAC Haifa, Israel\n1 FAMC @F2@\n0 @I3@ INDI\n1 NAME Zalman /Levitin/\n1 SEX M\n1 BIRT\n2 DATE 1919\n2 PLAC Brest-Litovsk, Poland\n1 DEAT\n2 DATE 1995\n2 PLAC Tel Aviv, Israel\n1 FAMC @F3@\n0 @I4@ INDI\n1 NAME Abram /Levitin/\n1 SEX M\n1 BIRT\n2 DATE ABT 1888\n2 PLAC Brest-Litovsk, Grodno Governorate, Russian Empire\n1 FAMS @F3@\n0 @I5@ INDI\n1 NAME Freida /Friedman/\n1 SEX F\n1 BIRT\n2 DATE ABT 1890\n2 PLAC Brest-Litovsk, Grodno Governorate, Russian Empire\n1 FAMS @F3@\n0 @I6@ INDI\n1 NAME Sara /Levitin/\n1 SEX F\n1 BIRT\n2 DATE ABT 1892\n2 PLAC Brest-Litovsk, Grodno Governorate, Russian Empire\n1 FAMS @F4@\n0 @I7@ INDI\n1 NAME Meyer /Kaplan/\n1 SEX M\n1 BIRT\n2 DATE ABT 1887\n2 PLAC Kobryn, Grodno Governorate, Russian Empire\n1 FAMS @F4@\n0 @I8@ INDI\n1 NAME Rachel /Kaplan/\n1 SEX F\n1 BIRT\n2 DATE 1922\n2 PLAC Warsaw, Poland\n1 FAMC @F4@\n0 @I9@ INDI\n1 NAME Adrienne /Kaplan/\n1 SEX F\n1 BIRT\n2 DATE 1951\n2 PLAC New York, USA\n1 FAMC @F5@\n0 @I10@ INDI\n1 NAME Geoffrey /Michael/\n1 SEX M\n1 BIRT\n2 DATE 1950\n2 PLAC London, England\n1 NOTE Same DNA cluster but not same person as Adrienne Kaplan.\n0 @F3@ FAM\n1 HUSB @I4@\n1 WIFE @I5@\n1 CHIL @I3@\n1 CHIL @I6@\n0 @F4@ FAM\n1 HUSB @I7@\n1 WIFE @I6@\n1 CHIL @I8@\n0 @F5@ FAM\n1 WIFE @I8@\n1 CHIL @I9@\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_901",
+      "match_name": "A. Kaplan",
+      "platform": "AncestryDNA",
+      "platform_profile_id": "ancestry_AK_001",
+      "reported_tree_name": "Kaplan-Levitin Family Tree",
+      "email_hash": "hash_adrienne_main",
+      "kit_id": null,
+      "shared_cm": 149,
+      "longest_segment": 34,
+      "segment_count": 12,
+      "shared_matches_with": ["dna_902", "dna_903", "dna_905"],
+      "tree_surnames": ["Kaplan", "Levitin", "Friedman", "Kobryn", "Brest"],
+      "expected_link": "same person cluster as dna_902/dna_903; descends from Sara Levitin, sister of Abram Levitin"
+    },
+    {
+      "match_id": "dna_902",
+      "match_name": "Adrienne K.",
+      "platform": "MyHeritage",
+      "platform_profile_id": "mh_adrienne_k_77",
+      "reported_tree_name": "Brisk Kaplan Tree",
+      "email_hash": "hash_adrienne_main",
+      "kit_id": null,
+      "shared_cm": 151,
+      "longest_segment": 35,
+      "segment_count": 13,
+      "triangulated_segments": [
+        {
+          "chromosome": 5,
+          "start": 14300000,
+          "end": 29600000,
+          "cm": 33.8,
+          "triangulated_with": ["dna_903", "dna_905"]
+        },
+        {
+          "chromosome": 16,
+          "start": 4100000,
+          "end": 11900000,
+          "cm": 13.2,
+          "triangulated_with": ["dna_901"]
+        }
+      ],
+      "shared_matches_with": ["dna_901", "dna_903", "dna_905"],
+      "tree_surnames": ["Kaplan", "Levitin", "Frydman", "Brest-Litovsk"],
+      "expected_link": "same person cluster as dna_901/dna_903"
+    },
+    {
+      "match_id": "dna_903",
+      "match_name": "AK GEDmatch",
+      "platform": "GEDmatch",
+      "platform_profile_id": "gedmatch_user_AK",
+      "email_hash": "hash_adrienne_main",
+      "kit_id": "T900901",
+      "shared_cm": 148,
+      "longest_segment": 34,
+      "segment_count": 12,
+      "shared_matches_with": ["dna_901", "dna_902", "dna_905"],
+      "tree_surnames": ["Levitin", "Kaplan"],
+      "expected_link": "same person cluster as dna_901/dna_902"
+    },
+    {
+      "match_id": "dna_904",
+      "match_name": "A. Kaplan",
+      "platform": "FamilyTreeDNA",
+      "platform_profile_id": "ftdna_AK_unrelated",
+      "email_hash": "hash_other_kaplan",
+      "kit_id": "B904904",
+      "shared_cm": 24,
+      "longest_segment": 9,
+      "segment_count": 5,
+      "shared_matches_with": ["dna_906"],
+      "tree_surnames": ["Kaplan", "Rosenberg", "Galicia"],
+      "expected_link": "same name but different person; should not merge with dna_901/902/903"
+    },
+    {
+      "match_id": "dna_905",
+      "match_name": "Geoff M.",
+      "platform": "MyHeritage",
+      "platform_profile_id": "mh_geoff_m_22",
+      "email_hash": "hash_geoff_main",
+      "kit_id": null,
+      "shared_cm": 96,
+      "longest_segment": 27,
+      "segment_count": 9,
+      "triangulated_segments": [
+        {
+          "chromosome": 5,
+          "start": 14350000,
+          "end": 29100000,
+          "cm": 32.1,
+          "triangulated_with": ["dna_902", "dna_903"]
+        }
+      ],
+      "shared_matches_with": ["dna_901", "dna_902", "dna_903"],
+      "tree_surnames": ["Michael", "Kaplan", "Levitin"],
+      "expected_link": "same Levitin/Kaplan cluster but distinct person from Adrienne Kaplan"
+    },
+    {
+      "match_id": "dna_906",
+      "match_name": "Rose K.",
+      "platform": "AncestryDNA",
+      "platform_profile_id": "ancestry_rose_k",
+      "email_hash": "hash_rose_k",
+      "shared_cm": 18,
+      "longest_segment": 7,
+      "segment_count": 4,
+      "shared_matches_with": ["dna_904"],
+      "tree_surnames": ["Kaplan", "Rosenberg"],
+      "expected_link": "Galician Kaplan/Rosenberg cluster, not Levitin/Kaplan cluster"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_901",
+      "type": "metric_book_birth",
+      "year": 1888,
+      "place": "Brest-Litovsk, Grodno Governorate",
+      "transcription_excerpt": "Birth of Abram Levitin, son of Hersh Levitin and Freida Friedman.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "anchors Abram Levitin branch."
+    },
+    {
+      "snippet_id": "src_902",
+      "type": "metric_book_birth",
+      "year": 1892,
+      "place": "Brest-Litovsk, Grodno Governorate",
+      "transcription_excerpt": "Birth of Sara Levitin, daughter of Hersh Levitin and Freida Friedman.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms Sara Levitin as sister of Abram; key link to Kaplan descendants."
+    },
+    {
+      "snippet_id": "src_903",
+      "type": "civil_BDM_marriage",
+      "year": 1916,
+      "place": "Kobryn / Brest region",
+      "transcription_excerpt": "Marriage of Meyer Kaplan of Kobryn and Sara Levitin of Brest-Litovsk, daughter of Hersh Levitin.",
+      "language": "ru+pl",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "connects Kaplan line to Levitin branch."
+    },
+    {
+      "snippet_id": "src_904",
+      "type": "immigration_manifest",
+      "year": 1949,
+      "place": "New York, USA",
+      "transcription_excerpt": "Rachel Kaplan, born Warsaw, last residence London, contact: daughter Adrienne Kaplan.",
+      "language": "en",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "supports Rachel/Adrienne identity chain."
+    },
+    {
+      "snippet_id": "src_905",
+      "type": "online_tree",
+      "year": 2023,
+      "place": "Ancestry public tree",
+      "transcription_excerpt": "A. Kaplan and Geoff Michael merged as same person due to shared matches and overlapping surnames.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "expected_use": "should be flagged as erroneous same-cluster-not-same-person merge."
+    },
+    {
+      "snippet_id": "src_906",
+      "type": "online_tree",
+      "year": 2023,
+      "place": "FamilyTreeDNA user note",
+      "transcription_excerpt": "A. Kaplan FTDNA kit B904904 claims Levitin line, but tree shows Galician Rosenberg/Kaplan and no Brest/Levitin ancestors.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "expected_use": "conflicting same-name match; identity resolver should keep separate from Adrienne cluster."
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "dna_901",
+      "assertion": "A. Kaplan on Ancestry and Adrienne K. on MyHeritage are probably the same person.",
+      "scope": "match_identity_resolution",
+      "evidence": "same email hash, same tree surnames, same cM, same shared matches"
+    },
+    {
+      "person_id": "dna_904",
+      "assertion": "A. Kaplan on FTDNA is also the same person because name matches.",
+      "scope": "match_identity_resolution",
+      "evidence": "same displayed initials only"
+    },
+    {
+      "person_id": "dna_905",
+      "assertion": "Geoff M. may be the same person as Adrienne because he shares the same triangulated segment.",
+      "scope": "match_identity_resolution",
+      "evidence": "same DNA cluster"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "cross_platform_identity_error",
+      "subtype": "same_name_wrong_platform_merge",
+      "matches": ["dna_901", "dna_904"],
+      "expected_flag": "same_name_different_person",
+      "reason": "same display name but different email hash, cM level, shared matches, surnames and cluster"
+    },
+    {
+      "type": "cross_platform_identity_error",
+      "subtype": "same_cluster_not_same_person",
+      "matches": ["dna_901", "dna_905"],
+      "expected_flag": "shared_cluster_not_identity",
+      "reason": "triangulation supports same family cluster, not same individual"
+    },
+    {
+      "type": "dna_overinterpretation",
+      "match_id": "dna_906",
+      "expected_flag": "endogamy_small_segment_overuse",
+      "reason": "small Galician Kaplan/Rosenberg match should not be absorbed into Levitin/Kaplan cluster"
+    },
+    {
+      "type": "online_tree_error",
+      "snippet_id": "src_905",
+      "expected_flag": "public_tree_same_cluster_person_merge_error",
+      "reason": "public tree merged A. Kaplan and Geoff Michael due to shared matches"
+    },
+    {
+      "type": "surname_cluster_collision",
+      "matches": ["dna_901", "dna_904"],
+      "expected_flag": "surname_only_identity_merge_risk",
+      "reason": "Kaplan is common and cannot resolve identity alone"
+    }
+  ],
+  "expected_reasoning_chain": [
+    "Step 1: Parse GEDCOM and identify Abram Levitin and Sara Levitin as sibling candidates.",
+    "Step 2: Use src_901 and src_902 to confirm Abram and Sara share parents.",
+    "Step 3: Use src_903 to connect Sara Levitin to Meyer Kaplan; this creates expected Kaplan/Levitin descendant branch.",
+    "Step 4: Build cross-platform DNA identity graph from match names, email hashes, platform IDs, kit IDs, cM values, shared matches, tree surnames and triangulation.",
+    "Step 5: Cluster dna_901, dna_902 and dna_903 as same individual identity: Adrienne Kaplan, because email hash, cM, shared matches and tree surnames align.",
+    "Step 6: Keep dna_905 Geoff M. as distinct individual in same family cluster, because email/person profile differs but triangulated segment and shared matches support relatedness.",
+    "Step 7: Reject merging dna_904 with Adrienne cluster: same display initials but different email hash, low cM, different shared matches and Galician Rosenberg/Kaplan tree.",
+    "Step 8: Apply Ashkenazi endogamy correction to dna_904/dna_906; keep as separate weak Galician Kaplan/Rosenberg cluster.",
+    "Step 9: Flag src_905 public tree merge as erroneous same-cluster-not-same-person.",
+    "Step 10: Output resolved match identities and relationship hypotheses for each platform match."
+  ],
+  "expected_confidence_outputs": {
+    "identity_cluster_Adrienne_Kaplan": {
+      "status": "Confirmed",
+      "confidence": 0.98,
+      "members": ["dna_901", "dna_902", "dna_903"],
+      "reason": "same email hash + consistent cM + shared matches + surnames + GEDmatch kit"
+    },
+    "identity_dna_905_same_as_Adrienne": {
+      "status": "Rejected",
+      "confidence": 0.09,
+      "reason": "same cluster but different person; distinct email/profile and lower cM"
+    },
+    "identity_dna_904_same_as_Adrienne": {
+      "status": "Rejected",
+      "confidence": 0.06,
+      "reason": "same display name only; evidence conflicts"
+    },
+    "relationship_proband_to_Adrienne_cluster": {
+      "status": "Confirmed",
+      "confidence": 0.96,
+      "relationship_summary": "descendant of Sara Levitin, sister of proband's Levitin ancestor"
+    },
+    "relationship_proband_to_Geoff_Michael": {
+      "status": "Probable",
+      "confidence": 0.82,
+      "relationship_summary": "same Levitin/Kaplan collateral cluster; exact branch still requires archive/tree confirmation"
+    },
+    "cluster_dna_904_dna_906": {
+      "status": "Hypothesis",
+      "confidence": 0.46,
+      "relationship_summary": "separate Galician Kaplan/Rosenberg cluster; weak endogamous signal"
+    }
+  },
+  "expected_engine_flags": [
+    "same_name_different_person",
+    "shared_cluster_not_identity",
+    "surname_only_identity_merge_risk",
+    "public_tree_same_cluster_person_merge_error",
+    "endogamy_small_segment_overuse",
+    "cross_platform_identity_resolved",
+    "kit_id_email_hash_match_confirmed"
+  ],
+  "ground_truth_annotations": {
+    "true_lineage": [
+      "Synthetic Proband Levitin",
+      "Talia Levitin",
+      "Zalman Levitin",
+      "Abram Levitin + Freida Friedman",
+      "Sara Levitin, sister of Abram, married Meyer Kaplan",
+      "Rachel Kaplan",
+      "Adrienne Kaplan"
+    ],
+    "true_identity_clusters": [
+      {
+        "cluster_id": "identity_adrienne_kaplan",
+        "members": ["dna_901", "dna_902", "dna_903"],
+        "same_person": true
+      },
+      {
+        "cluster_id": "identity_geoff_michael",
+        "members": ["dna_905"],
+        "same_person_as_adrienne": false,
+        "same_family_cluster": true
+      },
+      {
+        "cluster_id": "identity_other_a_kaplan",
+        "members": ["dna_904"],
+        "same_person_as_adrienne": false,
+        "same_family_cluster": false
+      }
+    ],
+    "false_claims": [
+      "All A. Kaplan matches across platforms are the same person.",
+      "Geoff M. is same person as Adrienne because he triangulates on same segment.",
+      "Kaplan surname alone proves identity.",
+      "Small dna_906 match belongs to the Levitin/Kaplan cluster."
+    ],
+    "intended_feature_coverage": [
+      "cross_platform_dna_match_resolver",
+      "same_person_detector",
+      "same_cluster_not_same_person",
+      "shared_match_graph",
+      "triangulation_interpretation",
+      "surname_collision_detection",
+      "endogamy_correction",
+      "archive_tree_dna_correlation"
+    ]
+  },
+  "evaluation_assertions": [
+    {
+      "assertion_id": "eval_09_001",
+      "description": "Engine must cluster dna_901/dna_902/dna_903 as same person.",
+      "expected": {
+        "identity_cluster": ["dna_901", "dna_902", "dna_903"],
+        "status": "Confirmed",
+        "min_confidence": 0.95
+      }
+    },
+    {
+      "assertion_id": "eval_09_002",
+      "description": "Engine must keep dna_905 as same family cluster but different person.",
+      "expected": {
+        "match_id": "dna_905",
+        "same_person_as": "dna_901",
+        "expected": false,
+        "same_family_cluster": true
+      }
+    },
+    {
+      "assertion_id": "eval_09_003",
+      "description": "Engine must reject dna_904 as same person as Adrienne cluster.",
+      "expected": {
+        "match_id": "dna_904",
+        "same_person_as_cluster": "identity_adrienne_kaplan",
+        "status": "Rejected",
+        "max_confidence": 0.15
+      }
+    },
+    {
+      "assertion_id": "eval_09_004",
+      "description": "Engine must confirm relationship to Adrienne cluster through Sara Levitin.",
+      "expected": {
+        "relationship": "proband_to_Adrienne_cluster",
+        "status": "Confirmed",
+        "min_confidence": 0.95
+      }
+    },
+    {
+      "assertion_id": "eval_09_005",
+      "description": "Engine must flag public tree same-cluster-person merge error.",
+      "expected": {
+        "snippet_id": "src_905",
+        "flag": "public_tree_same_cluster_person_merge_error"
+      }
+    }
+  ],
+  "phases_validated": [
+    "16.x_dna_cluster_interpretation",
+    "cross_platform_dna_resolver",
+    "15.10_name_disambiguation",
+    "24.x_evidence_summary",
+    "25.x_hypothesis_sandbox",
+    "archive_tree_dna_correlation",
+    "endogamy_correction"
+  ],
+  "version": "0.1",
+  "created_for": "AutoTreeGen Test Tree Corpus + Evaluation Suite"
+}

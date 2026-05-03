@@ -1,0 +1,2528 @@
+{
+  "harness_id": "autotreegen_eval_harness_v0_1",
+  "version": "0.1",
+  "generated_at_utc": "2026-05-02T16:17:04.442548+00:00",
+  "description": "Machine-readable expected-output harness for AutoTreeGen deterministic evaluation against Trees 01–20.",
+  "execution_model": {
+    "input": "Each tree JSON object is supplied independently to the AutoTreeGen engine.",
+    "required_outputs": [
+      "parsed_people_and_relationships",
+      "normalized_names",
+      "normalized_places",
+      "evidence_scores",
+      "relationship_statuses",
+      "engine_flags",
+      "merge_decisions",
+      "sealed_set_candidates",
+      "quarantined_claims",
+      "research_targets"
+    ],
+    "pass_fail_rule": "A tree passes when all evaluation_assertions pass and required expected_engine_flags are present unless the assertion explicitly permits alternative statuses.",
+    "scoring": {
+      "per_tree": {
+        "evaluation_assertions_weight": 0.7,
+        "expected_flags_weight": 0.2,
+        "schema_integrity_weight": 0.1
+      },
+      "overall_pass_threshold": 0.9,
+      "critical_failure_conditions": [
+        "Confirming a relationship expected to be Rejected with max_confidence <= 0.20",
+        "Merging a pair with auto_merge_allowed=false",
+        "Treating public-tree-only famous descent as Confirmed",
+        "Overwriting biological/social relationship type in NPE/adoption cases",
+        "Failing to preserve source provenance in GEDCOM safe merge"
+      ]
+    }
+  },
+  "required_schema_keys_per_tree": [
+    "tree_id",
+    "category",
+    "complexity",
+    "population_context",
+    "scope_description",
+    "input_gedcom_excerpt",
+    "input_dna_matches",
+    "input_archive_snippets",
+    "input_user_assertions",
+    "embedded_errors",
+    "expected_reasoning_chain",
+    "expected_confidence_outputs",
+    "expected_engine_flags",
+    "ground_truth_annotations",
+    "evaluation_assertions",
+    "phases_validated",
+    "version",
+    "created_for"
+  ],
+  "test_cases": [
+    {
+      "tree_number": 1,
+      "tree_id": "tree_01_pale_levitin_npe_resolution",
+      "input_file": "tree_01_pale_levitin_npe_resolution.json",
+      "category": "npe_via_dna",
+      "complexity": "high",
+      "population_context": "Ashkenazi",
+      "schema_integrity": {
+        "required_keys_present": false,
+        "missing_keys": ["ground_truth_annotations", "version", "created_for"]
+      },
+      "expected_engine_flags": [
+        "dna_vs_tree_contradiction",
+        "rabbinical_schneerson_to_baal_shem_tov",
+        "single_tree_only_low_confidence",
+        "ashkenazi_endogamy_multipath_review"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion": "Engine must not confirm I3 as biological father",
+          "expected": true
+        },
+        {
+          "assertion": "Engine must flag Schneerson bridge as high-severity fabrication",
+          "expected": true
+        },
+        {
+          "assertion": "Engine must preserve Levitin metric-book relationships as confirmed",
+          "expected": true
+        }
+      ],
+      "expected_confidence_outputs": {
+        "I4_child_of_I6_I7": "Confirmed 0.96 (metric book + place + chronology + GEDCOM consistency)",
+        "I6_child_of_I12_I13": "Confirmed 0.95 (birth record + revision list + name/patronymic consistency)",
+        "I1_child_of_I3": "Rejected 0.03 (DNA contradiction to recorded paternal comparator)",
+        "I12_child_of_I11": "Rejected 0.08 (fabrication pattern + no primary bridge + chronology weakness)",
+        "I1_link_to_Levitin_cluster": "Probable 0.88 (DNA cluster + shared matches + archive-consistent maternal line)"
+      },
+      "ground_truth_annotations": {}
+    },
+    {
+      "tree_number": 2,
+      "tree_id": "tree_02_mennonite_batensky_fictional_bridge",
+      "input_file": "tree_02_mennonite_batensky_fictional_bridge.json",
+      "category": "fictional_bridge_and_endogamy",
+      "complexity": "high",
+      "population_context": "Mixed Ukrainian Orthodox + Mennonite",
+      "schema_integrity": {
+        "required_keys_present": false,
+        "missing_keys": ["ground_truth_annotations", "version", "created_for"]
+      },
+      "expected_engine_flags": [
+        "fictional_bridge_ludmila_friesen",
+        "cross_religious_mennonite_orthodox_merge_risk",
+        "patronymic_ivanovich_as_surname",
+        "pedigree_collapse_mennonite_colony_founder_loop"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion": "Engine must reject Ludmila Friesen as mother of Hryhorii Batensky",
+          "expected": true
+        },
+        {
+          "assertion": "Engine must not delete Mennonite DNA cluster; classify as hypothesis",
+          "expected": true
+        },
+        {
+          "assertion": "Engine must parse Ivanovich as patronymic trap",
+          "expected": true
+        }
+      ],
+      "expected_confidence_outputs": {
+        "I2_child_of_I4_I5": "Confirmed 0.97 (close DNA + Orthodox record + GEDCOM chronology)",
+        "I4_child_of_I8": "Rejected 0.04 (primary-record context + fictional bridge + no source)",
+        "I1_link_to_Mennonite_cluster": "Hypothesis 0.52 (distant DNA + regional adjacency + endogamy correction)",
+        "I6_I7_Mennonite_identity": "Confirmed 0.95 (church register + place + surname cluster)"
+      },
+      "ground_truth_annotations": {}
+    },
+    {
+      "tree_number": 3,
+      "tree_id": "tree_03_friedman_raskes_identity_resolution",
+      "input_file": "tree_03_friedman_raskes_identity_resolution.json",
+      "category": "maiden_name_identity_resolution",
+      "complexity": "medium",
+      "population_context": "Ashkenazi",
+      "schema_integrity": {
+        "required_keys_present": false,
+        "missing_keys": ["ground_truth_annotations", "version", "created_for"]
+      },
+      "expected_engine_flags": [
+        "same_person_maiden_married_candidate",
+        "same_name_place_name_false_equivalence",
+        "surname_variant_cluster_match",
+        "duplicate_spouse_from_maiden_name"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion": "Engine must merge/suggest same person for I7 and I8, preserving aliases",
+          "expected": true
+        },
+        {
+          "assertion": "Engine must reject I10 same-person merge",
+          "expected": true
+        },
+        {
+          "assertion": "Engine must classify Friedman birth surname as lower confidence than Raskes maiden record",
+          "expected": true
+        }
+      ],
+      "expected_confidence_outputs": {
+        "I7_same_as_I8": "Confirmed 0.96 (marriage + birth + cemetery + name cluster + DNA triangulation)",
+        "I10_same_as_I7": "Rejected 0.12 (different locality + weak DNA + online-tree-only)",
+        "Raskes_as_maiden_name_for_Freida": "Confirmed 0.95 (primary marriage record + father-name + cemetery)",
+        "Friedman_as_birth_surname": "Hypothesis 0.48 (appears in child birth record but contradicted by marriage maiden name)"
+      },
+      "ground_truth_annotations": {}
+    },
+    {
+      "tree_number": 4,
+      "tree_id": "tree_04_voikhansky_kamenetsky_viral_tree_contamination",
+      "input_file": "tree_04_voikhansky_kamenetsky_viral_tree_contamination.json",
+      "category": "fabrication_detection_and_same_name_separation",
+      "complexity": "high",
+      "population_context": "Ashkenazi",
+      "schema_integrity": {
+        "required_keys_present": true,
+        "missing_keys": []
+      },
+      "expected_engine_flags": [
+        "pale_voikhansky_viral_tree_contamination",
+        "rabbinical_famous_line_bridge",
+        "online_tree_only_famous_descent",
+        "same_name_different_person",
+        "same_name_place_name_false_equivalence",
+        "endogamy_small_segment_overuse",
+        "person_in_wrong_jurisdiction_for_claim"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion_id": "eval_04_001",
+          "description": "Engine must reject I8 as father of I6.",
+          "expected": {
+            "relationship": "I8->I6",
+            "status": "Rejected",
+            "max_confidence": 0.2
+          }
+        },
+        {
+          "assertion_id": "eval_04_002",
+          "description": "Engine must confirm Dvora's father as Nakhman Kamenetsky when primary metric records are present.",
+          "expected": {
+            "relationship": "Nakhman_Kamenetsky->I6",
+            "status": "Confirmed",
+            "min_confidence": 0.95
+          }
+        },
+        {
+          "assertion_id": "eval_04_003",
+          "description": "Engine must block automatic merge of I6 and I9.",
+          "expected": {
+            "merge_pair": ["I6", "I9"],
+            "auto_merge_allowed": false
+          }
+        },
+        {
+          "assertion_id": "eval_04_004",
+          "description": "Engine must not treat small non-triangulated dna_404 as proof.",
+          "expected": {
+            "match_id": "dna_404",
+            "max_dna_evidence_score": 0.25
+          }
+        },
+        {
+          "assertion_id": "eval_04_005",
+          "description": "Engine must keep Kamenetsky surname cluster as Hypothesis while rejecting famous-rabbi direct descent.",
+          "expected": {
+            "surname_cluster_status": "Hypothesis",
+            "famous_line_status": "Rejected"
+          }
+        }
+      ],
+      "expected_confidence_outputs": {
+        "relationship_I6_daughter_of_Nakhman_Kamenetsky": {
+          "status": "Confirmed",
+          "confidence": 0.96,
+          "evidence": ["src_401", "src_403"],
+          "classes": ["archival_record", "name", "place", "time"]
+        },
+        "relationship_I6_daughter_of_Rabbi_Baruch_Ber_Kamenetsky_I8": {
+          "status": "Rejected",
+          "confidence": 0.08,
+          "evidence_against": ["src_401", "src_403"],
+          "flags": ["online_tree_only_famous_descent", "rabbinical_famous_line_bridge"]
+        },
+        "relationship_I4_child_of_I7_I6": {
+          "status": "Confirmed",
+          "confidence": 0.95,
+          "evidence": ["src_403"],
+          "classes": ["archival_record", "name", "place", "time"]
+        },
+        "duplicate_I6_I9": {
+          "status": "Conflict",
+          "confidence": 0.42,
+          "reason": "same name but father/place conflict; block merge"
+        },
+        "cluster_Leschinsky_Voikhansky_Kamenetsky": {
+          "status": "Probable",
+          "confidence": 0.78,
+          "reason": "DNA triangulation + surname/place cluster, endogamy corrected"
+        },
+        "famous_Rabbi_Kamenetsky_direct_descent": {
+          "status": "Rejected",
+          "confidence": 0.12,
+          "reason": "primary records point elsewhere; viral tree claim unsupported"
+        }
+      },
+      "ground_truth_annotations": {
+        "true_lineage": [
+          "I1 Test Proband Voikhansky",
+          "I2 Miriam Voikhansky",
+          "I3 Aron Voikhansky",
+          "I5 Yankel Nakhman Voikhansky + I4 Rakhla Rocha Leschinsky",
+          "I7 Chaim Leib Leschinsky + I6 Dvora Kamenetsky",
+          "Dvora's father: Nakhman Kamenetsky, not Rabbi Baruch Ber Kamenetsky"
+        ],
+        "false_claims": [
+          "I8 Rabbi Baruch Ber Kamenetsky is not father of I6",
+          "I6 and I9 are not safe duplicates",
+          "I7 and I10 are not safe duplicates",
+          "dna_404 does not prove a famous rabbinical line"
+        ],
+        "intended_feature_coverage": [
+          "fabrication_filter",
+          "same_name_different_person",
+          "duplicate_blocking",
+          "archive_vs_tree_conflict",
+          "Ashkenazi_endogamy_correction",
+          "source_authority_chain",
+          "rabbinical_fantasy_detection",
+          "Pale_jurisdiction_routing"
+        ]
+      }
+    },
+    {
+      "tree_number": 5,
+      "tree_id": "tree_05_brest_litovsk_holocaust_gap_reconstruction",
+      "input_file": "tree_05_brest_litovsk_holocaust_gap_reconstruction.json",
+      "category": "holocaust_gap_reconstruction",
+      "complexity": "high",
+      "population_context": "Ashkenazi",
+      "schema_integrity": {
+        "required_keys_present": true,
+        "missing_keys": []
+      },
+      "expected_engine_flags": [
+        "holocaust_perished_vs_survived_duplicate",
+        "holocaust_dp_camp_birthplace_default_error",
+        "holocaust_yizkor_book_family_group_overreach",
+        "rabbinical_unknown_wife_as_dynasty_daughter",
+        "same_name_different_person",
+        "record_likely_destroyed_not_absence_disproof",
+        "online_tree_conflict_with_primary_records"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion_id": "eval_05_001",
+          "description": "Engine must reject merge of Holocaust victim I4 with New York survivor I5.",
+          "expected": {
+            "merge_pair": ["I4", "I5"],
+            "auto_merge_allowed": false,
+            "status": "Rejected"
+          }
+        },
+        {
+          "assertion_id": "eval_05_002",
+          "description": "Engine must classify Yizkor source as locality/community evidence, not direct kinship proof.",
+          "expected": {
+            "snippet_id": "src_503",
+            "max_relationship_confidence_contribution": 0.25
+          }
+        },
+        {
+          "assertion_id": "eval_05_003",
+          "description": "Engine must use documented no-record-found as record-loss context, not disproof.",
+          "expected": {
+            "snippet_id": "src_507",
+            "negative_evidence_mode": "record_likely_destroyed"
+          }
+        },
+        {
+          "assertion_id": "eval_05_004",
+          "description": "Engine must confirm I2 as child of I3 and I4 using DP/immigration/DNA evidence.",
+          "expected": {
+            "relationship": "I2 child of I3/I4",
+            "status": "Confirmed",
+            "min_confidence": 0.95
+          }
+        },
+        {
+          "assertion_id": "eval_05_005",
+          "description": "Engine must reject famous-rabbinical bridge through I10.",
+          "expected": {
+            "person_id": "I10",
+            "status": "Rejected",
+            "max_confidence": 0.2
+          }
+        }
+      ],
+      "expected_confidence_outputs": {
+        "identity_I4_Moshe_Friedman_Brest_victim": {
+          "status": "Probable",
+          "confidence": 0.89,
+          "reason": "Yad Vashem spouse-submitted testimony + DP record + immigration widow status; no civil death record survives"
+        },
+        "identity_I5_Moshe_Friedman_New_York_survivor": {
+          "status": "Confirmed",
+          "confidence": 0.95,
+          "reason": "naturalization record with distinct birthplace/spouse/arrival path"
+        },
+        "merge_I4_I5": {
+          "status": "Rejected",
+          "confidence": 0.06,
+          "flags": ["holocaust_perished_vs_survived_duplicate", "same_name_different_person"]
+        },
+        "relationship_I2_child_of_I3_I4": {
+          "status": "Confirmed",
+          "confidence": 0.96,
+          "evidence": ["src_501", "src_504", "dna_501", "dna_502"]
+        },
+        "birthplace_I2_Munich_DP_Camp": {
+          "status": "Conflict",
+          "confidence": 0.41,
+          "reason": "DP registration may indicate birth/registration context; requires parsing event field carefully"
+        },
+        "famous_rabbinical_bridge_I10": {
+          "status": "Rejected",
+          "confidence": 0.11,
+          "flags": [
+            "holocaust_yizkor_book_family_group_overreach",
+            "rabbinical_unknown_wife_as_dynasty_daughter"
+          ]
+        },
+        "raskes_friedman_branch": {
+          "status": "Probable",
+          "confidence": 0.84,
+          "reason": "DNA cluster + DP/immigration records; older Brest records remain research target"
+        }
+      },
+      "ground_truth_annotations": {
+        "true_lineage": [
+          "I1 Research Proband Friedman",
+          "I2 David Friedman",
+          "I3 Chana Raskes + I4 Moshe Friedman",
+          "I6 Freida Raskes + I7 Yankel Raskes",
+          "I8 Leib Friedman + I9 Sura Levitin"
+        ],
+        "true_events": [
+          "I4 Moshe Friedman died during Holocaust in Brest/Brisk area, exact civil death record absent.",
+          "I5 Moshe Friedman is a different survivor from Pruzhany/New York.",
+          "I2 David Friedman was registered in Munich DP context; birthplace parsing must not overwrite all identity evidence without field validation."
+        ],
+        "false_claims": [
+          "I4 and I5 are the same person.",
+          "Yizkor book surname list proves direct parent-child relationships.",
+          "Unknown Daughter Famous Rabbi bridge is real.",
+          "No civil death record means Moshe did not die in Holocaust."
+        ],
+        "intended_feature_coverage": [
+          "Holocaust gap reconstruction",
+          "negative evidence handling",
+          "same-name victim/survivor separation",
+          "DP camp record parsing",
+          "Yizkor evidence limits",
+          "archive-vs-tree conflict",
+          "Ashkenazi DNA endogamy correction",
+          "famous-rabbi bridge rejection"
+        ]
+      }
+    },
+    {
+      "tree_number": 6,
+      "tree_id": "tree_06_rabbi_kamenetsky_hypothesis_not_confirmed",
+      "input_file": "tree_06_rabbi_kamenetsky_hypothesis_not_confirmed.json",
+      "category": "rabbinical_hypothesis_control",
+      "complexity": "high",
+      "population_context": "Ashkenazi",
+      "schema_integrity": {
+        "required_keys_present": true,
+        "missing_keys": []
+      },
+      "expected_engine_flags": [
+        "rabbinical_famous_line_bridge",
+        "online_tree_only_famous_descent",
+        "child_born_before_parent",
+        "same_name_place_name_false_equivalence",
+        "endogamy_small_segment_overuse",
+        "record_exists_not_yet_searched_or_not_conclusive",
+        "hypothesis_not_confirmed"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion_id": "eval_06_001",
+          "description": "Engine must not confirm famous Rabbi Kamenetsky descent.",
+          "expected": {
+            "claim": "famous_Rabbi_Kamenetsky_descent",
+            "allowed_statuses": ["Hypothesis", "Rejected"],
+            "forbidden_status": "Confirmed"
+          }
+        },
+        {
+          "assertion_id": "eval_06_002",
+          "description": "Engine must reject the asserted direct relationship to Rabbi Yaakov Kamenetsky due to chronology.",
+          "expected": {
+            "relationship": "I7->I5",
+            "status": "Rejected",
+            "max_confidence": 0.1
+          }
+        },
+        {
+          "assertion_id": "eval_06_003",
+          "description": "Engine must confirm I4 as child of I5 and I6.",
+          "expected": {
+            "relationship": "I4 child of I5/I6",
+            "status": "Confirmed",
+            "min_confidence": 0.95
+          }
+        },
+        {
+          "assertion_id": "eval_06_004",
+          "description": "Engine must keep I5 father I8 as Hypothesis only.",
+          "expected": {
+            "relationship": "I8->I5",
+            "status": "Hypothesis",
+            "max_confidence": 0.65
+          }
+        },
+        {
+          "assertion_id": "eval_06_005",
+          "description": "Engine must block I5/I10 merge.",
+          "expected": {
+            "merge_pair": ["I5", "I10"],
+            "auto_merge_allowed": false
+          }
+        },
+        {
+          "assertion_id": "eval_06_006",
+          "description": "Engine must downweight dna_604.",
+          "expected": {
+            "match_id": "dna_604",
+            "max_dna_evidence_score": 0.25
+          }
+        }
+      ],
+      "expected_confidence_outputs": {
+        "relationship_I4_child_of_I5_I6": {
+          "status": "Confirmed",
+          "confidence": 0.95,
+          "evidence": ["src_601", "src_602"],
+          "classes": ["archival_record", "name", "place", "time"]
+        },
+        "relationship_I5_son_of_I8_unknown_kamenetsky": {
+          "status": "Hypothesis",
+          "confidence": 0.48,
+          "reason": "damaged revision list and user placeholder; insufficient father identification"
+        },
+        "relationship_I5_descendant_of_Rabbi_Yaakov_Kamenetsky_I7": {
+          "status": "Rejected",
+          "confidence": 0.03,
+          "reason": "chronologically impossible in asserted form; copied tree only"
+        },
+        "kamenetsky_surname_cluster": {
+          "status": "Hypothesis",
+          "confidence": 0.62,
+          "reason": "surname + place + weak DNA cluster; no primary bridge to famous rabbinical line"
+        },
+        "leschinsky_kamenetsky_cluster": {
+          "status": "Probable",
+          "confidence": 0.78,
+          "reason": "metric marriage/birth records plus triangulated DNA support collateral family cluster"
+        },
+        "merge_I5_I10": {
+          "status": "Rejected",
+          "confidence": 0.18,
+          "reason": "similar name only; Podolia vs Minsk jurisdiction conflict"
+        },
+        "dna_604_famous_descendant_claim": {
+          "status": "Insufficient",
+          "confidence": 0.21,
+          "reason": "weak small-segment endogamous match"
+        }
+      },
+      "ground_truth_annotations": {
+        "true_lineage": [
+          "I1 Synthetic Proband Katz",
+          "I2 Lidia Katz",
+          "I3 Sura Levitin",
+          "I4 Rakhla Rocha Leschinsky",
+          "I5 Nakhman Kamenetsky + I6 Dvora Leschinsky"
+        ],
+        "true_statuses": [
+          "Rakhla Rocha child of Nakhman and Dvora is confirmed.",
+          "Nakhman Kamenetsky is a real ancestor in this synthetic tree.",
+          "Exact father of Nakhman remains unconfirmed.",
+          "Connection to famous Rabbi Kamenetsky line is not confirmed and asserted version is rejected."
+        ],
+        "false_claims": [
+          "Rabbi Yaakov Kamenetsky is father of Nakhman.",
+          "Rabbi Line Bridge Kamenetsky is documented.",
+          "Nakhman Kamenetsky from Podolia is automatically same as Nachman Kamieniec from Minsk.",
+          "Small-segment match with a famous-line claimant proves descent."
+        ],
+        "intended_feature_coverage": [
+          "hypothesis_sandbox",
+          "famous_rabbi_line_control",
+          "chronology_validation",
+          "same_name_place_resolution",
+          "Ashkenazi_endogamy_correction",
+          "archive_source_weighting",
+          "research_gap_tracking",
+          "sealed_set_prevention"
+        ]
+      }
+    },
+    {
+      "tree_number": 7,
+      "tree_id": "tree_07_patronymic_vs_surname_disambiguation",
+      "input_file": "tree_07_patronymic_vs_surname_disambiguation.json",
+      "category": "name_parsing_patronymic_surname",
+      "complexity": "medium",
+      "population_context": "Mixed Ashkenazi + Slavic",
+      "schema_integrity": {
+        "required_keys_present": true,
+        "missing_keys": []
+      },
+      "expected_engine_flags": [
+        "patronymic_ivanovich_as_surname",
+        "patronymic_matronymic_jewish_records_confusion",
+        "patronymic_female_ending_duplicate_error",
+        "relationship_phrase_not_surname",
+        "patronymic_record_column_shift",
+        "public_tree_parsing_error",
+        "gedcom_repair_required"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion_id": "eval_07_001",
+          "description": "Engine must merge I1 and I2 and classify Moiseevna/Moiseyevich as patronymic.",
+          "expected": {
+            "merge_pair": ["I1", "I2"],
+            "status": "Confirmed",
+            "canonical_surname": "Zhitnitsky"
+          }
+        },
+        {
+          "assertion_id": "eval_07_002",
+          "description": "Engine must merge I6 and I7 and classify Ivanovich as patronymic.",
+          "expected": {
+            "merge_pair": ["I6", "I7"],
+            "status": "Confirmed",
+            "canonical_surname": "Honcharenko"
+          }
+        },
+        {
+          "assertion_id": "eval_07_003",
+          "description": "Engine must not create Basmoshe surname branch.",
+          "expected": {
+            "person_id": "I9",
+            "surname_branch_created": false
+          }
+        },
+        {
+          "assertion_id": "eval_07_004",
+          "description": "Engine must preserve original name strings as aliases after repair.",
+          "expected": {
+            "audit_trail_required": true,
+            "aliases_preserved": true
+          }
+        },
+        {
+          "assertion_id": "eval_07_005",
+          "description": "Engine must confirm Zhitnitsky as hereditary surname across revision-list and metric-book evidence.",
+          "expected": {
+            "surname": "Zhitnitsky",
+            "status": "Confirmed",
+            "min_confidence": 0.95
+          }
+        }
+      ],
+      "expected_confidence_outputs": {
+        "identity_I1_I2_same_person": {
+          "status": "Confirmed",
+          "confidence": 0.97,
+          "action": "merge_with_repair",
+          "canonical_name": "Anna Moiseevna Zhitnitsky"
+        },
+        "surname_Moiseyevich_for_I1": {
+          "status": "Rejected",
+          "confidence": 0.04,
+          "correct_classification": "patronymic"
+        },
+        "identity_I6_I7_same_person": {
+          "status": "Confirmed",
+          "confidence": 0.96,
+          "action": "merge_with_repair",
+          "canonical_name": "Ivan Ivanovich Honcharenko"
+        },
+        "surname_Ivanovich_for_I6": {
+          "status": "Rejected",
+          "confidence": 0.05,
+          "correct_classification": "patronymic"
+        },
+        "identity_I8_I9_same_person": {
+          "status": "Probable",
+          "confidence": 0.88,
+          "action": "merge_after_review",
+          "canonical_name": "Chana Zhitnitsky bat Moshe"
+        },
+        "surname_Basmoshe_for_I9": {
+          "status": "Rejected",
+          "confidence": 0.08,
+          "correct_classification": "Hebrew patronymic phrase"
+        },
+        "zhitnitsky_hereditary_surname": {
+          "status": "Confirmed",
+          "confidence": 0.95,
+          "reason": "revision list and metric book show surname continuity"
+        }
+      },
+      "ground_truth_annotations": {
+        "true_lineage": [
+          "Anna Moiseevna Zhitnitsky is same person as erroneous Anna Moiseyevich",
+          "Sura Moiseevna Zhitnitsky is daughter of Moisey Zelmanov Zhitnitsky",
+          "Moisey Zelmanov is son of Zelman Movshevich Zhitnitsky",
+          "Zelman Movshevich is son of Movsha Zhitnitsky",
+          "Ivan Ivanovich Honcharenko is same person as erroneous Ivan Ivanovich Ivanovich"
+        ],
+        "false_claims": [
+          "Moiseyevich is a hereditary surname in this branch",
+          "Ivanovich is a hereditary surname in this Slavic branch",
+          "Basmoshe is a separate surname branch",
+          "I1/I2 and I6/I7 should remain separate because surname fields differ"
+        ],
+        "intended_feature_coverage": [
+          "patronymic_vs_surname_disambiguation",
+          "GEDCOM_doctor",
+          "duplicate_detection",
+          "Hebrew_name_parser",
+          "Russian_Cyrillic_name_parser",
+          "source_authority_chain",
+          "surname_variant_engine",
+          "audit_trail_repair"
+        ]
+      }
+    },
+    {
+      "tree_number": 8,
+      "tree_id": "tree_08_maiden_vs_married_name_resolution",
+      "input_file": "tree_08_maiden_vs_married_name_resolution.json",
+      "category": "maiden_married_name_resolution",
+      "complexity": "medium",
+      "population_context": "Ashkenazi",
+      "schema_integrity": {
+        "required_keys_present": true,
+        "missing_keys": []
+      },
+      "expected_engine_flags": [
+        "same_name_common_woman_maiden_married_confusion",
+        "public_tree_married_name_duplicate",
+        "weak_dna_mother_assignment_error",
+        "unsafe_name_equivalence",
+        "holocaust_yizkor_book_family_group_overreach",
+        "endogamy_small_segment_overuse",
+        "gedcom_spouse_duplicate_repair"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion_id": "eval_08_001",
+          "description": "Engine must merge I3 and I4 as same woman, not two wives.",
+          "expected": {
+            "merge_pair": ["I3", "I4"],
+            "status": "Confirmed",
+            "min_confidence": 0.95
+          }
+        },
+        {
+          "assertion_id": "eval_08_002",
+          "description": "Engine must reject Sura Markus as mother of Rivka.",
+          "expected": {
+            "relationship": "I10 mother of I3",
+            "status": "Rejected",
+            "max_confidence": 0.2
+          }
+        },
+        {
+          "assertion_id": "eval_08_003",
+          "description": "Engine must confirm Reizel Feldman as mother of Rivka.",
+          "expected": {
+            "relationship": "I5 mother of I3",
+            "status": "Confirmed",
+            "min_confidence": 0.95
+          }
+        },
+        {
+          "assertion_id": "eval_08_004",
+          "description": "Engine must block I5/I6 merge.",
+          "expected": {
+            "merge_pair": ["I5", "I6"],
+            "auto_merge_allowed": false
+          }
+        },
+        {
+          "assertion_id": "eval_08_005",
+          "description": "Engine must not use Yizkor list as direct kinship proof.",
+          "expected": {
+            "snippet_id": "src_806",
+            "max_relationship_confidence_contribution": 0.25
+          }
+        }
+      ],
+      "expected_confidence_outputs": {
+        "identity_I3_I4_same_person": {
+          "status": "Confirmed",
+          "confidence": 0.97,
+          "action": "merge_with_aliases",
+          "canonical_name": "Rivka/Rywka Rosenberg née Feldman"
+        },
+        "relationship_I3_child_of_I9_I5": {
+          "status": "Confirmed",
+          "confidence": 0.96,
+          "evidence": ["src_801", "src_804"],
+          "classes": ["archival_record", "name", "place", "time"]
+        },
+        "relationship_I3_child_of_I9_I10": {
+          "status": "Rejected",
+          "confidence": 0.07,
+          "reason": "primary records name Reizel Feldman; Markus evidence weak and indirect"
+        },
+        "identity_I5_I6_same_person": {
+          "status": "Conflict",
+          "confidence": 0.38,
+          "reason": "given-name similarity but surname/parent conflict; block merge"
+        },
+        "dna_803_mother_assignment": {
+          "status": "Insufficient",
+          "confidence": 0.22,
+          "reason": "small/endogamous DNA signal; cannot override birth record"
+        },
+        "src_806_yizkor_kinship_use": {
+          "status": "Rejected",
+          "confidence": 0.1,
+          "reason": "Yizkor surname list is locality/community clue only"
+        }
+      },
+      "ground_truth_annotations": {
+        "true_lineage": [
+          "I1 Synthetic Proband Rosenberg",
+          "I2 Esther Rosenberg",
+          "I3/I4 Rivka/Rywka Rosenberg née Feldman",
+          "I9 Abram Rosenberg + I5 Reizel Feldman",
+          "I7 Mordechai Feldman + I8 Chana Guttenberg"
+        ],
+        "false_claims": [
+          "I3 and I4 are separate wives",
+          "Sura Markus is mother of Rivka",
+          "Reizel Feldman and Rachel Katz are automatically same person",
+          "Yizkor book family-name proximity proves kinship"
+        ],
+        "intended_feature_coverage": [
+          "maiden_vs_married_name_resolution",
+          "female_identity_consolidation",
+          "GEDCOM_spouse_duplicate_repair",
+          "birth_record_mother_assignment",
+          "Yizkor_evidence_limits",
+          "DNA_vs_archive_weighting",
+          "Ashkenazi_endogamy_correction",
+          "alias_preservation"
+        ]
+      }
+    },
+    {
+      "tree_number": 9,
+      "tree_id": "tree_09_cross_platform_dna_match_resolver",
+      "input_file": "tree_09_cross_platform_dna_match_resolver.json",
+      "category": "cross_platform_dna_identity_resolution",
+      "complexity": "high",
+      "population_context": "Ashkenazi endogamy + diaspora",
+      "schema_integrity": {
+        "required_keys_present": true,
+        "missing_keys": []
+      },
+      "expected_engine_flags": [
+        "same_name_different_person",
+        "shared_cluster_not_identity",
+        "surname_only_identity_merge_risk",
+        "public_tree_same_cluster_person_merge_error",
+        "endogamy_small_segment_overuse",
+        "cross_platform_identity_resolved",
+        "kit_id_email_hash_match_confirmed"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion_id": "eval_09_001",
+          "description": "Engine must cluster dna_901/dna_902/dna_903 as same person.",
+          "expected": {
+            "identity_cluster": ["dna_901", "dna_902", "dna_903"],
+            "status": "Confirmed",
+            "min_confidence": 0.95
+          }
+        },
+        {
+          "assertion_id": "eval_09_002",
+          "description": "Engine must keep dna_905 as same family cluster but different person.",
+          "expected": {
+            "match_id": "dna_905",
+            "same_person_as": "dna_901",
+            "expected": false,
+            "same_family_cluster": true
+          }
+        },
+        {
+          "assertion_id": "eval_09_003",
+          "description": "Engine must reject dna_904 as same person as Adrienne cluster.",
+          "expected": {
+            "match_id": "dna_904",
+            "same_person_as_cluster": "identity_adrienne_kaplan",
+            "status": "Rejected",
+            "max_confidence": 0.15
+          }
+        },
+        {
+          "assertion_id": "eval_09_004",
+          "description": "Engine must confirm relationship to Adrienne cluster through Sara Levitin.",
+          "expected": {
+            "relationship": "proband_to_Adrienne_cluster",
+            "status": "Confirmed",
+            "min_confidence": 0.95
+          }
+        },
+        {
+          "assertion_id": "eval_09_005",
+          "description": "Engine must flag public tree same-cluster-person merge error.",
+          "expected": {
+            "snippet_id": "src_905",
+            "flag": "public_tree_same_cluster_person_merge_error"
+          }
+        }
+      ],
+      "expected_confidence_outputs": {
+        "identity_cluster_Adrienne_Kaplan": {
+          "status": "Confirmed",
+          "confidence": 0.98,
+          "members": ["dna_901", "dna_902", "dna_903"],
+          "reason": "same email hash + consistent cM + shared matches + surnames + GEDmatch kit"
+        },
+        "identity_dna_905_same_as_Adrienne": {
+          "status": "Rejected",
+          "confidence": 0.09,
+          "reason": "same cluster but different person; distinct email/profile and lower cM"
+        },
+        "identity_dna_904_same_as_Adrienne": {
+          "status": "Rejected",
+          "confidence": 0.06,
+          "reason": "same display name only; evidence conflicts"
+        },
+        "relationship_proband_to_Adrienne_cluster": {
+          "status": "Confirmed",
+          "confidence": 0.96,
+          "relationship_summary": "descendant of Sara Levitin, sister of proband's Levitin ancestor"
+        },
+        "relationship_proband_to_Geoff_Michael": {
+          "status": "Probable",
+          "confidence": 0.82,
+          "relationship_summary": "same Levitin/Kaplan collateral cluster; exact branch still requires archive/tree confirmation"
+        },
+        "cluster_dna_904_dna_906": {
+          "status": "Hypothesis",
+          "confidence": 0.46,
+          "relationship_summary": "separate Galician Kaplan/Rosenberg cluster; weak endogamous signal"
+        }
+      },
+      "ground_truth_annotations": {
+        "true_lineage": [
+          "Synthetic Proband Levitin",
+          "Talia Levitin",
+          "Zalman Levitin",
+          "Abram Levitin + Freida Friedman",
+          "Sara Levitin, sister of Abram, married Meyer Kaplan",
+          "Rachel Kaplan",
+          "Adrienne Kaplan"
+        ],
+        "true_identity_clusters": [
+          {
+            "cluster_id": "identity_adrienne_kaplan",
+            "members": ["dna_901", "dna_902", "dna_903"],
+            "same_person": true
+          },
+          {
+            "cluster_id": "identity_geoff_michael",
+            "members": ["dna_905"],
+            "same_person_as_adrienne": false,
+            "same_family_cluster": true
+          },
+          {
+            "cluster_id": "identity_other_a_kaplan",
+            "members": ["dna_904"],
+            "same_person_as_adrienne": false,
+            "same_family_cluster": false
+          }
+        ],
+        "false_claims": [
+          "All A. Kaplan matches across platforms are the same person.",
+          "Geoff M. is same person as Adrienne because he triangulates on same segment.",
+          "Kaplan surname alone proves identity.",
+          "Small dna_906 match belongs to the Levitin/Kaplan cluster."
+        ],
+        "intended_feature_coverage": [
+          "cross_platform_dna_match_resolver",
+          "same_person_detector",
+          "same_cluster_not_same_person",
+          "shared_match_graph",
+          "triangulation_interpretation",
+          "surname_collision_detection",
+          "endogamy_correction",
+          "archive_tree_dna_correlation"
+        ]
+      }
+    },
+    {
+      "tree_number": 10,
+      "tree_id": "tree_10_historical_place_jurisdiction_resolution",
+      "input_file": "tree_10_historical_place_jurisdiction_resolution.json",
+      "category": "historical_place_resolution",
+      "complexity": "high",
+      "population_context": "Mixed Ashkenazi + Mennonite + Slavic",
+      "schema_integrity": {
+        "required_keys_present": true,
+        "missing_keys": []
+      },
+      "expected_engine_flags": [
+        "modern_country_for_pre1917_record",
+        "partition_jurisdiction_confusion",
+        "old_name_used_for_wrong_period",
+        "danzig_gdansk_period_error",
+        "mennonite_colony_generic_ukraine_error",
+        "mennonite_jewish_boundary_error",
+        "modern_place_normalization_lost_jurisdiction",
+        "archive_routing_by_event_year_required"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion_id": "eval_10_001",
+          "description": "Engine must map Brest 1863 to Brest-Litovsk/Grodno Governorate, not modern Belarus-only routing.",
+          "expected": {
+            "person_id": "I7",
+            "historical_jurisdiction": "Grodno Governorate, Russian Empire",
+            "min_confidence": 0.95
+          }
+        },
+        {
+          "assertion_id": "eval_10_002",
+          "description": "Engine must map Koniuchy 1902 to Congress Poland/Russian Empire.",
+          "expected": {
+            "person_id": "I6",
+            "historical_jurisdiction": "Congress Poland, Russian Empire",
+            "min_confidence": 0.9
+          }
+        },
+        {
+          "assertion_id": "eval_10_003",
+          "description": "Engine must flag 1924 Ekaterinoslav/Russian Empire as period mismatch.",
+          "expected": {
+            "person_id": "I3",
+            "flag": "old_name_used_for_wrong_period"
+          }
+        },
+        {
+          "assertion_id": "eval_10_004",
+          "description": "Engine must map Danzig 1880 to German Empire/West Prussia and modern Gdańsk, Poland.",
+          "expected": {
+            "person_id": "I9",
+            "old_name": "Danzig",
+            "modern_name": "Gdańsk",
+            "historical_jurisdiction": "German Empire, Province of West Prussia"
+          }
+        },
+        {
+          "assertion_id": "eval_10_005",
+          "description": "Engine must route Molotschna 1845 through Mennonite colony/Taurida workflow.",
+          "expected": {
+            "person_id": "I10",
+            "place_group": "Mennonite colony",
+            "historical_jurisdiction": "Taurida Governorate, Russian Empire"
+          }
+        },
+        {
+          "assertion_id": "eval_10_006",
+          "description": "Engine must keep Mennonite Wiens/Friesen DNA cluster separate from Jewish Levitin branch unless bridge evidence appears.",
+          "expected": {
+            "claim": "mennonite_match_as_jewish_ancestor",
+            "status": "Rejected",
+            "max_confidence": 0.2
+          }
+        }
+      ],
+      "expected_confidence_outputs": {
+        "place_I7_Brest_1863": {
+          "status": "Confirmed",
+          "confidence": 0.97,
+          "corrected_place": {
+            "old_name": "Brest-Litovsk / Brisk",
+            "modern_name": "Brest",
+            "modern_country": "Belarus",
+            "historical_jurisdiction": "Grodno Governorate, Russian Empire"
+          }
+        },
+        "place_I6_Koniuchy_1902": {
+          "status": "Confirmed",
+          "confidence": 0.93,
+          "corrected_place": {
+            "old_name": "Koniuchy near Hrubieszów",
+            "modern_country": "Poland",
+            "historical_jurisdiction": "Congress Poland, Russian Empire"
+          }
+        },
+        "place_I3_1924_Dnipropetrovsk": {
+          "status": "Conflict",
+          "confidence": 0.88,
+          "reason": "GEDCOM uses Ekaterinoslav/Russian Empire label for Soviet-era 1924 event; corrected to Dnipropetrovsk region, Ukrainian SSR"
+        },
+        "place_I9_Danzig_1880": {
+          "status": "Confirmed",
+          "confidence": 0.96,
+          "corrected_place": {
+            "old_name": "Danzig",
+            "modern_name": "Gdańsk",
+            "modern_country": "Poland",
+            "historical_jurisdiction": "German Empire, Province of West Prussia"
+          }
+        },
+        "place_I10_Molotschna_1845": {
+          "status": "Confirmed",
+          "confidence": 0.95,
+          "corrected_place": {
+            "old_name": "Molotschna Mennonite Settlement",
+            "modern_name": "Molochansk / Molochna colony region",
+            "modern_country": "Ukraine",
+            "historical_jurisdiction": "Taurida Governorate, Russian Empire"
+          }
+        },
+        "mennonite_match_as_jewish_ancestor": {
+          "status": "Rejected",
+          "confidence": 0.12,
+          "reason": "Mennonite regional DNA cluster remains separate from Jewish Levitin branch absent marriage/adoption/conversion evidence"
+        }
+      },
+      "ground_truth_annotations": {
+        "true_place_mappings": [
+          "Brest 1863 -> Brest-Litovsk/Brisk, Grodno Governorate, Russian Empire; modern Brest, Belarus",
+          "Koniuchy 1902 -> Congress Poland/Russian Empire, Hrubieszów-area routing; modern Lubelskie, Poland",
+          "Dnipropetrovsk 1924 -> Ukrainian SSR/Soviet-era context, not Russian Empire Ekaterinoslav",
+          "Danzig 1880 -> German Empire/West Prussia; modern Gdańsk, Poland",
+          "Molotschna 1845 -> Mennonite Settlement, Taurida Governorate, Russian Empire; modern Molochansk region, Ukraine"
+        ],
+        "false_claims": [
+          "Modern country alone determines archive routing.",
+          "Danzig is always Germany.",
+          "Brest 1863 should use modern Belarus civil records only.",
+          "Molotschna does not need Mennonite colony workflow.",
+          "Mennonite DNA near Ekaterinoslav proves Jewish ancestor connection."
+        ],
+        "intended_feature_coverage": [
+          "historical_place_resolver",
+          "jurisdiction_by_event_year",
+          "archive_workflow_routing",
+          "old_modern_place_mapping",
+          "Mennonite_colony_context",
+          "DNA_population_boundary_control",
+          "public_tree_place_normalization_warning"
+        ]
+      }
+    },
+    {
+      "tree_number": 11,
+      "tree_id": "tree_11_unknown_father_npe_dna_contradiction",
+      "input_file": "tree_11_unknown_father_npe_dna_contradiction.json",
+      "category": "npe_unknown_parentage",
+      "complexity": "high",
+      "population_context": "Mixed Ashkenazi + Slavic",
+      "schema_integrity": {
+        "required_keys_present": true,
+        "missing_keys": []
+      },
+      "expected_engine_flags": [
+        "dna_vs_tree_parentage_contradiction",
+        "adoption_foster_guardian_as_parent",
+        "half_sibling_other_parent_branch_contamination",
+        "online_tree_contradicted_by_dna",
+        "zero_cm_social_family_not_biological",
+        "npe_privacy_safe_mode_required",
+        "sealed_set_biological_parentage_candidate"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion_id": "eval_11_001",
+          "description": "Engine must confirm Alexander Batensky as biological father.",
+          "expected": {
+            "relationship": "I4 biological father of I1",
+            "status": "Confirmed",
+            "min_confidence": 0.97
+          }
+        },
+        {
+          "assertion_id": "eval_11_002",
+          "description": "Engine must reject Ivan Danilov as biological father but retain him as adoptive/social father.",
+          "expected": {
+            "biological_relationship": {
+              "person": "I3",
+              "status": "Rejected",
+              "max_confidence": 0.1
+            },
+            "social_relationship": {
+              "person": "I3",
+              "status": "Confirmed",
+              "min_confidence": 0.9
+            }
+          }
+        },
+        {
+          "assertion_id": "eval_11_003",
+          "description": "Engine must confirm Yuri as paternal half-sibling.",
+          "expected": {
+            "relationship": "I5 paternal half sibling of I1",
+            "status": "Confirmed",
+            "min_confidence": 0.95
+          }
+        },
+        {
+          "assertion_id": "eval_11_004",
+          "description": "Engine must prevent Koltunova branch import into proband ancestry.",
+          "expected": {
+            "relationship": "I6 ancestor of I1",
+            "status": "Rejected",
+            "max_confidence": 0.1
+          }
+        },
+        {
+          "assertion_id": "eval_11_005",
+          "description": "Engine must enter NPE privacy-safe mode.",
+          "expected": {
+            "privacy_mode": "npe_sensitive",
+            "required": true
+          }
+        },
+        {
+          "assertion_id": "eval_11_006",
+          "description": "Engine must create sealed-set candidate for biological parentage.",
+          "expected": {
+            "sealed_set_candidate": true,
+            "claim": "I4 biological father of I1"
+          }
+        }
+      ],
+      "expected_confidence_outputs": {
+        "relationship_I4_biological_father_of_I1": {
+          "status": "Confirmed",
+          "confidence": 0.98,
+          "evidence": ["dna_1101", "dna_1102", "src_1103", "src_1104"],
+          "classes": ["DNA", "archival_record", "FAN_cluster", "time", "place"],
+          "sealed_set_candidate": true
+        },
+        "relationship_I3_biological_father_of_I1": {
+          "status": "Rejected",
+          "confidence": 0.04,
+          "reason": "DNA contradiction + adoption/name-change record; no biological evidence"
+        },
+        "relationship_I3_social_adoptive_father_of_I1": {
+          "status": "Confirmed",
+          "confidence": 0.94,
+          "evidence": ["src_1102"],
+          "relationship_type": "adoptive_or_social_father"
+        },
+        "relationship_I5_paternal_half_sibling_of_I1": {
+          "status": "Confirmed",
+          "confidence": 0.97,
+          "evidence": ["dna_1101", "src_1103"],
+          "relationship_type": "paternal_half_sibling"
+        },
+        "relationship_I6_ancestor_of_I1": {
+          "status": "Rejected",
+          "confidence": 0.03,
+          "reason": "Vera Koltunova is mother of paternal half-sibling, not mother/ancestor of proband"
+        },
+        "maternal_Zhitnitsky_cluster": {
+          "status": "Confirmed",
+          "confidence": 0.94,
+          "evidence": ["dna_1104", "dna_1105"],
+          "relationship_summary": "separate maternal branch"
+        }
+      },
+      "ground_truth_annotations": {
+        "true_lineage": [
+          "I1 Synthetic Proband",
+          "mother: I2 Tatyana Zhitnitsky",
+          "biological father: I4 Alexander Batensky",
+          "social/adoptive father: I3 Ivan Danilov",
+          "paternal half-sibling: I5 Yuri Batensky",
+          "paternal grandparents: I7 Gregory Batensky + I8 Matrona Dodatko"
+        ],
+        "false_claims": [
+          "Ivan Danilov is biological father because surname is Danilov",
+          "Yuri's maternal Koltunova line belongs to proband ancestry",
+          "Zero-cM social-family match supports biological Danilov line",
+          "Public GEDCOM parent assignment overrides DNA"
+        ],
+        "intended_feature_coverage": [
+          "NPE_mode",
+          "DNA_vs_tree_contradiction",
+          "paternal_half_sibling_detection",
+          "sealed_set_assertions",
+          "relationship_type_modeling",
+          "branch_contamination_prevention",
+          "privacy_safe_reporting",
+          "archive_DNA_correlation"
+        ]
+      }
+    },
+    {
+      "tree_number": 12,
+      "tree_id": "tree_12_ashkenazi_endogamy_multi_path_relationship",
+      "input_file": "tree_12_ashkenazi_endogamy_multi_path_relationship.json",
+      "category": "endogamy_multi_path_relationship",
+      "complexity": "high",
+      "population_context": "Ashkenazi endogamy",
+      "schema_integrity": {
+        "required_keys_present": true,
+        "missing_keys": []
+      },
+      "expected_engine_flags": [
+        "pedigree_collapse_ashkenazi_single_path_error",
+        "pedigree_collapse_endogamy_small_segment_overuse",
+        "public_tree_single_path_overcompression",
+        "multi_path_relationship_required",
+        "katz_feldman_cluster_not_noise",
+        "shared_match_cluster_split",
+        "triangulated_segments_support_distinct_paths"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion_id": "eval_12_001",
+          "description": "Engine must not force dna_1201 into one path.",
+          "expected": {
+            "match_id": "dna_1201",
+            "relationship_model": "multi_path",
+            "single_path_only_status": "Rejected"
+          }
+        },
+        {
+          "assertion_id": "eval_12_002",
+          "description": "Engine must assign Levitin-Friedman path as probable.",
+          "expected": {
+            "path": "Levitin_Friedman",
+            "status": "Probable",
+            "min_confidence": 0.75
+          }
+        },
+        {
+          "assertion_id": "eval_12_003",
+          "description": "Engine must assign Katz-Feldman path as probable.",
+          "expected": {
+            "path": "Katz_Feldman",
+            "status": "Probable",
+            "min_confidence": 0.75
+          }
+        },
+        {
+          "assertion_id": "eval_12_004",
+          "description": "Engine must reject dna_1206 as proof anchor.",
+          "expected": {
+            "match_id": "dna_1206",
+            "status": "Rejected",
+            "max_confidence": 0.2
+          }
+        },
+        {
+          "assertion_id": "eval_12_005",
+          "description": "Engine must flag public tree single-path overcompression.",
+          "expected": {
+            "snippet_id": "src_1205",
+            "flag": "public_tree_single_path_overcompression"
+          }
+        }
+      ],
+      "expected_confidence_outputs": {
+        "relationship_dna_1201_via_Levitin_Friedman": {
+          "status": "Probable",
+          "confidence": 0.82,
+          "evidence": ["dna_1202", "dna_1204", "src_1201", "src_1202"],
+          "path_role": "path_A"
+        },
+        "relationship_dna_1201_via_Katz_Feldman": {
+          "status": "Probable",
+          "confidence": 0.79,
+          "evidence": ["dna_1203", "dna_1205", "src_1203", "src_1204"],
+          "path_role": "path_B"
+        },
+        "relationship_dna_1201_single_path_only": {
+          "status": "Rejected",
+          "confidence": 0.18,
+          "reason": "two independent shared-match/triangulation clusters exist"
+        },
+        "combined_relationship_dna_1201": {
+          "status": "Probable",
+          "confidence": 0.88,
+          "relationship_model": "multi_path",
+          "note": "combined confidence reflects two probable paths but should not be reported as a single exact cousin relationship"
+        },
+        "dna_1206_as_proof_anchor": {
+          "status": "Rejected",
+          "confidence": 0.12,
+          "reason": "small-segment endogamy noise"
+        },
+        "src_1205_public_tree_claim": {
+          "status": "Rejected",
+          "confidence": 0.16,
+          "reason": "single-path overcompression"
+        }
+      },
+      "ground_truth_annotations": {
+        "true_relationship_model": "multi_path",
+        "true_paths": [
+          {
+            "path_id": "path_A_Levitin_Friedman",
+            "status": "Probable",
+            "via": ["Gersh Levitin", "Freida Friedman", "Sura Levitin/Boris Levitin collateral"]
+          },
+          {
+            "path_id": "path_B_Katz_Feldman",
+            "status": "Probable",
+            "via": ["Nuta Nahum Katz", "Tatiana Tiena Scherbatenko", "Lidia/Tamara Katz collateral"]
+          }
+        ],
+        "false_claims": [
+          "dna_1201 must be only Levitin",
+          "Katz-Feldman shared matches are noise",
+          "dna_1206 proves a third path",
+          "Total cM can be interpreted without endogamy correction"
+        ],
+        "intended_feature_coverage": [
+          "endogamy_aware_relationship_engine",
+          "multi_path_relationship_modeling",
+          "shared_match_cluster_split",
+          "triangulation_path_assignment",
+          "DNA_vs_public_tree_conflict",
+          "archive_supported_collateral_paths",
+          "confidence_combination_algebra"
+        ]
+      }
+    },
+    {
+      "tree_number": 13,
+      "tree_id": "tree_13_mennonite_colony_founder_loop_ambiguity",
+      "input_file": "tree_13_mennonite_colony_founder_loop_ambiguity.json",
+      "category": "mennonite_endogamy_founder_loop",
+      "complexity": "high",
+      "population_context": "Mennonite + Slavic adjacency",
+      "schema_integrity": {
+        "required_keys_present": true,
+        "missing_keys": []
+      },
+      "expected_engine_flags": [
+        "fictional_bridge_person",
+        "mennonite_jewish_or_slavic_boundary_error",
+        "pedigree_collapse_mennonite_colony_founder_loop",
+        "same_name_different_person_colony_context",
+        "pedigree_collapse_endogamy_small_segment_overuse",
+        "online_tree_fictional_bridge",
+        "direct_pedigree_insertion_blocked"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion_id": "eval_13_001",
+          "description": "Engine must reject Ludmila Friesen fictional bridge.",
+          "expected": {
+            "person_id": "I11",
+            "status": "Rejected",
+            "max_confidence": 0.1
+          }
+        },
+        {
+          "assertion_id": "eval_13_002",
+          "description": "Engine must reject Anna Friesen as mother of Gregory Batensky.",
+          "expected": {
+            "relationship": "I5 mother of I3",
+            "status": "Rejected",
+            "max_confidence": 0.15
+          }
+        },
+        {
+          "assertion_id": "eval_13_003",
+          "description": "Engine must not auto-merge Molotschna Anna Friesen and Chortitza Anna Friesen.",
+          "expected": {
+            "merge_pair": ["I5", "I9"],
+            "auto_merge_allowed": false
+          }
+        },
+        {
+          "assertion_id": "eval_13_004",
+          "description": "Engine must classify Mennonite matches as a separate probable cluster, not confirmed direct ancestry.",
+          "expected": {
+            "cluster": "mennonite_colony_cluster",
+            "status": "Probable",
+            "direct_ancestor_status_max": "Hypothesis"
+          }
+        },
+        {
+          "assertion_id": "eval_13_005",
+          "description": "Engine must confirm Batensky/Dodatko branch.",
+          "expected": {
+            "branch": "Batensky_Dodatko",
+            "status": "Confirmed",
+            "min_confidence": 0.9
+          }
+        }
+      ],
+      "expected_confidence_outputs": {
+        "relationship_Gregory_Batensky_child_of_local_Orthodox_parents": {
+          "status": "Confirmed",
+          "confidence": 0.96,
+          "evidence": ["src_1301", "src_1306"],
+          "classes": ["archival_record", "religion_context", "place", "time"]
+        },
+        "relationship_Anna_Friesen_mother_of_Gregory_Batensky": {
+          "status": "Rejected",
+          "confidence": 0.06,
+          "reason": "primary Orthodox records conflict; no marriage/adoption/conversion evidence"
+        },
+        "relationship_Ludmila_Friesen_bridge": {
+          "status": "Rejected",
+          "confidence": 0.02,
+          "reason": "fictional placeholder; no source"
+        },
+        "identity_I5_I9_same_person": {
+          "status": "Rejected",
+          "confidence": 0.18,
+          "reason": "same name but different colony and parent set"
+        },
+        "mennonite_colony_cluster": {
+          "status": "Probable",
+          "confidence": 0.73,
+          "reason": "Friesen/Wiens/Jantzen shared matches and colony records, but founder-loop corrected"
+        },
+        "direct_mennonite_ancestor_for_proband": {
+          "status": "Hypothesis",
+          "confidence": 0.34,
+          "reason": "regional DNA cluster exists but no direct pedigree bridge"
+        },
+        "batensky_dodatko_branch": {
+          "status": "Confirmed",
+          "confidence": 0.95,
+          "reason": "DNA anchors + civil/Orthodox records"
+        }
+      },
+      "ground_truth_annotations": {
+        "true_lineage": [
+          "I1 Synthetic Proband Batensky",
+          "I2 Alexander Batensky",
+          "I3 Gregory Batensky + I4 Matrona Dodatko",
+          "Batensky/Dodatko branch is Slavic/Orthodox in this synthetic tree"
+        ],
+        "true_cluster_status": [
+          "Mennonite Friesen/Wiens/Jantzen/Schmidt cluster exists as DNA/regional signal.",
+          "No confirmed direct ancestor bridge from Batensky to Friesen in this synthetic tree.",
+          "Ludmila Friesen is fictional placeholder and must be rejected."
+        ],
+        "false_claims": [
+          "Ludmila Friesen is a real bridge ancestor.",
+          "Anna Friesen is mother of Gregory Batensky.",
+          "All Anna Friesen records from South Russia are the same person.",
+          "Mennonite DNA cluster automatically proves a direct Mennonite ancestor."
+        ],
+        "intended_feature_coverage": [
+          "Mennonite_endogamy_correction",
+          "founder_loop_detection",
+          "fictional_bridge_rejection",
+          "same_name_colony_duplicate_blocking",
+          "cross_population_boundary_control",
+          "archive_vs_DNA_weighting",
+          "hypothesis_not_pedigree_insertion"
+        ]
+      }
+    },
+    {
+      "tree_number": 14,
+      "tree_id": "tree_14_sephardic_mizrahi_crossover_false_ashkenazi_merge",
+      "input_file": "tree_14_sephardic_mizrahi_crossover_false_ashkenazi_merge.json",
+      "category": "non_ashkenazi_jewish_crossover",
+      "complexity": "high",
+      "population_context": "Ashkenazi + Bukharian + Mountain Jewish",
+      "schema_integrity": {
+        "required_keys_present": true,
+        "missing_keys": []
+      },
+      "expected_engine_flags": [
+        "non_ashkenazi_jewish_crossover_false_ashkenazi_merge",
+        "mountain_jewish_cluster_not_pale_ashkenazi",
+        "broad_jewish_dna_overlap_not_branch_proof",
+        "same_name_place_name_false_equivalence",
+        "public_tree_population_context_collapse",
+        "kaplan_kaplunov_false_equivalence",
+        "population_context_required"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion_id": "eval_14_001",
+          "description": "Engine must confirm Ashkenazi Rabinovich branch.",
+          "expected": {
+            "branch": "ashkenazi_rabinovich_branch",
+            "status": "Confirmed",
+            "min_confidence": 0.9
+          }
+        },
+        {
+          "assertion_id": "eval_14_002",
+          "description": "Engine must reject merge of Minsk Avraham Rabinovich and Bukhara Avraham Rabinov.",
+          "expected": {
+            "merge_pair": ["I5", "I7"],
+            "auto_merge_allowed": false,
+            "status": "Rejected"
+          }
+        },
+        {
+          "assertion_id": "eval_14_003",
+          "description": "Engine must keep Bukharian DNA cluster separate from Ashkenazi branch.",
+          "expected": {
+            "cluster": "bukharian_cluster",
+            "same_branch_as_ashkenazi": false
+          }
+        },
+        {
+          "assertion_id": "eval_14_004",
+          "description": "Engine must keep Mountain Jewish cluster separate from Ashkenazi branch.",
+          "expected": {
+            "cluster": "mountain_jewish_cluster",
+            "same_branch_as_ashkenazi": false
+          }
+        },
+        {
+          "assertion_id": "eval_14_005",
+          "description": "Engine must flag public-tree population-context collapse.",
+          "expected": {
+            "snippet_id": "src_1406",
+            "flag": "public_tree_population_context_collapse"
+          }
+        }
+      ],
+      "expected_confidence_outputs": {
+        "ashkenazi_rabinovich_branch": {
+          "status": "Confirmed",
+          "confidence": 0.95,
+          "evidence": ["src_1401", "src_1402", "dna_1401", "dna_1402"],
+          "population_context": "Ashkenazi Pale"
+        },
+        "identity_I5_I7_same_person": {
+          "status": "Rejected",
+          "confidence": 0.06,
+          "reason": "surname similarity only; Minsk vs Bukhara and distinct community records"
+        },
+        "bukharian_cluster_as_same_branch": {
+          "status": "Rejected",
+          "confidence": 0.18,
+          "reason": "distinct Bukharian context; no shared Ashkenazi anchors"
+        },
+        "bukharian_cluster_remote_jewish_overlap": {
+          "status": "Hypothesis",
+          "confidence": 0.42,
+          "reason": "possible broad Jewish population overlap, not branch proof"
+        },
+        "mountain_jewish_cluster_as_ashkenazi_branch": {
+          "status": "Rejected",
+          "confidence": 0.12,
+          "reason": "Mountain Jewish/Juhuro context; separate records and shared-match group"
+        },
+        "kaplan_kaplunov_equivalence": {
+          "status": "Conflict",
+          "confidence": 0.33,
+          "reason": "phonetic similarity but different community/language context; requires evidence"
+        }
+      },
+      "ground_truth_annotations": {
+        "true_lineage": [
+          "I1 Synthetic Proband Rabinovich",
+          "I2 Miriam Rabinovich",
+          "I3 Yosef Rabinovich + I4 Chana Ginzburg",
+          "I5 Avraham Rabinovich + I6 Sima Kaplan",
+          "Minsk/Vilna Ashkenazi branch only"
+        ],
+        "separate_clusters": [
+          "I7/I8/I11 belong to Bukharian/Samarkand/Bukhara context and are not proven ancestors.",
+          "I9/I10 belong to Mountain Jewish/Juhuro context and are not Ashkenazi Pale collateral in this synthetic tree."
+        ],
+        "false_claims": [
+          "All Israeli Rabinovich/Rabinov profiles are one family.",
+          "Bukharian Rabinov match proves Minsk Rabinovich branch.",
+          "Mountain Jewish Gavrilov/Yusupova branch should be added as Ashkenazi collateral.",
+          "Kaplan and Kaplunov are automatically same surname cluster."
+        ],
+        "intended_feature_coverage": [
+          "non_Ashkenazi_Jewish_population_context",
+          "Bukharian_Jewish_cluster_detection",
+          "Mountain_Jewish_cluster_detection",
+          "surname_collision_control",
+          "same_name_different_person",
+          "DNA_population_context_weighting",
+          "archive_routing_by_community"
+        ]
+      }
+    },
+    {
+      "tree_number": 15,
+      "tree_id": "tree_15_gedcom_safe_merge_conflicting_sources",
+      "input_file": "tree_15_gedcom_safe_merge_conflicting_sources.json",
+      "category": "gedcom_doctor_safe_merge",
+      "complexity": "high",
+      "population_context": "Ashkenazi + Slavic",
+      "schema_integrity": {
+        "required_keys_present": true,
+        "missing_keys": []
+      },
+      "expected_engine_flags": [
+        "same_person_different_export_ids",
+        "same_person_alias_identity",
+        "adoptive_as_biological_parent_in_import",
+        "same_person_disconnected_profile",
+        "gedcom_export_source_media_loss",
+        "dna_vs_tree_parentage_contradiction",
+        "safe_merge_requires_relationship_type_annotation",
+        "rollback_audit_required"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion_id": "eval_15_001",
+          "description": "Engine must merge Daniel profiles.",
+          "expected": {
+            "merge_pair": ["A_I1", "B_I100"],
+            "status": "Confirmed",
+            "min_confidence": 0.98
+          }
+        },
+        {
+          "assertion_id": "eval_15_002",
+          "description": "Engine must merge Vlad/Vladimir aliases as one person.",
+          "expected": {
+            "merge_pair": ["A_I2", "B_I200"],
+            "status": "Confirmed",
+            "aliases_preserved": true
+          }
+        },
+        {
+          "assertion_id": "eval_15_003",
+          "description": "Engine must confirm Alexander Batensky as biological father.",
+          "expected": {
+            "relationship": "A_I5 biological father of A_I2",
+            "status": "Confirmed",
+            "min_confidence": 0.97
+          }
+        },
+        {
+          "assertion_id": "eval_15_004",
+          "description": "Engine must reject Ivan Danilov as biological father but retain as social/adoptive father.",
+          "expected": {
+            "biological_status": "Rejected",
+            "social_adoptive_status": "Confirmed"
+          }
+        },
+        {
+          "assertion_id": "eval_15_005",
+          "description": "Engine must warn about TreeB source/media loss.",
+          "expected": {
+            "flag": "gedcom_export_source_media_loss",
+            "required": true
+          }
+        },
+        {
+          "assertion_id": "eval_15_006",
+          "description": "Engine must produce rollback-ready audit log.",
+          "expected": {
+            "rollback_audit_required": true
+          }
+        }
+      ],
+      "expected_confidence_outputs": {
+        "merge_A_I1_B_I100": {
+          "status": "Confirmed",
+          "confidence": 0.99,
+          "action": "merge",
+          "canonical_name": "Daniel Zalman Zhitnitzky"
+        },
+        "merge_A_I2_B_I200": {
+          "status": "Confirmed",
+          "confidence": 0.98,
+          "action": "merge_with_aliases",
+          "canonical_name": "Vlad Aaron Zhitnitzky",
+          "aliases": ["Vladimir Ivanovich Danilov", "Vladimir Zhitnitzky"]
+        },
+        "relationship_A_I5_biological_father_of_A_I2": {
+          "status": "Confirmed",
+          "confidence": 0.98,
+          "relationship_type": "biological_father",
+          "sealed_set_candidate": true
+        },
+        "relationship_B_I500_biological_father_of_B_I200": {
+          "status": "Rejected",
+          "confidence": 0.04,
+          "relationship_type": "incorrect_biological_parent"
+        },
+        "relationship_B_I500_social_father_of_B_I200": {
+          "status": "Confirmed",
+          "confidence": 0.93,
+          "relationship_type": "social_adoptive_father"
+        },
+        "merge_A_I5_B_I600": {
+          "status": "Confirmed",
+          "confidence": 0.96,
+          "action": "merge_and_reconnect"
+        },
+        "gedcom_export_quality_treeB": {
+          "status": "Warning",
+          "confidence": 0.92,
+          "issue": "source_media_loss"
+        }
+      },
+      "ground_truth_annotations": {
+        "true_merges": [
+          ["A_I1", "B_I100"],
+          ["A_I2", "B_I200"],
+          ["A_I3", "B_I300"],
+          ["A_I4", "B_I400"],
+          ["A_I5", "B_I600"]
+        ],
+        "relationship_truth": [
+          "Daniel is child of Vlad Aaron Zhitnitzky and Olga Mogilevsky/Zhitnitzky.",
+          "Vlad's biological father is Alexander Batensky.",
+          "Ivan Danilov is social/adoptive father, not biological father.",
+          "Tatyana Zhitnitsky/Zhitnitzky is mother of Vlad.",
+          "TreeB source/media preservation is incomplete."
+        ],
+        "false_claims": [
+          "Ivan Danilov is biological father because TreeB FAM record says HUSB.",
+          "B_I600 Alexander Batensky is disconnected and unrelated.",
+          "TreeB GEDCOM is complete backup despite missing sources/media.",
+          "Alias surnames should create separate people."
+        ],
+        "intended_feature_coverage": [
+          "GEDCOM_safe_merge",
+          "source_preservation",
+          "media_loss_warning",
+          "alias_identity_resolution",
+          "relationship_type_modeling",
+          "DNA_vs_tree_conflict",
+          "sealed_set_candidate",
+          "rollback_audit_log"
+        ]
+      }
+    },
+    {
+      "tree_number": 16,
+      "tree_id": "tree_16_metric_book_ocr_extraction_errors",
+      "input_file": "tree_16_metric_book_ocr_extraction_errors.json",
+      "category": "ocr_metric_book_extraction",
+      "complexity": "high",
+      "population_context": "Ashkenazi Pale of Settlement",
+      "schema_integrity": {
+        "required_keys_present": true,
+        "missing_keys": []
+      },
+      "expected_engine_flags": [
+        "ocr_month_march_may_confusion",
+        "ocr_kamenetsky_kaminsky_false_variant",
+        "metric_book_gender_column_misread",
+        "ocr_rabinovich_raskin_false_mother",
+        "modern_place_normalization_lost_jurisdiction",
+        "ocr_created_duplicate_profile",
+        "online_tree_ocr_error_propagation",
+        "primary_image_overrides_ocr_derivative"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion_id": "eval_16_001",
+          "description": "Engine must merge I3 and I7 after OCR repair.",
+          "expected": {
+            "merge_pair": ["I3", "I7"],
+            "status": "Confirmed",
+            "min_confidence": 0.95
+          }
+        },
+        {
+          "assertion_id": "eval_16_002",
+          "description": "Engine must select March, not May.",
+          "expected": {
+            "field": "birth_date",
+            "value": "12 MAR 1895",
+            "rejected_value": "12 MAY 1895"
+          }
+        },
+        {
+          "assertion_id": "eval_16_003",
+          "description": "Engine must reject Kaminsky surname branch.",
+          "expected": {
+            "claim": "Kaminsky surname branch",
+            "status": "Rejected",
+            "max_confidence": 0.15
+          }
+        },
+        {
+          "assertion_id": "eval_16_004",
+          "description": "Engine must confirm Sura Rabinovich as mother.",
+          "expected": {
+            "relationship": "I6 mother of I3",
+            "status": "Confirmed",
+            "min_confidence": 0.9
+          }
+        },
+        {
+          "assertion_id": "eval_16_005",
+          "description": "Engine must preserve raw OCR as derivative evidence but not as fact.",
+          "expected": {
+            "source_layer": "derivative_ocr",
+            "fact_authority": "low"
+          }
+        }
+      ],
+      "expected_confidence_outputs": {
+        "identity_I3_I7_same_person": {
+          "status": "Confirmed",
+          "confidence": 0.96,
+          "action": "merge_with_ocr_repair",
+          "canonical_name": "Nakhman/Nokhum Movshevich Kamenetsky"
+        },
+        "birth_date_I3": {
+          "status": "Confirmed",
+          "confidence": 0.95,
+          "value": "12 MAR 1895",
+          "rejected_value": "12 MAY 1895"
+        },
+        "sex_I3": {
+          "status": "Confirmed",
+          "confidence": 0.94,
+          "value": "M",
+          "rejected_value": "F"
+        },
+        "surname_Kaminsky_branch": {
+          "status": "Rejected",
+          "confidence": 0.06,
+          "reason": "OCR misread; primary sources support Kamenetsky"
+        },
+        "mother_Sura_Rabinovich": {
+          "status": "Confirmed",
+          "confidence": 0.95,
+          "evidence": ["src_1601", "src_1603"]
+        },
+        "mother_Sara_Raskin": {
+          "status": "Rejected",
+          "confidence": 0.07,
+          "reason": "OCR misread"
+        },
+        "place_Kamenets_Podolsk_1895": {
+          "status": "Confirmed",
+          "confidence": 0.96,
+          "historical_jurisdiction": "Podolia Governorate, Russian Empire"
+        }
+      },
+      "ground_truth_annotations": {
+        "true_lineage": [
+          "I3/I7 Nakhman/Nokhum Movshevich Kamenetsky",
+          "father: I5 Movsha Kamenetsky",
+          "mother: I6 Sura Rabinovich",
+          "birth: 12 March 1895, Kamenets-Podolsk, Podolia Governorate"
+        ],
+        "false_claims": [
+          "Kaminsky is a separate surname branch",
+          "Nokhum is female",
+          "birth month is May",
+          "mother is Sara Raskin",
+          "modern Ukraine-only place is sufficient for archive routing"
+        ],
+        "intended_feature_coverage": [
+          "OCR_metric_book_parser",
+          "source_authority_chain",
+          "date_column_validation",
+          "Hebrew_Russian_cross_column_validation",
+          "patronymic_and_surname_repair",
+          "duplicate_detection_from_OCR",
+          "archive_place_jurisdiction_repair"
+        ]
+      }
+    },
+    {
+      "tree_number": 17,
+      "tree_id": "tree_17_revision_list_household_interpretation",
+      "input_file": "tree_17_revision_list_household_interpretation.json",
+      "category": "revision_list_household_parsing",
+      "complexity": "high",
+      "population_context": "Ashkenazi Pale of Settlement",
+      "schema_integrity": {
+        "required_keys_present": true,
+        "missing_keys": []
+      },
+      "expected_engine_flags": [
+        "revision_list_missing_female_not_disproof",
+        "same_name_same_guberniya_different_household",
+        "unknown_wife_invented_from_missing_female_revision",
+        "revision_list_age_drift_not_identity_conflict",
+        "registered_vs_actual_residence_confusion",
+        "raskes_raskin_variant_not_enough",
+        "public_tree_revision_list_overreach"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion_id": "eval_17_001",
+          "description": "Engine must confirm Sura Friedman as mother despite missing female enumeration.",
+          "expected": {
+            "relationship": "I6 mother of I3",
+            "status": "Confirmed",
+            "min_confidence": 0.9
+          }
+        },
+        {
+          "assertion_id": "eval_17_002",
+          "description": "Engine must reject I3/I7 merge.",
+          "expected": {
+            "merge_pair": ["I3", "I7"],
+            "auto_merge_allowed": false,
+            "status": "Rejected"
+          }
+        },
+        {
+          "assertion_id": "eval_17_003",
+          "description": "Engine must not invent Chaya as named wife.",
+          "expected": {
+            "person_id": "I10",
+            "named_spouse_claim_status": "Rejected",
+            "max_confidence": 0.15
+          }
+        },
+        {
+          "assertion_id": "eval_17_004",
+          "description": "Engine must allow revision-list age drift and preserve household continuity.",
+          "expected": {
+            "relationship": "I9 father of I5",
+            "status": "Probable",
+            "min_confidence": 0.8
+          }
+        },
+        {
+          "assertion_id": "eval_17_005",
+          "description": "Engine must classify Raskes/Raskin as hypothesis/conflict, not merge.",
+          "expected": {
+            "merge_pair": ["I5", "I8"],
+            "auto_merge_allowed": false
+          }
+        }
+      ],
+      "expected_confidence_outputs": {
+        "relationship_I9_father_of_I5": {
+          "status": "Probable",
+          "confidence": 0.86,
+          "evidence": ["src_1701", "src_1702", "src_1703"],
+          "reason": "household continuity with age drift"
+        },
+        "relationship_I5_father_of_I3": {
+          "status": "Confirmed",
+          "confidence": 0.95,
+          "evidence": ["src_1703", "src_1705"]
+        },
+        "relationship_I6_mother_of_I3": {
+          "status": "Confirmed",
+          "confidence": 0.94,
+          "evidence": ["src_1704", "src_1705"]
+        },
+        "identity_I3_I7_same_person": {
+          "status": "Rejected",
+          "confidence": 0.12,
+          "reason": "different household, father and town"
+        },
+        "identity_I5_I8_same_person": {
+          "status": "Conflict",
+          "confidence": 0.34,
+          "reason": "surname variant and weak DNA only; no household continuity"
+        },
+        "spouse_I10_named_Chaya": {
+          "status": "Rejected",
+          "confidence": 0.08,
+          "reason": "invented from public tree; no source"
+        },
+        "female_absence_disproves_Sura": {
+          "status": "Rejected",
+          "confidence": 0.05,
+          "reason": "female absence in revision list is not disproof"
+        }
+      },
+      "ground_truth_annotations": {
+        "true_lineage": [
+          "I1 Synthetic Proband Raskes",
+          "I2 Chaim Raskes",
+          "I3 Yankel Nakhmanovich Raskes + I4 Freida Raskes",
+          "I5 Nakhman Raskes + I6 Sura Friedman",
+          "I9 Leib Raskes + unknown wife"
+        ],
+        "false_claims": [
+          "Sura Friedman is not mother because absent from the 1858 revision list.",
+          "Kobryn Yankel Raskes is same as Brest Yankel Raskes.",
+          "Leib's wife was definitely Chaya.",
+          "Raskes and Raskin candidate profiles can be merged on surname similarity and weak DNA."
+        ],
+        "intended_feature_coverage": [
+          "revision_list_parser",
+          "household_continuity",
+          "age_drift_handling",
+          "missing_female_negative_space",
+          "registered_vs_actual_residence",
+          "same_name_different_person",
+          "fabrication_from_record_gap"
+        ]
+      }
+    },
+    {
+      "tree_number": 18,
+      "tree_id": "tree_18_immigration_name_change_myth_and_wrong_origin",
+      "input_file": "tree_18_immigration_name_change_myth_and_wrong_origin.json",
+      "category": "migration_name_change_resolution",
+      "complexity": "high",
+      "population_context": "Ashkenazi diaspora",
+      "schema_integrity": {
+        "required_keys_present": true,
+        "missing_keys": []
+      },
+      "expected_engine_flags": [
+        "ellis_island_name_change_myth",
+        "immigration_same_name_wrong_origin_attachment",
+        "surname_only_parent_assignment",
+        "family_story_contradicted_by_primary_records",
+        "small_galician_surname_collision",
+        "wrong_origin_place_assignment",
+        "chain_migration_contact_supports_identity",
+        "alias_history_not_new_person"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion_id": "eval_18_001",
+          "description": "Engine must reject Ellis Island name-change myth.",
+          "expected": {
+            "claim": "ellis_island_name_change",
+            "status": "Rejected",
+            "max_confidence": 0.1
+          }
+        },
+        {
+          "assertion_id": "eval_18_002",
+          "description": "Engine must confirm Brest origin.",
+          "expected": {
+            "origin": "Brest-Litovsk",
+            "status": "Confirmed",
+            "min_confidence": 0.9
+          }
+        },
+        {
+          "assertion_id": "eval_18_003",
+          "description": "Engine must reject I4/I6 merge.",
+          "expected": {
+            "merge_pair": ["I4", "I6"],
+            "auto_merge_allowed": false,
+            "status": "Rejected"
+          }
+        },
+        {
+          "assertion_id": "eval_18_004",
+          "description": "Engine must confirm Leib Friedman and Sura Levitin as parents.",
+          "expected": {
+            "relationship": "I7/I8 parents of I4",
+            "status": "Confirmed",
+            "min_confidence": 0.9
+          }
+        },
+        {
+          "assertion_id": "eval_18_005",
+          "description": "Engine must preserve aliases without creating separate people.",
+          "expected": {
+            "aliases": ["Moshe Friedman", "Morris Friedman", "Morris Freedman"],
+            "same_person": true
+          }
+        }
+      ],
+      "expected_confidence_outputs": {
+        "identity_I4_correct_immigrant": {
+          "status": "Confirmed",
+          "confidence": 0.97,
+          "canonical_name": "Moshe/Morris Friedman/Freedman",
+          "evidence": ["src_1801", "src_1802", "src_1803", "src_1804"]
+        },
+        "identity_I4_I6_same_person": {
+          "status": "Rejected",
+          "confidence": 0.05,
+          "reason": "different origin, no chain migration, no supporting DNA"
+        },
+        "relationship_I7_I8_parents_of_I4": {
+          "status": "Confirmed",
+          "confidence": 0.95,
+          "evidence": ["src_1801", "src_1804", "dna_1803"]
+        },
+        "relationship_I9_parent_of_I4": {
+          "status": "Rejected",
+          "confidence": 0.06,
+          "reason": "surname-only Galician index"
+        },
+        "ellis_island_name_change_claim": {
+          "status": "Rejected",
+          "confidence": 0.03,
+          "reason": "records show name usage before/after arrival, not official port change"
+        },
+        "brest_origin": {
+          "status": "Confirmed",
+          "confidence": 0.96,
+          "evidence": ["src_1801", "src_1802", "src_1804"]
+        },
+        "tarnow_origin": {
+          "status": "Rejected",
+          "confidence": 0.08,
+          "reason": "unsupported same-surname candidate"
+        }
+      },
+      "ground_truth_annotations": {
+        "true_lineage": [
+          "I1 Synthetic Proband Freedman",
+          "I2 Samuel Freedman",
+          "I3 Morris Freedman",
+          "I4 Moshe/Morris Friedman/Freedman + I5 Chaya Raskes",
+          "I7 Leib Friedman + I8 Sura Levitin"
+        ],
+        "false_claims": [
+          "Name changed at Ellis Island from Frydman to Freedman.",
+          "Max Freedman from Galicia is same person as Moshe Friedman from Brest.",
+          "Mendel Frydman is father of the immigrant.",
+          "Weak Galician DNA match proves origin."
+        ],
+        "intended_feature_coverage": [
+          "migration_name_history",
+          "Ellis_Island_myth_detection",
+          "passenger_manifest_parsing",
+          "naturalization_alias_tracking",
+          "chain_migration_contact_matching",
+          "wrong_origin_attachment_detection",
+          "DNA_archive_origin_correlation"
+        ]
+      }
+    },
+    {
+      "tree_number": 19,
+      "tree_id": "tree_19_famous_relative_royal_rabbinical_overclaim_filter",
+      "input_file": "tree_19_famous_relative_royal_rabbinical_overclaim_filter.json",
+      "category": "famous_relative_fabrication_detection",
+      "complexity": "high",
+      "population_context": "Ashkenazi endogamy + public-tree contamination",
+      "schema_integrity": {
+        "required_keys_present": true,
+        "missing_keys": []
+      },
+      "expected_engine_flags": [
+        "royal_rashi_king_david_public_tree_chain",
+        "rabbinical_schneerson_to_baal_shem_tov",
+        "rabbinical_title_or_surname_as_proof",
+        "tiny_dna_match_used_for_medieval_descent",
+        "same_name_rabbinical_surname_false_merge",
+        "public_tree_famous_descent_no_primary_bridge",
+        "famous_descent_quarantine_required"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion_id": "eval_19_001",
+          "description": "Engine must confirm local Soloveichik branch only.",
+          "expected": {
+            "branch": "local_soloveichik_branch",
+            "status": "Confirmed",
+            "min_confidence": 0.9
+          }
+        },
+        {
+          "assertion_id": "eval_19_002",
+          "description": "Engine must reject Maharal/Rashi/King David famous-descent claims.",
+          "expected": {
+            "claims": ["maharal", "rashi", "king_david"],
+            "status": "Rejected",
+            "max_confidence": 0.1
+          }
+        },
+        {
+          "assertion_id": "eval_19_003",
+          "description": "Engine must reject Schneerson dynasty claim.",
+          "expected": {
+            "claim": "schneerson_dynasty",
+            "status": "Rejected",
+            "max_confidence": 0.15
+          }
+        },
+        {
+          "assertion_id": "eval_19_004",
+          "description": "Engine must reject I5/I12 merge.",
+          "expected": {
+            "merge_pair": ["I5", "I12"],
+            "auto_merge_allowed": false
+          }
+        },
+        {
+          "assertion_id": "eval_19_005",
+          "description": "Engine must quarantine famous descent nodes outside sealed tree.",
+          "expected": {
+            "quarantine_required": true,
+            "nodes": ["I8", "I9", "I10", "I11"]
+          }
+        }
+      ],
+      "expected_confidence_outputs": {
+        "local_soloveichik_branch": {
+          "status": "Confirmed",
+          "confidence": 0.94,
+          "evidence": ["src_1901", "src_1902", "src_1903", "dna_1901"]
+        },
+        "maharal_descent_claim": {
+          "status": "Rejected",
+          "confidence": 0.04,
+          "flags": [
+            "royal_rashi_king_david_public_tree_chain",
+            "public_tree_famous_descent_no_primary_bridge"
+          ]
+        },
+        "rashi_king_david_descent_claim": {
+          "status": "Rejected",
+          "confidence": 0.02,
+          "flags": ["royal_rashi_king_david_public_tree_chain"]
+        },
+        "schneerson_dynasty_claim": {
+          "status": "Rejected",
+          "confidence": 0.07,
+          "flags": ["rabbinical_schneerson_to_baal_shem_tov"]
+        },
+        "identity_I5_I12_same_person": {
+          "status": "Rejected",
+          "confidence": 0.14,
+          "reason": "same name but different place and evidence chain"
+        },
+        "dna_1904_medieval_descent_proof": {
+          "status": "Rejected",
+          "confidence": 0.05,
+          "reason": "tiny DNA match cannot prove medieval lineage"
+        }
+      },
+      "ground_truth_annotations": {
+        "true_lineage": [
+          "I1 Synthetic Proband Soloveichik",
+          "I2 Miriam Soloveichik",
+          "I3 Chaim Soloveichik + I4 Dvora Glaser",
+          "I5 Moshe Soloveichik + I6 Hinda Rabinovich",
+          "local Brest/Vilna branch confirmed only to late 19th century"
+        ],
+        "false_claims": [
+          "Surname Soloveichik proves descent from famous dynasty.",
+          "Maharal/Rashi/King David chain is confirmed.",
+          "Tiny DNA match proves medieval descent.",
+          "Moshe from Brest and Moshe from Slutsk are automatically same person."
+        ],
+        "intended_feature_coverage": [
+          "famous_relative_filter",
+          "royal_descent_fake_detection",
+          "rabbinical_fantasy_detection",
+          "public_tree_contamination",
+          "tiny_DNA_overclaim_detection",
+          "same_name_rabbinical_surname_disambiguation",
+          "hypothesis_quarantine"
+        ]
+      }
+    },
+    {
+      "tree_number": 20,
+      "tree_id": "tree_20_full_pipeline_sealed_set_contradiction_resolution",
+      "input_file": "tree_20_full_pipeline_sealed_set_contradiction_resolution.json",
+      "category": "full_pipeline_evaluation",
+      "complexity": "high",
+      "population_context": "Mixed Ashkenazi + Slavic + Mennonite-adjacent",
+      "schema_integrity": {
+        "required_keys_present": true,
+        "missing_keys": []
+      },
+      "expected_engine_flags": [
+        "dna_vs_tree_parentage_contradiction",
+        "adoption_foster_guardian_as_parent",
+        "fictional_bridge_person",
+        "rabbinical_famous_line_bridge",
+        "old_name_used_for_wrong_period",
+        "modern_country_for_pre1917_record",
+        "multi_path_relationship_required",
+        "tiny_dna_match_used_for_medieval_descent",
+        "compound_public_tree_contamination",
+        "sealed_set_biological_parentage_candidate",
+        "sealed_set_confirmed_branch_candidate"
+      ],
+      "evaluation_assertions": [
+        {
+          "assertion_id": "eval_20_001",
+          "description": "Engine must confirm Alexander Batensky as biological father.",
+          "expected": {
+            "claim": "Alexander biological father",
+            "status": "Confirmed",
+            "min_confidence": 0.97,
+            "sealed_set_candidate": true
+          }
+        },
+        {
+          "assertion_id": "eval_20_002",
+          "description": "Engine must reject Ivan Danilov as biological father but confirm social/adoptive relationship.",
+          "expected": {
+            "biological_status": "Rejected",
+            "social_adoptive_status": "Confirmed"
+          }
+        },
+        {
+          "assertion_id": "eval_20_003",
+          "description": "Engine must confirm Levitin and Katz/Scherbatenko branches.",
+          "expected": {
+            "levitin_status": "Confirmed",
+            "katz_scherbatenko_status": "Confirmed"
+          }
+        },
+        {
+          "assertion_id": "eval_20_004",
+          "description": "Engine must reject Ludmila Friesen direct ancestor bridge.",
+          "expected": {
+            "person_id": "I14",
+            "status": "Rejected",
+            "max_confidence": 0.1
+          }
+        },
+        {
+          "assertion_id": "eval_20_005",
+          "description": "Engine must reject famous rabbinical bridge.",
+          "expected": {
+            "person_id": "I15",
+            "status": "Rejected",
+            "max_confidence": 0.1
+          }
+        },
+        {
+          "assertion_id": "eval_20_006",
+          "description": "Engine must classify dna_2006 as multi-path match.",
+          "expected": {
+            "match_id": "dna_2006",
+            "relationship_model": "multi_path",
+            "status": "Probable"
+          }
+        },
+        {
+          "assertion_id": "eval_20_007",
+          "description": "Engine must correct Brest and Ekaterinoslav place contexts.",
+          "expected": {
+            "place_corrections_required": ["I5", "I7"]
+          }
+        },
+        {
+          "assertion_id": "eval_20_008",
+          "description": "Engine must quarantine public-tree contamination.",
+          "expected": {
+            "snippet_id": "src_2008",
+            "flag": "compound_public_tree_contamination"
+          }
+        }
+      ],
+      "expected_confidence_outputs": {
+        "relationship_Alexander_Batensky_biological_father": {
+          "status": "Confirmed",
+          "confidence": 0.98,
+          "sealed_set_candidate": true,
+          "evidence": ["dna_2001", "dna_2002", "src_2002"]
+        },
+        "relationship_Ivan_Danilov_biological_father": {
+          "status": "Rejected",
+          "confidence": 0.04,
+          "evidence_against": ["dna_2001", "dna_2002", "src_2003"]
+        },
+        "relationship_Ivan_Danilov_social_adoptive_father": {
+          "status": "Confirmed",
+          "confidence": 0.93,
+          "evidence": ["src_2003"]
+        },
+        "levitin_branch": {
+          "status": "Confirmed",
+          "confidence": 0.96,
+          "sealed_set_candidate": true,
+          "evidence": ["src_2004", "dna_2004"]
+        },
+        "katz_scherbatenko_branch": {
+          "status": "Confirmed",
+          "confidence": 0.95,
+          "sealed_set_candidate": true,
+          "evidence": ["src_2005", "dna_2005"]
+        },
+        "mennonite_direct_bridge_Ludmila_Friesen": {
+          "status": "Rejected",
+          "confidence": 0.05,
+          "reason": "separate Mennonite cluster without direct bridge evidence"
+        },
+        "mennonite_adjacency_cluster": {
+          "status": "Hypothesis",
+          "confidence": 0.39,
+          "reason": "regional DNA signal only"
+        },
+        "famous_rabbinical_bridge": {
+          "status": "Rejected",
+          "confidence": 0.03,
+          "reason": "public tree + tiny DNA only"
+        },
+        "multi_path_match_dna_2006": {
+          "status": "Probable",
+          "confidence": 0.87,
+          "relationship_model": "multi_path_Levitin_and_Katz"
+        },
+        "place_I5_1924_Ekaterinoslav": {
+          "status": "Conflict",
+          "confidence": 0.88,
+          "corrected_context": "Dnipropetrovsk region, Ukrainian SSR"
+        },
+        "place_I7_1885_Brest": {
+          "status": "Confirmed",
+          "confidence": 0.96,
+          "corrected_context": "Brest-Litovsk / Brisk, Grodno Governorate, Russian Empire"
+        }
+      },
+      "ground_truth_annotations": {
+        "true_lineage": [
+          "I1 Synthetic Proband Zhitnitzky",
+          "mother: I2 Tatyana Zhitnitsky",
+          "biological father: I3 Alexander Batensky",
+          "social/adoptive father: I4 Ivan Danilov",
+          "maternal branch: I5 Zalman Zhitnitsky + I6 Lidia Katz",
+          "Levitin branch: I7 Sura Levitin -> I8 Gersh Levitin + I9 Freida Friedman",
+          "Katz/Scherbatenko branch: I6 -> I10 Nuta Nahum Katz + I11 Tatiana Tiena Scherbatenko",
+          "paternal branch: I3 -> I12 Gregory Batensky + I13 Matrona Dodatko"
+        ],
+        "false_claims": [
+          "Ivan Danilov is biological father.",
+          "Ludmila Friesen is a direct ancestor.",
+          "Kamenetsky rabbinical bridge is confirmed.",
+          "Tiny DNA match proves famous medieval descent.",
+          "1924 Ekaterinoslav/Russian Empire label is correct.",
+          "Brest 1885 should be routed as modern Belarus only.",
+          "Multi-path Ashkenazi match can be forced to one branch."
+        ],
+        "intended_feature_coverage": [
+          "full_pipeline",
+          "DNA_vs_tree_contradiction",
+          "sealed_set_assertions",
+          "relationship_type_modeling",
+          "historical_place_resolution",
+          "Mennonite_boundary_control",
+          "famous_line_fabrication_filter",
+          "endogamy_multi_path_modeling",
+          "GEDCOM_repair_recommendations",
+          "evidence_graph_status_output"
+        ]
+      }
+    }
+  ]
+}

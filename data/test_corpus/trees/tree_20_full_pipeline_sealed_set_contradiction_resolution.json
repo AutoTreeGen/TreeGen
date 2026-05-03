@@ -1,0 +1,452 @@
+{
+  "tree_id": "tree_20_full_pipeline_sealed_set_contradiction_resolution",
+  "category": "full_pipeline_evaluation",
+  "complexity": "high",
+  "population_context": "Mixed Ashkenazi + Slavic + Mennonite-adjacent",
+  "scope_description": "Full AutoTreeGen pipeline stress test combining GEDCOM imports, DNA clusters, archive snippets, false famous-line claims, historical place errors, patronymic errors, NPE relationship typing, and sealed-set assertions.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR AutoTreeGenSyntheticCorpus\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Synthetic Proband /Zhitnitzky/\n1 SEX M\n1 BIRT\n2 DATE 1971\n2 PLAC Dnipropetrovsk, Ukrainian SSR\n1 FAMC @F1@\n0 @I2@ INDI\n1 NAME Tatyana /Zhitnitsky/\n1 SEX F\n1 BIRT\n2 DATE 1951\n2 PLAC Dnepropetrovsk, Ukrainian SSR\n1 FAMS @F1@\n1 FAMC @F2@\n0 @I3@ INDI\n1 NAME Alexander /Batensky/\n1 SEX M\n1 BIRT\n2 DATE 1948\n2 PLAC Privolnoye, Dnipropetrovsk Oblast, Ukrainian SSR\n1 FAMS @F1@\n1 FAMC @F3@\n0 @I4@ INDI\n1 NAME Ivan /Danilov/\n1 SEX M\n1 BIRT\n2 DATE 1949\n2 PLAC Kamchatka, RSFSR\n1 NOTE Social/adoptive father incorrectly imported as biological father in one tree.\n0 @I5@ INDI\n1 NAME Zalman /Zhitnitsky/\n1 SEX M\n1 BIRT\n2 DATE 1924\n2 PLAC Ekaterinoslav, Russian Empire\n1 NOTE Place-period error: 1924 should not be Russian Empire.\n1 FAMS @F2@\n1 FAMC @F4@\n0 @I6@ INDI\n1 NAME Lidia /Katz/\n1 SEX F\n1 BIRT\n2 DATE 1924\n2 PLAC Hrubieszów, Poland\n1 FAMS @F2@\n1 FAMC @F5@\n0 @I7@ INDI\n1 NAME Sura /Levitin/\n1 SEX F\n1 BIRT\n2 DATE 1885\n2 PLAC Brest, Belarus\n1 FAMS @F4@\n1 FAMC @F6@\n0 @I8@ INDI\n1 NAME Gersh /Levitin/\n1 SEX M\n1 BIRT\n2 DATE 1859\n2 PLAC Brisk, Grodno Governorate\n1 FAMS @F6@\n0 @I9@ INDI\n1 NAME Freida /Friedman/\n1 SEX F\n1 BIRT\n2 DATE 1863\n2 PLAC Brest-Litovsk, Grodno Governorate\n1 FAMS @F6@\n0 @I10@ INDI\n1 NAME Nuta Nahum /Katz/\n1 SEX M\n1 BIRT\n2 DATE 1899\n2 PLAC Koniuchy, Lublin, Russian Empire\n1 FAMS @F5@\n0 @I11@ INDI\n1 NAME Tatiana Tiena /Scherbatenko/\n1 SEX F\n1 BIRT\n2 DATE 1902\n2 PLAC Koniuchy, Poland\n1 FAMS @F5@\n0 @I12@ INDI\n1 NAME Gregory /Batensky/\n1 SEX M\n1 BIRT\n2 DATE 1908\n2 PLAC Privolnoye, Ekaterinoslav Governorate\n1 FAMS @F3@\n0 @I13@ INDI\n1 NAME Matrona /Dodatko/\n1 SEX F\n1 BIRT\n2 DATE 1912\n2 PLAC Dnipropetrovsk region, Ukraine\n1 FAMS @F3@\n0 @I14@ INDI\n1 NAME Ludmila /Friesen/\n1 SEX F\n1 BIRT\n2 DATE ABT 1880\n2 PLAC Molotschna Colony\n1 NOTE Fictional bridge profile; should be rejected.\n0 @I15@ INDI\n1 NAME Rabbi Dynasty Bridge /Kamenetsky/\n1 SEX M\n1 NOTE Unsourced famous-rabbi bridge to Maharal/Rashi line.\n0 @F1@ FAM\n1 HUSB @I3@\n1 WIFE @I2@\n1 CHIL @I1@\n0 @F2@ FAM\n1 HUSB @I5@\n1 WIFE @I6@\n1 CHIL @I2@\n0 @F3@ FAM\n1 HUSB @I12@\n1 WIFE @I13@\n1 CHIL @I3@\n0 @F4@ FAM\n1 HUSB @I16@\n1 WIFE @I7@\n1 CHIL @I5@\n0 @I16@ INDI\n1 NAME Moisey /Zhitnitsky/\n1 SEX M\n0 @F5@ FAM\n1 HUSB @I10@\n1 WIFE @I11@\n1 CHIL @I6@\n0 @F6@ FAM\n1 HUSB @I8@\n1 WIFE @I9@\n1 CHIL @I7@\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_2001",
+      "match_name": "Paternal Batensky Half-Sibling Anchor",
+      "platform": "AncestryDNA",
+      "shared_cm": 1762,
+      "longest_segment": 177,
+      "segment_count": 43,
+      "shared_matches_with": ["dna_2002", "dna_2003"],
+      "expected_link": "confirms Alexander Batensky biological father line"
+    },
+    {
+      "match_id": "dna_2002",
+      "match_name": "Batensky-Dodatko Cousin",
+      "platform": "MyHeritage",
+      "shared_cm": 610,
+      "longest_segment": 92,
+      "segment_count": 29,
+      "shared_matches_with": ["dna_2001"],
+      "expected_link": "Batensky/Dodatko paternal line"
+    },
+    {
+      "match_id": "dna_2003",
+      "match_name": "Mennonite Wiens/Friesen Cluster Match",
+      "platform": "GEDmatch",
+      "shared_cm": 42,
+      "longest_segment": 13,
+      "segment_count": 6,
+      "shared_matches_with": ["dna_2002"],
+      "expected_link": "Mennonite-adjacent cluster, not direct Friesen bridge"
+    },
+    {
+      "match_id": "dna_2004",
+      "match_name": "Levitin Confirmed Cousin",
+      "platform": "AncestryDNA",
+      "shared_cm": 151,
+      "longest_segment": 35,
+      "segment_count": 13,
+      "shared_matches_with": ["dna_2005", "dna_2006"],
+      "expected_link": "Levitin branch via Gersh/Freida"
+    },
+    {
+      "match_id": "dna_2005",
+      "match_name": "Katz-Feldman Cousin",
+      "platform": "MyHeritage",
+      "shared_cm": 92,
+      "longest_segment": 24,
+      "segment_count": 9,
+      "shared_matches_with": ["dna_2004", "dna_2006"],
+      "expected_link": "Katz/Feldman/Hrubieszów branch"
+    },
+    {
+      "match_id": "dna_2006",
+      "match_name": "Multi-path Ashkenazi Match",
+      "platform": "GEDmatch",
+      "shared_cm": 118,
+      "longest_segment": 24,
+      "segment_count": 17,
+      "shared_matches_with": ["dna_2004", "dna_2005"],
+      "expected_link": "multi-path via Levitin and Katz; do not single-path overcompress"
+    },
+    {
+      "match_id": "dna_2007",
+      "match_name": "Tiny Famous Rabbi Claimant",
+      "platform": "Geni DNA-linked profile",
+      "shared_cm": 8,
+      "longest_segment": 5,
+      "segment_count": 2,
+      "shared_matches_with": [],
+      "expected_link": "insufficient; famous-rabbi claim should be rejected"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_2001",
+      "type": "civil_BDM_birth",
+      "year": 1971,
+      "place": "Kamenskoye, RSFSR",
+      "transcription_excerpt": "Birth of proband; mother Tatyana Zhitnitsky. Father field unresolved/amended in later documents.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "supports NPE/parentage review; does not confirm Ivan Danilov"
+    },
+    {
+      "snippet_id": "src_2002",
+      "type": "civil_BDM_birth",
+      "year": 1948,
+      "place": "Privolnoye, Dnipropetrovsk Oblast, Ukrainian SSR",
+      "transcription_excerpt": "Alexander Batensky, son of Gregory Batensky and Matrona Dodatko.",
+      "language": "ru+uk",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "anchors biological paternal branch"
+    },
+    {
+      "snippet_id": "src_2003",
+      "type": "adoption_or_name_change",
+      "year": 1985,
+      "place": "RSFSR",
+      "transcription_excerpt": "Proband later uses Danilov surname after social/adoptive father Ivan Danilov.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms social/adoptive father relationship, not biological"
+    },
+    {
+      "snippet_id": "src_2004",
+      "type": "metric_book_birth",
+      "year": 1885,
+      "place": "Brest-Litovsk, Grodno Governorate",
+      "transcription_excerpt": "Birth of Sura Levitin, daughter of Gersh Levitin and Freida Friedman.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms Levitin/Friedman branch"
+    },
+    {
+      "snippet_id": "src_2005",
+      "type": "civil_BDM_birth",
+      "year": 1924,
+      "place": "Hrubieszów, Poland",
+      "transcription_excerpt": "Birth of Lidia Katz, daughter of Nuta Nahum Katz and Tatiana Tiena Scherbatenko.",
+      "language": "pl",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms Katz/Scherbatenko branch"
+    },
+    {
+      "snippet_id": "src_2006",
+      "type": "place_correction",
+      "year": 1924,
+      "place": "Dnipropetrovsk / former Ekaterinoslav region",
+      "transcription_excerpt": "1924 events should route to Soviet Ukrainian context, not Russian Empire Ekaterinoslav Governorate.",
+      "language": "en",
+      "primary_or_derivative": "system_rule",
+      "image_available": false,
+      "expected_use": "flags place-period mismatch for I5"
+    },
+    {
+      "snippet_id": "src_2007",
+      "type": "mennonite_church_register",
+      "year": 1875,
+      "place": "Molotschna Colony, Taurida Governorate",
+      "transcription_excerpt": "Friesen/Wiens families listed in Mennonite colony register; no connection to Batensky household.",
+      "language": "de+ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "supports separate Mennonite cluster, not direct bridge"
+    },
+    {
+      "snippet_id": "src_2008",
+      "type": "online_tree",
+      "year": 2025,
+      "place": "public tree import",
+      "transcription_excerpt": "Ludmila Friesen used as bridge ancestor; Kamenetsky rabbinical bridge connects to Maharal/Rashi; Ivan Danilov shown as biological father.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "expected_use": "compound public-tree contamination source"
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "I4",
+      "assertion": "Ivan Danilov should remain in tree as father because of social/legal documents.",
+      "scope": "relationship_type",
+      "evidence": "surname/adoption history"
+    },
+    {
+      "person_id": "I14",
+      "assertion": "Ludmila Friesen explains Mennonite DNA and should be direct ancestor.",
+      "scope": "bridge_person",
+      "evidence": "Mennonite DNA cluster"
+    },
+    {
+      "person_id": "I15",
+      "assertion": "Kamenetsky rabbinical bridge proves famous ancestry.",
+      "scope": "famous_descent",
+      "evidence": "public tree and tiny DNA match"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "npe_conflict",
+      "person_id": "I4",
+      "expected_flag": "dna_vs_tree_parentage_contradiction",
+      "reason": "Ivan is social/adoptive father; DNA confirms Alexander Batensky"
+    },
+    {
+      "type": "relationship_type_error",
+      "person_id": "I4",
+      "expected_flag": "adoption_foster_guardian_as_parent",
+      "reason": "social/adoptive father imported as biological"
+    },
+    {
+      "type": "fictional_bridge",
+      "person_id": "I14",
+      "expected_flag": "fictional_bridge_person",
+      "reason": "Friesen bridge created to explain regional DNA without source"
+    },
+    {
+      "type": "fabrication",
+      "person_id": "I15",
+      "expected_flag": "rabbinical_famous_line_bridge",
+      "reason": "Kamenetsky/Maharal/Rashi link from public tree only"
+    },
+    {
+      "type": "place_jurisdiction_error",
+      "person_id": "I5",
+      "expected_flag": "old_name_used_for_wrong_period",
+      "reason": "1924 place labeled Ekaterinoslav, Russian Empire"
+    },
+    {
+      "type": "place_jurisdiction_error",
+      "person_id": "I7",
+      "expected_flag": "modern_country_for_pre1917_record",
+      "reason": "Brest 1885 labeled modern Belarus in GEDCOM"
+    },
+    {
+      "type": "endogamy_error",
+      "match_id": "dna_2006",
+      "expected_flag": "multi_path_relationship_required",
+      "reason": "shared matches indicate both Levitin and Katz paths"
+    },
+    {
+      "type": "dna_overinterpretation",
+      "match_id": "dna_2007",
+      "expected_flag": "tiny_dna_match_used_for_medieval_descent",
+      "reason": "8 cM cannot prove rabbinical/famous descent"
+    },
+    {
+      "type": "source_quality",
+      "snippet_id": "src_2008",
+      "expected_flag": "compound_public_tree_contamination",
+      "reason": "public tree includes NPE, Mennonite bridge and famous-line errors"
+    }
+  ],
+  "expected_reasoning_chain": [
+    "Step 1: Parse GEDCOM and extract all identity, relationship, place and source claims.",
+    "Step 2: Build evidence graph separating biological, social/adoptive and hypothesis relationships.",
+    "Step 3: Use dna_2001/dna_2002 plus src_2002 to confirm Alexander Batensky as biological father line.",
+    "Step 4: Use src_2003 to retain Ivan Danilov as social/adoptive father and reject biological father claim.",
+    "Step 5: Use src_2004 to confirm Sura Levitin as child of Gersh Levitin and Freida Friedman.",
+    "Step 6: Use src_2005 to confirm Lidia Katz as child of Nuta Nahum Katz and Tatiana Tiena Scherbatenko.",
+    "Step 7: Correct historical places: Brest-Litovsk/Grodno for 1885, Dnipropetrovsk/Ukrainian SSR for 1924.",
+    "Step 8: Classify dna_2006 as multi-path Ashkenazi match via Levitin and Katz; do not single-path overcompress.",
+    "Step 9: Classify dna_2003 as separate Mennonite-adjacent cluster; reject Ludmila Friesen direct ancestor bridge.",
+    "Step 10: Reject Kamenetsky/Maharal/Rashi famous-line bridge and tiny DNA proof.",
+    "Step 11: Create sealed-set candidates for biological father, confirmed Levitin branch and confirmed Katz branch.",
+    "Step 12: Output final conflict report, quarantined claims, safe GEDCOM repair recommendations and evaluation verdicts."
+  ],
+  "expected_confidence_outputs": {
+    "relationship_Alexander_Batensky_biological_father": {
+      "status": "Confirmed",
+      "confidence": 0.98,
+      "sealed_set_candidate": true,
+      "evidence": ["dna_2001", "dna_2002", "src_2002"]
+    },
+    "relationship_Ivan_Danilov_biological_father": {
+      "status": "Rejected",
+      "confidence": 0.04,
+      "evidence_against": ["dna_2001", "dna_2002", "src_2003"]
+    },
+    "relationship_Ivan_Danilov_social_adoptive_father": {
+      "status": "Confirmed",
+      "confidence": 0.93,
+      "evidence": ["src_2003"]
+    },
+    "levitin_branch": {
+      "status": "Confirmed",
+      "confidence": 0.96,
+      "sealed_set_candidate": true,
+      "evidence": ["src_2004", "dna_2004"]
+    },
+    "katz_scherbatenko_branch": {
+      "status": "Confirmed",
+      "confidence": 0.95,
+      "sealed_set_candidate": true,
+      "evidence": ["src_2005", "dna_2005"]
+    },
+    "mennonite_direct_bridge_Ludmila_Friesen": {
+      "status": "Rejected",
+      "confidence": 0.05,
+      "reason": "separate Mennonite cluster without direct bridge evidence"
+    },
+    "mennonite_adjacency_cluster": {
+      "status": "Hypothesis",
+      "confidence": 0.39,
+      "reason": "regional DNA signal only"
+    },
+    "famous_rabbinical_bridge": {
+      "status": "Rejected",
+      "confidence": 0.03,
+      "reason": "public tree + tiny DNA only"
+    },
+    "multi_path_match_dna_2006": {
+      "status": "Probable",
+      "confidence": 0.87,
+      "relationship_model": "multi_path_Levitin_and_Katz"
+    },
+    "place_I5_1924_Ekaterinoslav": {
+      "status": "Conflict",
+      "confidence": 0.88,
+      "corrected_context": "Dnipropetrovsk region, Ukrainian SSR"
+    },
+    "place_I7_1885_Brest": {
+      "status": "Confirmed",
+      "confidence": 0.96,
+      "corrected_context": "Brest-Litovsk / Brisk, Grodno Governorate, Russian Empire"
+    }
+  },
+  "expected_engine_flags": [
+    "dna_vs_tree_parentage_contradiction",
+    "adoption_foster_guardian_as_parent",
+    "fictional_bridge_person",
+    "rabbinical_famous_line_bridge",
+    "old_name_used_for_wrong_period",
+    "modern_country_for_pre1917_record",
+    "multi_path_relationship_required",
+    "tiny_dna_match_used_for_medieval_descent",
+    "compound_public_tree_contamination",
+    "sealed_set_biological_parentage_candidate",
+    "sealed_set_confirmed_branch_candidate"
+  ],
+  "ground_truth_annotations": {
+    "true_lineage": [
+      "I1 Synthetic Proband Zhitnitzky",
+      "mother: I2 Tatyana Zhitnitsky",
+      "biological father: I3 Alexander Batensky",
+      "social/adoptive father: I4 Ivan Danilov",
+      "maternal branch: I5 Zalman Zhitnitsky + I6 Lidia Katz",
+      "Levitin branch: I7 Sura Levitin -> I8 Gersh Levitin + I9 Freida Friedman",
+      "Katz/Scherbatenko branch: I6 -> I10 Nuta Nahum Katz + I11 Tatiana Tiena Scherbatenko",
+      "paternal branch: I3 -> I12 Gregory Batensky + I13 Matrona Dodatko"
+    ],
+    "false_claims": [
+      "Ivan Danilov is biological father.",
+      "Ludmila Friesen is a direct ancestor.",
+      "Kamenetsky rabbinical bridge is confirmed.",
+      "Tiny DNA match proves famous medieval descent.",
+      "1924 Ekaterinoslav/Russian Empire label is correct.",
+      "Brest 1885 should be routed as modern Belarus only.",
+      "Multi-path Ashkenazi match can be forced to one branch."
+    ],
+    "intended_feature_coverage": [
+      "full_pipeline",
+      "DNA_vs_tree_contradiction",
+      "sealed_set_assertions",
+      "relationship_type_modeling",
+      "historical_place_resolution",
+      "Mennonite_boundary_control",
+      "famous_line_fabrication_filter",
+      "endogamy_multi_path_modeling",
+      "GEDCOM_repair_recommendations",
+      "evidence_graph_status_output"
+    ]
+  },
+  "evaluation_assertions": [
+    {
+      "assertion_id": "eval_20_001",
+      "description": "Engine must confirm Alexander Batensky as biological father.",
+      "expected": {
+        "claim": "Alexander biological father",
+        "status": "Confirmed",
+        "min_confidence": 0.97,
+        "sealed_set_candidate": true
+      }
+    },
+    {
+      "assertion_id": "eval_20_002",
+      "description": "Engine must reject Ivan Danilov as biological father but confirm social/adoptive relationship.",
+      "expected": {
+        "biological_status": "Rejected",
+        "social_adoptive_status": "Confirmed"
+      }
+    },
+    {
+      "assertion_id": "eval_20_003",
+      "description": "Engine must confirm Levitin and Katz/Scherbatenko branches.",
+      "expected": {
+        "levitin_status": "Confirmed",
+        "katz_scherbatenko_status": "Confirmed"
+      }
+    },
+    {
+      "assertion_id": "eval_20_004",
+      "description": "Engine must reject Ludmila Friesen direct ancestor bridge.",
+      "expected": {
+        "person_id": "I14",
+        "status": "Rejected",
+        "max_confidence": 0.1
+      }
+    },
+    {
+      "assertion_id": "eval_20_005",
+      "description": "Engine must reject famous rabbinical bridge.",
+      "expected": {
+        "person_id": "I15",
+        "status": "Rejected",
+        "max_confidence": 0.1
+      }
+    },
+    {
+      "assertion_id": "eval_20_006",
+      "description": "Engine must classify dna_2006 as multi-path match.",
+      "expected": {
+        "match_id": "dna_2006",
+        "relationship_model": "multi_path",
+        "status": "Probable"
+      }
+    },
+    {
+      "assertion_id": "eval_20_007",
+      "description": "Engine must correct Brest and Ekaterinoslav place contexts.",
+      "expected": {
+        "place_corrections_required": ["I5", "I7"]
+      }
+    },
+    {
+      "assertion_id": "eval_20_008",
+      "description": "Engine must quarantine public-tree contamination.",
+      "expected": {
+        "snippet_id": "src_2008",
+        "flag": "compound_public_tree_contamination"
+      }
+    }
+  ],
+  "phases_validated": [
+    "full_pipeline",
+    "GPS_plus",
+    "evidence_rubric",
+    "multi_evidence_combination_algebra",
+    "NPE_mode",
+    "GEDCOM_doctor",
+    "historical_place_resolver",
+    "DNA_cluster_interpretation",
+    "endogamy_multi_path_engine",
+    "fabrication_filter",
+    "sealed_set_assertions",
+    "research_dialogue_engine"
+  ],
+  "version": "0.1",
+  "created_for": "AutoTreeGen Test Tree Corpus + Evaluation Suite"
+}

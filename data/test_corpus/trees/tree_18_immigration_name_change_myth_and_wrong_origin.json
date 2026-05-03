@@ -1,0 +1,327 @@
+{
+  "tree_id": "tree_18_immigration_name_change_myth_and_wrong_origin",
+  "category": "migration_name_change_resolution",
+  "complexity": "high",
+  "population_context": "Ashkenazi diaspora",
+  "scope_description": "5-generation Eastern European Jewish migration case where an immigrant's surname is assumed to have been changed at Ellis Island, causing wrong shtetl/origin and wrong European parents. Uses passenger manifest, naturalization, census, chain migration contacts and DNA cluster evidence.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR AutoTreeGenSyntheticCorpus\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Synthetic Proband /Freedman/\n1 SEX M\n1 BIRT\n2 DATE 1980\n2 PLAC Brooklyn, New York, USA\n1 FAMC @F1@\n0 @I2@ INDI\n1 NAME Samuel /Freedman/\n1 SEX M\n1 BIRT\n2 DATE 1950\n2 PLAC New York, USA\n1 FAMC @F2@\n0 @I3@ INDI\n1 NAME Morris /Freedman/\n1 SEX M\n1 BIRT\n2 DATE 1918\n2 PLAC New York, USA\n1 FAMC @F3@\n0 @I4@ INDI\n1 NAME Moshe /Friedman/\n1 SEX M\n1 BIRT\n2 DATE ABT 1889\n2 PLAC Brest-Litovsk, Grodno Governorate, Russian Empire\n1 DEAT\n2 DATE 1962\n2 PLAC Brooklyn, New York, USA\n1 FAMS @F3@\n1 NOTE Correct immigrant ancestor; surname standardized gradually after arrival.\n0 @I5@ INDI\n1 NAME Chaya /Raskes/\n1 SEX F\n1 BIRT\n2 DATE ABT 1892\n2 PLAC Brest-Litovsk, Grodno Governorate, Russian Empire\n1 FAMS @F3@\n0 @I6@ INDI\n1 NAME Max /Freedman/\n1 SEX M\n1 BIRT\n2 DATE ABT 1887\n2 PLAC Galicia, Austria-Hungary\n1 NOTE Wrong immigrant candidate attached by public tree because name became Freedman.\n0 @I7@ INDI\n1 NAME Leib /Friedman/\n1 SEX M\n1 BIRT\n2 DATE ABT 1860\n2 PLAC Brest-Litovsk, Grodno Governorate\n1 FAMS @F4@\n0 @I8@ INDI\n1 NAME Sura /Levitin/\n1 SEX F\n1 BIRT\n2 DATE ABT 1863\n2 PLAC Brest-Litovsk, Grodno Governorate\n1 FAMS @F4@\n0 @I9@ INDI\n1 NAME Mendel /Frydman/\n1 SEX M\n1 BIRT\n2 DATE ABT 1858\n2 PLAC Tarnów, Galicia, Austria-Hungary\n1 NOTE Wrong father from Galician Freedman/Frydman branch.\n0 @I10@ INDI\n1 NAME Unknown Wife /Frydman/\n1 SEX F\n1 NOTE Wrong Galician mother placeholder.\n0 @F3@ FAM\n1 HUSB @I4@\n1 WIFE @I5@\n1 CHIL @I3@\n0 @F4@ FAM\n1 HUSB @I7@\n1 WIFE @I8@\n1 CHIL @I4@\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_1801",
+      "match_name": "Anonymized Brest Friedman Cousin",
+      "platform": "AncestryDNA",
+      "shared_cm": 118,
+      "longest_segment": 29,
+      "segment_count": 11,
+      "shared_matches_with": ["dna_1802", "dna_1803"],
+      "expected_link": "Brest-Litovsk Friedman/Raskes branch"
+    },
+    {
+      "match_id": "dna_1802",
+      "match_name": "Anonymized Raskes Cousin",
+      "platform": "MyHeritage",
+      "shared_cm": 82,
+      "longest_segment": 23,
+      "segment_count": 9,
+      "triangulated_segments": [
+        {
+          "chromosome": 8,
+          "start": 18200000,
+          "end": 34100000,
+          "cm": 22.4,
+          "triangulated_with": ["dna_1801"]
+        }
+      ],
+      "shared_matches_with": ["dna_1801"],
+      "expected_link": "Chaya Raskes side"
+    },
+    {
+      "match_id": "dna_1803",
+      "match_name": "Anonymized Levitin Cousin",
+      "platform": "GEDmatch",
+      "shared_cm": 44,
+      "longest_segment": 15,
+      "segment_count": 6,
+      "shared_matches_with": ["dna_1801"],
+      "expected_link": "Sura Levitin / Brest branch"
+    },
+    {
+      "match_id": "dna_1804",
+      "match_name": "Anonymized Galician Frydman Match",
+      "platform": "FamilyTreeDNA",
+      "shared_cm": 21,
+      "longest_segment": 7,
+      "segment_count": 5,
+      "shared_matches_with": [],
+      "expected_link": "Galician surname collision; not proof of Max/Fridman branch"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_1801",
+      "type": "passenger_manifest",
+      "year": 1912,
+      "place": "Ellis Island / New York, USA",
+      "transcription_excerpt": "Moshe Friedman, age 23, last residence Brest-Litovsk, nearest relative father Leib Friedman in Brest, going to cousin Yankel Raskes, Brooklyn.",
+      "language": "en",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms original surname Friedman and Brest/Raskes chain migration contact; no Ellis Island name change."
+    },
+    {
+      "snippet_id": "src_1802",
+      "type": "naturalization_petition",
+      "year": 1921,
+      "place": "Brooklyn, New York, USA",
+      "transcription_excerpt": "Morris/Moshe Friedman, also known as Morris Freedman, born Brest-Litovsk 1889, arrived 1912 under name Moshe Friedman.",
+      "language": "en",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "shows gradual Americanized alias; not port-official renaming."
+    },
+    {
+      "snippet_id": "src_1803",
+      "type": "census",
+      "year": 1920,
+      "place": "Brooklyn, New York, USA",
+      "transcription_excerpt": "Morris Freedman, wife Clara/Chaya, son Morris Jr., language Yiddish, birthplace Russia, immigration 1912.",
+      "language": "en",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "supports Americanized name and family group."
+    },
+    {
+      "snippet_id": "src_1804",
+      "type": "metric_book_birth",
+      "year": 1889,
+      "place": "Brest-Litovsk, Grodno Governorate",
+      "transcription_excerpt": "Birth of Moshe Friedman, son of Leib Friedman and Sura Levitin.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "anchors correct European birth and parents."
+    },
+    {
+      "snippet_id": "src_1805",
+      "type": "galicia_birth_index",
+      "year": 1887,
+      "place": "Tarnów, Galicia",
+      "transcription_excerpt": "Max Frydman, son of Mendel Frydman. No evidence of migration to Brooklyn or link to Raskes contacts.",
+      "language": "pl+de",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "expected_use": "wrong same-surname candidate; should not attach."
+    },
+    {
+      "snippet_id": "src_1806",
+      "type": "online_tree",
+      "year": 2025,
+      "place": "public tree import",
+      "transcription_excerpt": "Family story: name was changed from Frydman to Freedman at Ellis Island; ancestor from Tarnów, Galicia.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "expected_use": "low-confidence family story contradicted by passenger/naturalization and DNA cluster."
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "I4",
+      "assertion": "Surname was changed at Ellis Island from Frydman to Freedman.",
+      "scope": "name_change",
+      "evidence": "family story / public tree"
+    },
+    {
+      "person_id": "I6",
+      "assertion": "Max Freedman from Galicia is the immigrant ancestor.",
+      "scope": "identity_merge",
+      "evidence": "similar Americanized surname"
+    },
+    {
+      "person_id": "I9",
+      "assertion": "Mendel Frydman is the correct father because of Galician index.",
+      "scope": "parentage",
+      "evidence": "surname match"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "migration_error",
+      "subtype": "ellis_island_name_change_myth",
+      "person_id": "I4",
+      "expected_flag": "ellis_island_name_change_myth",
+      "reason": "passenger manifest already lists Friedman; naturalization documents alias transition"
+    },
+    {
+      "type": "same_name_different_person",
+      "persons": ["I4", "I6"],
+      "expected_flag": "immigration_same_name_wrong_origin_attachment",
+      "reason": "Brest immigrant attached to Galician same-surname candidate"
+    },
+    {
+      "type": "false_parent_assignment",
+      "person_id": "I9",
+      "expected_flag": "surname_only_parent_assignment",
+      "reason": "Mendel Frydman attached based on surname only"
+    },
+    {
+      "type": "source_quality",
+      "snippet_id": "src_1806",
+      "expected_flag": "family_story_contradicted_by_primary_records",
+      "reason": "public tree/family story conflicts with manifest and naturalization"
+    },
+    {
+      "type": "dna_overinterpretation",
+      "match_id": "dna_1804",
+      "expected_flag": "small_galician_surname_collision",
+      "reason": "weak Galician Frydman match does not override Brest anchors"
+    },
+    {
+      "type": "place_jurisdiction_error",
+      "person_id": "I6",
+      "expected_flag": "wrong_origin_place_assignment",
+      "reason": "Tarnów Galicia substituted for Brest-Litovsk without migration evidence"
+    }
+  ],
+  "expected_reasoning_chain": [
+    "Step 1: Parse immigrant identity claims and identify competing origins: Brest-Litovsk vs Tarnów/Galicia.",
+    "Step 2: Use passenger manifest src_1801 to anchor name Moshe Friedman, last residence Brest-Litovsk and cousin Yankel Raskes in Brooklyn.",
+    "Step 3: Use naturalization src_1802 to show alias progression Friedman -> Freedman after arrival, not Ellis Island renaming.",
+    "Step 4: Use census src_1803 to correlate family group and Americanized names.",
+    "Step 5: Use metric book src_1804 to confirm European parents Leib Friedman and Sura Levitin.",
+    "Step 6: Evaluate Galician index src_1805 as same-surname candidate only; no chain migration or DNA support.",
+    "Step 7: Evaluate DNA cluster dna_1801/dna_1802/dna_1803 as Brest/Raskes/Levitin support.",
+    "Step 8: Downweight dna_1804 Galician Frydman as weak surname collision.",
+    "Step 9: Reject I6/I9/I10 Galician branch attachment and quarantine src_1806 public tree claim.",
+    "Step 10: Output normalized name history with aliases: Moshe Friedman, Morris Friedman, Morris Freedman."
+  ],
+  "expected_confidence_outputs": {
+    "identity_I4_correct_immigrant": {
+      "status": "Confirmed",
+      "confidence": 0.97,
+      "canonical_name": "Moshe/Morris Friedman/Freedman",
+      "evidence": ["src_1801", "src_1802", "src_1803", "src_1804"]
+    },
+    "identity_I4_I6_same_person": {
+      "status": "Rejected",
+      "confidence": 0.05,
+      "reason": "different origin, no chain migration, no supporting DNA"
+    },
+    "relationship_I7_I8_parents_of_I4": {
+      "status": "Confirmed",
+      "confidence": 0.95,
+      "evidence": ["src_1801", "src_1804", "dna_1803"]
+    },
+    "relationship_I9_parent_of_I4": {
+      "status": "Rejected",
+      "confidence": 0.06,
+      "reason": "surname-only Galician index"
+    },
+    "ellis_island_name_change_claim": {
+      "status": "Rejected",
+      "confidence": 0.03,
+      "reason": "records show name usage before/after arrival, not official port change"
+    },
+    "brest_origin": {
+      "status": "Confirmed",
+      "confidence": 0.96,
+      "evidence": ["src_1801", "src_1802", "src_1804"]
+    },
+    "tarnow_origin": {
+      "status": "Rejected",
+      "confidence": 0.08,
+      "reason": "unsupported same-surname candidate"
+    }
+  },
+  "expected_engine_flags": [
+    "ellis_island_name_change_myth",
+    "immigration_same_name_wrong_origin_attachment",
+    "surname_only_parent_assignment",
+    "family_story_contradicted_by_primary_records",
+    "small_galician_surname_collision",
+    "wrong_origin_place_assignment",
+    "chain_migration_contact_supports_identity",
+    "alias_history_not_new_person"
+  ],
+  "ground_truth_annotations": {
+    "true_lineage": [
+      "I1 Synthetic Proband Freedman",
+      "I2 Samuel Freedman",
+      "I3 Morris Freedman",
+      "I4 Moshe/Morris Friedman/Freedman + I5 Chaya Raskes",
+      "I7 Leib Friedman + I8 Sura Levitin"
+    ],
+    "false_claims": [
+      "Name changed at Ellis Island from Frydman to Freedman.",
+      "Max Freedman from Galicia is same person as Moshe Friedman from Brest.",
+      "Mendel Frydman is father of the immigrant.",
+      "Weak Galician DNA match proves origin."
+    ],
+    "intended_feature_coverage": [
+      "migration_name_history",
+      "Ellis_Island_myth_detection",
+      "passenger_manifest_parsing",
+      "naturalization_alias_tracking",
+      "chain_migration_contact_matching",
+      "wrong_origin_attachment_detection",
+      "DNA_archive_origin_correlation"
+    ]
+  },
+  "evaluation_assertions": [
+    {
+      "assertion_id": "eval_18_001",
+      "description": "Engine must reject Ellis Island name-change myth.",
+      "expected": {
+        "claim": "ellis_island_name_change",
+        "status": "Rejected",
+        "max_confidence": 0.1
+      }
+    },
+    {
+      "assertion_id": "eval_18_002",
+      "description": "Engine must confirm Brest origin.",
+      "expected": {
+        "origin": "Brest-Litovsk",
+        "status": "Confirmed",
+        "min_confidence": 0.9
+      }
+    },
+    {
+      "assertion_id": "eval_18_003",
+      "description": "Engine must reject I4/I6 merge.",
+      "expected": {
+        "merge_pair": ["I4", "I6"],
+        "auto_merge_allowed": false,
+        "status": "Rejected"
+      }
+    },
+    {
+      "assertion_id": "eval_18_004",
+      "description": "Engine must confirm Leib Friedman and Sura Levitin as parents.",
+      "expected": {
+        "relationship": "I7/I8 parents of I4",
+        "status": "Confirmed",
+        "min_confidence": 0.9
+      }
+    },
+    {
+      "assertion_id": "eval_18_005",
+      "description": "Engine must preserve aliases without creating separate people.",
+      "expected": {
+        "aliases": ["Moshe Friedman", "Morris Friedman", "Morris Freedman"],
+        "same_person": true
+      }
+    }
+  ],
+  "phases_validated": [
+    "migration_pathway_patterns",
+    "15.10_name_disambiguation",
+    "19.x_place_resolution",
+    "22.x_archive_routing",
+    "16.x_dna_cluster_interpretation",
+    "24.x_evidence_summary",
+    "25.x_research_dialogue_engine"
+  ],
+  "version": "0.1",
+  "created_for": "AutoTreeGen Test Tree Corpus + Evaluation Suite"
+}

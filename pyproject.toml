@@ -107,6 +107,9 @@ extend-exclude = [
     "build",
     "dist",
     "samples/personal",
+    # Phase 26.1 / ADR-0084: reference runner skeleton от ChatGPT хранится
+    # как-есть для round-trip-аудита; canonical runner — scripts/run_eval.py.
+    "data/test_corpus/harness/autotreegen_eval_runner_skeleton.py",
 ]
 
 [tool.ruff.lint]

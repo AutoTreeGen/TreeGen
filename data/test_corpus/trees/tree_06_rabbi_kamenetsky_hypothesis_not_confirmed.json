@@ -1,0 +1,353 @@
+{
+  "tree_id": "tree_06_rabbi_kamenetsky_hypothesis_not_confirmed",
+  "category": "rabbinical_hypothesis_control",
+  "complexity": "high",
+  "population_context": "Ashkenazi",
+  "scope_description": "6-generation Pale/Litvak-Volhynian Jewish tree with a plausible Kamenetsky surname cluster and distant DNA, but no primary bridge to the famous Rabbi Kamenetsky line. Designed to ensure AutoTreeGen keeps prestige-line claims as Hypothesis or Rejected, not Confirmed.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR AutoTreeGenSyntheticCorpus\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Synthetic Proband /Katz/\n1 SEX M\n1 BIRT\n2 DATE 1975\n2 PLAC Melbourne, Victoria, Australia\n1 FAMC @F1@\n0 @I2@ INDI\n1 NAME Lidia /Katz/\n1 SEX F\n1 BIRT\n2 DATE 1949\n2 PLAC Kyiv, Ukrainian SSR\n1 FAMC @F2@\n0 @I3@ INDI\n1 NAME Sura /Levitin/\n1 SEX F\n1 BIRT\n2 DATE ABT 1924\n2 PLAC Berdychiv, Ukrainian SSR\n1 FAMC @F3@\n0 @I4@ INDI\n1 NAME Rakhla Rocha /Leschinsky/\n1 SEX F\n1 BIRT\n2 DATE ABT 1895\n2 PLAC Starokostiantyniv, Volhynia Governorate, Russian Empire\n1 FAMS @F3@\n0 @I5@ INDI\n1 NAME Nakhman /Kamenetsky/\n1 SEX M\n1 BIRT\n2 DATE ABT 1865\n2 PLAC Kamenets-Podolsk, Podolia Governorate, Russian Empire\n1 FAMS @F4@\n0 @I6@ INDI\n1 NAME Dvora /Leschinsky/\n1 SEX F\n1 BIRT\n2 DATE ABT 1868\n2 PLAC Starokostiantyniv, Volhynia Governorate, Russian Empire\n1 FAMS @F4@\n0 @I7@ INDI\n1 NAME Rabbi Yaakov /Kamenetsky/\n1 SEX M\n1 BIRT\n2 DATE 1891\n2 PLAC Kalushkove, Russian Empire\n1 DEAT\n2 DATE 1986\n2 PLAC United States\n1 NOTE Famous rabbinical profile. Imported as possible ancestor in copied tree, but dates make direct fatherhood of I5 impossible.\n0 @I8@ INDI\n1 NAME Unknown Father /Kamenetsky/\n1 SEX M\n1 BIRT\n2 DATE ABT 1835\n2 PLAC Kamenets-Podolsk, Podolia Governorate, Russian Empire\n1 FAMS @F5@\n0 @I9@ INDI\n1 NAME Rabbi Line Bridge /Kamenetsky/\n1 SEX M\n1 BIRT\n2 DATE ABT 1830\n2 PLAC Lithuania\n1 NOTE Unsourced bridge person connecting Nakhman to famous rabbinical family.\n0 @I10@ INDI\n1 NAME Nachman /Kamieniec/\n1 SEX M\n1 BIRT\n2 DATE ABT 1864\n2 PLAC Minsk Governorate, Russian Empire\n1 NOTE Same-name candidate from different jurisdiction; not safe duplicate.\n0 @F3@ FAM\n1 HUSB @I11@\n1 WIFE @I4@\n1 CHIL @I3@\n0 @I11@ INDI\n1 NAME Gersh /Levitin/\n1 SEX M\n1 BIRT\n2 DATE ABT 1890\n2 PLAC Berdychiv, Kiev Governorate, Russian Empire\n0 @F4@ FAM\n1 HUSB @I5@\n1 WIFE @I6@\n1 CHIL @I4@\n0 @F5@ FAM\n1 HUSB @I8@\n1 CHIL @I5@\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_601",
+      "match_name": "Anonymized Kamenetsky Surname Match",
+      "platform": "MyHeritage",
+      "shared_cm": 24,
+      "longest_segment": 9,
+      "segment_count": 5,
+      "shared_matches_with": ["dna_602", "dna_604"],
+      "expected_link": "Kamenetsky surname/locality hypothesis; too distant and endogamous for famous-rabbi confirmation"
+    },
+    {
+      "match_id": "dna_602",
+      "match_name": "Anonymized Leschinsky Match",
+      "platform": "GEDmatch",
+      "shared_cm": 37,
+      "longest_segment": 13,
+      "segment_count": 4,
+      "triangulated_segments": [
+        {
+          "chromosome": 3,
+          "start": 72000000,
+          "end": 82500000,
+          "cm": 12.7,
+          "triangulated_with": ["dna_601"]
+        }
+      ],
+      "shared_matches_with": ["dna_601", "dna_603"],
+      "expected_link": "supports Leschinsky/Kamenetsky collateral cluster"
+    },
+    {
+      "match_id": "dna_603",
+      "match_name": "Anonymized Levitin Match",
+      "platform": "AncestryDNA",
+      "shared_cm": 68,
+      "longest_segment": 21,
+      "segment_count": 7,
+      "shared_matches_with": ["dna_602"],
+      "expected_link": "Levitin branch anchor, not Kamenetsky rabbinical branch"
+    },
+    {
+      "match_id": "dna_604",
+      "match_name": "Famous Rabbi Descendant Claimant",
+      "platform": "FamilyTreeDNA",
+      "shared_cm": 14,
+      "longest_segment": 6,
+      "segment_count": 3,
+      "shared_matches_with": ["dna_601"],
+      "expected_link": "weak endogamous overlap; should not confirm famous rabbinical descent"
+    },
+    {
+      "match_id": "dna_605",
+      "match_name": "Control Match No Shared Cluster",
+      "platform": "GEDmatch",
+      "shared_cm": 8,
+      "longest_segment": 4,
+      "segment_count": 2,
+      "shared_matches_with": [],
+      "expected_link": "noise; no usable evidence"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_601",
+      "type": "metric_book_birth",
+      "year": 1895,
+      "place": "Starokostiantyniv, Volhynia Governorate",
+      "transcription_excerpt": "Birth of Rakhla Rocha, daughter of Nakhman Kamenetsky son of unknown/illegible patronymic and Dvora Leschinsky.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms I4 as child of I5 and I6; father patronymic not legible enough to connect to famous line."
+    },
+    {
+      "snippet_id": "src_602",
+      "type": "metric_book_marriage",
+      "year": 1891,
+      "place": "Starokostiantyniv, Volhynia Governorate",
+      "transcription_excerpt": "Marriage of Nakhman Kamenetsky, age 26, registered from Kamenets-Podolsk, to Dvora Leschinsky, daughter of Movsha, Starokostiantyniv community.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "supports Kamenets-Podolsk to Starokostiantyniv migration and relationship to Dvora; no rabbinical lineage."
+    },
+    {
+      "snippet_id": "src_603",
+      "type": "revision_list",
+      "year": 1858,
+      "place": "Kamenets-Podolsk Uyezd, Podolia Governorate",
+      "transcription_excerpt": "Kamenetsky household: adult male surname Kamenetsky, child Nakhman age not listed clearly; household page damaged.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "weak possible candidate for I5, but damaged page and no complete father link."
+    },
+    {
+      "snippet_id": "src_604",
+      "type": "online_tree",
+      "year": 2023,
+      "place": "Geni / MyHeritage copied tree",
+      "transcription_excerpt": "Nakhman Kamenetsky attached to Rabbi Yaakov Kamenetsky family through Rabbi Line Bridge Kamenetsky; no document cited.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "expected_use": "low-confidence online claim; should trigger fabrication risk and not confirm."
+    },
+    {
+      "snippet_id": "src_605",
+      "type": "biographical_rabbinical_source",
+      "year": 1986,
+      "place": "United States / Lithuanian rabbinical biography",
+      "transcription_excerpt": "Rabbi Yaakov Kamenetsky born 1891; known family chronology incompatible with fathering a man born 1865.",
+      "language": "en+he",
+      "primary_or_derivative": "authored",
+      "image_available": false,
+      "expected_use": "disconfirms impossible direct father relationship; helps reject copied-tree claim."
+    },
+    {
+      "snippet_id": "src_606",
+      "type": "archive_negative_search",
+      "year": 2026,
+      "place": "Podolia / Volhynia archive routing",
+      "transcription_excerpt": "Search target remains open: no confirmed birth record for Nakhman Kamenetsky c.1865 found yet. Existing 1858 revision list is damaged and not conclusive.",
+      "language": "en",
+      "primary_or_derivative": "research_log",
+      "image_available": false,
+      "expected_use": "record exists/not-yet-confirmed; keeps bridge as hypothesis."
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "I5",
+      "assertion": "Nakhman Kamenetsky must be related to Rabbi Kamenetsky because surname and DNA matches overlap.",
+      "scope": "famous_descent_hypothesis",
+      "evidence": "surname cluster + distant DNA + copied tree"
+    },
+    {
+      "person_id": "I8",
+      "assertion": "Unknown Father Kamenetsky is the bridge generation.",
+      "scope": "parentage",
+      "evidence": "placeholder added to connect to famous line"
+    },
+    {
+      "person_id": "I10",
+      "assertion": "Nachman Kamieniec from Minsk is same as Nakhman Kamenetsky from Podolia.",
+      "scope": "duplicate_merge",
+      "evidence": "similar name only"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "fabrication",
+      "subtype": "rabbinical_famous_line_bridge",
+      "person_id": "I9",
+      "expected_flag": "rabbinical_maharal_to_modern_family_shortcut",
+      "expected_confidence_when_flagged": 0.9
+    },
+    {
+      "type": "chronology",
+      "subtype": "impossible_parent_child",
+      "persons": ["I7", "I5"],
+      "expected_flag": "child_born_before_parent",
+      "reason": "Rabbi Yaakov Kamenetsky born 1891 cannot father Nakhman born c.1865"
+    },
+    {
+      "type": "source_quality",
+      "person_id": "I9",
+      "expected_flag": "online_tree_only_famous_descent",
+      "reason": "bridge exists only in copied tree"
+    },
+    {
+      "type": "same_name_different_person",
+      "persons": ["I5", "I10"],
+      "expected_flag": "same_name_place_name_false_equivalence",
+      "reason": "Nakhman/Nachman similar name but Podolia vs Minsk; no migration evidence"
+    },
+    {
+      "type": "dna_overinterpretation",
+      "match_id": "dna_604",
+      "expected_flag": "endogamy_small_segment_overuse",
+      "reason": "14 cM total, longest 6 cM, no convincing triangulation"
+    },
+    {
+      "type": "research_gap",
+      "snippet_id": "src_606",
+      "expected_flag": "record_exists_not_yet_searched_or_not_conclusive",
+      "reason": "damaged revision list cannot confirm father bridge"
+    }
+  ],
+  "expected_reasoning_chain": [
+    "Step 1: Parse GEDCOM and identify famous-line bridge I9 and famous Rabbi profile I7.",
+    "Step 2: Run chronology validation: I7 born 1891 cannot be father or grandfather of I5 born c.1865 in asserted configuration.",
+    "Step 3: Confirm Rakhla Rocha I4 as child of Nakhman I5 and Dvora I6 using src_601.",
+    "Step 4: Confirm marriage and migration context for I5/I6 using src_602.",
+    "Step 5: Evaluate src_603 as weak/damaged revision-list clue; do not use it to confirm I8 fatherhood.",
+    "Step 6: Compare src_604 online tree to src_605 biography and chronology; reject direct famous-rabbi link.",
+    "Step 7: Evaluate DNA: dna_601/dna_602 support broad Kamenetsky-Leschinsky cluster; dna_604 is too weak/endogamous to prove famous descent.",
+    "Step 8: Block merge of I5 and I10 because place/jurisdiction conflict and no migration evidence.",
+    "Step 9: Classify Kamenetsky surname/locality relationship as Hypothesis, famous Rabbi Kamenetsky descent as Rejected.",
+    "Step 10: Generate research targets: locate Nakhman birth record c.1863-1867 in Kamenets-Podolsk, cemetery inscription, and undamaged revision-list household evidence."
+  ],
+  "expected_confidence_outputs": {
+    "relationship_I4_child_of_I5_I6": {
+      "status": "Confirmed",
+      "confidence": 0.95,
+      "evidence": ["src_601", "src_602"],
+      "classes": ["archival_record", "name", "place", "time"]
+    },
+    "relationship_I5_son_of_I8_unknown_kamenetsky": {
+      "status": "Hypothesis",
+      "confidence": 0.48,
+      "reason": "damaged revision list and user placeholder; insufficient father identification"
+    },
+    "relationship_I5_descendant_of_Rabbi_Yaakov_Kamenetsky_I7": {
+      "status": "Rejected",
+      "confidence": 0.03,
+      "reason": "chronologically impossible in asserted form; copied tree only"
+    },
+    "kamenetsky_surname_cluster": {
+      "status": "Hypothesis",
+      "confidence": 0.62,
+      "reason": "surname + place + weak DNA cluster; no primary bridge to famous rabbinical line"
+    },
+    "leschinsky_kamenetsky_cluster": {
+      "status": "Probable",
+      "confidence": 0.78,
+      "reason": "metric marriage/birth records plus triangulated DNA support collateral family cluster"
+    },
+    "merge_I5_I10": {
+      "status": "Rejected",
+      "confidence": 0.18,
+      "reason": "similar name only; Podolia vs Minsk jurisdiction conflict"
+    },
+    "dna_604_famous_descendant_claim": {
+      "status": "Insufficient",
+      "confidence": 0.21,
+      "reason": "weak small-segment endogamous match"
+    }
+  },
+  "expected_engine_flags": [
+    "rabbinical_famous_line_bridge",
+    "online_tree_only_famous_descent",
+    "child_born_before_parent",
+    "same_name_place_name_false_equivalence",
+    "endogamy_small_segment_overuse",
+    "record_exists_not_yet_searched_or_not_conclusive",
+    "hypothesis_not_confirmed"
+  ],
+  "ground_truth_annotations": {
+    "true_lineage": [
+      "I1 Synthetic Proband Katz",
+      "I2 Lidia Katz",
+      "I3 Sura Levitin",
+      "I4 Rakhla Rocha Leschinsky",
+      "I5 Nakhman Kamenetsky + I6 Dvora Leschinsky"
+    ],
+    "true_statuses": [
+      "Rakhla Rocha child of Nakhman and Dvora is confirmed.",
+      "Nakhman Kamenetsky is a real ancestor in this synthetic tree.",
+      "Exact father of Nakhman remains unconfirmed.",
+      "Connection to famous Rabbi Kamenetsky line is not confirmed and asserted version is rejected."
+    ],
+    "false_claims": [
+      "Rabbi Yaakov Kamenetsky is father of Nakhman.",
+      "Rabbi Line Bridge Kamenetsky is documented.",
+      "Nakhman Kamenetsky from Podolia is automatically same as Nachman Kamieniec from Minsk.",
+      "Small-segment match with a famous-line claimant proves descent."
+    ],
+    "intended_feature_coverage": [
+      "hypothesis_sandbox",
+      "famous_rabbi_line_control",
+      "chronology_validation",
+      "same_name_place_resolution",
+      "Ashkenazi_endogamy_correction",
+      "archive_source_weighting",
+      "research_gap_tracking",
+      "sealed_set_prevention"
+    ]
+  },
+  "evaluation_assertions": [
+    {
+      "assertion_id": "eval_06_001",
+      "description": "Engine must not confirm famous Rabbi Kamenetsky descent.",
+      "expected": {
+        "claim": "famous_Rabbi_Kamenetsky_descent",
+        "allowed_statuses": ["Hypothesis", "Rejected"],
+        "forbidden_status": "Confirmed"
+      }
+    },
+    {
+      "assertion_id": "eval_06_002",
+      "description": "Engine must reject the asserted direct relationship to Rabbi Yaakov Kamenetsky due to chronology.",
+      "expected": {
+        "relationship": "I7->I5",
+        "status": "Rejected",
+        "max_confidence": 0.1
+      }
+    },
+    {
+      "assertion_id": "eval_06_003",
+      "description": "Engine must confirm I4 as child of I5 and I6.",
+      "expected": {
+        "relationship": "I4 child of I5/I6",
+        "status": "Confirmed",
+        "min_confidence": 0.95
+      }
+    },
+    {
+      "assertion_id": "eval_06_004",
+      "description": "Engine must keep I5 father I8 as Hypothesis only.",
+      "expected": {
+        "relationship": "I8->I5",
+        "status": "Hypothesis",
+        "max_confidence": 0.65
+      }
+    },
+    {
+      "assertion_id": "eval_06_005",
+      "description": "Engine must block I5/I10 merge.",
+      "expected": {
+        "merge_pair": ["I5", "I10"],
+        "auto_merge_allowed": false
+      }
+    },
+    {
+      "assertion_id": "eval_06_006",
+      "description": "Engine must downweight dna_604.",
+      "expected": {
+        "match_id": "dna_604",
+        "max_dna_evidence_score": 0.25
+      }
+    }
+  ],
+  "phases_validated": [
+    "5.10_fantasy_filter",
+    "15.10_name_disambiguation",
+    "15.11_sealed_set_assertions",
+    "16.x_dna_cluster_interpretation",
+    "19.x_place_resolution",
+    "24.x_evidence_summary",
+    "25.x_hypothesis_sandbox",
+    "chronology_validation"
+  ],
+  "version": "0.1",
+  "created_for": "AutoTreeGen Test Tree Corpus + Evaluation Suite"
+}

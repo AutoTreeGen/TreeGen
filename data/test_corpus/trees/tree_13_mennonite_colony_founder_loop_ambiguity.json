@@ -1,0 +1,350 @@
+{
+  "tree_id": "tree_13_mennonite_colony_founder_loop_ambiguity",
+  "category": "mennonite_endogamy_founder_loop",
+  "complexity": "high",
+  "population_context": "Mennonite + Slavic adjacency",
+  "scope_description": "6-generation South Russia / Ukraine Mennonite colony tree with Friesen-Wiens-Jantzen-Schmidt founder-loop ambiguity, repeated colony names, false Jewish/Mennonite bridge, and Batensky regional DNA adjacency.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR AutoTreeGenSyntheticCorpus\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Synthetic Proband /Batensky/\n1 SEX M\n1 BIRT\n2 DATE 1971\n2 PLAC Dnipropetrovsk, Ukrainian SSR\n1 FAMC @F1@\n0 @I2@ INDI\n1 NAME Alexander /Batensky/\n1 SEX M\n1 BIRT\n2 DATE 1948\n2 PLAC Privolnoye, Dnipropetrovsk Oblast, Ukrainian SSR\n1 FAMC @F2@\n0 @I3@ INDI\n1 NAME Gregory /Batensky/\n1 SEX M\n1 BIRT\n2 DATE 1908\n2 PLAC Privolnoye, Ekaterinoslav Governorate, Russian Empire\n1 FAMS @F2@\n0 @I4@ INDI\n1 NAME Matrona /Dodatko/\n1 SEX F\n1 BIRT\n2 DATE 1912\n2 PLAC Dnipropetrovsk region, Ukraine\n1 FAMS @F2@\n0 @I5@ INDI\n1 NAME Anna /Friesen/\n1 SEX F\n1 BIRT\n2 DATE ABT 1872\n2 PLAC Molotschna Colony, Taurida Governorate, Russian Empire\n1 NOTE FALSE BRIDGE: public tree attaches Anna Friesen as mother of Gregory Batensky without marriage/adoption record.\n0 @I6@ INDI\n1 NAME Jakob /Wiens/\n1 SEX M\n1 BIRT\n2 DATE ABT 1845\n2 PLAC Halbstadt, Molotschna Colony, Taurida Governorate\n1 FAMS @F3@\n0 @I7@ INDI\n1 NAME Maria /Jantzen/\n1 SEX F\n1 BIRT\n2 DATE ABT 1848\n2 PLAC Muntau, Molotschna Colony, Taurida Governorate\n1 FAMS @F3@\n0 @I8@ INDI\n1 NAME Peter /Friesen/\n1 SEX M\n1 BIRT\n2 DATE ABT 1870\n2 PLAC Molotschna Colony, Taurida Governorate\n1 FAMS @F4@\n0 @I9@ INDI\n1 NAME Anna /Friesen/\n1 SEX F\n1 BIRT\n2 DATE ABT 1872\n2 PLAC Chortitza Colony, Ekaterinoslav Governorate\n1 NOTE Same-name Mennonite candidate from a different colony; not safe duplicate with I5.\n0 @I10@ INDI\n1 NAME Heinrich /Schmidt/\n1 SEX M\n1 BIRT\n2 DATE ABT 1838\n2 PLAC Molotschna Colony, Taurida Governorate\n0 @I11@ INDI\n1 NAME Ludmila /Friesen/\n1 SEX F\n1 BIRT\n2 DATE ABT 1880\n2 PLAC Fictional bridge profile\n1 NOTE Fictional/placeholder bridge profile used to attach Batensky to Mennonite colony.\n0 @F2@ FAM\n1 HUSB @I3@\n1 WIFE @I4@\n1 CHIL @I2@\n0 @F3@ FAM\n1 HUSB @I6@\n1 WIFE @I7@\n1 CHIL @I5@\n0 @F4@ FAM\n1 HUSB @I8@\n1 WIFE @I12@\n1 CHIL @I13@\n0 @I12@ INDI\n1 NAME Katharina /Wiens/\n1 SEX F\n0 @I13@ INDI\n1 NAME Peter /Friesen/\n1 SEX M\n1 BIRT\n2 DATE ABT 1895\n2 PLAC Molotschna Colony, Taurida Governorate\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_1301",
+      "match_name": "Anonymized Friesen Match",
+      "platform": "GEDmatch",
+      "shared_cm": 43,
+      "longest_segment": 14,
+      "segment_count": 6,
+      "shared_matches_with": ["dna_1302", "dna_1303"],
+      "expected_link": "Mennonite colony regional/endogamy signal; not proof of Anna Friesen as direct ancestor"
+    },
+    {
+      "match_id": "dna_1302",
+      "match_name": "Anonymized Wiens Match",
+      "platform": "MyHeritage",
+      "shared_cm": 39,
+      "longest_segment": 12,
+      "segment_count": 7,
+      "triangulated_segments": [
+        {
+          "chromosome": 10,
+          "start": 11000000,
+          "end": 21700000,
+          "cm": 11.9,
+          "triangulated_with": ["dna_1301", "dna_1303"]
+        }
+      ],
+      "shared_matches_with": ["dna_1301", "dna_1303"],
+      "expected_link": "Mennonite shared colony cluster"
+    },
+    {
+      "match_id": "dna_1303",
+      "match_name": "Anonymized Jantzen Match",
+      "platform": "FamilyTreeDNA",
+      "shared_cm": 31,
+      "longest_segment": 10,
+      "segment_count": 5,
+      "shared_matches_with": ["dna_1301", "dna_1302"],
+      "expected_link": "Mennonite shared colony cluster"
+    },
+    {
+      "match_id": "dna_1304",
+      "match_name": "Anonymized Batensky Cousin",
+      "platform": "AncestryDNA",
+      "shared_cm": 214,
+      "longest_segment": 48,
+      "segment_count": 17,
+      "shared_matches_with": ["dna_1305"],
+      "expected_link": "Batensky/Dodatko Slavic paternal branch anchor"
+    },
+    {
+      "match_id": "dna_1305",
+      "match_name": "Anonymized Dodatko Cousin",
+      "platform": "MyHeritage",
+      "shared_cm": 138,
+      "longest_segment": 35,
+      "segment_count": 13,
+      "shared_matches_with": ["dna_1304"],
+      "expected_link": "Dodatko/Slavic paternal branch anchor"
+    },
+    {
+      "match_id": "dna_1306",
+      "match_name": "Anonymized Schmidt Match",
+      "platform": "GEDmatch",
+      "shared_cm": 18,
+      "longest_segment": 6,
+      "segment_count": 5,
+      "shared_matches_with": ["dna_1301"],
+      "expected_link": "small Mennonite founder-loop signal; not a direct relationship anchor"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_1301",
+      "type": "orthodox_church_birth",
+      "year": 1908,
+      "place": "Privolnoye, Ekaterinoslav Governorate",
+      "transcription_excerpt": "Birth of Gregory Batensky, son of Ukrainian Orthodox parents: listed father Batensky and mother from local Orthodox community. No Mennonite mother recorded.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "blocks Anna Friesen as mother of Gregory Batensky."
+    },
+    {
+      "snippet_id": "src_1302",
+      "type": "mennonite_church_register",
+      "year": 1872,
+      "place": "Molotschna Colony, Taurida Governorate",
+      "transcription_excerpt": "Birth of Anna Friesen, daughter of Jakob Wiens household connection through mother Maria Jantzen; colony register only.",
+      "language": "de+ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms a Mennonite Anna Friesen exists in Molotschna but not linked to Batensky family."
+    },
+    {
+      "snippet_id": "src_1303",
+      "type": "mennonite_church_register",
+      "year": 1872,
+      "place": "Chortitza Colony, Ekaterinoslav Governorate",
+      "transcription_excerpt": "Another Anna Friesen born in Chortitza colony to different parents.",
+      "language": "de+ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "separates I9 from I5; same-name colony duplication."
+    },
+    {
+      "snippet_id": "src_1304",
+      "type": "colony_census",
+      "year": 1858,
+      "place": "Molotschna Colony, Taurida Governorate",
+      "transcription_excerpt": "Wiens, Jantzen, Friesen and Schmidt households listed repeatedly across colony villages.",
+      "language": "de+ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "supports founder-loop/endogamy context; not direct parentage."
+    },
+    {
+      "snippet_id": "src_1305",
+      "type": "online_tree",
+      "year": 2024,
+      "place": "public GEDCOM",
+      "transcription_excerpt": "Ludmila Friesen shown as mother/ancestor bridge from Batensky to Molotschna Mennonites; no document cited.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "expected_use": "fictional bridge; should be rejected/quarantined."
+    },
+    {
+      "snippet_id": "src_1306",
+      "type": "civil_BDM_birth",
+      "year": 1948,
+      "place": "Privolnoye, Dnipropetrovsk Oblast, Ukrainian SSR",
+      "transcription_excerpt": "Birth of Alexander Batensky, son of Gregory Batensky and Matrona Dodatko.",
+      "language": "ru+uk",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "anchors Batensky/Dodatko branch and blocks direct Mennonite parent insertion."
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "I11",
+      "assertion": "Ludmila Friesen is the missing bridge between Batensky and Mennonite DNA matches.",
+      "scope": "bridge_person",
+      "evidence": "created as placeholder to explain DNA"
+    },
+    {
+      "person_id": "I5",
+      "assertion": "Anna Friesen from Molotschna is mother of Gregory Batensky.",
+      "scope": "parentage",
+      "evidence": "Mennonite DNA matches and same region"
+    },
+    {
+      "person_id": "I9",
+      "assertion": "All Anna Friesen entries in South Russia are same person.",
+      "scope": "duplicate_merge",
+      "evidence": "same name and similar year"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "fictional_bridge",
+      "person_id": "I11",
+      "expected_flag": "fictional_bridge_person",
+      "expected_confidence_when_flagged": 0.93,
+      "reason": "placeholder person with no source created to explain DNA"
+    },
+    {
+      "type": "cross_population_confusion",
+      "persons": ["I5", "I3"],
+      "expected_flag": "mennonite_jewish_or_slavic_boundary_error",
+      "reason": "Mennonite regional DNA/locality signal used as direct Batensky parentage"
+    },
+    {
+      "type": "pedigree_collapse",
+      "match_id": "dna_1301",
+      "expected_flag": "pedigree_collapse_mennonite_colony_founder_loop",
+      "expected_confidence_when_flagged": 0.82
+    },
+    {
+      "type": "duplicate",
+      "persons": ["I5", "I9"],
+      "expected_flag": "same_name_different_person_colony_context",
+      "reason": "same name/year but different colony and parent set"
+    },
+    {
+      "type": "dna_overinterpretation",
+      "match_id": "dna_1306",
+      "expected_flag": "pedigree_collapse_endogamy_small_segment_overuse",
+      "reason": "18 cM across small segments in founder population"
+    },
+    {
+      "type": "source_quality",
+      "snippet_id": "src_1305",
+      "expected_flag": "online_tree_fictional_bridge",
+      "reason": "public GEDCOM bridge lacks primary source and conflicts with Orthodox records"
+    }
+  ],
+  "expected_reasoning_chain": [
+    "Step 1: Parse GEDCOM and identify I11 Ludmila Friesen as a bridge person with no source, no parents, no vital records, and only bridge purpose.",
+    "Step 2: Use src_1301 and src_1306 to confirm Batensky/Dodatko Orthodox/Slavic parentage for Gregory and Alexander.",
+    "Step 3: Use src_1302 to confirm Anna Friesen exists in Molotschna but not in Batensky household or Orthodox records.",
+    "Step 4: Use src_1303 to separate Chortitza Anna Friesen from Molotschna Anna Friesen.",
+    "Step 5: Use src_1304 to mark Mennonite surnames as repeated founder-loop surnames, requiring multi-path and colony-register caution.",
+    "Step 6: Evaluate dna_1301/dna_1302/dna_1303 as Mennonite colony cluster, not a direct ancestor proof.",
+    "Step 7: Evaluate dna_1304/dna_1305 as Batensky/Dodatko branch anchors and give them higher branch-placement priority.",
+    "Step 8: Downweight dna_1306 small segments under Mennonite founder-loop correction.",
+    "Step 9: Reject Ludmila Friesen bridge and Anna Friesen-as-mother claim.",
+    "Step 10: Preserve Mennonite cluster as a separate probable regional DNA cluster requiring future triangulation/records, not as direct pedigree insertion."
+  ],
+  "expected_confidence_outputs": {
+    "relationship_Gregory_Batensky_child_of_local_Orthodox_parents": {
+      "status": "Confirmed",
+      "confidence": 0.96,
+      "evidence": ["src_1301", "src_1306"],
+      "classes": ["archival_record", "religion_context", "place", "time"]
+    },
+    "relationship_Anna_Friesen_mother_of_Gregory_Batensky": {
+      "status": "Rejected",
+      "confidence": 0.06,
+      "reason": "primary Orthodox records conflict; no marriage/adoption/conversion evidence"
+    },
+    "relationship_Ludmila_Friesen_bridge": {
+      "status": "Rejected",
+      "confidence": 0.02,
+      "reason": "fictional placeholder; no source"
+    },
+    "identity_I5_I9_same_person": {
+      "status": "Rejected",
+      "confidence": 0.18,
+      "reason": "same name but different colony and parent set"
+    },
+    "mennonite_colony_cluster": {
+      "status": "Probable",
+      "confidence": 0.73,
+      "reason": "Friesen/Wiens/Jantzen shared matches and colony records, but founder-loop corrected"
+    },
+    "direct_mennonite_ancestor_for_proband": {
+      "status": "Hypothesis",
+      "confidence": 0.34,
+      "reason": "regional DNA cluster exists but no direct pedigree bridge"
+    },
+    "batensky_dodatko_branch": {
+      "status": "Confirmed",
+      "confidence": 0.95,
+      "reason": "DNA anchors + civil/Orthodox records"
+    }
+  },
+  "expected_engine_flags": [
+    "fictional_bridge_person",
+    "mennonite_jewish_or_slavic_boundary_error",
+    "pedigree_collapse_mennonite_colony_founder_loop",
+    "same_name_different_person_colony_context",
+    "pedigree_collapse_endogamy_small_segment_overuse",
+    "online_tree_fictional_bridge",
+    "direct_pedigree_insertion_blocked"
+  ],
+  "ground_truth_annotations": {
+    "true_lineage": [
+      "I1 Synthetic Proband Batensky",
+      "I2 Alexander Batensky",
+      "I3 Gregory Batensky + I4 Matrona Dodatko",
+      "Batensky/Dodatko branch is Slavic/Orthodox in this synthetic tree"
+    ],
+    "true_cluster_status": [
+      "Mennonite Friesen/Wiens/Jantzen/Schmidt cluster exists as DNA/regional signal.",
+      "No confirmed direct ancestor bridge from Batensky to Friesen in this synthetic tree.",
+      "Ludmila Friesen is fictional placeholder and must be rejected."
+    ],
+    "false_claims": [
+      "Ludmila Friesen is a real bridge ancestor.",
+      "Anna Friesen is mother of Gregory Batensky.",
+      "All Anna Friesen records from South Russia are the same person.",
+      "Mennonite DNA cluster automatically proves a direct Mennonite ancestor."
+    ],
+    "intended_feature_coverage": [
+      "Mennonite_endogamy_correction",
+      "founder_loop_detection",
+      "fictional_bridge_rejection",
+      "same_name_colony_duplicate_blocking",
+      "cross_population_boundary_control",
+      "archive_vs_DNA_weighting",
+      "hypothesis_not_pedigree_insertion"
+    ]
+  },
+  "evaluation_assertions": [
+    {
+      "assertion_id": "eval_13_001",
+      "description": "Engine must reject Ludmila Friesen fictional bridge.",
+      "expected": {
+        "person_id": "I11",
+        "status": "Rejected",
+        "max_confidence": 0.1
+      }
+    },
+    {
+      "assertion_id": "eval_13_002",
+      "description": "Engine must reject Anna Friesen as mother of Gregory Batensky.",
+      "expected": {
+        "relationship": "I5 mother of I3",
+        "status": "Rejected",
+        "max_confidence": 0.15
+      }
+    },
+    {
+      "assertion_id": "eval_13_003",
+      "description": "Engine must not auto-merge Molotschna Anna Friesen and Chortitza Anna Friesen.",
+      "expected": {
+        "merge_pair": ["I5", "I9"],
+        "auto_merge_allowed": false
+      }
+    },
+    {
+      "assertion_id": "eval_13_004",
+      "description": "Engine must classify Mennonite matches as a separate probable cluster, not confirmed direct ancestry.",
+      "expected": {
+        "cluster": "mennonite_colony_cluster",
+        "status": "Probable",
+        "direct_ancestor_status_max": "Hypothesis"
+      }
+    },
+    {
+      "assertion_id": "eval_13_005",
+      "description": "Engine must confirm Batensky/Dodatko branch.",
+      "expected": {
+        "branch": "Batensky_Dodatko",
+        "status": "Confirmed",
+        "min_confidence": 0.9
+      }
+    }
+  ],
+  "phases_validated": [
+    "16.x_dna_cluster_interpretation",
+    "endogamy_aware_relationship_engine",
+    "5.10_fantasy_filter",
+    "19.x_place_resolution",
+    "22.x_archive_routing",
+    "24.x_evidence_summary",
+    "25.x_hypothesis_sandbox"
+  ],
+  "version": "0.1",
+  "created_for": "AutoTreeGen Test Tree Corpus + Evaluation Suite"
+}

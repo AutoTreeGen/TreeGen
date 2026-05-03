@@ -1,0 +1,324 @@
+{
+  "tree_id": "tree_15_gedcom_safe_merge_conflicting_sources",
+  "category": "gedcom_doctor_safe_merge",
+  "complexity": "high",
+  "population_context": "Ashkenazi + Slavic",
+  "scope_description": "Two synthetic GEDCOM imports for the same Eastern European family with conflicting IDs, duplicate relationships, lost sources/media, and biological-vs-adoptive father conflict.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR TreeA_AncestryExport\n0 @A_I1@ INDI\n1 NAME Daniel Zalman /Zhitnitsky/\n1 BIRT\n2 DATE 31 DEC 2003\n2 PLAC Kfar-Saba, Israel\n1 FAMC @A_F1@\n1 SOUR @A_S1@\n0 @A_I2@ INDI\n1 NAME Vlad Aaron /Zhitnitzky/\n1 BIRT\n2 DATE 7 JUN 1971\n2 PLAC Kamenskoye, Koryak Okrug, RSFSR\n1 FAMS @A_F1@\n1 FAMC @A_F2@\n0 @A_I3@ INDI\n1 NAME Olga /Mogilevsky/\n1 FAMS @A_F1@\n0 @A_I4@ INDI\n1 NAME Tatyana /Zhitnitsky/\n1 FAMS @A_F2@\n0 @A_I5@ INDI\n1 NAME Alexander /Batensky/\n1 FAMS @A_F2@\n0 @A_F1@ FAM\n1 HUSB @A_I2@\n1 WIFE @A_I3@\n1 CHIL @A_I1@\n0 @A_F2@ FAM\n1 HUSB @A_I5@\n1 WIFE @A_I4@\n1 CHIL @A_I2@\n0 @A_S1@ SOUR\n1 TITL Israeli birth certificate extract for Daniel\n0 HEAD\n1 SOUR TreeB_MyHeritageExport\n0 @B_I100@ INDI\n1 NAME Daniel Z. /Zhitnitzky/\n1 BIRT\n2 DATE 2003\n2 PLAC Kfar Saba, Central District, Israel\n1 FAMC @B_F100@\n0 @B_I200@ INDI\n1 NAME Vladimir Ivanovich /Danilov/\n1 BIRT\n2 DATE 1971\n2 PLAC Kamchatka, Russia\n1 FAMS @B_F100@\n1 FAMC @B_F200@\n0 @B_I300@ INDI\n1 NAME Olga /Zhitnitzky/\n1 FAMS @B_F100@\n0 @B_I400@ INDI\n1 NAME Tatyana /Zhitnitzky/\n1 FAMS @B_F200@\n0 @B_I500@ INDI\n1 NAME Ivan /Danilov/\n1 NOTE Imported as biological father; should be social/adoptive only.\n1 FAMS @B_F200@\n0 @B_I600@ INDI\n1 NAME Alexander /Batensky/\n1 NOTE Biological father candidate lost as disconnected profile in TreeB.\n0 @B_F100@ FAM\n1 HUSB @B_I200@\n1 WIFE @B_I300@\n1 CHIL @B_I100@\n0 @B_F200@ FAM\n1 HUSB @B_I500@\n1 WIFE @B_I400@\n1 CHIL @B_I200@\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_1501",
+      "match_name": "Paternal Batensky Cluster Anchor",
+      "platform": "AncestryDNA",
+      "shared_cm": 1748,
+      "longest_segment": 176,
+      "segment_count": 44,
+      "shared_matches_with": ["dna_1502"],
+      "expected_link": "supports Alexander Batensky as biological father of Vlad identity cluster"
+    },
+    {
+      "match_id": "dna_1502",
+      "match_name": "Batensky-Dodatko Cousin",
+      "platform": "MyHeritage",
+      "shared_cm": 604,
+      "longest_segment": 91,
+      "segment_count": 28,
+      "shared_matches_with": ["dna_1501"],
+      "expected_link": "Batensky/Dodatko branch"
+    },
+    {
+      "match_id": "dna_1503",
+      "match_name": "Danilov Social-Family Control",
+      "platform": "AncestryDNA",
+      "shared_cm": 0,
+      "longest_segment": 0,
+      "segment_count": 0,
+      "shared_matches_with": [],
+      "expected_link": "no biological Danilov match"
+    },
+    {
+      "match_id": "dna_1504",
+      "match_name": "Maternal Zhitnitsky Cousin",
+      "platform": "FamilyTreeDNA",
+      "shared_cm": 152,
+      "longest_segment": 36,
+      "segment_count": 12,
+      "shared_matches_with": [],
+      "expected_link": "maternal Zhitnitsky branch"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_1501",
+      "type": "civil_BDM_birth",
+      "year": 2003,
+      "place": "Kfar-Saba, Israel",
+      "transcription_excerpt": "Birth of Daniel Zalman Zhitnitzky, father Vlad Aaron Zhitnitzky, mother Olga Mogilevsky.",
+      "language": "he+en",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms Daniel's parents; must preserve source through merge."
+    },
+    {
+      "snippet_id": "src_1502",
+      "type": "civil_BDM_birth",
+      "year": 1971,
+      "place": "Kamenskoye, Koryak Okrug, RSFSR",
+      "transcription_excerpt": "Birth of Vlad; mother Tatyana Zhitnitsky. Father field blank/amended; later surname changes documented.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "supports identity of Vlad/Vladimir; does not confirm Ivan as biological father."
+    },
+    {
+      "snippet_id": "src_1503",
+      "type": "adoption_or_name_change",
+      "year": 1985,
+      "place": "RSFSR",
+      "transcription_excerpt": "Name change/adoption: Vladimir uses Danilov surname after mother's marriage to Ivan Danilov.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "classifies Ivan Danilov as social/adoptive relationship."
+    },
+    {
+      "snippet_id": "src_1504",
+      "type": "civil_BDM_birth",
+      "year": 1948,
+      "place": "Privolnoye, Dnipropetrovsk Oblast, Ukrainian SSR",
+      "transcription_excerpt": "Alexander Batensky, son of Gregory Batensky and Matrona Dodatko.",
+      "language": "ru+uk",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "anchors biological paternal branch."
+    },
+    {
+      "snippet_id": "src_1505",
+      "type": "gedcom_export_audit",
+      "year": 2026,
+      "place": "AutoTreeGen GEDCOM Doctor",
+      "transcription_excerpt": "TreeB export contains no media pointers and missing source records for B_I100/B_I200; TreeA contains source A_S1.",
+      "language": "en",
+      "primary_or_derivative": "system_audit",
+      "image_available": false,
+      "expected_use": "media/source preservation warning."
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "B_I200",
+      "assertion": "Vladimir Danilov and Vlad Zhitnitzky are the same person.",
+      "scope": "identity_merge",
+      "evidence": "same birth year, mother, spouse and child"
+    },
+    {
+      "person_id": "B_I500",
+      "assertion": "Ivan Danilov should remain in tree as father.",
+      "scope": "relationship_type",
+      "evidence": "legal/social father and surname history"
+    },
+    {
+      "person_id": "A_I5",
+      "assertion": "Alexander Batensky should be biological father.",
+      "scope": "biological_parentage",
+      "evidence": "DNA cluster and source records"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "gedcom_duplicate",
+      "persons": ["A_I1", "B_I100"],
+      "expected_flag": "same_person_different_export_ids",
+      "reason": "Daniel represented with exact vs abbreviated name/date/place"
+    },
+    {
+      "type": "gedcom_duplicate",
+      "persons": ["A_I2", "B_I200"],
+      "expected_flag": "same_person_alias_identity",
+      "reason": "Vlad Aaron Zhitnitzky / Vladimir Ivanovich Danilov identity aliases"
+    },
+    {
+      "type": "relationship_type_error",
+      "person_id": "B_I500",
+      "expected_flag": "adoptive_as_biological_parent_in_import",
+      "reason": "Ivan imported as biological father in TreeB but should be social/adoptive"
+    },
+    {
+      "type": "disconnected_duplicate",
+      "persons": ["A_I5", "B_I600"],
+      "expected_flag": "same_person_disconnected_profile",
+      "reason": "Alexander Batensky appears as connected father in TreeA and disconnected candidate in TreeB"
+    },
+    {
+      "type": "source_loss",
+      "snippet_id": "src_1505",
+      "expected_flag": "gedcom_export_source_media_loss",
+      "reason": "TreeB lacks source/media pointers that TreeA has"
+    },
+    {
+      "type": "dna_vs_tree_conflict",
+      "person_id": "B_I500",
+      "expected_flag": "dna_vs_tree_parentage_contradiction",
+      "reason": "Danilov biological father claim conflicts with Batensky DNA cluster"
+    }
+  ],
+  "expected_reasoning_chain": [
+    "Step 1: Ingest TreeA and TreeB as separate source graphs, preserving source provenance and original IDs.",
+    "Step 2: Detect A_I1/B_I100 as same person based on names, birth date/place, parents and source src_1501.",
+    "Step 3: Detect A_I2/B_I200 as same person with alias model: Vlad Aaron Zhitnitzky, Vladimir Ivanovich Danilov, Vladimir Zhitnitzky.",
+    "Step 4: Merge Olga/Mogilevsky/Zhitnitzky profiles as same spouse, preserving maiden and married forms.",
+    "Step 5: Merge Tatyana Zhitnitsky/Zhitnitzky profiles using date/place/child evidence and maternal DNA match dna_1504.",
+    "Step 6: Identify conflicting father relationship for Vlad identity cluster: Alexander Batensky vs Ivan Danilov.",
+    "Step 7: Use dna_1501/dna_1502 and src_1504 to confirm Alexander Batensky as biological father.",
+    "Step 8: Use src_1503 to retain Ivan Danilov as social/adoptive father, not biological father.",
+    "Step 9: Merge A_I5/B_I600 as same Alexander Batensky profile and reconnect B disconnected profile.",
+    "Step 10: Produce safe-merge output: source/media warnings, conflict report, rollback audit, and relationship-type annotations."
+  ],
+  "expected_confidence_outputs": {
+    "merge_A_I1_B_I100": {
+      "status": "Confirmed",
+      "confidence": 0.99,
+      "action": "merge",
+      "canonical_name": "Daniel Zalman Zhitnitzky"
+    },
+    "merge_A_I2_B_I200": {
+      "status": "Confirmed",
+      "confidence": 0.98,
+      "action": "merge_with_aliases",
+      "canonical_name": "Vlad Aaron Zhitnitzky",
+      "aliases": ["Vladimir Ivanovich Danilov", "Vladimir Zhitnitzky"]
+    },
+    "relationship_A_I5_biological_father_of_A_I2": {
+      "status": "Confirmed",
+      "confidence": 0.98,
+      "relationship_type": "biological_father",
+      "sealed_set_candidate": true
+    },
+    "relationship_B_I500_biological_father_of_B_I200": {
+      "status": "Rejected",
+      "confidence": 0.04,
+      "relationship_type": "incorrect_biological_parent"
+    },
+    "relationship_B_I500_social_father_of_B_I200": {
+      "status": "Confirmed",
+      "confidence": 0.93,
+      "relationship_type": "social_adoptive_father"
+    },
+    "merge_A_I5_B_I600": {
+      "status": "Confirmed",
+      "confidence": 0.96,
+      "action": "merge_and_reconnect"
+    },
+    "gedcom_export_quality_treeB": {
+      "status": "Warning",
+      "confidence": 0.92,
+      "issue": "source_media_loss"
+    }
+  },
+  "expected_engine_flags": [
+    "same_person_different_export_ids",
+    "same_person_alias_identity",
+    "adoptive_as_biological_parent_in_import",
+    "same_person_disconnected_profile",
+    "gedcom_export_source_media_loss",
+    "dna_vs_tree_parentage_contradiction",
+    "safe_merge_requires_relationship_type_annotation",
+    "rollback_audit_required"
+  ],
+  "ground_truth_annotations": {
+    "true_merges": [
+      ["A_I1", "B_I100"],
+      ["A_I2", "B_I200"],
+      ["A_I3", "B_I300"],
+      ["A_I4", "B_I400"],
+      ["A_I5", "B_I600"]
+    ],
+    "relationship_truth": [
+      "Daniel is child of Vlad Aaron Zhitnitzky and Olga Mogilevsky/Zhitnitzky.",
+      "Vlad's biological father is Alexander Batensky.",
+      "Ivan Danilov is social/adoptive father, not biological father.",
+      "Tatyana Zhitnitsky/Zhitnitzky is mother of Vlad.",
+      "TreeB source/media preservation is incomplete."
+    ],
+    "false_claims": [
+      "Ivan Danilov is biological father because TreeB FAM record says HUSB.",
+      "B_I600 Alexander Batensky is disconnected and unrelated.",
+      "TreeB GEDCOM is complete backup despite missing sources/media.",
+      "Alias surnames should create separate people."
+    ],
+    "intended_feature_coverage": [
+      "GEDCOM_safe_merge",
+      "source_preservation",
+      "media_loss_warning",
+      "alias_identity_resolution",
+      "relationship_type_modeling",
+      "DNA_vs_tree_conflict",
+      "sealed_set_candidate",
+      "rollback_audit_log"
+    ]
+  },
+  "evaluation_assertions": [
+    {
+      "assertion_id": "eval_15_001",
+      "description": "Engine must merge Daniel profiles.",
+      "expected": {
+        "merge_pair": ["A_I1", "B_I100"],
+        "status": "Confirmed",
+        "min_confidence": 0.98
+      }
+    },
+    {
+      "assertion_id": "eval_15_002",
+      "description": "Engine must merge Vlad/Vladimir aliases as one person.",
+      "expected": {
+        "merge_pair": ["A_I2", "B_I200"],
+        "status": "Confirmed",
+        "aliases_preserved": true
+      }
+    },
+    {
+      "assertion_id": "eval_15_003",
+      "description": "Engine must confirm Alexander Batensky as biological father.",
+      "expected": {
+        "relationship": "A_I5 biological father of A_I2",
+        "status": "Confirmed",
+        "min_confidence": 0.97
+      }
+    },
+    {
+      "assertion_id": "eval_15_004",
+      "description": "Engine must reject Ivan Danilov as biological father but retain as social/adoptive father.",
+      "expected": {
+        "biological_status": "Rejected",
+        "social_adoptive_status": "Confirmed"
+      }
+    },
+    {
+      "assertion_id": "eval_15_005",
+      "description": "Engine must warn about TreeB source/media loss.",
+      "expected": {
+        "flag": "gedcom_export_source_media_loss",
+        "required": true
+      }
+    },
+    {
+      "assertion_id": "eval_15_006",
+      "description": "Engine must produce rollback-ready audit log.",
+      "expected": {
+        "rollback_audit_required": true
+      }
+    }
+  ],
+  "phases_validated": [
+    "GEDCOM_doctor",
+    "safe_merge",
+    "source_preservation",
+    "media_loss_detection",
+    "DNA_vs_tree_contradiction",
+    "relationship_type_modeling",
+    "15.11_sealed_set_assertions",
+    "24.x_evidence_summary"
+  ],
+  "version": "0.1",
+  "created_for": "AutoTreeGen Test Tree Corpus + Evaluation Suite"
+}

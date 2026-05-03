@@ -1,0 +1,308 @@
+{
+  "tree_id": "tree_16_metric_book_ocr_extraction_errors",
+  "category": "ocr_metric_book_extraction",
+  "complexity": "high",
+  "population_context": "Ashkenazi Pale of Settlement",
+  "scope_description": "Synthetic Jewish metric-book OCR case from Podolia/Volhynia where Russian+Hebrew columns are misread, causing wrong dates, patronymics, surnames, gender, and parent assignments.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR AutoTreeGenSyntheticCorpus\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Synthetic Proband /Kamenetsky/\n1 SEX M\n1 BIRT\n2 DATE 1970\n2 PLAC Melbourne, Australia\n1 FAMC @F1@\n0 @I2@ INDI\n1 NAME Rachel /Kamenetsky/\n1 SEX F\n1 BIRT\n2 DATE 1945\n2 PLAC Kyiv, Ukrainian SSR\n1 FAMC @F2@\n0 @I3@ INDI\n1 NAME Nakhman /Kamenetsky/\n1 SEX M\n1 BIRT\n2 DATE 12 MAR 1895\n2 PLAC Kamenets-Podolsk, Podolia Governorate\n1 FAMC @F3@\n0 @I4@ INDI\n1 NAME Dvora /Leschinsky/\n1 SEX F\n1 BIRT\n2 DATE 1898\n2 PLAC Starokostiantyniv, Volhynia Governorate\n1 FAMS @F3@\n0 @I5@ INDI\n1 NAME Movsha /Kamenetsky/\n1 SEX M\n1 BIRT\n2 DATE ABT 1865\n2 PLAC Kamenets-Podolsk, Podolia Governorate\n1 FAMS @F4@\n0 @I6@ INDI\n1 NAME Sura /Rabinovich/\n1 SEX F\n1 BIRT\n2 DATE ABT 1868\n2 PLAC Kamenets-Podolsk, Podolia Governorate\n1 FAMS @F4@\n0 @I7@ INDI\n1 NAME Nokhum Movshevich /Kaminsky/\n1 SEX F\n1 BIRT\n2 DATE 12 MAY 1895\n2 PLAC Kamianets-Podilskyi, Ukraine\n1 NOTE OCR-created duplicate: surname Kaminsky, sex F, month May, modern place only.\n0 @F3@ FAM\n1 HUSB @I3@\n1 WIFE @I4@\n1 CHIL @I2@\n0 @F4@ FAM\n1 HUSB @I5@\n1 WIFE @I6@\n1 CHIL @I3@\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_1601",
+      "match_name": "Anonymized Kamenetsky Cousin",
+      "platform": "MyHeritage",
+      "shared_cm": 78,
+      "longest_segment": 22,
+      "segment_count": 8,
+      "shared_matches_with": ["dna_1602"],
+      "expected_link": "supports Kamenetsky/Rabinovich branch after OCR repair"
+    },
+    {
+      "match_id": "dna_1602",
+      "match_name": "Anonymized Rabinovich Cousin",
+      "platform": "AncestryDNA",
+      "shared_cm": 61,
+      "longest_segment": 18,
+      "segment_count": 7,
+      "shared_matches_with": ["dna_1601"],
+      "expected_link": "maternal side of Nakhman through Sura Rabinovich"
+    },
+    {
+      "match_id": "dna_1603",
+      "match_name": "Anonymized Kaminsky Match",
+      "platform": "GEDmatch",
+      "shared_cm": 14,
+      "longest_segment": 6,
+      "segment_count": 3,
+      "shared_matches_with": [],
+      "expected_link": "surname collision/noise; OCR Kaminsky should not create surname branch"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_1601",
+      "type": "metric_book_birth_image",
+      "year": 1895,
+      "place": "Kamenets-Podolsk, Podolia Governorate",
+      "transcription_excerpt": "Russian column: 12 марта 1895. Born Nokhum, male, son of Movsha Kamenetsky, Kamenets-Podolsk meshchanin, and wife Sura Rabinovich. Hebrew column: נחום בן משה קאמינעצקי; mother שרה/סורה בת ...",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "authoritative source for Nakhman/Nokhum birth; corrects OCR errors."
+    },
+    {
+      "snippet_id": "src_1602",
+      "type": "ocr_output_raw",
+      "year": 1895,
+      "place": "OCR pipeline",
+      "transcription_excerpt": "12 мая 1895; Nokhum Movshevich Kaminsky; female; father Movsha Kaminsky; mother Sara Raskin; place Kamianets-Podilskyi Ukraine.",
+      "language": "ru+he OCR",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "expected_use": "low-confidence OCR output with month, surname, sex, mother surname and place-jurisdiction errors."
+    },
+    {
+      "snippet_id": "src_1603",
+      "type": "metric_book_marriage",
+      "year": 1893,
+      "place": "Kamenets-Podolsk, Podolia Governorate",
+      "transcription_excerpt": "Marriage of Movsha Kamenetsky, son of Nakhman, to Sura Rabinovich, daughter of Gersh.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms parents and surname Kamenetsky/Rabinovich."
+    },
+    {
+      "snippet_id": "src_1604",
+      "type": "revision_list",
+      "year": 1858,
+      "place": "Kamenets-Podolsk Uyezd, Podolia Governorate",
+      "transcription_excerpt": "Kamenetsky household includes Nakhman, son Movsha age 7; household surname Kamenetsky.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "supports Kamenetsky hereditary surname; blocks Kaminsky branch."
+    },
+    {
+      "snippet_id": "src_1605",
+      "type": "online_tree",
+      "year": 2025,
+      "place": "OCR-imported public tree",
+      "transcription_excerpt": "Nokhum Movshevich Kaminsky female, born May 1895, mother Sara Raskin.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "expected_use": "should be quarantined as OCR-derived error."
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "I7",
+      "assertion": "Kaminsky may be a separate branch because OCR shows Kaminsky.",
+      "scope": "surname",
+      "evidence": "OCR output"
+    },
+    {
+      "person_id": "I7",
+      "assertion": "Nokhum appears female in OCR, maybe daughter not son.",
+      "scope": "gender",
+      "evidence": "OCR output"
+    },
+    {
+      "person_id": "I6",
+      "assertion": "Mother may be Sara Raskin, not Sura Rabinovich.",
+      "scope": "mother_identity",
+      "evidence": "OCR output"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "ocr_error",
+      "subtype": "month_misread",
+      "snippet_id": "src_1602",
+      "expected_flag": "ocr_month_march_may_confusion",
+      "reason": "марта misread as мая"
+    },
+    {
+      "type": "ocr_error",
+      "subtype": "surname_misread",
+      "persons": ["I3", "I7"],
+      "expected_flag": "ocr_kamenetsky_kaminsky_false_variant",
+      "reason": "Kamenetsky/Kaminsky OCR confusion creates false surname branch"
+    },
+    {
+      "type": "ocr_error",
+      "subtype": "gender_misread",
+      "person_id": "I7",
+      "expected_flag": "metric_book_gender_column_misread",
+      "reason": "male child Nokhum imported as female"
+    },
+    {
+      "type": "ocr_error",
+      "subtype": "mother_surname_misread",
+      "person_id": "I6",
+      "expected_flag": "ocr_rabinovich_raskin_false_mother",
+      "reason": "Rabinovich misread as Raskin and mother replaced"
+    },
+    {
+      "type": "place_jurisdiction_error",
+      "person_id": "I7",
+      "expected_flag": "modern_place_normalization_lost_jurisdiction",
+      "reason": "Podolia Governorate replaced with modern Ukraine only"
+    },
+    {
+      "type": "duplicate",
+      "persons": ["I3", "I7"],
+      "expected_flag": "ocr_created_duplicate_profile",
+      "reason": "same child created twice due to OCR errors"
+    },
+    {
+      "type": "source_quality",
+      "snippet_id": "src_1605",
+      "expected_flag": "online_tree_ocr_error_propagation",
+      "reason": "public tree copied raw OCR errors as facts"
+    }
+  ],
+  "expected_reasoning_chain": [
+    "Step 1: Parse metric-book image source src_1601 and OCR output src_1602 as separate source layers.",
+    "Step 2: Assign src_1601 higher source authority because image/primary record exists.",
+    "Step 3: Compare date fields: Russian column 12 марта conflicts with OCR 12 мая; choose March and flag OCR month error.",
+    "Step 4: Compare child sex/gender column: primary record says male; OCR says female; choose male.",
+    "Step 5: Compare surname readings: Kamenetsky supported by Russian/Hebrew columns, marriage record src_1603 and revision list src_1604; reject Kaminsky surname branch.",
+    "Step 6: Compare mother identity: Sura Rabinovich supported by birth image and marriage record; reject Sara Raskin OCR reading.",
+    "Step 7: Resolve I3/I7 as same person with repaired canonical identity Nakhman/Nokhum Movshevich Kamenetsky.",
+    "Step 8: Preserve OCR raw text as low-confidence derivative alias/evidence, not as fact.",
+    "Step 9: Use DNA dna_1601/dna_1602 to support Kamenetsky/Rabinovich branch; downweight dna_1603 Kaminsky surname collision.",
+    "Step 10: Output normalized persons, event, citation and OCR error report for retraining."
+  ],
+  "expected_confidence_outputs": {
+    "identity_I3_I7_same_person": {
+      "status": "Confirmed",
+      "confidence": 0.96,
+      "action": "merge_with_ocr_repair",
+      "canonical_name": "Nakhman/Nokhum Movshevich Kamenetsky"
+    },
+    "birth_date_I3": {
+      "status": "Confirmed",
+      "confidence": 0.95,
+      "value": "12 MAR 1895",
+      "rejected_value": "12 MAY 1895"
+    },
+    "sex_I3": {
+      "status": "Confirmed",
+      "confidence": 0.94,
+      "value": "M",
+      "rejected_value": "F"
+    },
+    "surname_Kaminsky_branch": {
+      "status": "Rejected",
+      "confidence": 0.06,
+      "reason": "OCR misread; primary sources support Kamenetsky"
+    },
+    "mother_Sura_Rabinovich": {
+      "status": "Confirmed",
+      "confidence": 0.95,
+      "evidence": ["src_1601", "src_1603"]
+    },
+    "mother_Sara_Raskin": {
+      "status": "Rejected",
+      "confidence": 0.07,
+      "reason": "OCR misread"
+    },
+    "place_Kamenets_Podolsk_1895": {
+      "status": "Confirmed",
+      "confidence": 0.96,
+      "historical_jurisdiction": "Podolia Governorate, Russian Empire"
+    }
+  },
+  "expected_engine_flags": [
+    "ocr_month_march_may_confusion",
+    "ocr_kamenetsky_kaminsky_false_variant",
+    "metric_book_gender_column_misread",
+    "ocr_rabinovich_raskin_false_mother",
+    "modern_place_normalization_lost_jurisdiction",
+    "ocr_created_duplicate_profile",
+    "online_tree_ocr_error_propagation",
+    "primary_image_overrides_ocr_derivative"
+  ],
+  "ground_truth_annotations": {
+    "true_lineage": [
+      "I3/I7 Nakhman/Nokhum Movshevich Kamenetsky",
+      "father: I5 Movsha Kamenetsky",
+      "mother: I6 Sura Rabinovich",
+      "birth: 12 March 1895, Kamenets-Podolsk, Podolia Governorate"
+    ],
+    "false_claims": [
+      "Kaminsky is a separate surname branch",
+      "Nokhum is female",
+      "birth month is May",
+      "mother is Sara Raskin",
+      "modern Ukraine-only place is sufficient for archive routing"
+    ],
+    "intended_feature_coverage": [
+      "OCR_metric_book_parser",
+      "source_authority_chain",
+      "date_column_validation",
+      "Hebrew_Russian_cross_column_validation",
+      "patronymic_and_surname_repair",
+      "duplicate_detection_from_OCR",
+      "archive_place_jurisdiction_repair"
+    ]
+  },
+  "evaluation_assertions": [
+    {
+      "assertion_id": "eval_16_001",
+      "description": "Engine must merge I3 and I7 after OCR repair.",
+      "expected": {
+        "merge_pair": ["I3", "I7"],
+        "status": "Confirmed",
+        "min_confidence": 0.95
+      }
+    },
+    {
+      "assertion_id": "eval_16_002",
+      "description": "Engine must select March, not May.",
+      "expected": {
+        "field": "birth_date",
+        "value": "12 MAR 1895",
+        "rejected_value": "12 MAY 1895"
+      }
+    },
+    {
+      "assertion_id": "eval_16_003",
+      "description": "Engine must reject Kaminsky surname branch.",
+      "expected": {
+        "claim": "Kaminsky surname branch",
+        "status": "Rejected",
+        "max_confidence": 0.15
+      }
+    },
+    {
+      "assertion_id": "eval_16_004",
+      "description": "Engine must confirm Sura Rabinovich as mother.",
+      "expected": {
+        "relationship": "I6 mother of I3",
+        "status": "Confirmed",
+        "min_confidence": 0.9
+      }
+    },
+    {
+      "assertion_id": "eval_16_005",
+      "description": "Engine must preserve raw OCR as derivative evidence but not as fact.",
+      "expected": {
+        "source_layer": "derivative_ocr",
+        "fact_authority": "low"
+      }
+    }
+  ],
+  "phases_validated": [
+    "OCR_metric_book_parser",
+    "metric_book_parsing_template",
+    "15.10_name_disambiguation",
+    "19.x_place_resolution",
+    "22.x_archive_routing",
+    "GEDCOM_doctor",
+    "24.x_evidence_summary"
+  ],
+  "version": "0.1",
+  "created_for": "AutoTreeGen Test Tree Corpus + Evaluation Suite"
+}

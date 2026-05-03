@@ -160,12 +160,22 @@ desktop.ini
 .docker/
 docker-compose.override.yml
 volumes/
-data/
+# Корневой ``data/`` ignore через ``data/*`` (а не сам ``data/`` как dir),
+# чтобы negation-правила ниже могли re-include конкретные пути. Git не
+# позволяет re-include содержимое директории, чей родитель сам excluded
+# (см. man gitignore). Поэтому исключаем ДЕТЕЙ, не родителя.
+data/*
 # Phase 15.10 / ADR-0068: ICP-anchor synonyms shipped как package-data.
 # Глобальный ``data/`` ignore выше иначе drop'ает этот JSON, и tests
 # падают с FileNotFoundError на CI (см. PR #170 first run).
 !packages/entity-resolution/src/entity_resolution/names/data/
 !packages/entity-resolution/src/entity_resolution/names/data/**
+# Phase 26.1 / ADR-0084: synthetic test tree corpus — product-level
+# evaluation data, not unit-test fixture. Hashes pinned in manifest.
+# Re-include the dir + everything under it; data/* above excludes
+# all other top-level entries in data/.
+!data/test_corpus/
+!data/test_corpus/**
 
 # ---- Логи и временные файлы ----
 *.log
@@ -178,6 +188,10 @@ temp/
 test-results/
 playwright-report/
 playwright/.cache/
+# Phase 26.1 / ADR-0084: artefacts of `scripts/run_eval.py`. Папка
+# трекается (через .gitkeep), отчёты per-run — нет.
+reports/eval/*.json
+!reports/eval/.gitkeep
 
 # ---- OS ----
 .DS_Store
