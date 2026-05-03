@@ -1,16 +1,4 @@
-"""Registry for Phase 26.x tree-level detectors.
-
-Each detector is a pure function:
-
-    detect(tree: dict[str, Any]) -> DetectorResult
-
-Detectors must be deterministic. They must not read expected_engine_flags or
-expected_confidence_outputs from the answer key. They may only use input
-evidence such as GEDCOM excerpts, DNA matches, user assertions, archive snippets
-and embedded error metadata.
-
-The registry owns detector ordering and result aggregation.
-"""
+"""Registry for Phase 26.x tree-level detectors."""
 
 from __future__ import annotations
 
@@ -21,6 +9,7 @@ from inference_engine.detectors import (
     cross_platform_dna_match,
     dna_vs_tree,
     gedcom_safe_merge,
+    historical_place_jurisdiction,
     metric_book_ocr,
     revision_list_household,
 )
@@ -35,6 +24,7 @@ _DETECTORS: list[DetectorFn] = [
     gedcom_safe_merge.detect,
     metric_book_ocr.detect,
     revision_list_household.detect,
+    historical_place_jurisdiction.detect,
 ]
 
 
