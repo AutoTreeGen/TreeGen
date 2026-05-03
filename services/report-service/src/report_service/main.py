@@ -14,9 +14,10 @@ from fastapi import FastAPI
 from shared_models.observability import setup_logging, setup_sentry
 from shared_models.security import apply_security_middleware
 
-from report_service.api import health, relationship
+from report_service.api import bundles, health, relationship
 from report_service.config import get_settings
 from report_service.database import dispose_engine, init_engine
+from report_service.queue import close_arq_pool
 
 setup_logging(service_name="report-service")
 setup_sentry(service_name="report-service", environment=os.environ.get("ENVIRONMENT"))
@@ -24,10 +25,15 @@ setup_sentry(service_name="report-service", environment=os.environ.get("ENVIRONM
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    """Инициализировать engine при старте, закрыть при shutdown."""
+    """Инициализировать engine при старте, закрыть при shutdown.
+
+    Phase 24.4: arq pool тоже закрывается на shutdown (lazy-init на первый
+    enqueue, поэтому ничего не делаем на startup).
+    """
     settings = get_settings()
     init_engine(settings.database_url)
     yield
+    await close_arq_pool()
     await dispose_engine()
 
 
@@ -46,3 +52,4 @@ apply_security_middleware(app, service_name="report-service")
 
 app.include_router(health.router)
 app.include_router(relationship.router)
+app.include_router(bundles.router)

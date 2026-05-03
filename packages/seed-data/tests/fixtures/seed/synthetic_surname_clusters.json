@@ -1,0 +1,115 @@
+{
+  "metadata": {
+    "title": "Synthetic surname clusters fixture (Phase 22.1b CI)",
+    "version": "0.0-synthetic",
+    "generated_date": "2026-05-02",
+    "purpose": "CI smoke coverage for SurnameVariantSeed + SurnameTransliterationSeed loaders without committing the canonical 401 KB merged file."
+  },
+  "surname_variant_clusters": [
+    {
+      "canonical": "Doe",
+      "community_scope": "Anglophone",
+      "rank_within_scope": 1,
+      "variants_latin": ["Doe", "Doh", "Doh-Smith"],
+      "variants_cyrillic": null,
+      "variants_hebrew": null,
+      "variants_yiddish": null,
+      "etymology": "Synthetic placeholder name for fixture coverage."
+    },
+    {
+      "canonical": "Smith",
+      "community_scope": "Anglophone",
+      "rank_within_scope": 2,
+      "variants_latin": ["Smith", "Smyth"],
+      "variants_cyrillic": null,
+      "variants_hebrew": null,
+      "variants_yiddish": null,
+      "etymology": "Synthetic placeholder."
+    },
+    {
+      "canonical": "TestCohen",
+      "community_scope": "Synthetic Jewish",
+      "rank_within_scope": 1,
+      "variants_latin": ["TestCohen", "TestKohn"],
+      "variants_cyrillic": ["ТестКоэн"],
+      "variants_hebrew": ["טסטכהן"],
+      "variants_yiddish": ["טעסטקאהן"],
+      "etymology": "Synthetic placeholder for cross-script coverage."
+    },
+    {
+      "canonical": "TestLevi",
+      "community_scope": "Synthetic Jewish",
+      "rank_within_scope": 2,
+      "variants_latin": ["TestLevi", "TestLevy"],
+      "variants_cyrillic": ["ТестЛеви"],
+      "variants_hebrew": ["טסטלוי"],
+      "variants_yiddish": null,
+      "etymology": "Synthetic placeholder."
+    },
+    {
+      "canonical": "TestIvanov",
+      "community_scope": "Synthetic Slavic",
+      "rank_within_scope": 1,
+      "variants_latin": ["TestIvanov", "TestIvanow"],
+      "variants_cyrillic": ["ТестИванов", "ТестИваноф"],
+      "variants_hebrew": null,
+      "variants_yiddish": null,
+      "etymology": "Synthetic placeholder."
+    },
+    {
+      "canonical": "TestPetrov",
+      "community_scope": "Synthetic Slavic",
+      "rank_within_scope": 2,
+      "variants_latin": ["TestPetrov"],
+      "variants_cyrillic": ["ТестПетров"],
+      "variants_hebrew": null,
+      "variants_yiddish": null,
+      "etymology": "Synthetic placeholder."
+    },
+    {
+      "canonical": "TestKowalski",
+      "community_scope": "Synthetic Polish",
+      "rank_within_scope": 1,
+      "variants_latin": ["TestKowalski", "TestKovalski"],
+      "variants_cyrillic": null,
+      "variants_hebrew": null,
+      "variants_yiddish": null,
+      "etymology": "Synthetic placeholder."
+    },
+    {
+      "canonical": "TestSchmidt",
+      "community_scope": "Synthetic German",
+      "rank_within_scope": 1,
+      "variants_latin": ["TestSchmidt", "TestSchmid"],
+      "variants_cyrillic": null,
+      "variants_hebrew": null,
+      "variants_yiddish": null,
+      "etymology": "Synthetic placeholder."
+    },
+    {
+      "canonical": "TestNovak",
+      "community_scope": "Synthetic Czech",
+      "rank_within_scope": 1,
+      "variants_latin": ["TestNovak", "TestNovák"],
+      "variants_cyrillic": null,
+      "variants_hebrew": null,
+      "variants_yiddish": null,
+      "etymology": "Synthetic placeholder."
+    },
+    {
+      "canonical": "TestPapadopoulos",
+      "community_scope": "Synthetic Greek",
+      "rank_within_scope": 1,
+      "variants_latin": ["TestPapadopoulos"],
+      "variants_cyrillic": null,
+      "variants_hebrew": null,
+      "variants_yiddish": null,
+      "etymology": "Synthetic placeholder."
+    }
+  ],
+  "transliteration_tables": {
+    "ТестИванов": { "latin_bgn": ["TestIvanov"], "latin_iso9": ["TestIvanov"] },
+    "ТестПетров": { "latin_bgn": ["TestPetrov"], "latin_iso9": ["TestPetrov"] },
+    "טסטכהן": { "latin_alalc": ["TestKohen"], "latin_bgn": ["TestKohen"] }
+  }
+}

@@ -696,7 +696,13 @@
       "consentRequired": "Подтвердите согласие выше, чтобы включить запись.",
       "deviceUnavailable": "Не получилось получить доступ к микрофону. Проверьте разрешения браузера.",
       "unsupported": "MediaRecorder не поддерживается в этом браузере. Попробуйте Chrome или Firefox.",
-      "uploadFailed": "Не удалось загрузить: {message}"
+      "uploadFailed": "Не удалось загрузить: {message}",
+      "languageLabel": "Язык",
+      "languageAuto": "Автоопределение",
+      "languageEn": "Английский",
+      "languageRu": "Русский",
+      "languageHe": "Иврит",
+      "languageHintNonLatin": "Имена сохранятся в исходной графике и будут транслитерированы в латиницу через name-engine Phase 15.10."
     },
     "sessions": {
       "heading": "Записи",
