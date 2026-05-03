@@ -1,8 +1,10 @@
-"""DetectorResult dataclass — общий тип для всех Phase 26.x детекторов.
+"""Shared result type for Phase 26.x tree-level detectors.
 
-Лежит в отдельном module (не в ``registry.py``), чтобы детекторы могли
-импортить ``DetectorResult`` без циркулярной зависимости с registry,
-который сам импортит детекторов на module-level.
+Detector modules return DetectorResult objects. The registry aggregates them
+into the final EngineOutput payload used by scripts/run_eval.py.
+
+DetectorResult intentionally mirrors the list-like fields in EngineOutput plus
+evaluation_results. This keeps detector output deterministic and easy to merge.
 """
 
 from __future__ import annotations
@@ -13,13 +15,7 @@ from typing import Any
 
 @dataclass
 class DetectorResult:
-    """Output одного tree-level детектора.
-
-    Поля совпадают с list-полями ``EngineOutput`` (см. ADR-0084) плюс
-    ``evaluation_results``. Engine мерджит несколько ``DetectorResult``
-    в финальный output: list-поля extend'ятся, ``evaluation_results``
-    update'ится.
-    """
+    """Output produced by one tree-level detector."""
 
     engine_flags: list[str] = field(default_factory=list)
     relationship_claims: list[dict[str, Any]] = field(default_factory=list)
