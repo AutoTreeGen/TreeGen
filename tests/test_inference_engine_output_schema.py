@@ -108,31 +108,38 @@ def test_evaluation_results_is_dict_str_to_bool() -> None:
 # Anti-cheat
 # ---------------------------------------------------------------------------
 
+# Tree без подходящего детектора в Phase 26.2 (patronymic disambiguation —
+# DNA слабая, no NPE-сигнал). По мере добавления детекторов в Phase 26.3+
+# pivot на tree, который ещё не покрыт.
+_UNCOVERED_TREE = "tree_07_patronymic_vs_surname_disambiguation.json"
 
-def test_baseline_does_not_emit_expected_engine_flags() -> None:
-    """ADR-0084 §"Anti-cheat": baseline НЕ должен заранее проходить flag_score
-    путём копирования ``expected_engine_flags`` в output.
+
+def test_uncovered_tree_does_not_emit_expected_engine_flags() -> None:
+    """ADR-0084 §"Anti-cheat": engine не должен auto-pass'ить flag_score
+    путём копирования ``expected_engine_flags`` в output. Проверяем на
+    tree без подходящего детектора — output должен оставаться пустым.
     """
-    tree = _load("tree_11_unknown_father_npe_dna_contradiction.json")
+    tree = _load(_UNCOVERED_TREE)
     out = run_tree(tree)
     expected = set(tree["expected_engine_flags"])
     actual = set(out["engine_flags"])
     assert actual & expected == set(), (
-        "baseline must not auto-pass by copying expected_engine_flags into output"
+        "engine must not auto-pass by copying expected_engine_flags into output"
     )
 
 
-def test_baseline_evaluation_results_all_false() -> None:
-    """Baseline помечает каждый assertion как False — ни одного True."""
-    tree = _load("tree_11_unknown_father_npe_dna_contradiction.json")
+def test_uncovered_tree_evaluation_results_all_false() -> None:
+    """Tree без активного детектора → все assertion'ы помечены False."""
+    tree = _load(_UNCOVERED_TREE)
     out = run_tree(tree)
     assert out["evaluation_results"], "expected non-empty evaluation_results"
     assert all(v is False for v in out["evaluation_results"].values())
 
 
-def test_baseline_lists_are_empty() -> None:
-    """Phase 26.1: relationship_claims / merge_decisions / etc — все пустые."""
-    tree = _load("tree_20_full_pipeline_sealed_set_contradiction_resolution.json")
+def test_uncovered_tree_lists_are_empty() -> None:
+    """Tree без активного детектора: relationship_claims / merge_decisions
+    / etc — пустые."""
+    tree = _load(_UNCOVERED_TREE)
     out = run_tree(tree)
     for key in (
         "engine_flags",
@@ -142,7 +149,7 @@ def test_baseline_lists_are_empty() -> None:
         "quarantined_claims",
         "sealed_set_candidates",
     ):
-        assert out[key] == [], f"{key} expected empty in baseline, got {out[key]!r}"
+        assert out[key] == [], f"{key} expected empty for uncovered tree, got {out[key]!r}"
 
 
 # ---------------------------------------------------------------------------
