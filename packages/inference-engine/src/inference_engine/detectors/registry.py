@@ -6,6 +6,7 @@ from collections.abc import Callable
 from typing import Any
 
 from inference_engine.detectors import (
+    ashkenazi_endogamy,
     dna_vs_tree,
     gedcom_safe_merge,
     historical_place_jurisdiction,
@@ -18,6 +19,7 @@ DetectorFn = Callable[[dict[str, Any]], DetectorResult]
 
 
 _DETECTORS: list[DetectorFn] = [
+    ashkenazi_endogamy.detect,
     dna_vs_tree.detect,
     gedcom_safe_merge.detect,
     metric_book_ocr.detect,
