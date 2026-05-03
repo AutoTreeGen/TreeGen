@@ -10,6 +10,7 @@ from inference_engine.detectors import (
     dna_vs_tree,
     gedcom_safe_merge,
     historical_place_jurisdiction,
+    mennonite_founder_loop,
     metric_book_ocr,
     revision_list_household,
 )
@@ -19,6 +20,7 @@ DetectorFn = Callable[[dict[str, Any]], DetectorResult]
 
 
 _DETECTORS: list[DetectorFn] = [
+    mennonite_founder_loop.detect,
     cross_platform_dna_match.detect,
     dna_vs_tree.detect,
     gedcom_safe_merge.detect,
