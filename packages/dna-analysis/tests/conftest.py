@@ -15,6 +15,7 @@ from ._generators import (
     generate_synthetic_23andme,
     generate_synthetic_ancestry,
     generate_synthetic_ftdna,
+    generate_synthetic_livingdna,
     generate_synthetic_myheritage,
 )
 
@@ -41,6 +42,12 @@ def synthetic_myheritage_content() -> str:
 def synthetic_ftdna_content() -> str:
     """Свежесгенерированный синтетический FTDNA Family Finder файл (100 SNP)."""
     return generate_synthetic_ftdna()
+
+
+@pytest.fixture
+def synthetic_livingdna_content() -> str:
+    """Свежесгенерированный синтетический LivingDNA файл (100 SNP)."""
+    return generate_synthetic_livingdna()
 
 
 @pytest.fixture
@@ -71,3 +78,9 @@ def synthetic_myheritage_file(fixtures_dir: Path) -> str:
 def synthetic_ftdna_file(fixtures_dir: Path) -> str:
     """Содержимое pre-generated tests/fixtures/synthetic_ftdna.csv."""
     return (fixtures_dir / "synthetic_ftdna.csv").read_text(encoding="utf-8")
+
+
+@pytest.fixture
+def synthetic_livingdna_file(fixtures_dir: Path) -> str:
+    """Содержимое pre-generated tests/fixtures/synthetic_livingdna.txt."""
+    return (fixtures_dir / "synthetic_livingdna.txt").read_text(encoding="utf-8")

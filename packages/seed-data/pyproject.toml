@@ -1,0 +1,50 @@
+[project]
+name = "seed-data"
+version = "0.1.0"
+description = "AutoTreeGen reference seed data ingestion (Phase 22.1b)."
+requires-python = ">=3.13"
+readme = "README.md"
+license = { text = "Proprietary" }
+authors = [{ name = "AutoTreeGen", email = "autotreegen@gmail.com" }]
+
+# Pure ingestion код:
+#  - shared-models — ORM tables (CountryArchiveDirectorySeed, ...).
+#  - sqlalchemy — async upsert через pg-dialect ON CONFLICT.
+#  - pydantic — typed loaders.
+# Никаких fastapi / httpx / клиентских deps: это CLI + библиотека, не сервис.
+dependencies = [
+    "shared-models",
+    "pydantic>=2.10",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.30",
+    "typer>=0.13",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "testcontainers[postgres]>=4.8",
+    "psycopg[binary]>=3.2",
+]
+
+[project.scripts]
+# CLI entrypoint: `seed-data ingest` после `uv pip install -e .`
+seed-data = "seed_data.cli:app"
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/seed_data"]
+# Включаем committed canonical JSON-файлы в wheel'е для distributable
+# install'а (на dev/staging машинах ingest CLI работает из package data,
+# не из gitignored data/reference/ дерева).
+include = [
+    "src/seed_data/**/*.py",
+    "data/canonical/**/*.json",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true

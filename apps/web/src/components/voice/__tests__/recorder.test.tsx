@@ -179,4 +179,115 @@ describe("Recorder", () => {
       expect(screen.getByRole("alert").textContent).toMatch(/microphone/i);
     });
   });
+
+  // -------------------------------------------------------------------------
+  // Phase 10.9e — language picker tests (slice A)
+  // -------------------------------------------------------------------------
+
+  it("renders the language picker with Auto / EN / RU / HE options, default Auto", () => {
+    render(wrap(<Recorder treeId={TREE_ID} consentGranted={true} />));
+    const picker = screen.getByTestId("recorder-language") as HTMLSelectElement;
+    expect(picker.value).toBe("");
+    const options = Array.from(picker.options).map((o) => o.value);
+    expect(options).toEqual(["", "en", "ru", "he"]);
+  });
+
+  it("does not show the non-Latin hint when Auto or EN selected", () => {
+    render(wrap(<Recorder treeId={TREE_ID} consentGranted={true} />));
+    expect(screen.queryByTestId("recorder-language-hint")).toBeNull();
+
+    const picker = screen.getByTestId("recorder-language") as HTMLSelectElement;
+    fireEvent.change(picker, { target: { value: "en" } });
+    expect(screen.queryByTestId("recorder-language-hint")).toBeNull();
+  });
+
+  it("shows the non-Latin hint when Russian or Hebrew selected", () => {
+    render(wrap(<Recorder treeId={TREE_ID} consentGranted={true} />));
+    const picker = screen.getByTestId("recorder-language") as HTMLSelectElement;
+
+    fireEvent.change(picker, { target: { value: "ru" } });
+    expect(screen.getByTestId("recorder-language-hint").textContent).toMatch(
+      /preserved in the original script/,
+    );
+
+    fireEvent.change(picker, { target: { value: "he" } });
+    expect(screen.getByTestId("recorder-language-hint")).toBeInTheDocument();
+  });
+
+  it("propagates the picker value to uploadAudioSession as languageHint", async () => {
+    let now = 1_700_000_000_000;
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    const upload = vi.spyOn(voiceApi, "uploadAudioSession").mockResolvedValue({
+      id: "sess-1",
+      tree_id: TREE_ID,
+      status: "uploaded",
+      storage_uri: "s3://bucket/sessions/sess-1.webm",
+      mime_type: "audio/webm",
+      duration_sec: null,
+      size_bytes: 16,
+      language: "ru",
+      transcript_text: null,
+      transcript_provider: null,
+      transcript_model_version: null,
+      transcript_cost_usd: null,
+      error_message: null,
+      created_at: "2026-05-02T10:00:00Z",
+      updated_at: "2026-05-02T10:00:00Z",
+      deleted_at: null,
+    });
+
+    render(wrap(<Recorder treeId={TREE_ID} consentGranted={true} />));
+    fireEvent.change(screen.getByTestId("recorder-language"), { target: { value: "ru" } });
+
+    fireEvent.click(screen.getByTestId("recorder-start"));
+    await waitFor(() => {
+      expect(screen.getByTestId("recorder-stop")).toBeInTheDocument();
+    });
+    now += 10_000;
+    fireEvent.click(screen.getByTestId("recorder-stop"));
+
+    await waitFor(() => {
+      expect(upload).toHaveBeenCalledTimes(1);
+    });
+    const options = upload.mock.calls[0]?.[2];
+    expect(options?.languageHint).toBe("ru");
+  });
+
+  it("omits languageHint when Auto is selected (regression for EN-default Geoffrey demo path)", async () => {
+    let now = 1_700_000_000_000;
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    const upload = vi.spyOn(voiceApi, "uploadAudioSession").mockResolvedValue({
+      id: "sess-1",
+      tree_id: TREE_ID,
+      status: "uploaded",
+      storage_uri: "s3://bucket/sessions/sess-1.webm",
+      mime_type: "audio/webm",
+      duration_sec: null,
+      size_bytes: 16,
+      language: null,
+      transcript_text: null,
+      transcript_provider: null,
+      transcript_model_version: null,
+      transcript_cost_usd: null,
+      error_message: null,
+      created_at: "2026-05-02T10:00:00Z",
+      updated_at: "2026-05-02T10:00:00Z",
+      deleted_at: null,
+    });
+
+    render(wrap(<Recorder treeId={TREE_ID} consentGranted={true} />));
+    // Не трогаем picker — оставляем default ("").
+    fireEvent.click(screen.getByTestId("recorder-start"));
+    await waitFor(() => {
+      expect(screen.getByTestId("recorder-stop")).toBeInTheDocument();
+    });
+    now += 10_000;
+    fireEvent.click(screen.getByTestId("recorder-stop"));
+
+    await waitFor(() => {
+      expect(upload).toHaveBeenCalledTimes(1);
+    });
+    const options = upload.mock.calls[0]?.[2];
+    expect(options?.languageHint).toBeUndefined();
+  });
 });

@@ -38,12 +38,14 @@ members = [
     "packages/inference-engine",
     "packages/ai-layer",
     "packages/mcp-server",
+    "packages/seed-data",
     "services/parser-service",
     "services/dna-service",
     "services/archive-service",
     "services/notification-service",
     "services/email-service",
     "services/billing-service",
+    "services/report-service",
     "services/telegram-bot",
 ]
 
@@ -57,12 +59,14 @@ familysearch-client = { workspace = true }
 inference-engine = { workspace = true }
 ai-layer = { workspace = true }
 treegen-mcp = { workspace = true }
+seed-data = { workspace = true }
 parser-service = { workspace = true }
 dna-service = { workspace = true }
 archive-service = { workspace = true }
 notification-service = { workspace = true }
 email-service = { workspace = true }
 billing-service = { workspace = true }
+report-service = { workspace = true }
 telegram-bot = { workspace = true }
 
 [tool.uv]
@@ -216,6 +220,7 @@ mypy_path = [
     "packages/gedcom-parser/src",
     "packages/inference-engine/src",
     "packages/mcp-server/src",
+    "packages/seed-data/src",
     "packages/shared-models/src",
     "services/archive-service/src",
     "services/billing-service/src",
@@ -223,6 +228,7 @@ mypy_path = [
     "services/email-service/src",
     "services/notification-service/src",
     "services/parser-service/src",
+    "services/report-service/src",
     "services/telegram-bot/src",
 ]
 exclude = [

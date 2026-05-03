@@ -114,6 +114,17 @@ async def planner_client(
     from archive_service.main import app
 
     app.dependency_overrides[get_current_claims] = lambda: AsyncMock(sub="u_test")
+
+    # Phase 15.11c: planner endpoint теперь зависит от sealed-scopes
+    # fetcher'а. По умолчанию в тестах никаких active assertions нет,
+    # поэтому возвращаем empty frozenset — это устраняет необходимость
+    # инициализировать engine в тестах, которые не трогают БД.
+    from archive_service.planner.router import get_sealed_scopes_fetcher
+
+    async def _empty_sealed(_person_id: uuid.UUID) -> frozenset:
+        return frozenset()
+
+    app.dependency_overrides[get_sealed_scopes_fetcher] = lambda: _empty_sealed
     try:
         async with AsyncClient(
             transport=ASGITransport(app=app),
