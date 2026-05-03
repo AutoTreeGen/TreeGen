@@ -22,6 +22,9 @@ from inference_engine.detectors import (
     famous_overclaim,
     gedcom_safe_merge,
     metric_book_ocr,
+    gedcom_safe_merge,
+    metric_book_ocr,
+    revision_list_household,
 )
 from inference_engine.detectors.result import DetectorResult
 
@@ -33,6 +36,7 @@ _DETECTORS: list[DetectorFn] = [
     dna_vs_tree.detect,
     gedcom_safe_merge.detect,
     metric_book_ocr.detect,
+    revision_list_household.detect,
 ]
 
 
