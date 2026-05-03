@@ -1,0 +1,336 @@
+{
+  "tree_id": "tree_17_revision_list_household_interpretation",
+  "category": "revision_list_household_parsing",
+  "complexity": "high",
+  "population_context": "Ashkenazi Pale of Settlement",
+  "scope_description": "5-generation Minsk/Brest Jewish family reconstructed from 1834, 1850 and 1858 revision lists with missing female enumeration, age drift, registered-vs-actual residence, household-number collisions and false parent-child assignments.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR AutoTreeGenSyntheticCorpus\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Synthetic Proband /Raskes/\n1 SEX F\n1 BIRT\n2 DATE 1979\n2 PLAC Montreal, Quebec, Canada\n1 FAMC @F1@\n0 @I2@ INDI\n1 NAME Chaim /Raskes/\n1 SEX M\n1 BIRT\n2 DATE 1948\n2 PLAC Brest, Belarusian SSR\n1 FAMC @F2@\n0 @I3@ INDI\n1 NAME Yankel Nakhmanovich /Raskes/\n1 SEX M\n1 BIRT\n2 DATE ABT 1885\n2 PLAC Brest-Litovsk, Grodno Governorate\n1 FAMS @F2@\n0 @I4@ INDI\n1 NAME Freida /Raskes/\n1 SEX F\n1 BIRT\n2 DATE ABT 1888\n2 PLAC Brest-Litovsk, Grodno Governorate\n1 NOTE Female missing from 1858 revision household; confirmed later by marriage/birth records.\n1 FAMS @F2@\n0 @I5@ INDI\n1 NAME Nakhman /Raskes/\n1 SEX M\n1 BIRT\n2 DATE ABT 1840\n2 PLAC Brest-Litovsk, Grodno Governorate\n1 FAMS @F3@\n0 @I6@ INDI\n1 NAME Sura /Friedman/\n1 SEX F\n1 BIRT\n2 DATE ABT 1842\n2 PLAC Brest-Litovsk, Grodno Governorate\n1 FAMS @F3@\n0 @I7@ INDI\n1 NAME Yankel /Raskes/\n1 SEX M\n1 BIRT\n2 DATE ABT 1838\n2 PLAC Kobryn, Grodno Governorate\n1 NOTE Same-name collateral in another household; wrongly merged as father of I3 in public tree.\n0 @I8@ INDI\n1 NAME Nakhman /Raskin/\n1 SEX M\n1 BIRT\n2 DATE ABT 1841\n2 PLAC Pruzhany, Grodno Governorate\n1 NOTE Surname variant candidate; not safe merge with I5 without household continuity.\n0 @I9@ INDI\n1 NAME Leib /Raskes/\n1 SEX M\n1 BIRT\n2 DATE ABT 1810\n2 PLAC Brest-Litovsk, Grodno Governorate\n1 FAMS @F4@\n0 @I10@ INDI\n1 NAME Unknown Wife /Raskes/\n1 SEX F\n1 NOTE Missing female in early revision; public tree invents name Chaya without source.\n1 FAMS @F4@\n0 @F2@ FAM\n1 HUSB @I3@\n1 WIFE @I4@\n1 CHIL @I2@\n0 @F3@ FAM\n1 HUSB @I5@\n1 WIFE @I6@\n1 CHIL @I3@\n0 @F4@ FAM\n1 HUSB @I9@\n1 WIFE @I10@\n1 CHIL @I5@\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_1701",
+      "match_name": "Anonymized Raskes Cousin A",
+      "platform": "AncestryDNA",
+      "shared_cm": 96,
+      "longest_segment": 25,
+      "segment_count": 10,
+      "shared_matches_with": ["dna_1702", "dna_1703"],
+      "expected_link": "via Nakhman Raskes / Brest household"
+    },
+    {
+      "match_id": "dna_1702",
+      "match_name": "Anonymized Friedman Cousin",
+      "platform": "MyHeritage",
+      "shared_cm": 66,
+      "longest_segment": 18,
+      "segment_count": 7,
+      "shared_matches_with": ["dna_1701"],
+      "expected_link": "via Sura Friedman / Raskes household"
+    },
+    {
+      "match_id": "dna_1703",
+      "match_name": "Anonymized Raskin Pruzhany Match",
+      "platform": "GEDmatch",
+      "shared_cm": 23,
+      "longest_segment": 8,
+      "segment_count": 4,
+      "shared_matches_with": ["dna_1701"],
+      "expected_link": "surname-variant clue only; insufficient to merge I5/I8"
+    },
+    {
+      "match_id": "dna_1704",
+      "match_name": "Anonymized Kobryn Raskes Match",
+      "platform": "FamilyTreeDNA",
+      "shared_cm": 17,
+      "longest_segment": 6,
+      "segment_count": 5,
+      "shared_matches_with": [],
+      "expected_link": "small endogamous/collateral clue; not father proof"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_1701",
+      "type": "revision_list",
+      "year": 1834,
+      "place": "Brest-Litovsk, Grodno Governorate",
+      "transcription_excerpt": "Household 44: Leib Raskes age 24; son Nakhman age 2. Registered in Brest Jewish community.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "anchors I9 -> I5 household relationship; ages approximate."
+    },
+    {
+      "snippet_id": "src_1702",
+      "type": "revision_list",
+      "year": 1850,
+      "place": "Brest-Litovsk, Grodno Governorate",
+      "transcription_excerpt": "Household 44: Leib Raskes age 39; son Nakhman age 14; note: absent in actual residence, registered here.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "shows age drift and registered-vs-actual residence; supports continuity from 1834."
+    },
+    {
+      "snippet_id": "src_1703",
+      "type": "revision_list",
+      "year": 1858,
+      "place": "Brest-Litovsk, Grodno Governorate",
+      "transcription_excerpt": "Household 44: Nakhman Raskes age 19, son Yankel age 3. Wife not enumerated in this copy. Female household members absent from summary page.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "supports I5 -> I3; absence of wife Sura is not proof she did not exist."
+    },
+    {
+      "snippet_id": "src_1704",
+      "type": "metric_book_marriage",
+      "year": 1863,
+      "place": "Brest-Litovsk, Grodno Governorate",
+      "transcription_excerpt": "Marriage of Nakhman Raskes, son of Leib, to Sura Friedman, daughter of Gersh.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms wife Sura and correct parentage; resolves female absence in revision list."
+    },
+    {
+      "snippet_id": "src_1705",
+      "type": "metric_book_birth",
+      "year": 1885,
+      "place": "Brest-Litovsk, Grodno Governorate",
+      "transcription_excerpt": "Birth of Yankel, son of Nakhman Raskes and Sura Friedman.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms I3 parents; resolves age/household interpretation."
+    },
+    {
+      "snippet_id": "src_1706",
+      "type": "revision_list",
+      "year": 1858,
+      "place": "Kobryn, Grodno Governorate",
+      "transcription_excerpt": "Household 91: Yankel Raskes age 20, son of Movsha, registered in Kobryn.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "separates I7 from Brest household; not father of I3."
+    },
+    {
+      "snippet_id": "src_1707",
+      "type": "online_tree",
+      "year": 2024,
+      "place": "public tree import",
+      "transcription_excerpt": "Yankel Raskes of Kobryn merged with Brest Yankel; Chaya added as wife of Leib because female missing in 1834 revision list.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "expected_use": "should be flagged as same-name merge and invented female bridge."
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "I10",
+      "assertion": "Leib's wife was Chaya because some trees say so.",
+      "scope": "spouse_identity",
+      "evidence": "public tree; no revision/metric source"
+    },
+    {
+      "person_id": "I7",
+      "assertion": "Yankel Raskes from Kobryn is the same as Brest Yankel because name and age are similar.",
+      "scope": "identity_merge",
+      "evidence": "same name and same governorate"
+    },
+    {
+      "person_id": "I6",
+      "assertion": "Sura Friedman may not be mother because absent in 1858 revision list.",
+      "scope": "mother_identity",
+      "evidence": "not enumerated in revision list household copy"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "revision_list_interpretation_error",
+      "subtype": "female_absence_as_nonexistence",
+      "person_id": "I6",
+      "expected_flag": "revision_list_missing_female_not_disproof",
+      "reason": "wife not enumerated in summary page; metric records confirm her"
+    },
+    {
+      "type": "same_name_different_person",
+      "persons": ["I3", "I7"],
+      "expected_flag": "same_name_same_guberniya_different_household",
+      "reason": "Brest household vs Kobryn household; different father"
+    },
+    {
+      "type": "fabrication",
+      "subtype": "invented_spouse_from_revision_gap",
+      "person_id": "I10",
+      "expected_flag": "unknown_wife_invented_from_missing_female_revision",
+      "reason": "public tree invents Chaya without source"
+    },
+    {
+      "type": "revision_list_interpretation_error",
+      "subtype": "age_drift_overinterpreted",
+      "person_id": "I5",
+      "expected_flag": "revision_list_age_drift_not_identity_conflict",
+      "reason": "age differences 1834/1850/1858 are within revision-list drift range"
+    },
+    {
+      "type": "residence_confusion",
+      "person_id": "I5",
+      "expected_flag": "registered_vs_actual_residence_confusion",
+      "reason": "1850 says registered in Brest but absent/actual residence elsewhere"
+    },
+    {
+      "type": "surname_variant_overmerge",
+      "persons": ["I5", "I8"],
+      "expected_flag": "raskes_raskin_variant_not_enough",
+      "reason": "Raskes/Raskin and low DNA are insufficient without household continuity"
+    },
+    {
+      "type": "source_quality",
+      "snippet_id": "src_1707",
+      "expected_flag": "public_tree_revision_list_overreach",
+      "reason": "public tree converts revision-list gaps into invented relationships"
+    }
+  ],
+  "expected_reasoning_chain": [
+    "Step 1: Parse revision-list household numbers, names, ages, relationship terms and registered-residence notes.",
+    "Step 2: Correlate household 44 across 1834, 1850 and 1858; allow reasonable age drift.",
+    "Step 3: Identify I9 Leib -> I5 Nakhman continuity from household records.",
+    "Step 4: Identify I5 Nakhman -> I3 Yankel from 1858 household plus metric birth src_1705.",
+    "Step 5: Treat missing female enumeration in 1858 as negative-space caveat, not disproof of Sura Friedman.",
+    "Step 6: Use marriage src_1704 and birth src_1705 to confirm Sura Friedman as wife/mother.",
+    "Step 7: Separate I7 Kobryn Yankel from I3 Brest Yankel using household, father and place differences.",
+    "Step 8: Reject invented Chaya wife profile unless future source appears; keep I10 as unknown wife placeholder only if needed.",
+    "Step 9: Treat Raskes/Raskin Pruzhany match as surname-variant hypothesis, not merge.",
+    "Step 10: Output household-linked reconstructed tree with evidence status and flagged revision-list traps."
+  ],
+  "expected_confidence_outputs": {
+    "relationship_I9_father_of_I5": {
+      "status": "Probable",
+      "confidence": 0.86,
+      "evidence": ["src_1701", "src_1702", "src_1703"],
+      "reason": "household continuity with age drift"
+    },
+    "relationship_I5_father_of_I3": {
+      "status": "Confirmed",
+      "confidence": 0.95,
+      "evidence": ["src_1703", "src_1705"]
+    },
+    "relationship_I6_mother_of_I3": {
+      "status": "Confirmed",
+      "confidence": 0.94,
+      "evidence": ["src_1704", "src_1705"]
+    },
+    "identity_I3_I7_same_person": {
+      "status": "Rejected",
+      "confidence": 0.12,
+      "reason": "different household, father and town"
+    },
+    "identity_I5_I8_same_person": {
+      "status": "Conflict",
+      "confidence": 0.34,
+      "reason": "surname variant and weak DNA only; no household continuity"
+    },
+    "spouse_I10_named_Chaya": {
+      "status": "Rejected",
+      "confidence": 0.08,
+      "reason": "invented from public tree; no source"
+    },
+    "female_absence_disproves_Sura": {
+      "status": "Rejected",
+      "confidence": 0.05,
+      "reason": "female absence in revision list is not disproof"
+    }
+  },
+  "expected_engine_flags": [
+    "revision_list_missing_female_not_disproof",
+    "same_name_same_guberniya_different_household",
+    "unknown_wife_invented_from_missing_female_revision",
+    "revision_list_age_drift_not_identity_conflict",
+    "registered_vs_actual_residence_confusion",
+    "raskes_raskin_variant_not_enough",
+    "public_tree_revision_list_overreach"
+  ],
+  "ground_truth_annotations": {
+    "true_lineage": [
+      "I1 Synthetic Proband Raskes",
+      "I2 Chaim Raskes",
+      "I3 Yankel Nakhmanovich Raskes + I4 Freida Raskes",
+      "I5 Nakhman Raskes + I6 Sura Friedman",
+      "I9 Leib Raskes + unknown wife"
+    ],
+    "false_claims": [
+      "Sura Friedman is not mother because absent from the 1858 revision list.",
+      "Kobryn Yankel Raskes is same as Brest Yankel Raskes.",
+      "Leib's wife was definitely Chaya.",
+      "Raskes and Raskin candidate profiles can be merged on surname similarity and weak DNA."
+    ],
+    "intended_feature_coverage": [
+      "revision_list_parser",
+      "household_continuity",
+      "age_drift_handling",
+      "missing_female_negative_space",
+      "registered_vs_actual_residence",
+      "same_name_different_person",
+      "fabrication_from_record_gap"
+    ]
+  },
+  "evaluation_assertions": [
+    {
+      "assertion_id": "eval_17_001",
+      "description": "Engine must confirm Sura Friedman as mother despite missing female enumeration.",
+      "expected": {
+        "relationship": "I6 mother of I3",
+        "status": "Confirmed",
+        "min_confidence": 0.9
+      }
+    },
+    {
+      "assertion_id": "eval_17_002",
+      "description": "Engine must reject I3/I7 merge.",
+      "expected": {
+        "merge_pair": ["I3", "I7"],
+        "auto_merge_allowed": false,
+        "status": "Rejected"
+      }
+    },
+    {
+      "assertion_id": "eval_17_003",
+      "description": "Engine must not invent Chaya as named wife.",
+      "expected": {
+        "person_id": "I10",
+        "named_spouse_claim_status": "Rejected",
+        "max_confidence": 0.15
+      }
+    },
+    {
+      "assertion_id": "eval_17_004",
+      "description": "Engine must allow revision-list age drift and preserve household continuity.",
+      "expected": {
+        "relationship": "I9 father of I5",
+        "status": "Probable",
+        "min_confidence": 0.8
+      }
+    },
+    {
+      "assertion_id": "eval_17_005",
+      "description": "Engine must classify Raskes/Raskin as hypothesis/conflict, not merge.",
+      "expected": {
+        "merge_pair": ["I5", "I8"],
+        "auto_merge_allowed": false
+      }
+    }
+  ],
+  "phases_validated": [
+    "revision_list_parser",
+    "household_continuity_engine",
+    "negative_evidence_handling",
+    "15.10_name_disambiguation",
+    "19.x_place_resolution",
+    "24.x_evidence_summary",
+    "25.x_research_dialogue_engine"
+  ],
+  "version": "0.1",
+  "created_for": "AutoTreeGen Test Tree Corpus + Evaluation Suite"
+}

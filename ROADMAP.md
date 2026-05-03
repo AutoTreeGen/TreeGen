@@ -853,6 +853,60 @@ Voice-to-Tree (append-mode fuzzy match).
 
 ---
 
+## 18B. Фаза 26 — Evaluation Harness Foundation
+
+Регрессионный слой для evidence-engine, поверх синтетического 20-tree
+корпуса. Каждый Phase 26.x детектор измеряется per-tree score и
+overall score; anti-cheat-тесты гарантируют, что детектор не «пройдёт»
+тесты копированием answer key из tree-fixture'а.
+
+### 18B.1 Phase 26.1 — Harness foundation ✅ (см. ADR-0084)
+
+- Корпус 20 синтетических деревьев в ``data/test_corpus/`` (с явным
+  `.gitignore` exception — остальная `data/` остаётся ignored).
+- `packages/inference-engine/src/inference_engine/engine.py` —
+  ``run_tree(tree: dict) -> dict`` baseline без real detectors.
+- `packages/inference-engine/src/inference_engine/output_schema.py` —
+  Pydantic ``EngineOutput`` с ``extra="forbid"`` на top-level.
+- ``scripts/run_eval.py`` — runner с CLI ``--tree`` / ``--fail-under`` /
+  ``--output``; пишет JSON-отчёт в ``reports/eval/``.
+- Anti-cheat tests: baseline не должен emit'ить ``expected_engine_flags``
+  и не должен помечать assertion'ы True.
+- Inference-engine vs ai-layer boundary зафиксирован в ADR-0084.
+
+### 18B.2 Что НЕ входит в 26.1 (anti-drift)
+
+- Реальные detectors — Phase 26.2+.
+- API endpoints для запуска harness — out of scope (CLI-only).
+- Frontend evaluation dashboard — Phase 26.x после стабилизации
+  ``EngineOutput`` shape.
+- LLM-based detectors — Phase 26.x в ai-layer, через адаптер.
+- Auto-merge / GEDCOM safe merge / NPE detector / fabrication filter —
+  каждый отдельным PR в Phase 26.2-26.20.
+
+### 18B.3 Plan для Phase 26.2+ (preview)
+
+Каждый PR подключает один detector через ``inference_engine.detectors``
+registry (mirror of ``rules/registry.py``):
+
+| Phase | Tree(s)            | Detector                                  |
+| ----- | ------------------ | ----------------------------------------- |
+| 26.2  | 11                 | NPE via DNA contradiction                 |
+| 26.3  | 04, 19             | Famous-line / public-tree fabrication     |
+| 26.4  | 15                 | GEDCOM safe merge with conflicting source |
+| 26.5  | 16                 | Metric-book OCR correction                |
+| 26.6  | 17                 | Revision-list household interpretation    |
+| 26.7  | 18                 | Immigration name-change myth              |
+| 26.8  | 12                 | Ashkenazi endogamy multipath review       |
+| 26.9  | 14                 | Sephardic / Mizrahi crossover guard       |
+| 26.10 | 20                 | Full pipeline sealed-set integration      |
+
+Каждый detector PR обязан: (а) сделать соответствующий tree score ≥ 0.85,
+(б) не уронить score других trees, (в) не cheat'ить через копирование
+answer key.
+
+---
+
 ## 19. Claude Code: настройка субагентов и MCP
 
 ### 19.1 Структура `CLAUDE.md`

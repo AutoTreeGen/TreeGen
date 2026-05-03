@@ -1,0 +1,191 @@
+{
+  "tree_id": "tree_01_pale_levitin_npe_resolution",
+  "category": "npe_via_dna",
+  "complexity": "high",
+  "population_context": "Ashkenazi",
+  "scope_description": "5-generation Pale/Brest-Litovsk tree with NPE at generation 3, rabbinical bridge fabrication, and 150 cM Levitin-side DNA anchor; ~70 synthetic persons in full version, excerpt contains core 13.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR AutoTreeGenSynthetic\n1 GEDC\n2 VERS 5.5.1\n1 CHAR UTF-8\n0 @I1@ INDI\n1 NAME Synthetic Proband /Atlas/\n1 SEX M\n1 BIRT\n2 DATE 1972\n2 PLAC Melbourne, Victoria, Australia\n1 NOTE Target individual. Known maternal line, unknown paternal grandfather in GEDCOM; DNA reveals NPE at generation 3.\n0 @I2@ INDI\n1 NAME Miriam /Atlas/\n1 SEX F\n1 BIRT\n2 DATE 1948\n2 PLAC Kiev, Ukrainian SSR\n1 DEAT\n2 DATE 2011\n2 PLAC Melbourne, Australia\n0 @I3@ INDI\n1 NAME David /Atlas/\n1 SEX M\n1 BIRT\n2 DATE 1945\n2 PLAC Odessa, Ukrainian SSR\n1 DEAT\n2 DATE 2004\n2 PLAC Melbourne, Australia\n1 NOTE Recorded father in public tree; expected biological link is rejected by DNA.\n0 @I4@ INDI\n1 NAME Zalman Moiseevich /Levitin/\n1 SEX M\n1 BIRT\n2 DATE 1922\n2 PLAC Brest-Litovsk, Grodno Governorate, Russian Empire\n1 DEAT\n2 DATE 1998\n2 PLAC Haifa, Israel\n0 @I5@ INDI\n1 NAME Lidia /Katz/\n1 SEX F\n1 BIRT\n2 DATE 1924\n2 PLAC Brest-Litovsk, Poland\n1 DEAT\n2 DATE 2009\n2 PLAC Tel Aviv, Israel\n0 @I6@ INDI\n1 NAME Moisey Zalmanovich /Levitin/\n1 SEX M\n1 BIRT\n2 DATE 1895\n2 PLAC Brest-Litovsk\n1 DEAT\n2 DATE 1942\n2 PLAC Brest Ghetto\n0 @I7@ INDI\n1 NAME Sura Gershevna /Levitin/\n1 SEX F\n1 BIRT\n2 DATE 1898\n2 PLAC Brest-Litovsk\n1 DEAT\n2 DATE 1956\n2 PLAC Kiev\n0 @I8@ INDI\n1 NAME Bella /Levitin/\n1 SEX F\n1 BIRT\n2 DATE 1901\n2 PLAC Brest-Litovsk\n1 DEAT\n2 DATE 1987\n2 PLAC New York, USA\n1 NOTE Sister of Moisey. Descendant creates 150 cM DNA anchor.\n0 @I9@ INDI\n1 NAME Boris /Geer/\n1 SEX M\n1 BIRT\n2 DATE 1930\n2 PLAC Brest-Litovsk, Poland\n1 DEAT\n2 DATE 2015\n2 PLAC New York, USA\n1 NOTE Synthetic DNA anchor through Bella Levitin line.\n0 @I10@ INDI\n1 NAME Rabbi Shneur Zalman /Schneerson/\n1 SEX M\n1 BIRT\n2 DATE 1745\n2 PLAC Liozna\n1 DEAT\n2 DATE 1812\n2 PLAC Piena\n1 NOTE Embedded false rabbinical bridge; no source linking to Levitin family.\n0 @I11@ INDI\n1 NAME Unknown Daughter of Famous Rabbi /Schneerson/\n1 SEX F\n1 BIRT\n2 DATE 1770\n2 PLAC Unknown\n1 NOTE Fabricated bridge inserted by public tree.\n0 @I12@ INDI\n1 NAME Gersh Itzkov /Levitin/\n1 SEX M\n1 BIRT\n2 DATE 1862\n2 PLAC Brest-Litovsk\n1 DEAT\n2 DATE 1931\n2 PLAC Brest-Litovsk\n0 @I13@ INDI\n1 NAME Freida /Friedman/\n1 SEX F\n1 BIRT\n2 DATE 1865\n2 PLAC Brest-Litovsk\n1 DEAT\n2 DATE 1933\n2 PLAC Brest-Litovsk\n0 @F1@ FAM\n1 HUSB @I3@\n1 WIFE @I2@\n1 CHIL @I1@\n1 MARR\n2 DATE 1970\n2 PLAC Kiev, Ukrainian SSR\n0 @F2@ FAM\n1 HUSB @I4@\n1 WIFE @I5@\n1 CHIL @I2@\n1 MARR\n2 DATE 1946\n2 PLAC Kiev, Ukrainian SSR\n0 @F3@ FAM\n1 HUSB @I6@\n1 WIFE @I7@\n1 CHIL @I4@\n1 MARR\n2 DATE 1919\n2 PLAC Brest-Litovsk\n0 @F4@ FAM\n1 HUSB @I12@\n1 WIFE @I13@\n1 CHIL @I6@\n1 CHIL @I8@\n1 MARR\n2 DATE 1889\n2 PLAC Brest-Litovsk\n0 @F5@ FAM\n1 HUSB @I9@\n0 @F6@ FAM\n1 HUSB @I10@\n1 CHIL @I11@\n0 @F7@ FAM\n1 WIFE @I11@\n1 CHIL @I12@\n1 MARR\n2 DATE 1790\n2 PLAC Unknown\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_001",
+      "match_name": "Anonymized Cousin A Geer-line",
+      "platform": "AncestryDNA",
+      "shared_cm": 150,
+      "longest_segment": 35,
+      "segment_count": 13,
+      "shared_matches_with": ["dna_002", "dna_005", "dna_006"],
+      "triangulation_status": "not_available_on_platform",
+      "expected_link": "via Bella Levitin, sister of Moisey Levitin"
+    },
+    {
+      "match_id": "dna_002",
+      "match_name": "Anonymized Cousin B Kaplan-line",
+      "platform": "MyHeritage",
+      "shared_cm": 92,
+      "longest_segment": 24,
+      "segment_count": 8,
+      "shared_matches_with": ["dna_001", "dna_005"],
+      "triangulation_status": "partial_triangulation_chr7",
+      "expected_link": "Levitin collateral"
+    },
+    {
+      "match_id": "dna_003",
+      "match_name": "Recorded father's nephew",
+      "platform": "GEDmatch",
+      "shared_cm": 0,
+      "longest_segment": 0,
+      "segment_count": 0,
+      "shared_matches_with": [],
+      "triangulation_status": "none",
+      "expected_link": "contradicts recorded father I3"
+    },
+    {
+      "match_id": "dna_004",
+      "match_name": "Katz-Feldman cousin",
+      "platform": "FamilyTreeDNA",
+      "shared_cm": 42,
+      "longest_segment": 14,
+      "segment_count": 4,
+      "shared_matches_with": ["dna_006"],
+      "triangulation_status": "weak",
+      "expected_link": "maternal Katz side, not NPE father"
+    },
+    {
+      "match_id": "dna_005",
+      "match_name": "Brest Levitin cluster match",
+      "platform": "GEDmatch",
+      "shared_cm": 64,
+      "longest_segment": 18,
+      "segment_count": 6,
+      "shared_matches_with": ["dna_001", "dna_002"],
+      "triangulation_status": "triangulated_with_dna_002",
+      "expected_link": "Levitin"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_001",
+      "type": "metric_book_birth",
+      "year": 1895,
+      "place": "Brest-Litovsk",
+      "transcription_excerpt": "Birth of Movsha/Moisey, son of Gersh Itzkov Levitin and Freida Friedman, Jewish community Brest-Litovsk.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "source_quality": 0.92
+    },
+    {
+      "snippet_id": "src_002",
+      "type": "revision_list",
+      "year": 1858,
+      "place": "Brest-Litovsk",
+      "transcription_excerpt": "Household of Itzko Levitin; son Gersh age 6, registered Brest-Litovsk petty bourgeois.",
+      "language": "ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "source_quality": 0.88
+    },
+    {
+      "snippet_id": "src_003",
+      "type": "online_tree",
+      "year": 2008,
+      "place": "Geni",
+      "transcription_excerpt": "Connects Gersh Levitin as descendant of unknown daughter of Schneerson family; no source cited.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "source_quality": 0.12
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "I3",
+      "assertion": "David Atlas is biological father of proband",
+      "scope": "parentage",
+      "evidence": "family tree only"
+    },
+    {
+      "person_id": "I12",
+      "assertion": "Levitin branch descends from Schneerson dynasty",
+      "scope": "rabbinical_descent",
+      "evidence": "copied public tree"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "npe",
+      "subtype": "recorded_father_dna_contradiction",
+      "person_id": "I3",
+      "expected_flag": "dna_vs_tree_contradiction",
+      "expected_confidence_when_flagged": 0.97
+    },
+    {
+      "type": "fabrication",
+      "subtype": "rabbinical_dynasty_bridge",
+      "person_id": "I11",
+      "expected_flag": "rabbinical_schneerson_to_baal_shem_tov",
+      "expected_confidence_when_flagged": 0.86
+    },
+    {
+      "type": "source_quality",
+      "subtype": "online_tree_only",
+      "person_id": "I12",
+      "expected_flag": "single_tree_only_low_confidence",
+      "expected_confidence_when_flagged": 0.82
+    },
+    {
+      "type": "endogamy",
+      "subtype": "ashkenazi_multi_path_possible",
+      "person_id": "I1",
+      "expected_flag": "endogamy_requires_multipath_check",
+      "expected_confidence_when_flagged": 0.8
+    }
+  ],
+  "ground_truth": {
+    "biological_parentage_status": "I3 is rejected as biological father; unknown biological father belongs to Levitin-adjacent Brest cluster in this synthetic excerpt",
+    "confirmed_relationships": ["I4 child of I6/I7", "I6 child of I12/I13", "I8 sibling of I6"],
+    "rejected_relationships": ["I12 child of I11 Schneerson bridge"],
+    "hypotheses": ["unknown father candidate should be searched in Levitin/Geer/Kaplan cluster"]
+  },
+  "expected_reasoning_chain": [
+    "Step 1: Parse GEDCOM, identify 13 individuals and 7 family units in excerpt.",
+    "Step 2: Detect claimed father I3 has zero DNA to close paternal-side comparator dna_003.",
+    "Step 3: Cluster dna_001, dna_002 and dna_005 through shared matches and Brest-Levitin geography.",
+    "Step 4: Use metric book src_001 and revision list src_002 to confirm Levitin branch.",
+    "Step 5: Detect rabbinical bridge I11→I12 as online-tree-only, pre-1804 dynasty shortcut.",
+    "Step 6: Apply Ashkenazi endogamy correction to distant matches but retain dna_001 as strong anchor.",
+    "Step 7: Output I3 relationship as Rejected, Levitin branch as Confirmed/Probable, Schneerson bridge as Rejected."
+  ],
+  "expected_confidence_outputs": {
+    "I4_child_of_I6_I7": "Confirmed 0.96 (metric book + place + chronology + GEDCOM consistency)",
+    "I6_child_of_I12_I13": "Confirmed 0.95 (birth record + revision list + name/patronymic consistency)",
+    "I1_child_of_I3": "Rejected 0.03 (DNA contradiction to recorded paternal comparator)",
+    "I12_child_of_I11": "Rejected 0.08 (fabrication pattern + no primary bridge + chronology weakness)",
+    "I1_link_to_Levitin_cluster": "Probable 0.88 (DNA cluster + shared matches + archive-consistent maternal line)"
+  },
+  "expected_engine_flags": [
+    "dna_vs_tree_contradiction",
+    "rabbinical_schneerson_to_baal_shem_tov",
+    "single_tree_only_low_confidence",
+    "ashkenazi_endogamy_multipath_review"
+  ],
+  "edge_cases_red_herrings": [
+    "Katz-Feldman cousin dna_004 shares maternal side but does not explain NPE.",
+    "Schneerson public tree creates prestige noise but no evidence."
+  ],
+  "phases_validated": ["15.x", "16.x", "24.x", "25.x", "5.10"],
+  "evaluation_assertions": [
+    {
+      "assertion": "Engine must not confirm I3 as biological father",
+      "expected": true
+    },
+    {
+      "assertion": "Engine must flag Schneerson bridge as high-severity fabrication",
+      "expected": true
+    },
+    {
+      "assertion": "Engine must preserve Levitin metric-book relationships as confirmed",
+      "expected": true
+    }
+  ]
+}

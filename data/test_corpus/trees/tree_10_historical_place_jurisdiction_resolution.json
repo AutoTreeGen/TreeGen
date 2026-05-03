@@ -1,0 +1,363 @@
+{
+  "tree_id": "tree_10_historical_place_jurisdiction_resolution",
+  "category": "historical_place_resolution",
+  "complexity": "high",
+  "population_context": "Mixed Ashkenazi + Mennonite + Slavic",
+  "scope_description": "Multi-branch Eastern European tree with historical place-name changes and jurisdiction traps: Brest-Litovsk/Brisk/Brest, Danzig/Gdańsk, Ekaterinoslav/Dnipropetrovsk/Dnipro, Hrubieszów/Koniuchy, and Molotschna/Molochansk.",
+  "input_gedcom_excerpt": "0 HEAD\n1 SOUR AutoTreeGenSyntheticCorpus\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Synthetic Proband /Zhitnitsky/\n1 SEX M\n1 BIRT\n2 DATE 1971\n2 PLAC Dnipropetrovsk, Ukrainian SSR\n1 FAMC @F1@\n0 @I2@ INDI\n1 NAME Tatyana /Zhitnitsky/\n1 SEX F\n1 BIRT\n2 DATE 1951\n2 PLAC Dnepropetrovsk, Ukrainian SSR\n1 FAMC @F2@\n0 @I3@ INDI\n1 NAME Zalman /Zhitnitsky/\n1 SEX M\n1 BIRT\n2 DATE 1924\n2 PLAC Ekaterinoslav, Russian Empire\n1 NOTE ERROR: 1924 place should route to Ukrainian SSR/Soviet Dnipropetrovsk-era context, not Russian Empire Ekaterinoslav.\n0 @I4@ INDI\n1 NAME Lidia /Katz/\n1 SEX F\n1 BIRT\n2 DATE 1924\n2 PLAC Hrubieszów, Poland\n1 FAMC @F3@\n0 @I5@ INDI\n1 NAME Nuta Nahum /Katz/\n1 SEX M\n1 BIRT\n2 DATE 1899\n2 PLAC Koniuchy, Lublin, Russian Empire\n1 NOTE Small village near Hrubieszów; coordinate requires approximate_seed and archive routing through Hrubieszów/Lublin.\n0 @I6@ INDI\n1 NAME Tatiana Tiena /Scherbatenko/\n1 SEX F\n1 BIRT\n2 DATE 1902\n2 PLAC Koniuchy, Lubelskie, Poland\n1 NOTE 1902 should be Congress Poland / Russian Empire, not modern Poland.\n0 @I7@ INDI\n1 NAME Freida /Friedman/\n1 SEX F\n1 BIRT\n2 DATE ABT 1863\n2 PLAC Brest, Belarus\n1 NOTE ERROR: 1863 place should be Brest-Litovsk/Brisk, Grodno Governorate, Russian Empire.\n0 @I8@ INDI\n1 NAME Gersh /Levitin/\n1 SEX M\n1 BIRT\n2 DATE ABT 1859\n2 PLAC Brisk, Grodno Guberniya\n0 @I9@ INDI\n1 NAME Chaim /Danzig/\n1 SEX M\n1 BIRT\n2 DATE 1880\n2 PLAC Gdańsk, Poland\n1 NOTE ERROR: 1880 should route to Danzig, German Empire / West Prussia, not modern Poland.\n0 @I10@ INDI\n1 NAME Jakob /Wiens/\n1 SEX M\n1 BIRT\n2 DATE 1845\n2 PLAC Molotschna, Ukraine\n1 NOTE Mennonite colony; 1845 jurisdiction Taurida Governorate, Russian Empire.\n0 @I11@ INDI\n1 NAME Alexander /Batensky/\n1 SEX M\n1 BIRT\n2 DATE 1948\n2 PLAC Privolnoye, Dnipropetrovsk Oblast, Ukrainian SSR\n1 NOTE Paternal Slavic branch adjacent to Mennonite colony DNA context.\n0 @F2@ FAM\n1 HUSB @I3@\n1 WIFE @I4@\n1 CHIL @I2@\n0 @F3@ FAM\n1 HUSB @I5@\n1 WIFE @I6@\n1 CHIL @I4@\n0 @F4@ FAM\n1 HUSB @I8@\n1 WIFE @I7@\n1 CHIL @I12@\n0 @I12@ INDI\n1 NAME Sura /Levitin/\n1 SEX F\n1 BIRT\n2 DATE 1885\n2 PLAC Brest-Litovsk, Grodno Governorate, Russian Empire\n0 TRLR",
+  "input_dna_matches": [
+    {
+      "match_id": "dna_1001",
+      "match_name": "Anonymized Brest Levitin Cousin",
+      "platform": "AncestryDNA",
+      "shared_cm": 72,
+      "longest_segment": 19,
+      "segment_count": 8,
+      "shared_matches_with": ["dna_1002", "dna_1003"],
+      "expected_link": "via Brest-Litovsk/Brisk Levitin-Friedman cluster"
+    },
+    {
+      "match_id": "dna_1002",
+      "match_name": "Anonymized Katz Hrubieszów Cousin",
+      "platform": "MyHeritage",
+      "shared_cm": 83,
+      "longest_segment": 21,
+      "segment_count": 9,
+      "shared_matches_with": ["dna_1001"],
+      "expected_link": "via Katz/Scherbatenko Hrubieszów-Koniuchy branch"
+    },
+    {
+      "match_id": "dna_1003",
+      "match_name": "Anonymized Mennonite Wiens Match",
+      "platform": "GEDmatch",
+      "shared_cm": 36,
+      "longest_segment": 13,
+      "segment_count": 5,
+      "shared_matches_with": ["dna_1004"],
+      "expected_link": "Mennonite colony adjacency; separate from Jewish Levitin branch"
+    },
+    {
+      "match_id": "dna_1004",
+      "match_name": "Anonymized Friesen Match",
+      "platform": "FamilyTreeDNA",
+      "shared_cm": 29,
+      "longest_segment": 10,
+      "segment_count": 4,
+      "shared_matches_with": ["dna_1003"],
+      "expected_link": "Molotschna/Khortitsa Mennonite cluster; not proof of direct Wiens ancestor"
+    },
+    {
+      "match_id": "dna_1005",
+      "match_name": "Anonymized Danzig Jewish Match",
+      "platform": "MyHeritage",
+      "shared_cm": 18,
+      "longest_segment": 7,
+      "segment_count": 3,
+      "shared_matches_with": [],
+      "expected_link": "Danzig/Gdańsk urban clue; weak/endogamous"
+    }
+  ],
+  "input_archive_snippets": [
+    {
+      "snippet_id": "src_1001",
+      "type": "metric_book_birth",
+      "year": 1863,
+      "place": "Brest-Litovsk, Grodno Governorate, Russian Empire",
+      "transcription_excerpt": "Birth record for Freida, daughter of Yankel Friedman, Jewish community of Brisk/Brest-Litovsk.",
+      "language": "ru+he",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "confirms old jurisdiction for I7; modern Brest/Belarus is not the search jurisdiction for 1863."
+    },
+    {
+      "snippet_id": "src_1002",
+      "type": "metric_book_birth",
+      "year": 1902,
+      "place": "Koniuchy near Hrubieszów, Congress Poland, Russian Empire",
+      "transcription_excerpt": "Birth of Tatiana/Tiena Scherbatenko, registered in Hrubieszów-area parish/civil district.",
+      "language": "ru+pl",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "routes 1902 Koniuchy to Congress Poland/Russian Empire rather than modern Lubelskie only."
+    },
+    {
+      "snippet_id": "src_1003",
+      "type": "civil_BDM_birth",
+      "year": 1924,
+      "place": "Dnipropetrovsk / former Ekaterinoslav region, Ukrainian SSR",
+      "transcription_excerpt": "Birth of Zalman Zhitnitsky in Soviet-era Dnipropetrovsk region.",
+      "language": "ru+uk",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "corrects GEDCOM place mismatch: 1924 is Soviet-era context, not Russian Empire."
+    },
+    {
+      "snippet_id": "src_1004",
+      "type": "civil_record",
+      "year": 1880,
+      "place": "Danzig, German Empire / West Prussia",
+      "transcription_excerpt": "Birth of Chaim Danzig in Danzig civil register, Province of West Prussia.",
+      "language": "de",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "corrects modern Gdańsk/Poland anachronism for 1880."
+    },
+    {
+      "snippet_id": "src_1005",
+      "type": "mennonite_church_register",
+      "year": 1845,
+      "place": "Molotschna Mennonite Settlement, Taurida Governorate, Russian Empire",
+      "transcription_excerpt": "Birth of Jakob Wiens in Molotschna colony register, Halbstadt/Molochna area.",
+      "language": "de+ru",
+      "primary_or_derivative": "primary",
+      "image_available": true,
+      "expected_use": "routes Molotschna through Mennonite/Taurida archive workflow, not generic modern Ukraine city lookup."
+    },
+    {
+      "snippet_id": "src_1006",
+      "type": "online_tree",
+      "year": 2025,
+      "place": "public tree import",
+      "transcription_excerpt": "All places normalized to modern countries: Brest Belarus, Gdańsk Poland, Dnipro Ukraine, Molotschna Ukraine, Koniuchy Poland.",
+      "language": "en",
+      "primary_or_derivative": "derivative",
+      "image_available": false,
+      "expected_use": "low-confidence import that loses historical jurisdictions; should trigger place normalization warning."
+    }
+  ],
+  "input_user_assertions": [
+    {
+      "person_id": "I7",
+      "assertion": "Because Freida was born in Brest, search modern Belarus civil records only.",
+      "scope": "archive_routing",
+      "evidence": "modern place name"
+    },
+    {
+      "person_id": "I9",
+      "assertion": "Danzig is Germany, so use German archives for all periods.",
+      "scope": "archive_routing",
+      "evidence": "old German place name"
+    },
+    {
+      "person_id": "I10",
+      "assertion": "Molotschna is just modern Ukraine; no separate Mennonite workflow needed.",
+      "scope": "archive_routing",
+      "evidence": "modern country only"
+    },
+    {
+      "person_id": "I6",
+      "assertion": "1902 Koniuchy is Polish because it is in Poland today.",
+      "scope": "jurisdiction",
+      "evidence": "modern map"
+    }
+  ],
+  "embedded_errors": [
+    {
+      "type": "place_jurisdiction_error",
+      "person_id": "I7",
+      "expected_flag": "modern_country_for_pre1917_record",
+      "reason": "Brest 1863 should route to Brest-Litovsk/Brisk, Grodno Governorate, Russian Empire"
+    },
+    {
+      "type": "place_jurisdiction_error",
+      "person_id": "I6",
+      "expected_flag": "partition_jurisdiction_confusion",
+      "reason": "Koniuchy 1902 should route to Congress Poland/Russian Empire"
+    },
+    {
+      "type": "place_jurisdiction_error",
+      "person_id": "I3",
+      "expected_flag": "old_name_used_for_wrong_period",
+      "reason": "Ekaterinoslav label used for 1924; Soviet Dnipropetrovsk/Dnipro context required"
+    },
+    {
+      "type": "place_jurisdiction_error",
+      "person_id": "I9",
+      "expected_flag": "danzig_gdansk_period_error",
+      "reason": "1880 Danzig is German Empire/West Prussia; modern Gdańsk/Poland should not be search label"
+    },
+    {
+      "type": "place_jurisdiction_error",
+      "person_id": "I10",
+      "expected_flag": "mennonite_colony_generic_ukraine_error",
+      "reason": "Molotschna 1845 requires Mennonite colony/Taurida workflow"
+    },
+    {
+      "type": "dna_overinterpretation",
+      "match_id": "dna_1003",
+      "expected_flag": "mennonite_jewish_boundary_error",
+      "reason": "Mennonite Wiens match should not be merged into Jewish Levitin branch solely by regional adjacency"
+    },
+    {
+      "type": "source_quality",
+      "snippet_id": "src_1006",
+      "expected_flag": "modern_place_normalization_lost_jurisdiction",
+      "reason": "public tree normalized all places to modern countries and lost historical context"
+    }
+  ],
+  "expected_reasoning_chain": [
+    "Step 1: Parse all place strings and extract event year, old name, modern name, language variant and candidate jurisdiction.",
+    "Step 2: Map Brest/Brisk/Brest-Litovsk: for 1863 use Grodno Governorate, Russian Empire; modern Belarus only as modern location field.",
+    "Step 3: Map Koniuchy/Hrubieszów: for 1902 use Congress Poland/Russian Empire with Hrubieszów-area routing.",
+    "Step 4: Map Ekaterinoslav/Dnipropetrovsk/Dnipro: for 1924 use Soviet-era Dnipropetrovsk context, not pre-1917 Ekaterinoslav Governorate.",
+    "Step 5: Map Danzig/Gdańsk: for 1880 use German Empire / West Prussia; for modern geocoding use Gdańsk, Poland.",
+    "Step 6: Map Molotschna/Molochansk/Halbstadt: for 1845 use Mennonite colony in Taurida Governorate, Russian Empire.",
+    "Step 7: Evaluate DNA clusters separately: Levitin/Friedman Jewish, Katz/Scherbatenko Hrubieszów, Mennonite Wiens/Friesen; do not merge populations by adjacency.",
+    "Step 8: Downweight src_1006 public tree because it lost historical jurisdictions.",
+    "Step 9: Produce corrected place objects with old_name, modern_name, old_jurisdiction and archive workflow.",
+    "Step 10: Generate research tasks by historical jurisdiction, not modern country alone."
+  ],
+  "expected_confidence_outputs": {
+    "place_I7_Brest_1863": {
+      "status": "Confirmed",
+      "confidence": 0.97,
+      "corrected_place": {
+        "old_name": "Brest-Litovsk / Brisk",
+        "modern_name": "Brest",
+        "modern_country": "Belarus",
+        "historical_jurisdiction": "Grodno Governorate, Russian Empire"
+      }
+    },
+    "place_I6_Koniuchy_1902": {
+      "status": "Confirmed",
+      "confidence": 0.93,
+      "corrected_place": {
+        "old_name": "Koniuchy near Hrubieszów",
+        "modern_country": "Poland",
+        "historical_jurisdiction": "Congress Poland, Russian Empire"
+      }
+    },
+    "place_I3_1924_Dnipropetrovsk": {
+      "status": "Conflict",
+      "confidence": 0.88,
+      "reason": "GEDCOM uses Ekaterinoslav/Russian Empire label for Soviet-era 1924 event; corrected to Dnipropetrovsk region, Ukrainian SSR"
+    },
+    "place_I9_Danzig_1880": {
+      "status": "Confirmed",
+      "confidence": 0.96,
+      "corrected_place": {
+        "old_name": "Danzig",
+        "modern_name": "Gdańsk",
+        "modern_country": "Poland",
+        "historical_jurisdiction": "German Empire, Province of West Prussia"
+      }
+    },
+    "place_I10_Molotschna_1845": {
+      "status": "Confirmed",
+      "confidence": 0.95,
+      "corrected_place": {
+        "old_name": "Molotschna Mennonite Settlement",
+        "modern_name": "Molochansk / Molochna colony region",
+        "modern_country": "Ukraine",
+        "historical_jurisdiction": "Taurida Governorate, Russian Empire"
+      }
+    },
+    "mennonite_match_as_jewish_ancestor": {
+      "status": "Rejected",
+      "confidence": 0.12,
+      "reason": "Mennonite regional DNA cluster remains separate from Jewish Levitin branch absent marriage/adoption/conversion evidence"
+    }
+  },
+  "expected_engine_flags": [
+    "modern_country_for_pre1917_record",
+    "partition_jurisdiction_confusion",
+    "old_name_used_for_wrong_period",
+    "danzig_gdansk_period_error",
+    "mennonite_colony_generic_ukraine_error",
+    "mennonite_jewish_boundary_error",
+    "modern_place_normalization_lost_jurisdiction",
+    "archive_routing_by_event_year_required"
+  ],
+  "ground_truth_annotations": {
+    "true_place_mappings": [
+      "Brest 1863 -> Brest-Litovsk/Brisk, Grodno Governorate, Russian Empire; modern Brest, Belarus",
+      "Koniuchy 1902 -> Congress Poland/Russian Empire, Hrubieszów-area routing; modern Lubelskie, Poland",
+      "Dnipropetrovsk 1924 -> Ukrainian SSR/Soviet-era context, not Russian Empire Ekaterinoslav",
+      "Danzig 1880 -> German Empire/West Prussia; modern Gdańsk, Poland",
+      "Molotschna 1845 -> Mennonite Settlement, Taurida Governorate, Russian Empire; modern Molochansk region, Ukraine"
+    ],
+    "false_claims": [
+      "Modern country alone determines archive routing.",
+      "Danzig is always Germany.",
+      "Brest 1863 should use modern Belarus civil records only.",
+      "Molotschna does not need Mennonite colony workflow.",
+      "Mennonite DNA near Ekaterinoslav proves Jewish ancestor connection."
+    ],
+    "intended_feature_coverage": [
+      "historical_place_resolver",
+      "jurisdiction_by_event_year",
+      "archive_workflow_routing",
+      "old_modern_place_mapping",
+      "Mennonite_colony_context",
+      "DNA_population_boundary_control",
+      "public_tree_place_normalization_warning"
+    ]
+  },
+  "evaluation_assertions": [
+    {
+      "assertion_id": "eval_10_001",
+      "description": "Engine must map Brest 1863 to Brest-Litovsk/Grodno Governorate, not modern Belarus-only routing.",
+      "expected": {
+        "person_id": "I7",
+        "historical_jurisdiction": "Grodno Governorate, Russian Empire",
+        "min_confidence": 0.95
+      }
+    },
+    {
+      "assertion_id": "eval_10_002",
+      "description": "Engine must map Koniuchy 1902 to Congress Poland/Russian Empire.",
+      "expected": {
+        "person_id": "I6",
+        "historical_jurisdiction": "Congress Poland, Russian Empire",
+        "min_confidence": 0.9
+      }
+    },
+    {
+      "assertion_id": "eval_10_003",
+      "description": "Engine must flag 1924 Ekaterinoslav/Russian Empire as period mismatch.",
+      "expected": {
+        "person_id": "I3",
+        "flag": "old_name_used_for_wrong_period"
+      }
+    },
+    {
+      "assertion_id": "eval_10_004",
+      "description": "Engine must map Danzig 1880 to German Empire/West Prussia and modern Gdańsk, Poland.",
+      "expected": {
+        "person_id": "I9",
+        "old_name": "Danzig",
+        "modern_name": "Gdańsk",
+        "historical_jurisdiction": "German Empire, Province of West Prussia"
+      }
+    },
+    {
+      "assertion_id": "eval_10_005",
+      "description": "Engine must route Molotschna 1845 through Mennonite colony/Taurida workflow.",
+      "expected": {
+        "person_id": "I10",
+        "place_group": "Mennonite colony",
+        "historical_jurisdiction": "Taurida Governorate, Russian Empire"
+      }
+    },
+    {
+      "assertion_id": "eval_10_006",
+      "description": "Engine must keep Mennonite Wiens/Friesen DNA cluster separate from Jewish Levitin branch unless bridge evidence appears.",
+      "expected": {
+        "claim": "mennonite_match_as_jewish_ancestor",
+        "status": "Rejected",
+        "max_confidence": 0.2
+      }
+    }
+  ],
+  "phases_validated": [
+    "19.x_place_resolution",
+    "22.x_archive_routing",
+    "16.x_dna_cluster_interpretation",
+    "15.10_name_disambiguation",
+    "GEDCOM_doctor",
+    "24.x_evidence_summary",
+    "25.x_research_dialogue_engine"
+  ],
+  "version": "0.1",
+  "created_for": "AutoTreeGen Test Tree Corpus + Evaluation Suite"
+}
