@@ -19,6 +19,7 @@ from archive_service.auth import get_current_claims
 from archive_service.config import get_settings
 from archive_service.database import dispose_engine, init_engine
 from archive_service.planner import router as planner_router
+from archive_service.registry import router as registry_router
 
 _LOG: Final = logging.getLogger(__name__)
 
@@ -60,6 +61,8 @@ _AUTH_DEPS = [Depends(get_current_claims)]
 app.include_router(fs_router.router, dependencies=_AUTH_DEPS)
 # Phase 15.5 — Archive Search Planner.
 app.include_router(planner_router.router, dependencies=_AUTH_DEPS)
+# Phase 22.1 — Hidden Archive Registry (off-catalog catalog).
+app.include_router(registry_router.router, dependencies=_AUTH_DEPS)
 
 
 @app.get("/healthz", tags=["meta"])

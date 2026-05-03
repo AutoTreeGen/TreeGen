@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from shared_models.orm.archive_listing import AccessMode, ArchiveListing, RecordType
 from shared_models.orm.audio_session import AudioSession, AudioSessionStatus
 from shared_models.orm.audit_log import AuditLog
 from shared_models.orm.chat import ChatMessage, ChatMessageRole, ChatSession
@@ -80,6 +81,8 @@ from shared_models.orm.version import Version
 from shared_models.orm.waitlist_entry import WaitlistEntry
 
 __all__ = [
+    "AccessMode",
+    "ArchiveListing",
     "AudioSession",
     "AudioSessionStatus",
     "AuditLog",
@@ -135,6 +138,7 @@ __all__ = [
     "PlaceAlias",
     "PlaceLookupSeed",
     "PublicTreeShare",
+    "RecordType",
     "ReportBundleJob",
     "SharedMatch",
     "Source",
