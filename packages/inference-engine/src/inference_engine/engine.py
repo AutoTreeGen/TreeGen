@@ -1,22 +1,22 @@
-"""Phase 26.1 baseline engine entrypoint.
+"""Engine entrypoint для evaluation harness.
 
 Public surface:
 
     >>> from inference_engine.engine import run_tree
     >>> output = run_tree(tree_dict)
 
-Phase 26.1 contract (см. ADR-0084):
+Контракт (ADR-0084 + ADR-0085):
 
 - Принимает один loaded tree JSON (см. ``data/test_corpus/trees/*.json``).
 - Возвращает dict, удовлетворяющий ``output_schema.EngineOutput``.
-- Baseline НЕ запускает реальные детекторы: ``engine_flags`` пустой,
-  ``evaluation_results`` содержит ``{assertion_id: False}`` для всех
-  assertion'ов tree-fixture'а.
-- Baseline намеренно НЕ читает ``expected_engine_flags`` и не возвращает
-  ``True`` для assertion'ов — иначе harness теряет diagnostic value.
-- Phase 26.2+ подключит реальные детекторы через ``detectors/registry``
-  (см. ``inference_engine.detectors``). Контракт engine_output не
-  изменяется при подключении детекторов — они только обогащают списки.
+- Phase 26.1 baseline возвращал пустой output;
+  Phase 26.2+ запускает зарегистрированные детекторы через
+  ``inference_engine.detectors.registry.run_all`` и мерджит их
+  ``DetectorResult`` в финальный ``EngineOutput``.
+- ``evaluation_results`` инициализируется ``{assertion_id: False}``
+  для каждого assertion из tree, после чего детектор может пометить
+  отдельные id'ы True (но никогда не должен помечать массово True по
+  какому-нибудь tree_id).
 
 Связь с существующим pipeline:
 
@@ -29,6 +29,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from inference_engine.detectors.registry import run_all
 from inference_engine.output_schema import EngineOutput
 
 
@@ -42,10 +43,10 @@ def run_tree(tree: dict[str, Any]) -> dict[str, Any]:
             opt-in по мере подключения детекторов.
 
     Returns:
-        Dict, удовлетворяющий ``EngineOutput`` schema. Phase 26.1 baseline
-        возвращает все required keys пустыми; ``evaluation_results``
-        заполнен ``{assertion_id: False}`` для каждого assertion из
-        входного tree.
+        Dict, удовлетворяющий ``EngineOutput`` schema. Все required keys
+        присутствуют. ``evaluation_results`` инициализирован
+        ``{assertion_id: False}`` для каждого assertion и затем перекрыт
+        ``True``-значениями от детекторов, поддерживающих эти assertion'ы.
 
     Raises:
         ValueError: Если ``tree_id`` отсутствует или пустой.
@@ -56,16 +57,26 @@ def run_tree(tree: dict[str, Any]) -> dict[str, Any]:
         raise ValueError(msg)
 
     assertion_ids = _extract_assertion_ids(tree)
+    evaluation_results: dict[str, bool] = dict.fromkeys(assertion_ids, False)
+
+    detector_output = run_all(tree)
+
+    # Detector-эмиссии, относящиеся к assertion_id, которых нет во входном
+    # tree, игнорируются — runner всё равно их не оценит, и засорять
+    # evaluation_results bogus-ключами не нужно.
+    for aid, value in detector_output.evaluation_results.items():
+        if aid in evaluation_results:
+            evaluation_results[aid] = value
 
     output = EngineOutput(
         tree_id=tree_id,
-        engine_flags=[],
-        relationship_claims=[],
-        merge_decisions=[],
-        place_corrections=[],
-        quarantined_claims=[],
-        sealed_set_candidates=[],
-        evaluation_results=dict.fromkeys(assertion_ids, False),
+        engine_flags=list(detector_output.engine_flags),
+        relationship_claims=list(detector_output.relationship_claims),
+        merge_decisions=list(detector_output.merge_decisions),
+        place_corrections=list(detector_output.place_corrections),
+        quarantined_claims=list(detector_output.quarantined_claims),
+        sealed_set_candidates=list(detector_output.sealed_set_candidates),
+        evaluation_results=evaluation_results,
     )
     return output.model_dump()
 
