@@ -85,6 +85,7 @@ async def app_client(
     get_settings.cache_clear()
 
     from httpx import ASGITransport, AsyncClient
+    from report_service.api.bundles import get_bundle_storage
     from report_service.api.relationship import get_report_storage
     from report_service.database import dispose_engine, init_engine
     from report_service.main import app
@@ -94,9 +95,12 @@ async def app_client(
 
     # Подмена storage на in-memory: реальный backend требует STORAGE_BUCKET +
     # MinIO/GCS креденшелы, не подходит для unit-теста endpoint'а. Симметрично
-    # parser-service court_ready conftest.
+    # parser-service court_ready conftest. Phase 24.4: один storage instance
+    # шарится между 24.3 sync endpoint и 24.4 bundle endpoints — оба сервируют
+    # blob'ы из одного фейкового хранилища.
     storage = InMemoryStorage()
     app.dependency_overrides[get_report_storage] = lambda: storage
+    app.dependency_overrides[get_bundle_storage] = lambda: storage
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

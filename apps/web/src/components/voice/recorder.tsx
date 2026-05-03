@@ -28,6 +28,17 @@ const MIN_DURATION_SEC = 5;
 const MAX_DURATION_SEC = 5 * 60;
 
 /**
+ * Phase 10.9e — language picker. Empty value = auto-detect (Whisper guesses).
+ * EN — Geoffrey-demo default, regression-stable. RU + HE — multilingual showcase.
+ *
+ * Не trogает 10.9b extraction layer (он не в main); slice A только пробрасывает
+ * Whisper language_hint и помечает upload row.language. Cм. ADR-0080.
+ */
+const LANGUAGE_OPTIONS = ["", "en", "ru", "he"] as const;
+type LanguageOption = (typeof LANGUAGE_OPTIONS)[number];
+const NON_LATIN_LANGUAGES: ReadonlySet<LanguageOption> = new Set<LanguageOption>(["ru", "he"]);
+
+/**
  * Подобрать первый supported MIME-type из preferred-списка. ``MediaRecorder``
  * на разных браузерах поддерживает разный набор; webm/opus — самый широкий
  * common denominator.
@@ -61,6 +72,10 @@ export function Recorder({ treeId, consentGranted, onUploaded }: RecorderProps) 
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
+  // Phase 10.9e — пользователь выбирает язык до записи. Default "" (Auto).
+  // EN-default'а намеренно нет: Whisper сам определит, и мы не хотим чтобы
+  // EN-выбор силой подавлял другие языки в Auto-mode'е (ADR-0080 §"Default").
+  const [language, setLanguage] = useState<LanguageOption>("");
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -96,10 +111,19 @@ export function Recorder({ treeId, consentGranted, onUploaded }: RecorderProps) 
   }, [stopMedia]);
 
   const upload = useMutation({
-    mutationFn: ({ blob, mimeType }: { blob: Blob; mimeType: string }) => {
+    mutationFn: ({
+      blob,
+      mimeType,
+      languageHint,
+    }: {
+      blob: Blob;
+      mimeType: string;
+      languageHint: string;
+    }) => {
       const ext = mimeType.includes("ogg") ? "ogg" : "webm";
       return uploadAudioSession(treeId, blob, {
         filename: `recording-${Date.now()}.${ext}`,
+        languageHint: languageHint.length > 0 ? languageHint : undefined,
       });
     },
     onSuccess: (data) => {
@@ -155,7 +179,7 @@ export function Recorder({ treeId, consentGranted, onUploaded }: RecorderProps) 
         return;
       }
       setPhase("uploading");
-      upload.mutate({ blob, mimeType });
+      upload.mutate({ blob, mimeType, languageHint: language });
     };
     startedAtRef.current = Date.now();
     setElapsed(0);
@@ -190,6 +214,37 @@ export function Recorder({ treeId, consentGranted, onUploaded }: RecorderProps) 
         <CardTitle>{t("heading")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <label
+            className="flex items-center gap-2 text-sm text-[color:var(--color-ink-700)]"
+            htmlFor="recorder-language"
+          >
+            <span>{t("languageLabel")}</span>
+            <select
+              id="recorder-language"
+              data-testid="recorder-language"
+              className="rounded border border-[color:var(--color-ink-300)] bg-white px-2 py-1 text-sm"
+              value={language}
+              onChange={(event) => setLanguage(event.target.value as LanguageOption)}
+              disabled={isRecording || isUploading}
+            >
+              <option value="">{t("languageAuto")}</option>
+              <option value="en">{t("languageEn")}</option>
+              <option value="ru">{t("languageRu")}</option>
+              <option value="he">{t("languageHe")}</option>
+            </select>
+          </label>
+        </div>
+
+        {NON_LATIN_LANGUAGES.has(language) ? (
+          <p
+            className="text-xs text-[color:var(--color-ink-500)]"
+            data-testid="recorder-language-hint"
+          >
+            {t("languageHintNonLatin")}
+          </p>
+        ) : null}
+
         <div className="flex flex-wrap items-center gap-3">
           {!isRecording ? (
             <Button

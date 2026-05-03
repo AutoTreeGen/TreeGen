@@ -22,6 +22,20 @@ class Provider(StrEnum):
     ANCESTRY = "ancestry"
     MYHERITAGE = "myheritage"
     FTDNA = "ftdna"
+    LIVING_DNA = "livingdna"
+
+
+class Sex(StrEnum):
+    """Inferred biological sex от распарсенного DNA-теста.
+
+    Эвристика — наличие валидных Y-SNP genotype calls (см. `infer_sex`).
+    Это **не** self-identified gender пользователя — для медицинских/
+    юридических контекстов нужен прямой self-report.
+    """
+
+    MALE = "male"
+    FEMALE = "female"
+    UNKNOWN = "unknown"
 
 
 class ReferenceBuild(StrEnum):

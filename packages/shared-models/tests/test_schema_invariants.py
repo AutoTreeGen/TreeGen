@@ -180,6 +180,11 @@ TREE_ENTITY_TABLES = {
     # → имеют tree_id, soft-delete, provenance, version_id, status,
     # confidence_score (в дополнение к специфичному composite_score).
     "hypotheses",
+    # Completeness assertions / sealed sets (Phase 15.11a / ADR-0076):
+    # owner-asserted-negation flag на scope вокруг анкорной персоны
+    # («siblings of X are exhaustive»). TreeEntityMixins для evidence-first
+    # семантики (status/confidence/provenance/soft-delete/version_id).
+    "completeness_assertions",
 }
 
 

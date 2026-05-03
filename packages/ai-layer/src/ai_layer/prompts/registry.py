@@ -11,6 +11,15 @@
 - **Типизированный доступ.** ``PromptRegistry.HYPOTHESIS_SUGGESTER_V1`` —
   атрибут-константа с ``PromptTemplate``, не магическая строка. IDE
   делает autocomplete, mypy ловит опечатки.
+
+Phase 10.9e — locale-aware lookup:
+
+- Шаблоны могут иметь locale-suffix: ``name_normalizer_v1.md`` (default,
+  EN), ``name_normalizer_v1_ru.md``, ``name_normalizer_v1_he.md``.
+- :func:`select_for_locale` выбирает per-locale шаблон если он
+  существует, иначе fallback на base template. Это additive: добавление
+  нового locale = новый файл + (опционально) запись в реестре, базовое
+  поведение EN-callers не меняется (см. ADR-0080).
 """
 
 from __future__ import annotations
@@ -76,15 +85,24 @@ class PromptTemplate:
     ``_USER_HEADER``).
     """
 
-    def __init__(self, name: str, version: int, *, prompts_dir: Path | None = None) -> None:
+    def __init__(
+        self,
+        name: str,
+        version: int,
+        *,
+        prompts_dir: Path | None = None,
+        locale: str | None = None,
+    ) -> None:
         self.name = name
         self.version = version
+        self.locale = locale
         self._prompts_dir = prompts_dir or PROMPTS_DIR
         self._system_template, self._user_template = self._load()
 
     @property
     def filename(self) -> str:
-        return f"{self.name}_v{self.version}.md"
+        suffix = f"_{self.locale}" if self.locale else ""
+        return f"{self.name}_v{self.version}{suffix}.md"
 
     @property
     def path(self) -> Path:
@@ -139,8 +157,47 @@ class PromptRegistry:
     VOICE_EXTRACT_PASS1_V1: Final[PromptTemplate] = PromptTemplate("voice_extract_pass1", 1)
     VOICE_EXTRACT_PASS2_V1: Final[PromptTemplate] = PromptTemplate("voice_extract_pass2", 1)
     VOICE_EXTRACT_PASS3_V1: Final[PromptTemplate] = PromptTemplate("voice_extract_pass3", 1)
+    # Phase 10.9e (ADR-0080) — locale-specific name normalizer variants.
+    # Wiring is via :func:`select_for_locale`; consumers should NOT branch
+    # on these constants directly — pass NAME_NORMALIZER_V1 + locale instead.
+    NAME_NORMALIZER_V1_RU: Final[PromptTemplate] = PromptTemplate("name_normalizer", 1, locale="ru")
+    NAME_NORMALIZER_V1_HE: Final[PromptTemplate] = PromptTemplate("name_normalizer", 1, locale="he")
 
     @classmethod
     def all_templates(cls) -> list[PromptTemplate]:
         """Все зарегистрированные шаблоны — для batch-валидации в тестах."""
         return [value for value in vars(cls).values() if isinstance(value, PromptTemplate)]
+
+
+# ---------------------------------------------------------------------------
+# Phase 10.9e — locale-aware lookup helper
+# ---------------------------------------------------------------------------
+
+
+def select_for_locale(
+    base: PromptTemplate,
+    locale: str | None,
+    *,
+    prompts_dir: Path | None = None,
+) -> PromptTemplate:
+    """Выбрать per-locale вариант шаблона если он есть, иначе base.
+
+    Args:
+        base: Default-locale (EN) шаблон, например
+            :data:`PromptRegistry.NAME_NORMALIZER_V1`.
+        locale: ISO-639 код. ``None`` / ``""`` / ``"en"`` → base.
+        prompts_dir: Override для тестов; обычно None (default ``PROMPTS_DIR``).
+
+    Returns:
+        :class:`PromptTemplate` — либо локализованный, либо base.
+
+    Граф fallback'а: ``ru`` → ``name_normalizer_v1_ru.md`` if exists else
+    ``name_normalizer_v1.md``. Никогда не raise'ит на missing locale файла —
+    EN-fallback гарантирует regression-stable поведение для Geoffrey-демо.
+    """
+    if not locale or locale == "en":
+        return base
+    candidate_path = (prompts_dir or PROMPTS_DIR) / f"{base.name}_v{base.version}_{locale}.md"
+    if not candidate_path.exists():
+        return base
+    return PromptTemplate(base.name, base.version, prompts_dir=prompts_dir, locale=locale)
