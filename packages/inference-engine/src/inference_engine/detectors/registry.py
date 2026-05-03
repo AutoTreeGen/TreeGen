@@ -17,7 +17,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from inference_engine.detectors import dna_vs_tree, gedcom_safe_merge
+from inference_engine.detectors import dna_vs_tree, gedcom_safe_merge, metric_book_ocr
 from inference_engine.detectors.result import DetectorResult
 
 DetectorFn = Callable[[dict[str, Any]], DetectorResult]
@@ -26,6 +26,7 @@ DetectorFn = Callable[[dict[str, Any]], DetectorResult]
 _DETECTORS: list[DetectorFn] = [
     dna_vs_tree.detect,
     gedcom_safe_merge.detect,
+    metric_book_ocr.detect,
 ]
 
 
