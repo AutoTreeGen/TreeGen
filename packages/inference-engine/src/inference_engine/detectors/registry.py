@@ -8,6 +8,7 @@ from typing import Any
 from inference_engine.detectors import (
     cross_platform_dna_match,
     dna_vs_tree,
+    full_pipeline_sealed_set,
     gedcom_safe_merge,
     historical_place_jurisdiction,
     mennonite_founder_loop,
@@ -20,6 +21,7 @@ DetectorFn = Callable[[dict[str, Any]], DetectorResult]
 
 
 _DETECTORS: list[DetectorFn] = [
+    full_pipeline_sealed_set.detect,
     mennonite_founder_loop.detect,
     cross_platform_dna_match.detect,
     dna_vs_tree.detect,
