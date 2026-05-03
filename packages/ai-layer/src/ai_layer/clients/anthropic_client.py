@@ -50,6 +50,45 @@ class ImageInput:
     media_type: str
 
 
+@dataclass(frozen=True, slots=True)
+class ToolCall:
+    """Один tool-use блок из ответа Claude.
+
+    Attributes:
+        id: SDK-присвоенный id (``toolu_...``); нужен для tool_result в
+            multi-turn'е (мы не используем — single-turn — но сохраняем
+            для аудита).
+        name: Имя tool'а из tools-schema.
+        input: Аргументы вызова (распарсенный JSON).
+    """
+
+    id: str
+    name: str
+    input: dict[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
+class AnthropicToolCallResult:
+    """Результат tool-use вызова Claude (Phase 10.9b).
+
+    Attributes:
+        tool_calls: Все ``tool_use`` блоки в порядке появления.
+        text: Опциональный текстовой блок (модель часто оборачивает
+            tool-calls пре-амбулой). ``None`` если только tool-blocks.
+        model: Имя actual-модели из ответа.
+        input_tokens: Токены prompt'а.
+        output_tokens: Токены ответа.
+        stop_reason: ``end_turn`` / ``tool_use`` / ``max_tokens``.
+    """
+
+    tool_calls: list[ToolCall]
+    text: str | None
+    model: str
+    input_tokens: int
+    output_tokens: int
+    stop_reason: str | None
+
+
 class AnthropicCompletion[T: BaseModel](BaseModel):
     """Результат structured-вызова Claude.
 
@@ -169,6 +208,91 @@ class AnthropicClient:
             stop_reason=getattr(response, "stop_reason", None),
         )
 
+    async def complete_with_tools(
+        self,
+        *,
+        system: str,
+        user: str,
+        tools: Sequence[dict[str, Any]],
+        model: str | None = None,
+        max_tokens: int = 1024,
+        temperature: float = 0.0,
+        tool_choice: dict[str, Any] | None = None,
+    ) -> AnthropicToolCallResult:
+        """Сделать вызов Claude с tool-use и вернуть собранные tool-calls.
+
+        Phase 10.9b (ADR-0075) — voice-to-tree NLU 3-pass extraction.
+        Один вызов = один pass; caller передаёт narrow tool-set per-pass и
+        читает ``tool_calls`` в результате. ``text`` остаётся в результате
+        как fallback для логов / debug (модель часто оборачивает tool-calls
+        текстовой пре-амбулой).
+
+        Args:
+            system: System-промпт (обычно из ``PromptRegistry``).
+            user: User-промпт (transcript + per-pass инструкция).
+            tools: JSON-schemas tools (Anthropic-format). Caller сам
+                определяет per-pass allowlist; client не валидирует.
+            model: Override модели; ``None`` → ``config.anthropic_model``.
+            max_tokens: Лимит на ответ.
+            temperature: ``0.0`` для детерминированности.
+            tool_choice: Anthropic ``tool_choice`` объект (например,
+                ``{"type": "auto"}``). ``None`` — SDK дефолт ("auto").
+
+        Returns:
+            :class:`AnthropicToolCallResult` со списком tool-calls,
+            usage и stop_reason. Caller сам решает, что делать с
+            unknown-tool вызовами (логировать, игнорировать, etc.).
+
+        Raises:
+            AILayerDisabledError: Если ``config.enabled is False``.
+            AILayerConfigError: Если API-ключ не настроен.
+            anthropic.APIError: Сетевые / 5xx ошибки SDK — caller ловит
+                для retry-логики (ADR-0064 §G — один retry per pass).
+        """
+        if not self._config.enabled:
+            msg = "AI_LAYER_ENABLED is false; refusing to call Anthropic API"
+            raise AILayerDisabledError(msg)
+
+        client = self._get_client()
+        chosen_model = model or self._config.anthropic_model
+
+        kwargs: dict[str, Any] = {
+            "model": chosen_model,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "system": system,
+            "messages": [{"role": "user", "content": user}],
+            "tools": list(tools),
+        }
+        if tool_choice is not None:
+            kwargs["tool_choice"] = tool_choice
+
+        response = await client.messages.create(**kwargs)
+
+        tool_calls: list[ToolCall] = []
+        text_parts: list[str] = []
+        for block in getattr(response, "content", None) or []:
+            block_type = getattr(block, "type", None)
+            if block_type is None and isinstance(block, dict):
+                block_type = block.get("type")
+            if block_type == "tool_use":
+                tool_calls.append(_extract_tool_call(block))
+            elif block_type == "text":
+                text_attr = getattr(block, "text", None)
+                if text_attr is None and isinstance(block, dict):
+                    text_attr = block.get("text", "")
+                if text_attr:
+                    text_parts.append(str(text_attr))
+
+        return AnthropicToolCallResult(
+            tool_calls=tool_calls,
+            text="".join(text_parts) or None,
+            model=getattr(response, "model", chosen_model),
+            input_tokens=_usage_field(response, "input_tokens"),
+            output_tokens=_usage_field(response, "output_tokens"),
+            stop_reason=getattr(response, "stop_reason", None),
+        )
+
     async def stream_completion(
         self,
         *,
@@ -268,6 +392,21 @@ def _extract_text(response: Any) -> str:
         msg = "Anthropic response has no text blocks"
         raise ValueError(msg)
     return "".join(parts)
+
+
+def _extract_tool_call(block: Any) -> ToolCall:
+    """Достать ``ToolCall`` из ``ToolUseBlock`` SDK-объекта или dict-mock'а."""
+    if isinstance(block, dict):
+        return ToolCall(
+            id=str(block.get("id", "")),
+            name=str(block.get("name", "")),
+            input=dict(block.get("input") or {}),
+        )
+    return ToolCall(
+        id=str(getattr(block, "id", "")),
+        name=str(getattr(block, "name", "")),
+        input=dict(getattr(block, "input", None) or {}),
+    )
 
 
 def _usage_field(response: Any, name: str) -> int:

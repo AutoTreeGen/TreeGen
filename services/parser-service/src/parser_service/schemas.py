@@ -2086,3 +2086,125 @@ class ChatMessageListResponse(BaseModel):
     limit: int
     offset: int
     items: list[ChatMessageResponse]
+
+
+# -----------------------------------------------------------------------------
+# Phase 10.9b — Voice-to-tree NLU extraction (ADR-0075).
+# -----------------------------------------------------------------------------
+
+
+ProposalTypeEnum = Literal["person", "place", "relationship", "event", "uncertain"]
+"""Mirror ``shared_models.orm.ProposalType`` для API."""
+
+
+ProposalStatusEnum = Literal["pending", "approved", "rejected"]
+"""Mirror ``shared_models.orm.ProposalStatus`` для API."""
+
+
+ExtractionJobStatusEnum = Literal[
+    "queued", "running", "succeeded", "partial_failed", "cost_capped", "failed"
+]
+"""Lifecycle одного extraction job'а как видит API.
+
+``queued`` / ``running`` — derived от arq job-status'а (arq не пишет в нашу
+ORM); ``succeeded|partial_failed|cost_capped|failed`` — terminal-статусы из
+ai-layer use-case'а, сохранены в ``provenance['job_status']`` каждого
+proposal'а.
+"""
+
+
+class StartExtractionRequest(BaseModel):
+    """Body ``POST /audio-sessions/{id}/extract``.
+
+    Минимальный — owner просто триггерит extraction. ``force`` — задел на
+    Phase 10.9d (re-extract после edit'а transcript'а); сейчас в этом PR
+    приравнивается к идемпотентному no-op'у если уже был job для этой session.
+    """
+
+    force: bool = Field(
+        default=False,
+        description=(
+            "Re-extract даже если уже есть proposals для этой session. "
+            "В 10.9b игнорируется (идемпотентный POST); 10.9d использует "
+            "при edit'е transcript'а."
+        ),
+    )
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class ExtractionJobResponse(BaseModel):
+    """Ответ ``POST /audio-sessions/{id}/extract`` — handle для polling'а.
+
+    arq job-id формируется как ``voice_extract:{extraction_job_id}``;
+    handler возвращает 202 Accepted с этим UUID, фронт опрашивает
+    ``GET /extractions/{extraction_job_id}`` пока статус не станет
+    terminal (``succeeded`` / ``partial_failed`` / ``cost_capped`` /
+    ``failed``).
+    """
+
+    extraction_job_id: uuid.UUID
+    audio_session_id: uuid.UUID
+    status: ExtractionJobStatusEnum
+    created_at: datetime
+
+
+class VoiceExtractedProposalResponse(BaseModel):
+    """Один proposal — ответ ``GET /extractions/{job_id}`` элемент.
+
+    Mirror ``shared_models.orm.VoiceExtractedProposal`` 1:1, кроме сырого
+    ``raw_response`` (audit-only, UI не рендерит) и cost-полей (телеметрия,
+    UI берёт total через aggregate-endpoint в 10.9d).
+    """
+
+    id: uuid.UUID
+    audio_session_id: uuid.UUID
+    extraction_job_id: uuid.UUID
+    proposal_type: ProposalTypeEnum
+    pass_number: int = Field(ge=1, le=3)
+    status: ProposalStatusEnum
+    payload: dict[str, Any]
+    confidence: Decimal = Field(ge=0, le=1)
+    evidence_snippets: list[str]
+    model_version: str
+    prompt_version: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ExtractionsByJobItem(BaseModel):
+    """Один extraction_job_id с агрегированной статистикой и списком proposals.
+
+    Используется в ``GET /audio-sessions/{id}/extractions`` где ответ
+    группируется по ``extraction_job_id``.
+    """
+
+    extraction_job_id: uuid.UUID
+    status: ExtractionJobStatusEnum = Field(
+        description=(
+            "Из ``provenance['job_status']`` любого proposal'а группы "
+            "(все proposals одного job'а имеют одинаковый job_status)."
+        ),
+    )
+    proposals_total: int = Field(ge=0)
+    started_at: datetime
+    proposals: list[VoiceExtractedProposalResponse]
+
+
+class ExtractionsBySessionResponse(BaseModel):
+    """Ответ ``GET /audio-sessions/{id}/extractions`` — все extraction_jobs."""
+
+    audio_session_id: uuid.UUID
+    total_jobs: int = Field(ge=0)
+    jobs: list[ExtractionsByJobItem]
+
+
+class ExtractionJobDetailResponse(BaseModel):
+    """Ответ ``GET /extractions/{extraction_job_id}`` — proposals одного job'а."""
+
+    extraction_job_id: uuid.UUID
+    audio_session_id: uuid.UUID
+    status: ExtractionJobStatusEnum
+    proposals_total: int = Field(ge=0)
+    proposals: list[VoiceExtractedProposalResponse]

@@ -149,42 +149,16 @@ SERVICE_TABLES = {
     # Reference data, seed'ится миграцией; UPDATE in-place для
     # переоценки tier'а без деплоя.
     "document_type_weights",
-    # Bulk report-bundle jobs (Phase 24.4 / ADR-0078): async job state
-    # для batch relationship-report генерации. Service-table mirror:
-    # узкий status enum (queued|running|completed|failed|cancelled),
-    # без provenance/version_id/confidence_score (job artifact, не
-    # доменный факт), hard-delete по cancel или TTL purge (вместо
-    # soft-delete, чтобы не аудитить как domain-факт). FK CASCADE
-    # на tree, FK RESTRICT на requested_by — erasure pipeline сначала
-    # чистит jobs, потом user.
-    "report_bundle_jobs",
-    # Completeness-assertion ↔ source junction (Phase 15.11a / ADR-0076):
-    # composite-PK (assertion_id, source_id), CASCADE on assertion delete,
-    # RESTRICT on source delete (sources outlive their citations). Pure m2m,
-    # без mixin'ов и tree_id; revoke на API-слое чистит junction
-    # hard-delete'ом, родительская assertion остаётся для audit.
-    "completeness_assertion_sources",
-    # Reference seed tables (Phase 22.1b / ADR-0081): committed canonical
-    # data + ingested-from-local data. Без tree_id, soft-delete, provenance —
-    # это shared reference (страны, фамилии, места, паттерны фабрикации),
-    # не user-tree-domain. Refresh = ingest CLI с ON CONFLICT DO UPDATE.
-    # Consumers (22.1c+) читают по PK; lifecycle = manual rollback DELETE
-    # при ошибочной seed-версии.
-    "country_archive_directory_seed",
-    "surname_variant_seed",
-    "surname_transliteration_seed",
-    "fabrication_pattern_seed",
-    "place_lookup_seed",
-    # Merge sessions / decisions / apply batches (Phase 5.7c-a / ADR-0070):
-    # сессионный 2-way merge (orchestration-artifact merge-service'а), не
-    # доменная сущность дерева. ``merge_sessions.status`` — узкий lifecycle
-    # с терминальным ``abandoned``; ``merge_decisions`` / ``merge_apply_batches``
-    # immutable history rows. Без provenance/version_id/soft-delete на самих
-    # session-row'ах — provenance пишется на затронутые domain-row'ы при
-    # apply (ADR-0070 §«Аудит и provenance»).
-    "merge_sessions",
-    "merge_decisions",
-    "merge_apply_batches",
+    # Voice-to-tree NLU extraction proposals (Phase 10.9b / ADR-0075):
+    # артефакт 3-pass extraction'а над AudioSession.transcript_text.
+    # Group-by ``extraction_job_id`` (UUID, не FK) объединяет proposals
+    # одного запуска в review-queue. Имеет ``tree_id`` + ``provenance``
+    # и ``deleted_at`` напрямую (без SoftDeleteMixin — иначе попадает под
+    # audit-listener; mirror AudioSession / SourceExtraction). Не TreeEntity:
+    # ``status`` свой узкий lifecycle (pending|approved|rejected) для
+    # review-queue, не доменный confidence_score / version_id (review
+    # решает, конвертировать ли в Hypothesis в 10.9c-cold).
+    "voice_extracted_proposals",
 }
 
 TREE_ENTITY_TABLES = {
@@ -288,6 +262,35 @@ def test_audio_sessions_consent_egress_provider_not_null() -> None:
     """``consent_egress_provider`` NOT NULL — пара к ``consent_egress_at``."""
     table = Base.metadata.tables["audio_sessions"]
     assert table.c.consent_egress_provider.nullable is False
+
+
+def test_voice_extracted_proposals_table_present() -> None:
+    """Phase 10.9b обязана зарегистрировать voice_extracted_proposals (ADR-0075)."""
+    assert "voice_extracted_proposals" in Base.metadata.tables
+
+
+def test_voice_extracted_proposals_audio_session_fk_cascade() -> None:
+    """``voice_extracted_proposals.audio_session_id → audio_sessions.id ON DELETE CASCADE``.
+
+    Proposals не должны переживать удаление родительской audio-сессии —
+    contextless review queue без transcript'а бесполезен.
+    """
+    table = Base.metadata.tables["voice_extracted_proposals"]
+    fks = [
+        fk
+        for fk in table.c.audio_session_id.foreign_keys
+        if fk.column.table.name == "audio_sessions"
+    ]
+    assert len(fks) == 1
+    assert fks[0].ondelete == "CASCADE"
+
+
+def test_voice_extracted_proposals_tree_id_fk_cascade() -> None:
+    """``voice_extracted_proposals.tree_id → trees.id ON DELETE CASCADE`` (safety net)."""
+    table = Base.metadata.tables["voice_extracted_proposals"]
+    fks = [fk for fk in table.c.tree_id.foreign_keys if fk.column.table.name == "trees"]
+    assert len(fks) == 1
+    assert fks[0].ondelete == "CASCADE"
 
 
 def test_audio_sessions_tree_id_fk_cascade() -> None:

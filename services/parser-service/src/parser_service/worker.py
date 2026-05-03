@@ -45,6 +45,7 @@ from parser_service.fs_oauth import (
 )
 from parser_service.jobs.erase_audio_session import erase_audio_session
 from parser_service.jobs.transcribe_audio import transcribe_audio_session
+from parser_service.jobs.voice_extract import voice_extract_job
 from parser_service.services.auto_transfer import run_ownership_transfer
 from parser_service.services.bulk_hypothesis_runner import (
     STAGE_FAILED,
@@ -613,6 +614,8 @@ class WorkerSettings:
         # Phase 10.9a — voice-to-tree.
         transcribe_audio_session,
         erase_audio_session,
+        # Phase 10.9b — voice-to-tree NLU extraction (ADR-0075).
+        voice_extract_job,
     ]
     on_startup = startup
     on_shutdown = shutdown
