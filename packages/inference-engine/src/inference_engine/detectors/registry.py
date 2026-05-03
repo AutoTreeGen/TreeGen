@@ -18,6 +18,7 @@ from collections.abc import Callable
 from typing import Any
 
 from inference_engine.detectors import (
+    cross_platform_dna_match,
     dna_vs_tree,
     gedcom_safe_merge,
     metric_book_ocr,
@@ -29,6 +30,7 @@ DetectorFn = Callable[[dict[str, Any]], DetectorResult]
 
 
 _DETECTORS: list[DetectorFn] = [
+    cross_platform_dna_match.detect,
     dna_vs_tree.detect,
     gedcom_safe_merge.detect,
     metric_book_ocr.detect,
